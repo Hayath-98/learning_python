@@ -1,0 +1,4535 @@
+HEADER hdudispfgrapp,Source Code Ver : 1.17 ,TestScript Ver :1.7
+--------------------------------------------------------------------------------
+-- Author Name         : Anusha V
+--
+-- File Name           : hdudispfgrapp_2.ptu
+--                       
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : GrappInit
+--                       GrappSwithcScreens
+--                       ExmonCheck
+--                       AppExDraw
+--                       CoolDownTimer
+--                       GrappApp
+--
+-- Version History     :
+--
+-- TEST-VERSION     TEST-DATE       TESTER NAME        MODIFICATIONS
+-- ------------     ---------       -----------        -------------
+--      1.1         04.10.2017      Anusha V           Created the PTU file.
+--      1.2         11.11.2017      Anusha V           Updated as per #PR100171 
+--		1.3         14.11.2017      Anusha V           Updated as per #PR100171
+--		1.4			10.04.2018		Akshay R K		   Updated as per #PR100201
+--		1.5			28.07.2020		Vignesh Sunil	   Updated as per #PR100267
+--		1.6			03.10.2020		Vignesh Sunil	   Updated as per #PR100281
+--		1.7			28.04.2021		Vignesh Sunil	   Updated as per #PR100338
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/  
+
+##include "hdudispfdemo.h"   /* contains functions for demo */
+##include "hdudispfcas.h"             /* common defines and functions prototypes for CAS */
+##include "hdudispfdma2d.h"  /* contains the common defines and functions prototypes for dma2d */
+##include "hdudispffonts.h"        /* Contains different font information*/
+##include "hdudispfglobalsettings.h"  /* Routines to read and write data to NVRAM  */
+##include "hdudispfgrapp.h"           /* routines for all graph */
+##include "hdudispfmenu.h"            /* contains prototype for menu module*/
+##include "hdudispfpbs.h"          /* Contains functions prototypes of pbs.*/
+##include "hdudispfpdidata.h"         /* contains routines for PDI data */
+##include "hdudispfpolygon1.h"         /* provides routines for "scan line" method polygon fill.*/
+##include "hdudispfpolygon2.h"         /*  Contains routines for polygons configuration.*/
+##include "hdudispfresource.h"  /* provides central location to use On Chip Peripherals*/
+##include "hdudispfrterror.h"           /* Provides sub routine for run time errors.*/
+##include "hdudispfstmadc.h"       /* contains routines for STM ADC modules.*/
+##include "hdudispftext.h"         /* Routines which maintain text display and updates */
+##include "hdudispftextbox.h"         /* routines for text box draw and updtaes */
+##include "hdudispftextbox.h"      /* routines for text box draw and updtaes */
+##include "hdudispftimer.h"           /* Need timer for debounce. */
+##include "hdudispfrtd.h"             /* Provide mapping for all A825 incoming parameters */
+##include "hdudispfconfig.h"          /* contains page and color config information */
+##include "hdudispfrounddial.h"    /* routines which draws and updates the round dial */
+##include "hdudispfbargraphs.h"    /* Routines which maintain the "Real Time" bar-graphs */
+##include "hdudispfnumbox.h"       /* Number box routines*/
+##include "hdudispfcarrotgraph.h"       /* Carrot Graph routines*/
+##include "hdudispfbinascii.h"     /*Utility routines to convert binary to ascii base 10.*/
+##include "hdudispfpara.h"         /* prototype for builds faults, message and system information */
+##include "hdudispfucos.h"            /* uC/OS routines for the real-time kernel */
+##include "hdudispfforeground.h"      /* contains the routines for foreground layer of the display */
+##include "hdulibbasictypes.h"      /* Contains basic header definations */
+##include "hdudispfpdicheck.h"
+
+#/* updated as per PR 100083 */
+##include "hdudispfa429.h"     /* Routines for arinc 429 */
+##include "hdudispfoffside.h"  /* Screen, message and timer configuration */
+##include "hdudispfpwm.h" /*maintains the pulse width modulation channels*/
+##include "hdudispfpanel.h"   /* Contains functions prototypes of panel.*/
+##include "hdudispfpbit.h"   /* Contains functions prototypes of panel.*/
+##include "hdudispflmsscu.h"  /* SCU rtd processing and error codes  */
+
+--MACROS INCLUDED FOR THE PURPOSE OF TESTING
+
+##define SPLASH_TIME     3000   
+##define DAU_CONNECTED   1
+##define DEC_120         120U
+##define DEC_160         160U
+##define DEC_320         320U
+##define DEC_50          50U
+##define DEC_90          90U
+##define DEC_131         131U
+##define DEC_107         107U
+##define DEC_225         225U
+##define DEC_1400        1400U
+##define DEC_2000        2000U
+##define DEC_1050        1050U
+##define DEC_990         990U
+##define DEC_860         860U
+##define DEC_1065        1065U
+##define DEC_1220        1220U
+##define DEC_694         694U
+##define DEC_768         768U
+##define DEC_120K        120000U
+##define DEC_60          60U
+##define DEC_670         670U
+##define DEC_366         366U
+##define DEC_523         523U
+##define MAX_TIME        35999999UL
+##define TICKS_PER_SECOND 1000U
+##define SEC_PER_MIN     60U
+##define MIN_PER_HOUR    60U
+##define N1_NORMAL_OP       650U
+##define COOLDOWN_AXIS_CALIBRATION 45U
+##define PAGE_ADDR_OFFSET 0x100000
+##define A429_DATA_SIZE   20U
+##define MAX_A429_DATA    65U
+##define ACDT_EXTRACT_ADDRS   0x61590000
+##define BG_IMAGE_OFFSET 0x300000
+##define SPLASH_SCREEN_ADDR  ((T_UINT16 *)0x60000000)
+##define PRIMARY_SCREEN_ADDR  ((T_UINT16 *)0x60100000)
+##define SECONDARY_SCREEN_ADDR  ((T_UINT16 *)0x60200000)
+##define BG_IMAGE_ADDR  0x60000000
+##define PAGE_BITMAP_NUM_OF_SECTOR 20U
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #T_UINT16 Cas_label_start_idx; 
+    #T_BOOL Cas_data_recieved; 
+    #T_BOOL Cas_wog_data_recieved; 
+    #T_UINT8 Page_cas; 
+    #T_TIMER Manual_timer; 
+    #T_INT32 S32_data_exceed[4]; 
+    #T_EXCEED_STRUCT Exceed_data[66]; 
+    #T_UINT8 Exceed_cnt; 
+    #T_UINT32 U32_critical_sr; 
+    #T_BOOL Bitmap_crc_check_bit[20]; 
+    #T_EIU Active_eiu; 
+    #T_BOOL Cool_down_select; 
+    #T_UINT8 Du_position; 
+    #T_BOOL Nv_crc_fail; 
+    #T_BOOL Demo_mode_activate; 
+    #T_BOOL Demo_active; 
+    #T_PBS Switches; 
+    #T_BOOL Acdt_flag; 
+    #T_UINT8 Tb_cnt; 
+    #T_UINT8 Text_cnt; 
+    #T_UINT8 Cg_cnt; 
+    #T_UINT8 Rd_cnt; 
+    #T_PAGE Page_settings; 
+    #T_TIMER Cool_timer; 
+    #T_UINT8 Nb_cnt; 
+    #T_UINT8 Bg_cnt; 
+    #T_UINT16 Port1_label_count; 
+    #extern void CarrotGraphInit(T_CARROTGRAPHDEF * cg_list);
+    #extern T_CHAR U8_circle[2];
+    #extern T_INT8 U8_time_string[15];
+    #extern void TextInit(T_TEXT * text_list);
+    #extern void AppExDraw(void);
+    #extern void ExmonCheck(void);
+    #extern void RoundDialsInit(T_ROUNDDIALDEF * rd_list);
+    #extern void TextBoxPdiInit(T_STEXTBOXPDIDATA * tb_list);
+    #extern void NumberBoxInit(T_SNUMBOXDEF * nb_list);
+    #extern void CoolDownTimer(void);
+    #extern void ScaleRead(void);
+    #extern void FlightTimer(void);
+    #extern void BarGraphInit(T_SBARGRAPHDEF * bg_list);
+    #extern void AppExTimerDraw(void);	
+	#extern T_PARAM_TABLE Parameters_reading[256];
+	#T_UINT32 Cas_error;
+	#T_UINT32 Timer_axis_error;
+	#T_UINT32 Acdt_axis_error;
+	#T_UINT32 Exceed_error;
+    #T_UINT8 Pg_cnt;
+    #T_BOOL Timer_flag;	
+    #T_BOOL Page_parameter_error[20];	
+	#extern T_CHAR glob_file_name[];
+	
+    #T_CHAR  *dummyfunc();
+    #T_UINT8 Timer_cnt;		
+    #T_CONFIG_STRUCT Config_data;	
+    #T_BOOL Fuel_flow_select;	
+    #T_DISPLAYSIZE Display_size;	
+    #T_UINT32 Ex_timer_error;		
+
+    --  Declarations of the temporary variables of the tested file
+        
+    --Temporary variable created to be used in CompareLimit
+    #T_UINT8 PTU_temp1;
+
+    --Temporary variable created to be used in CompareLimit
+    #T_UINT8 PTU_temp2;
+
+    --Temporary variable created to be used in CompareLimit
+    #T_INT8 PTU_temp3;
+
+    --Temporary variable created to be used in CoolxBoxText
+    #T_INT8 PTU_pc_string;
+
+    --Temporary variable created to be used in CoolxBoxText and FlightTimer
+    #T_UINT8 PTU_index=0;
+
+    --Temporary variable created to be used in CoolxBoxText and FlightTimer 
+    #T_UINT8 PTU_index1=0;
+
+    --Temporary variable created to be used in CoolxBoxText and FlightTimer
+    #T_UINT32 PTU_src[10];
+
+    --Temporary variable created to be used in CoolxBoxText and FlightTimer
+    #T_INT8 PTU_dest[10];
+
+    --Temporary variable created to be used in GrappInit
+    #T_TIMER PTU_Splash_timer;
+
+    --Temporary variable created to be used in GrappInit
+    #T_TIMER PTU_cool_timer;
+
+    --Temporary variable created to be used in GrappInit
+    #T_UINT32 PTU_count=0;
+
+    --Temporary variable created to be used in GrappApp
+    #T_EPAGE_NUM PTU_e_page_temp;
+        
+    --Temporary variable created to be used in GrappApp
+    #T_PARAM_READING PTU_parameters_numbox[50];
+    
+    # T_PARAM_READING PTU_parameters[50];
+    
+    --Temporary variable
+    #T_UINT16 PTU_pu16Src;
+    
+    --Temporary variable
+    #T_CHAR *PTU_char[20];
+    
+    --Temporary variable
+    #T_CHAR PTU_temp11[10];
+	
+	#T_UINT8 PTU_pu8_string;	
+	
+    --Temporary variable created to verify the parameters of function "RterrWidget"
+    #T_CHAR  PTU_rterr_file[100];
+    #T_CHAR  PTU_rterr_message[100];	
+	
+    #T_UINT32 index1;	
+
+--------------------------------------------------------------------------------
+BEGIN
+
+    COMMENT  Author Name         : Anusha V
+    COMMENT 
+    COMMENT  File Name           : hdudispfgrapp_2.ptu
+    COMMENT 
+    COMMENT  Tested Functions    :  GrappInit
+    COMMENT                         CoolxBoxText
+    COMMENT                         GrappSwithcScreens
+    COMMENT                         ExmonCheck
+    COMMENT                         AppExDraw
+    COMMENT                         CoolDownTimer                           
+    COMMENT							GrappApp
+    COMMENT
+    COMMENT  Assumptions and Constraints
+    COMMENT  <AC>
+    COMMENT
+    COMMENT  Assumption(s):
+    COMMENT
+    COMMENT  None
+    COMMENT 
+    COMMENT  Constraint(s):
+    COMMENT 1. The PTU is been split into 6 due to static dependency.
+    COMMENT
+    COMMENT 2. Internal service is enabled in hdudispfgrapp_4.ptu in order to test the 
+    COMMENT    following LLR's
+    COMMENT  "hdudispfgrapp-CoolxBoxText-DB-LLR-001"
+    COMMENT  "hdudispfgrapp-CoolxBoxText-DB-LLR-002"
+    COMMENT  "hdudispfgrapp-CoolxBoxText-DB-LLR-003"
+    COMMENT  "hdudispfgrapp-CoolxBoxText-DB-LLR-004"
+    COMMENT
+    COMMENT 3.Following Test script related warning is observed during Target Execution for stub function return value:
+	COMMENT warning #120-D: 
+	COMMENT return value type does not match the function type
+	COMMENT return(Attol_ptr_out->ret);
+	COMMENT
+	COMMENT line 314: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT                  Ap_page1_bar_graphs[u8_i].ePenColor=Ap_page1_bar_graphs[u8_i].limColor[u8_j];                                                    ^
+	COMMENT line 358: warning #188-D: 
+	COMMENT       enumerated type mixed with another type
+	COMMENT                  Page_num_boxes[u8_i].ePenColor=Page_num_boxes[u8_i].limColor[u8_j];
+	COMMENT                                               ^
+	COMMENT line 922: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT                                Exceed_data[loop_cntr].exceed_font, YELLOW,                                 ^
+	COMMENT line 1002: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT                     Page_settings.timer_font, WHITE, TX_NO_FLASH, V_NORMAL, ALIGN_CENTER);	
+	COMMENT
+    COMMENT  </AC>
+    
+    COMMENT  <ECD>
+    COMMENT 
+    COMMENT  Valid Class(es)
+    COMMENT  Class 1
+    COMMENT  In Function'GrappInit','TimerInstall' is called.
+    COMMENT
+    COMMENT  Class 2
+    COMMENT  In Function'GrappInit','ForegroundLoadBackground'is called.
+    COMMENT
+    COMMENT  Class 3
+    COMMENT  In Function'GrappInit',page_num of Page_settings is equal to ZERO.
+    COMMENT
+    COMMENT  Class 4
+    COMMENT  In Function'GrappInit',page_num of Page_settings is not equal to ZERO.
+    COMMENT
+    COMMENT  Class 5
+    COMMENT In function 'GrappSwithcScreens',Page_num is equal to e_new_page_num.
+    COMMENT
+    COMMENT  Class 6
+    COMMENT In function 'GrappSwithcScreens',Page_num is not equal to e_new_page_num.
+    COMMENT
+    COMMENT  Class 7
+    COMMENT In function 'GrappSwithcScreens','PwmBlink' is called.
+    COMMENT
+    COMMENT  Class 8
+    COMMENT In function 'GrappSwithcScreens','LCDBackgroundOff'is called.
+    COMMENT
+    COMMENT  Class 9
+    COMMENT In function 'GrappSwithcScreens','ForegroundClear' is called.
+    COMMENT
+    COMMENT  Class 10
+    COMMENT In function 'GrappSwithcScreens','ForegroundLoadBackground' is called.
+    COMMENT
+    COMMENT  Class 11
+    COMMENT In function 'GrappSwithcScreens','PdiPageDataInit' is called.
+    COMMENT
+    COMMENT  Class 12
+    COMMENT In function 'GrappSwithcScreens','ExceedExtract' is called.
+    COMMENT
+    COMMENT  Class 13
+    COMMENT In function 'GrappSwithcScreens','RoundDialsInit' is called.
+    COMMENT
+    COMMENT  Class 14
+    COMMENT In function 'GrappSwithcScreens','NumberBoxInit' is called.
+    COMMENT
+    COMMENT  Class 15
+    COMMENT In function 'GrappSwithcScreens','BarGraphInit' is called.
+    COMMENT
+    COMMENT  Class 16
+    COMMENT In function 'GrappSwithcScreens','TextBoxOff' is called.
+    COMMENT
+    COMMENT  Class 17
+    COMMENT In function 'GrappSwithcScreens',Acdt_flag is TRUE.
+    COMMENT
+    COMMENT  Class 18
+    COMMENT In function 'GrappSwithcScreens','Acdt_flag is FALSE.
+    COMMENT
+    COMMENT  Class 19
+    COMMENT  In Function'ScaleRead',type of Parameters is equal to BNR.
+    COMMENT
+    COMMENT  Class 20
+    COMMENT  In Function'ScaleRead',type of Parameters is other than  BNR.
+    COMMENT
+    COMMENT  Class 21
+    COMMENT  In Function'ScaleRead','RTDGetParam'is called.
+    COMMENT
+    COMMENT  Class 22
+    COMMENT  In Function'ScaleRead','RTDGetParamDdw'is called.
+    COMMENT
+    COMMENT  Class 23
+    COMMENT  In Function'CompareLimit',val is less than range.
+    COMMENT
+    COMMENT  Class 24
+    COMMENT  In Function'CompareLimit',val is equal to the range.
+    COMMENT
+    COMMENT  Class 25
+    COMMENT  In Function'CompareLimit',val is greater than range.
+    COMMENT
+    COMMENT  Class 26
+    COMMENT  In Function'CompareLimit',val is not equal range.
+    COMMENT
+    COMMENT  Class 27
+    COMMENT  In Function'CompareLimit',operator is equal to LESS_THAN.
+    COMMENT
+    COMMENT  Class 28
+    COMMENT  In Function'CompareLimit',operator is equal to LESS_THAN_EQUAL.
+    COMMENT
+    COMMENT  Class 29
+    COMMENT In Function'CompareLimit',operator is equal to EQUAL
+    COMMENT
+    COMMENT  Class 30
+    COMMENT In Function'CompareLimit',operator is equal to GREATER_THAN_EQUAL.
+    COMMENT
+    COMMENT  Class 31
+    COMMENT In Function'CompareLimit',operator is equal to GREATER_THAN.
+    COMMENT
+    COMMENT  Class 32
+    COMMENT In Function'CompareLimit',operator is equal to NOT_EQUAL.
+    COMMENT
+    COMMENT  Class 33
+    COMMENT  In Function'CompareLimit',operator is other than LESS_THAN,LESS_THAN_EQUAL,EQUAL,
+    COMMENT  GREATER_THAN_EQUAL,GREATER_THAN,NOT_EQUAL.
+    COMMENT
+    COMMENT  Class 34
+    COMMENT In Function'CoolxBoxText',cool_timer is greater than cool down variable.
+    COMMENT
+    COMMENT  Class 35
+    COMMENT  In Function'RoundDialsInit','RoundDialAllocat' is called.
+    COMMENT
+    COMMENT  Class 36
+    COMMENT  In Function'NumberBoxInit','NumboxAllocat' is called.
+    COMMENT
+    COMMENT  Class 37
+    COMMENT  In Function'BarGraphInit','BargraphAllocat' is called.
+    COMMENT
+    COMMENT  Class 38
+    COMMENT  In Function'FlightTimer',Manual_timer is greater than MAX_TIME.
+    COMMENT
+    COMMENT  Class 39
+    COMMENT  In Function'FlightTimer',Manual_timer is less than MAX_TIME.
+    COMMENT
+    COMMENT  Class 40
+    COMMENT  In Function'FlightTimer',Manual_timer is equal to MAX_TIME.
+    COMMENT
+    COMMENT  Class 41
+    COMMENT  In Function'FlightTimer','BinasByteFormatInfo' is called.
+    COMMENT
+    COMMENT  Class 42
+    COMMENT  In Function'FlightTimer','TextDispString' is called.
+    COMMENT 
+    COMMENT  Class 43
+    COMMENT  In Function'GrappSetPage','OS_ENTER_CRITICAL' is called.
+    COMMENT
+    COMMENT  Class 200
+    COMMENT  In Function'GrappSetPage','OS_EXIT_CRITICAL' is called.
+    COMMENT
+    COMMENT  Class 44
+    COMMENT  In Function'ExmonCheck',stat of psParam of Ap_page1_bar_graphs is less than  PARAM_BAD
+    COMMENT
+    COMMENT  Class 45
+    COMMENT  In Function'ExmonCheck',stat of psParam of Ap_page1_bar_graphs is greater than  PARAM_BAD
+    COMMENT
+    COMMENT  Class 46
+    COMMENT  In Function'ExmonCheck',stat of psParam of Ap_page1_bar_graphs is equal to  PARAM_BAD
+    COMMENT
+    COMMENT  Class 47
+    COMMENT  In Function'ExmonCheck',compare is equal to ONE 
+    COMMENT
+    COMMENT  Class 48
+    COMMENT  In Function'ExmonCheck',compare is not equal to ONE 
+    COMMENT
+    COMMENT  Class 49
+    COMMENT  In Function'ExmonCheck',ePenColor of Ap_page1_bar_graphs is equal to YELLOW
+    COMMENT
+    COMMENT  Class 50
+    COMMENT  In Function'ExmonCheck',ePenColor of Ap_page1_bar_graphs is equal to RED
+    COMMENT
+    COMMENT  Class 51
+    COMMENT  In Function'ExmonCheck',ePenColor of Ap_page1_bar_graphs is equal to GREEN
+    COMMENT
+    COMMENT  Class 52
+    COMMENT  In Function'ExmonCheck',stat of psParam of Page_num_boxes is less than  PARAM_BAD
+    COMMENT
+    COMMENT  Class 53
+    COMMENT  In Function'ExmonCheck',stat of psParam of Page_num_boxes is greater than  PARAM_BAD
+    COMMENT
+    COMMENT  Class 54
+    COMMENT  In Function'ExmonCheck',stat of psParam of Page_num_boxes is equal to  PARAM_BAD
+    COMMENT
+    COMMENT  Class 55
+    COMMENT  In Function'ExmonCheck',ePenColor of Page_num_boxes is equal to YELLOW
+    COMMENT
+    COMMENT  Class 56
+    COMMENT  In Function'ExmonCheck',ePenColor of Page_num_boxes is equal to RED
+    COMMENT
+    COMMENT  Class 57
+    COMMENT  In Function'ExmonCheck',ePenColor of Page_num_boxes is equal to GREEN
+    COMMENT
+    COMMENT  Class 58
+    COMMENT  In Function'ExmonCheck',ePenColor of Ap_page1_bar_graphs is other than RED,GREEN and YELLOW.
+    COMMENT
+    COMMENT  Class 59
+    COMMENT  In Function'ExmonCheck',ePenColor of Page_num_boxes is other than RED,GREEN and YELLOW.
+    COMMENT
+    COMMENT  Class 60
+    COMMENT  In Function'GrappApp','ScaleRead' is called.
+    COMMENT
+    COMMENT  Class 61
+    COMMENT  In Function'GrappApp','ExmonCheck' is called.
+    COMMENT
+    COMMENT  Class 62
+    COMMENT  In Function'GrappApp','ForegroundLoadBackground' is called.
+    COMMENT
+    COMMENT  Class 63
+    COMMENT  In Function'GrappApp','PdiPageDataInit ' is called.
+    COMMENT
+    COMMENT  Class 64
+    COMMENT  In Function'GrappApp','RoundDialsInit  ' is called.
+    COMMENT
+    COMMENT  Class 65
+    COMMENT  In Function'GrappApp','NumberBoxInit   ' is called.
+    COMMENT
+    COMMENT  Class 66
+    COMMENT  In Function'GrappApp','BarGraphInit    ' is called.
+    COMMENT
+    COMMENT  Class 67
+    COMMENT  In Function'GrappApp','MenuInit    ' is called.
+    COMMENT
+    COMMENT  Class 68
+    COMMENT  In Function'GrappApp','TextBoxOff  ' is called.
+    COMMENT
+    COMMENT  Class 69
+    COMMENT  In Function'GrappApp',acdt_flag is equal to TRUE.
+    COMMENT
+    COMMENT  Class 70
+    COMMENT  In Function'GrappApp',acdt_flag is not equal to TRUE.
+    COMMENT
+    COMMENT  Class 71
+    COMMENT  In Function'GrappApp',Nv_crc_fail is TRUE.
+    COMMENT
+    COMMENT  Class 72   
+    COMMENT  In Function'GrappApp',Nv_crc_fail is not TRUE.
+    COMMENT
+    COMMENT  Class 73
+    COMMENT  In Function'GrappApp','PageMenu' is called.
+    COMMENT 
+    COMMENT  Class 74
+    COMMENT  In Function'GrappApp',Button b1 is true.
+    COMMENT
+    COMMENT  Class 75
+    COMMENT  In Function'GrappApp',Button b2 is true.
+    COMMENT
+    COMMENT  Class 76
+    COMMENT  In Function'GrappApp',Button b3 is true.
+    COMMENT
+    COMMENT  Class 77
+    COMMENT  In Function'GrappApp',Button b4 is true.
+    COMMENT
+    COMMENT  Class 78
+    COMMENT  In Function'GrappApp',Button b5 is true.
+    COMMENT
+    COMMENT  Class 79
+    COMMENT  In Function'GrappApp',Button b6 is true.
+    COMMENT
+    COMMENT  Class 80
+    COMMENT  In Function'GrappApp',Button b7 is true.
+    COMMENT
+    COMMENT  Class 81
+    COMMENT  In Function'GrappApp',Button b8 is true.
+    COMMENT
+    COMMENT  Class 82
+    COMMENT  In Function'GrappApp',Button c1 is true.
+    COMMENT
+    COMMENT  Class 83
+    COMMENT  In Function'GrappApp',Button c2 is true.
+    COMMENT
+    COMMENT  Class 84
+    COMMENT  In Function'GrappApp',Button c3 is true.
+    COMMENT
+    COMMENT  Class 85
+    COMMENT  In Function'GrappApp',Button sLE.pressed is true.
+    COMMENT
+    COMMENT  Class 86
+    COMMENT  In Function'GrappApp',Button sRE.pressed is true.
+    COMMENT
+    COMMENT  Class 87
+    COMMENT  In Function'GrappApp',Button b1 is false.
+    COMMENT
+    COMMENT  Class 88
+    COMMENT  In Function'GrappApp',Button b2 is false.
+    COMMENT
+    COMMENT  Class 89
+    COMMENT  In Function'GrappApp',Button b3 is false.
+    COMMENT
+    COMMENT  Class 111
+    COMMENT  In Function'GrappApp',Button b4 is false.
+    COMMENT
+    COMMENT  Class 90
+    COMMENT  In Function'GrappApp',Button b5 is false.
+    COMMENT
+    COMMENT  Class 91
+    COMMENT  In Function'GrappApp',Button b6 is false.
+    COMMENT
+    COMMENT  Class 92
+    COMMENT  In Function'GrappApp',Button b7 is false.
+    COMMENT
+    COMMENT  Class 93
+    COMMENT  In Function'GrappApp',Button b8 is false.
+    COMMENT
+    COMMENT  Class 94
+    COMMENT  In Function'GrappApp',Button c1 is false.
+    COMMENT
+    COMMENT  Class 95
+    COMMENT  In Function'GrappApp',Button c2 is false.
+    COMMENT
+    COMMENT  Class 96
+    COMMENT  In Function'GrappApp',Button c3 is false.
+    COMMENT
+    COMMENT  Class 97
+    COMMENT  In Function'GrappApp',Button sLE.pressed is false.
+    COMMENT
+    COMMENT  Class 98
+    COMMENT  In Function'GrappApp',Button sRE.pressed is false.
+    COMMENT
+    COMMENT  Class 100
+    COMMENT  In Function'GrappApp',Splash_timer is less than SPLASH_TIME.
+    COMMENT
+    COMMENT  Class 101
+    COMMENT  In Function'GrappApp',Splash_timer is equal to SPLASH_TIME.
+    COMMENT
+    COMMENT  Class 102
+    COMMENT  In Function'GrappApp',Splash_done is ZERO
+    COMMENT
+    COMMENT  Class 103
+    COMMENT  In Function'GrappApp',Splash_done is not equal to ZERO
+    COMMENT 
+    COMMENT  Class 106
+    COMMENT  In Function'GrappApp','OS_ENTER_CRITICAL' is called.
+    COMMENT
+    COMMENT  Class 107
+    COMMENT  In Function'GrappApp','OS_EXIT_CRITICAL' is called.
+    COMMENT
+    COMMENT  Class 108
+    COMMENT  In Function'GrappApp','OsTimeDly' is called.
+    COMMENT
+    COMMENT  Class 109
+    COMMENT  In Function'GrappApp',Acdt_flag is true 
+    COMMENT
+    COMMENT  Class 110
+    COMMENT  In Function'GrappApp','Acdt_flag is false. 
+    COMMENT
+    COMMENT  Class 112
+    COMMENT  In Function'GrappApp',' PageMenu'is called.
+    COMMENT
+    COMMENT  Class 113
+    COMMENT  In Function'GrappApp',' OffsideSwitchScreen'is called.
+    COMMENT
+    COMMENT  Class 114
+    COMMENT  In Function'GrappApp',Du_position is equal to one.
+    COMMENT
+    COMMENT  Class 115
+    COMMENT  In Function'GrappApp',Du_position is not equal to one.
+    COMMENT
+    COMMENT  Class 116
+    COMMENT  In Function'CoolxBoxText',cool_timer is greater than cool down variable.
+    COMMENT
+    COMMENT  Class 117
+    COMMENT  In Function'CoolxBoxText',cool_timer is less than cool down variable.
+    COMMENT
+    COMMENT  Class 118
+    COMMENT  In Function'CoolxBoxText',cool_timer is equal to  cool down variable.
+    COMMENT
+    COMMENT  Class 119
+    COMMENT  In Function'CoolxBoxText','BinasByteFormatInfo' is called.
+    COMMENT
+    COMMENT  Class 120
+    COMMENT  In Function'CoolxBoxText','TextDispString' is called.
+    COMMENT
+    COMMENT  Class 121
+    COMMENT  In Function'AppExDraw',stat of Exceedances is equal to PARAM_OK
+    COMMENT
+    COMMENT  Class 122
+    COMMENT  In Function'AppExDraw',stat of Exceedances is not equal to PARAM_OK
+    COMMENT
+    COMMENT  Class 123
+    COMMENT  In Function'AppExDraw',exceed_bit is set
+    COMMENT
+    COMMENT  Class 124
+    COMMENT  In Function'AppExDraw',exceed_bit is reset
+    COMMENT
+    COMMENT  Class 125
+    COMMENT  In Function'AppExDraw',r of exceed_reading bitwise And with result of ONE left shift by 
+    COMMENT  exceed_bit of index loop_cntr of Exceed_data minus ONE is true.
+    COMMENT
+    COMMENT  Class 126
+    COMMENT  In Function'AppExDraw',r of exceed_reading bitwise And with result of ONE left shift by 
+    COMMENT  exceed_bit of index loop_cntr of Exceed_data minus ONE is false.
+    COMMENT
+    COMMENT  Class 127
+    COMMENT  In Function'AppExDraw',S32_data_exceed bitwise And with result of ONE left shift by exceed_bit
+    COMMENT  of index loop_cntr of Exceed_data minus ONE is true.
+    COMMENT
+    COMMENT  Class 128
+    COMMENT  In Function'AppExDraw',S32_data_exceed bitwise And with result of ONE left shift by exceed_bit
+    COMMENT  of index loop_cntr of Exceed_data minus ONE is false.
+    COMMENT
+    COMMENT  Class 129
+    COMMENT  In Function'AppExDraw','TextDispString' is called.
+    COMMENT 
+    COMMENT  Class 130
+    COMMENT  In Function'CoolDownTimer',return value of 'CompareLimit' is 0.
+    COMMENT
+    COMMENT  Class 131
+    COMMENT  In Function'CoolDownTimer',return value of 'CompareLimit' is 1.
+    COMMENT
+    COMMENT  Class 132
+    COMMENT  In Function'CoolDownTimer',result of logical AND of NOT of Inside_n1 and  value of 'CompareLimit' is TRUE.
+    COMMENT
+    COMMENT  Class 133
+    COMMENT  In Function'CoolDownTimer',result of logical AND of NOT of Inside_n1 and  value of 'CompareLimit' is FALSE.
+    COMMENT
+    COMMENT  Class 134
+    COMMENT  In Function'CoolDownTimer',Cool_down_select is equal to TRUE.
+    COMMENT
+    COMMENT  Class 135
+    COMMENT  In Function'CoolDownTimer',Cool_down_select is equal to FALSE.
+    COMMENT
+    COMMENT  Class 136
+    COMMENT  In Function'CoolDownTimer',Inside_n1 is equal to TRUE.
+    COMMENT
+    COMMENT  Class 137
+    COMMENT  In Function'CoolDownTimer',Inside_n1 is equal to FALSE.
+    COMMENT
+    COMMENT  Class 138
+    COMMENT  In Function'CoolDownTimer','CoolTimerStart'is called.
+    COMMENT
+    COMMENT  Class 139
+    COMMENT  In Function'CoolDownTimer','TextBoxOn'is called.
+    COMMENT
+    COMMENT  Class 140
+    COMMENT  In Function'CoolDownTimer','TextBoxOff'is called.
+    COMMENT
+    COMMENT  Class 141
+    COMMENT  In Function'CoolDownTimer','CoolTimerStop'is called.
+    COMMENT
+    COMMENT  Class 142
+    COMMENT  In Function'CoolDownTimer','CoolTimerReset'is called.
+    COMMENT
+    COMMENT  Class 143
+    COMMENT  In Function'CoolDownTimer',r of wdog_data of Auto_cool_down_tmr is equal to ONE. 
+    COMMENT
+    COMMENT  Class 144
+    COMMENT  In Function'CoolDownTimer',r of wdog_data of Auto_cool_down_tmr is not equal to ONE. 
+    COMMENT
+    COMMENT  Class 145
+    COMMENT  In Function'CoolDownTimer',stat of acdt_reading of Auto_cool_down_tmr is less than PARAM_BAD.
+    COMMENT     
+    COMMENT  Class 146
+    COMMENT  In Function'CoolDownTimer',stat of acdt_reading of Auto_cool_down_tmr is greater than PARAM_BAD.
+    COMMENT 
+    COMMENT  Class 147
+    COMMENT  In Function'CoolDownTimer',stat of acdt_reading of Auto_cool_down_tmr is equal than PARAM_BAD.
+    COMMENT 
+    COMMENT  Class 148
+    COMMENT  In Function'CoolDownTimer',Acdt_flag is TRUE
+    COMMENT 
+    COMMENT  Class 149
+    COMMENT  In Function'CoolDownTimer',Acdt_flag is FALSE
+    COMMENT 
+    COMMENT  Class 150
+    COMMENT  In Function'CoolDownTimer',stat of wdog_data of Auto_cool_down_tmr is less than PARAM_BAD.
+    COMMENT
+    COMMENT  Class 151
+    COMMENT  In Function'CoolDownTimer',stat of wdog_data of Auto_cool_down_tmr is greater than PARAM_BAD.
+    COMMENT
+    COMMENT  Class 152
+    COMMENT  In Function'CoolDownTimer',stat of wdog_data of Auto_cool_down_tmr is equal than PARAM_BAD.
+    COMMENT
+    COMMENT  Class 153
+    COMMENT  In Function'AppDraw1',splash done is equal to zero
+    COMMENT
+    COMMENT  Class 154
+    COMMENT  In Function'AppDraw1',splash done is not equal to zero
+    COMMENT
+    COMMENT  Class 155
+    COMMENT  In Function'AppDraw1','TextBoxOff' is called.
+    COMMENT
+    COMMENT  Class 156
+    COMMENT  In Function'AppDraw1',Page_cas is equal to one
+    COMMENT
+    COMMENT  Class 157
+    COMMENT  In Function'AppDraw1',Page_cas is not equal to one
+    COMMENT
+    COMMENT  Class 158
+    COMMENT  In Function'AppDraw1',Cas_wog_data_recieved is TRUE
+    COMMENT
+    COMMENT  Class 159
+    COMMENT  In Function'AppDraw1',Cas_wog_data_recieved is FALSE
+    COMMENT
+    COMMENT  Class 160
+    COMMENT  In Function'AppDraw1',Cas_data_recieved is TRUE
+    COMMENT
+    COMMENT  Class 161
+    COMMENT  In Function'AppDraw1',Cas_data_recieved is FALSE
+    COMMENT
+    COMMENT  Class 162
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 163
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 164
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx is equal to PARAM_BAD
+    COMMENT
+    COMMENT  Class 165
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+1 is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 166
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+1 is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 167
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+1 is equal to PARAM_BAD
+    COMMENT
+    COMMENT  Class 168
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+2 is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 169
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+2 is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 170
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+2 is equal to PARAM_BAD
+    COMMENT 
+    COMMENT  Class 171
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+3 is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 172
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+3 is greater to PARAM_BAD
+    COMMENT
+    COMMENT  Class 173
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+3 is equal to PARAM_BAD
+    COMMENT     
+    COMMENT  Class 174
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+4 is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 175
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+4 is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 176
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+4 is equal to PARAM_BAD
+    COMMENT 
+    COMMENT  Class 177
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+5 is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 178
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+5 is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 179
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+5 is equal to PARAM_BAD
+    COMMENT
+    COMMENT  Class 180
+    COMMENT  In Function'AppDraw1',stat of wog_data of Auto_cool_down_tmr is less than PARAM_BAD
+    COMMENT 
+    COMMENT  Class 181
+    COMMENT  In Function'AppDraw1',stat of wog_data of Auto_cool_down_tmr is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 182
+    COMMENT  In Function'AppDraw1',stat of wog_data of Auto_cool_down_tmr is equal to PARAM_BAD
+    COMMENT
+    COMMENT  Class 183
+    COMMENT  In Function'AppDraw1','CasDisplay' is called ,
+    COMMENT
+    COMMENT  Class 184
+    COMMENT  In Function'AppDraw1',7th bit of page_menu of page_settings is equal to one.
+    COMMENT
+    COMMENT  Class 185
+    COMMENT  In Function'AppDraw1',7th bit of page_menu of page_settings is not equal to one.
+    COMMENT
+    COMMENT  Class 186
+    COMMENT  In Function'AppDraw1','FlightTimer' is called.
+    COMMENT
+    COMMENT  Class 187
+    COMMENT  In Function'AppDraw1','CoolDownTimer' is called.
+    COMMENT
+    COMMENT  Class 188
+    COMMENT  In Function'AppDraw1',Acdt_flag is TRUE    
+    COMMENT
+    COMMENT  Class 189
+    COMMENT  In Function'AppDraw1',Acdt_flag is FALSE   
+    COMMENT
+    COMMENT  Class 190
+    COMMENT  In Function'AppDraw1','AppExDraw' is called.
+    COMMENT 
+    COMMENT  Class 191
+	COMMENT  In Function'GrappApp',Button sRE.twist is true.
+    COMMENT
+    COMMENT  Class 192
+	COMMENT  In Function'GrappApp',Button sRE.twist is false.
+	COMMENT
+    COMMENT  Class 193
+	COMMENT  In Function'GrappApp',Button sLE.twist is true.
+    COMMENT
+    COMMENT  Class 194
+	COMMENT  In Function'GrappApp',Button sLE.twist is false.	
+	COMMENT 
+    COMMENT  Class 195
+	COMMENT  In Function'GrappApp',Button Splash_b1_press is true.
+    COMMENT
+    COMMENT  Class 196
+	COMMENT  In Function'GrappApp',Button Splash_b1_press is false.
+    COMMENT
+    COMMENT  Class 197
+    COMMENT  In Function'GrappApp', Set_new_page is TRUE.
+    COMMENT
+	COMMENT  Class 198
+    COMMENT  In Function'GrappApp', Set_new_page is FALSE.
+    COMMENT
+    COMMENT  Class 199
+	COMMENT  In function'GrappApp', counter_airframe value is greater than AIFRAME_CHECK_SEC
+    COMMENT
+    COMMENT  Class 207
+	COMMENT  In function 'GrappApp' counter_airframe value is equall to AIFRAME_CHECK_SEC
+	COMMENT 
+    COMMENT  Class 201
+	COMMENT  In function 'GrappApp' counter_airframe value is less than AIFRAME_CHECK_SEC
+    COMMENT
+	COMMENT  Class 204
+    COMMENT  The function 'GrappApp' calls the function 'ProcessAirframeInfoWords'
+	COMMENT
+	COMMENT  Class 205
+    COMMENT  In function 'GrappApp' Demo_mode_activate is true
+	COMMENT	
+	COMMENT  Class 206
+    COMMENT  In function 'GrappApp' Demo_mode_activate is false
+	COMMENT
+    COMMENT  Class 208
+    COMMENT  In Function'GrappApp',Splash_timer is greater than SPLASH_TIME.
+	COMMENT
+	COMMENT  Class 209
+    COMMENT  In Function'GrappApp',Button b10 is true.
+	COMMENT
+    COMMENT  Class 210
+    COMMENT  In Function'GrappApp',Button b11 is true.
+	COMMENT
+    COMMENT  Class 211
+    COMMENT  In Function'GrappApp',Button b12 is true.
+	COMMENT
+    COMMENT  Class 212
+    COMMENT  In Function'GrappApp',Button b13 is true.	
+	COMMENT
+    COMMENT  Class 213
+    COMMENT  In Function'GrappApp',Button b10 is false.
+	COMMENT
+    COMMENT  Class 214
+    COMMENT  In Function'GrappApp',Button b11 is false.
+	COMMENT
+    COMMENT  Class 215
+    COMMENT  In Function'GrappApp',Button b12 is false.
+	COMMENT
+    COMMENT  Class 216
+    COMMENT  In Function'GrappApp',Button b13 is false.		
+	COMMENT
+    COMMENT  Class 217
+    COMMENT  In Function'GrappApp',The function CrcPages is called
+	COMMENT
+    COMMENT  Class 218
+    COMMENT  In Function'GrappInit',The function GlobalExtract is called	
+	COMMENT
+    COMMENT  Class 219
+    COMMENT  In Function'GrappApp',Bitmap_crc_check_bit with index Page_num is equal to FALSE	
+	COMMENT
+    COMMENT  Class 220
+    COMMENT  In Function'GrappApp',Bitmap_crc_check_bit with index Page_num is equal to TRUE
+	COMMENT
+    COMMENT  Class 221
+    COMMENT  In Function'CarrotGraphInit',Call the function CarrotGraphAllocat with cg_list as its function parameter,
+	COMMENT
+    COMMENT  Class 222
+    COMMENT  In Function'TextInit',Call the function TextAllocatPdi
+	COMMENT
+    COMMENT  Class 223
+    COMMENT  In Function'TextBoxPdiInit',Call the function TextBoxPdiAllocate with cg_list as its function parameter,		
+	COMMENT
+    COMMENT  Class 224
+    COMMENT  In Function'ScaleRead',Call the function ScuRTDGetParam 
+	COMMENT
+    COMMENT  Class 225
+    COMMENT  In Function'ScaleRead',scu_enable of Config_data is TRUE
+	COMMENT
+    COMMENT  Class 226
+    COMMENT  In Function'ScaleRead',scu_enable of Config_data is FALSE  
+	COMMENT
+    COMMENT  Class 227
+    COMMENT  In Function'ScaleRead',Call the function AppExTimerDraw  
+	COMMENT
+    COMMENT  Class 228
+    COMMENT  In Function'ScaleRead',scu_enable of Ex_timer_error is ZERO
+	COMMENT
+    COMMENT  Class 229
+    COMMENT  In Function'ScaleRead',scu_enable of Ex_timer_error is not ZERO   
+	COMMENT
+    COMMENT  Class 230
+    COMMENT  In Function'ScaleRead',Call the function OffsideFuelFlow 
+	COMMENT
+    COMMENT Invalid Class(es)   
+    COMMENT
+    COMMENT None
+    COMMENT
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hdudispfgrapp_c
+
+        #void CasDisplay(); 
+
+        #void CoolTimerReset(void); 
+
+        #void CoolTimerStop(void); 
+
+        #void TextBoxOn(T_STEXTBOXDATA _in *ps_this_box); 
+
+        #void CoolTimerStart(void); 
+
+        #void PageMenu(T_EPAGE_NUM _no back_grnd_page_num)
+        #{
+        #PTU_e_page_temp=back_grnd_page_num;
+        #}
+
+        #T_UINT32 SaveStatusReg(void); 
+
+        #void RestoreStatusReg(T_UINT32 _in U32_critical_sr);
+
+        #void MenuInit(); 
+
+        #void OsTimeDly(T_UWORD _in ticks); 
+
+        #void OffsideSwitchScreen(T_UINT8 _in u8_page_num); 
+
+        #void PageExtract(T_UINT8 _in *address);
+
+        #void TimerInstall( volatile T_TIMER _no *timer)
+        #{
+        #PTU_count++;
+        #if(PTU_count==1)
+        #{
+        #timer=&PTU_Splash_timer;
+        #}
+        #else if(PTU_count==2)
+        #{
+        #timer=&PTU_cool_timer;
+        #}
+        #} 
+
+        #void TextBoxOff(T_STEXTBOXDATA _in *ps_this_box); 
+
+        #void ExceedExtract(T_UINT8 _in *address);
+
+        #void PdiPageDataInit(T_UINT8 _in page_num);
+
+        #void ForegroundLoadBackground(const T_UINT16 _in *pu16Src);
+
+
+        #void ForegroundClear(void); 
+
+        #void LCDBackgroundOff(); 
+
+        #void PwmBlink();
+
+        #void NumboxAllocat(T_SNUMBOXDEF _in *psNumBoxDef); 
+
+        #void BargraphAllocat(T_SBARGRAPHDEF _in *psBarGraphDef); 
+
+        #void RoundDialAllocat(T_ROUNDDIALDEF _in *round_dial_def); 
+
+		#void CarrotGraphAllocat(T_CARROTGRAPHDEF  _in *carrot_graph_def);
+				
+		#void TextBoxPdiAllocate(T_STEXTBOXPDIDATA  _in *ps_this_box);		
+		
+		#void TextAllocatPdi(T_PTEXT  _in *pps_handle_add, T_UINT8  _no *pu8_string, T_UINT16  _in u16_x0, T_UINT16  _in u16_y0, T_ETXALIGN  _in e_tx_align, T_ETXFONT  _in e_tx_font, T_EPENCOLOR  _in e_pen_color, T_ETXV  _in e_txv, T_ETXFLASH  _in e_tx_flash)
+		#{
+		# pu8_string = &PTU_pu8_string;
+		#}
+		#
+		
+        #void TextDispString(char _no *pc_string[200], T_UINT16 _in u16_x, T_UINT16 _in u16_y, T_ETXFONT _in e_tx_font,
+        #  T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv, T_ETXALIGN _in e_tx_align)
+        #{
+        #pc_string=&PTU_pc_string;
+        #}
+
+        #T_INT8* BinasByteFormatInfo(void _no *src, T_UINT16 _in format, T_INT8 _no *dest)
+        #{
+        #PTU_src[PTU_index]=*((T_UINT32 *)src);
+        #*dest=PTU_dest[PTU_index];
+        #PTU_index++;
+        #}
+
+        #void RTDGetParamDdw(T_UINT16 _in a429_tag, T_PARAM_READING _no *ps_dest)
+        #{
+        #ps_dest = (T_PARAM_READING *)&PTU_parameters[PTU_index1];
+        #}
+
+        #void RTDGetParam(T_UINT16 _in a429_tag, T_PARAM_READING _no *ps_dest)
+        #{
+        #PTU_index1++;
+        #if(PTU_index1==1)
+        #{
+        #ps_dest = &PTU_parameters[PTU_index1];
+        #}
+        #else 
+        #ps_dest = &PTU_parameters_numbox[PTU_index1];
+        #}
+
+        #T_CHAR *dummyfunc()
+        #{
+        --# return (T_CHAR *)&PTU_char[0];
+        #}
+        
+        #void OffsideCoolTimer(T_UINT8 _in cool_timer_state);
+        
+        #void GlobalSettingsSetEIU(T_EIU eiu);
+		
+		#void ProcessAirframeInfoWords(void);
+		
+		#void CrcPages(T_EPAGE_NUM  _in page_count);
+		
+		#void GlobalExtract(T_UINT8  _in *address);		
+		
+        #void RterrWidget(T_CHAR _no *pc_file, T_INT32 _in s32_line_number, T_CHAR _no *pc_message)
+        #{
+        #   for(index1 = 0; index1<50;   index1++)
+        #   {
+        #    PTU_rterr_file[index1]=*(T_CHAR *)pc_file;
+        #    pc_file++;
+        #    PTU_rterr_message[index1]=*(T_CHAR *)pc_message;
+        #    pc_message++;
+        #   }
+        #}		
+
+		#void ScuRTDGetParam(T_UINT16  _in a429_tag, T_PARAM_READING  _inout ps_dest, T_A429_DATA_TYPE  _in a429_type);			
+  
+		#void OffsideFuelFlow(T_UINT8  _in Fuel_flow_state); 	
+		
+		#void MemCpy(void * _in p_dest,  const void * _in p_src, T_UINT16  _in count);	
+
+        #void AppExTimerDraw(void);		
+  
+    END DEFINE
+    
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+    
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfgrapp.c
+
+--ENVIRONMENT ENV_hdudispfgrapp_c
+--
+--   None
+--
+--END ENVIRONMENT -- ENV_hdudispfgrapp_c
+-- 
+--USE ENV_hdudispfgrapp_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service GrappInit
+--------------------------------------------------------------------------------
+SERVICE GrappInit
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT [hdudispfgrapp-GrappInit-DB-LLR-001]
+    COMMENT The function 'GrappInit'calls 'TimerInstall' with reference to Splash timer as its parameter.
+    COMMENT  Equivalence Class 1
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappInit-DB-LLR-002]
+    COMMENT The function 'GrappInit'calls 'TimerInstall' with reference to to Cool_timer as its parameter and
+	COMMENT 'GlobalExtract' with reference to to GLOBAL_SETTING_ADDRESS as its parameter
+    COMMENT  Equivalence Class 1,218
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappInit-DB-LLR-003]
+    COMMENT The function 'GrappInit' does the following
+    COMMENT a)call the function PageExtract with parameter (sum of FOREGROUND_SETTING_ADDRESS and
+    COMMENT  (SECTOR_SIZE multiflied by 19)) to extract  page settings from pdi.
+    COMMENT b)call the function ForegroundLoadBackground with (sum of BG_IMAGE_ADDR and (page_num of Page_settings
+    COMMENT multiplied by PAGE_BITMAP_NUM_OF_SECTOR multiplied by SECTOR_SIZE)) as its parameter, when page_num 
+    COMMENT of Page_settings is not equal to zero.
+    COMMENT  Equivalence Class 2,3
+    COMMENT  </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            
+            VAR Page_settings.page_num,             init = 1,                       ev = init
+			
+            --VAR Bitmap_crc_check_bit[19],           init = TRUE,                    ev = init
+                        
+        COMMENT INPUT/OUTPUT SECTION:
+                                
+            --None  
+            
+        COMMENT OUTPUT SECTION:
+                                
+            VAR PTU_Splash_timer,                   init = 0,                       ev = init
+            
+            VAR PTU_cool_timer,                     init = 0,                       ev = init
+                    
+        -- Stub Calls:
+                                    
+        SIMUL
+            
+            --TimerInstall is called to increment the timer
+            STUB TimerInstall()
+            
+            --TimerInstall is called to increment the timer
+            STUB TimerInstall()
+            
+            --To load the background
+            STUB ForegroundLoadBackground((T_UINT16 *)(BG_IMAGE_ADDR+(Page_settings.page_num *
+              &                             PAGE_BITMAP_NUM_OF_SECTOR*SECTOR_SIZE)))
+            
+            --
+            STUB PageExtract((T_UINT8 *)(FOREGROUND_SETTING_ADDRESS+(19*SECTOR_SIZE)))
+			
+			STUB GlobalExtract((T_UINT8 *)GLOBAL_SETTING_ADDRESS)
+			
+			--STUB CrcPages(EPAGE19)
+                                
+        END SIMUL
+                                
+        -- Calling the Unit Under Test
+        #GrappInit();
+        
+     END ELEMENT
+
+ END TEST -- TEST 1
+ 
+ TEST 2
+ FAMILY nominal
+ 
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT  [hdudispfgrapp-GrappInit-DB-LLR-003]
+    COMMENT  The function 'GrappInit' sets splash timer to SPLASH_TIME when page_num of Page_settings is  equal to zero
+    COMMENT  Equivalence Class 4
+    COMMENT  Note: Static variable splash timer is been verified in GrappApp Test Case 30
+    COMMENT  </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            
+            VAR Page_settings.page_num,             init = 0,                       ev = init
+            
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                                
+            --None  
+            
+        COMMENT OUTPUT SECTION:
+                                
+            VAR PTU_Splash_timer,                   init = 0,                       ev = init
+            
+            VAR PTU_cool_timer,                     init = 0,                       ev = init
+            
+        -- Stub Calls:
+                                    
+        SIMUL
+            
+            --TimerInstall is called to increment the timer
+            STUB TimerInstall()
+            
+            --TimerInstall is called to increment the timer
+            STUB TimerInstall()
+            
+            --
+            STUB PageExtract((T_UINT8 *)(FOREGROUND_SETTING_ADDRESS+(19*SECTOR_SIZE)))
+			
+			STUB GlobalExtract((T_UINT8 *)GLOBAL_SETTING_ADDRESS)
+                                
+        END SIMUL
+                                
+         -- Calling the Unit Under Test
+         #GrappInit();
+         
+      END ELEMENT
+ 
+ END TEST -- TEST 2
+
+
+END SERVICE -- GrappInit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service GrappSwithcScreens
+--------------------------------------------------------------------------------
+SERVICE GrappSwithcScreens
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_EPAGE_NUM e_new_page_num;
+#T_PARAM_READING  PTU_psParam,PTU_psParam1,PTU_psParam2;
+#T_LOOKUP_TABLE   PTU_psGeometry;
+#T_SDISREGION     PTU_psDisRegion,PTU_psDisRegion1,PTU_psDisRegion2;  
+#T_PSBARGRAPH     PTU_psbargraph;
+#T_PSNUMBOX       PTU_psNumBox,PTU_psNumBox1;
+
+
+#PTU_temp11[0] = 1;
+#PTU_char[0]= &PTU_temp11[0];
+
+ENVIRONMENT ENV_GrappSwithcScreens
+
+    VAR e_new_page_num,     init = EPAGE0,      ev = init
+    
+END ENVIRONMENT -- ENV_GrappSwithcScreens
+
+    USE ENV_GrappSwithcScreens
+
+TEST 1
+FAMILY nominal
+    
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT  [hdudispfgrapp-GrappSwithcScreens-DB-LLR-001]
+    COMMENT  The function 'GrappSwithcScreens' returns when e_new_page_num is equal to Page_num.
+    COMMENT  Equivalence Class 5
+    COMMENT  </TD>
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+        
+            --Input page number
+            VAR e_new_page_num,                 init = EPAGE1,                      ev = init 
+            
+            --Page number
+            VAR Page_num,                       init = EPAGE1,                      ev = init 
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            --None
+                
+        COMMENT OUTPUT SECTION:
+        
+            --None
+            
+        -- Stub Calls:
+        SIMUL
+                
+            --None  
+                
+        END SIMUL 
+        
+        -- Calling the Unit Under Test 
+        #GrappSwithcScreens(e_new_page_num);
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>   
+    COMMENT [hdudispfgrapp-GrappSwithcScreens-DB-LLR-001]
+    COMMENT The function 'GrappSwithcScreens' does nothing when e_new_page_num is not equal to Page_num.
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappSwithcScreens-DB-LLR-002]
+    COMMENT The function 'GrappSwithcScreens' does the following
+    COMMENT 1)  set Page_num to e_new_page_num.
+    COMMENT 2)  call the function PwmBlink
+    COMMENT 3)  call the function LCDBackgroundOff
+    COMMENT
+    COMMENT Equivalence Class 4,7,8
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappSwithcScreens-DB-LLR-003]
+    COMMENT The function 'GrappSwithcScreens' calls the 'ForegroundClear' to clear the foreground.
+    COMMENT Equivalence Class 9
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappSwithcScreens-DB-LLR-004]
+    COMMENT The function 'GrappSwithcScreens' calls the 'ForegroundLoadBackground' with sum of BG_IMAGE_ADDR and product 
+    COMMENT of Page_num and PAGE_BITMAP_NUM_OF_SECTOR and SECTOR_SIZE as its function parameter.
+    COMMENT Equivalence Class 10
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappSwithcScreens-DB-LLR-005]
+    COMMENT The function 'GrappSwithcScreens' calls 'PdiPageDataInit' with Page_num as its function parameter
+    COMMENT Equivalence Class 11
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappSwithcScreens-DB-LLR-006]
+    COMMENT The function 'GrappSwithcScreens' calls 'ExceedExtract' with sum of PAGE_EXCEEDANCE_ADDR and product of Page_num 
+    COMMENT A429_DATA_SIZE and MAX_A429_DATA as its function parameters.
+    COMMENT Equivalence Class 12
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappSwithcScreens-DB-LLR-007]
+    COMMENT The function 'GrappSwithcScreens' calls 'RoundDialsInit' with Ap_page0_dials as its parameter to 
+    COMMENT initialize the round dail
+    COMMENT Equivalence Class 13
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappSwithcScreens-DB-LLR-008]
+    COMMENT The function 'GrappSwithcScreens' calls NumberBoxInit  with Page_num_boxes as its parameter to initialize 
+    COMMENT the number box.
+    COMMENT Equivalence Class 14
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappSwithcScreens-DB-LLR-009]
+    COMMENT The function 'GrappSwithcScreens' calls BarGraphInit with Ap_page1_bar_graphs as its parameter to initialize
+    COMMENT the bar graphs.
+    COMMENT Equivalence Class 15
+    COMMENT
+    COMMENT [hdudispfgrapp-GrappSwithcScreens-DB-LLR-010]
+    COMMENT The function 'GrappSwithcScreens' does the following,
+    COMMENT a) Call function 'TextBoxOff' with reference to Prim_cool_down_pop_up_box as parameter.
+    COMMENT b) Set s16ULX of Prim_cool_down_pop_up_box to u16_x of acdt_axis of Page_settings minus COOLDOWN_AXIS_CALIBRATION, 
+    COMMENT Set s16ULY of Prim_cool_down_pop_up_box to u16_y of acdt_axis of Page_settings minus COOLDOWN_AXIS_CALIBRATION and 
+    COMMENT call function 'TextBoxInit' with reference to Prim_cool_down_pop_up_box as parameter if acdt_flag of Page_settings 
+    COMMENT is TRUE.
+    COMMENT Equivalence Class 16,17
+    COMMENT
+    COMMENT  </TD>
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+        
+            --Input page number
+            VAR e_new_page_num,                                     init = EPAGE0,                      ev = init 
+            
+            --Counter used to loop
+            VAR Rd_cnt,                                             init = 1,                           ev = init
+            
+            --Counter used to loop
+            VAR Bg_cnt,                                             init = 1,                           ev = init
+            
+            --Counter used to loop
+            VAR Nb_cnt,                                             init = 1,                           ev = init
+			
+			VAR Cg_cnt,                                         init = 1,               ev = init
+            VAR Text_cnt,                                         init = 1,               ev = init
+            VAR Tb_cnt,                                         init = 1,               ev = init
+            
+            --flag of page setting
+            VAR Acdt_flag,                                          init = TRUE,                        ev = init
+            
+            --X-Axis of the Bottom Center of Bar graph
+            VAR Page_settings.acdt_axis.u16_x,                      init = 50,                          ev = init
+        
+            --Y-Axis of the Bottom Center of Bar graph
+            VAR Page_settings.acdt_axis.u16_y,                      init = 50,                          ev = init
+            
+            VAR Ap_page0_dials[0..29].psParam,                      init = &PTU_psParam,                ev = init
+            
+            VAR Ap_page0_dials[0..29].psGeometry,                   init = &PTU_psGeometry,             ev = init
+            
+            VAR Ap_page0_dials[0..29].psDisRegion,                  init = &PTU_psDisRegion,            ev = init
+            
+            VAR Page_num_boxes[0..29].psParam,                      init = &PTU_psParam1,               ev = init
+            
+            ARRAY Page_num_boxes[0..29].psDisRegion,                init = &PTU_psDisRegion1,           ev = init
+            
+            ARRAY Page_num_boxes[0..29].psNumBox,                   init = &PTU_psNumBox,               ev = init
+            
+            ARRAY Ap_page1_bar_graphs[0..29].psParam,               init = &PTU_psParam2,               ev = init
+            
+            ARRAY Ap_page1_bar_graphs[0..29].psDisRegion,           init = &PTU_psDisRegion2,           ev = init
+            
+            ARRAY Ap_page1_bar_graphs[0..29].psbargraph,            init = &PTU_psNumBox1,              ev = init
+            
+            VAR Prim_cool_down_pop_up_box.fill,                     init = &dummyfunc,                 ev = init
+        
+            
+        COMMENT INPUT/OUTPUT SECTION:
+        
+                --Page number
+                VAR Page_num,                                       init = EPAGE1,                      ev = EPAGE0
+            
+            
+        COMMENT OUTPUT SECTION:
+        
+            --
+            VAR Prim_cool_down_pop_up_box.s16ULX,               init = 0,                                   ev = 5
+
+            --
+            VAR Prim_cool_down_pop_up_box.s16ULY,               init = 0,                                   ev = 5
+            
+        -- Stub Calls:
+        SIMUL
+        
+            --clears the foreground
+            STUB ForegroundClear()
+            
+            --loads the background
+            STUB ForegroundLoadBackground((T_UINT16 *)(BG_IMAGE_ADDR+(EPAGE0*PAGE_BITMAP_NUM_OF_SECTOR*SECTOR_SIZE)))
+            
+            --extracts page wise settings from PDI
+            STUB PdiPageDataInit(EPAGE0)
+            
+            --extract the exceedance data from NOR flash
+            STUB ExceedExtract((T_UINT8 *)(PAGE_EXCEEDANCE_ADDR+(EPAGE0*MAX_A429_DATA*A429_DATA_SIZE)))
+                
+            --Allocate a single round dial
+            STUB RoundDialAllocat(Ap_page0_dials)   
+            
+            --Allocates number box structure
+            STUB NumboxAllocat(Page_num_boxes)
+            
+            --Allocates number box structure
+            STUB BargraphAllocat(Ap_page1_bar_graphs)
+			
+			--Allocates Carrot Graph structure
+			STUB CarrotGraphAllocat (Ap_page2_carrot)
+				
+			--Allocates Text structure
+			STUB TextAllocatPdi(&Page_txt[0].ppsOwner,Page_txt[0].u16X0,Page_txt[0].u16Y0,Page_txt[0].eTXAlign,Page_txt[0].eTXFont,Page_txt[0].ePenColor,Page_txt[0].eTXV,Page_txt[0].eTXFlash)
+				
+			--Allocates Text Box structure
+			STUB TextBoxPdiAllocate (Ap_page_tbs)			
+            
+            --disables the text box
+            STUB TextBoxOff(&Prim_cool_down_pop_up_box)
+            
+            --turns off the back light for 1/10 second
+            STUB PwmBlink()
+            
+            --turns off the background
+            STUB LCDBackgroundOff()
+            
+        END SIMUL 
+        
+        --Calling the Unit Under Test 
+        #GrappSwithcScreens(e_new_page_num);
+        
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+    
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT  [hdudispfgrapp-GrappSwithcScreens-DB-LLR-010]
+    COMMENT  The function 'GrappSwithcScreens' does nothing when acdt_flag of Page_settings is not TRUE
+    COMMENT  Equivalence Class 18
+    COMMENT  </TD>
+
+    ELEMENT
+        
+            COMMENT INPUT SECTION:
+            
+                --Input page number
+                VAR e_new_page_num,                                     init = EPAGE0,                      ev = init 
+                
+                --Counter used to loop
+                VAR Rd_cnt,                                             init = 1,                           ev = init
+                
+                --Counter used to loop
+                VAR Bg_cnt,                                             init = 1,                           ev = init
+                
+                --Counter used to loop
+                VAR Nb_cnt,                                             init = 1,                           ev = init
+                
+                --flag of page setting
+                VAR Acdt_flag,                                          init = FALSE,                       ev = init
+                
+                --X-Axis of the Bottom Center of Bar graph
+                VAR Page_settings.acdt_axis.u16_x,                      init = 50,                          ev = init
+            
+                --Y-Axis of the Bottom Center of Bar graph
+                VAR Page_settings.acdt_axis.u16_y,                      init = 50,                          ev = init
+                
+                VAR Ap_page0_dials[0..29].psParam,                      init = &PTU_psParam,                ev = init
+                
+                VAR Ap_page0_dials[0..29].psGeometry,                   init = &PTU_psGeometry,             ev = init
+                
+                VAR Ap_page0_dials[0..29].psDisRegion,                  init = &PTU_psDisRegion,            ev = init
+                
+                VAR Page_num_boxes[0..29].psParam,                      init = &PTU_psParam1,               ev = init
+                
+                ARRAY Page_num_boxes[0..29].psDisRegion,                init = &PTU_psDisRegion1,           ev = init
+                
+                ARRAY Page_num_boxes[0..29].psNumBox,                   init = &PTU_psNumBox,               ev = init
+                
+                ARRAY Ap_page1_bar_graphs[0..29].psParam,               init = &PTU_psParam2,               ev = init
+                
+                ARRAY Ap_page1_bar_graphs[0..29].psDisRegion,           init = &PTU_psDisRegion2,           ev = init
+                
+                ARRAY Ap_page1_bar_graphs[0..29].psbargraph,            init = &PTU_psNumBox1,              ev = init
+                
+                VAR Prim_cool_down_pop_up_box.fill,                     init = &dummyfunc,                 ev = init
+            
+                
+            COMMENT INPUT/OUTPUT SECTION:
+            
+                    --Page number
+                    VAR Page_num,                                       init = EPAGE1,                      ev = EPAGE0
+                
+                
+            COMMENT OUTPUT SECTION:
+            
+                --None
+                
+            -- Stub Calls:
+            SIMUL
+            
+                --clears the foreground
+                STUB ForegroundClear()
+                
+                --loads the background
+                STUB ForegroundLoadBackground((T_UINT16 *)(BG_IMAGE_ADDR+(EPAGE0*PAGE_BITMAP_NUM_OF_SECTOR*SECTOR_SIZE)))
+                
+                --extracts page wise settings from PDI
+                STUB PdiPageDataInit(EPAGE0)
+                
+                --extract the exceedance data from NOR flash
+                STUB ExceedExtract((T_UINT8 *)(PAGE_EXCEEDANCE_ADDR+(EPAGE0*MAX_A429_DATA*A429_DATA_SIZE)))
+                    
+                --Allocate a single round dial
+                STUB RoundDialAllocat(Ap_page0_dials)   
+                
+                --Allocates number box structure
+                STUB NumboxAllocat(Page_num_boxes)
+                
+                --Allocates number box structure
+                STUB BargraphAllocat(Ap_page1_bar_graphs)
+				
+				--Allocates Carrot Graph structure
+				STUB CarrotGraphAllocat (Ap_page2_carrot)
+				
+				--Allocates Text structure
+				STUB TextAllocatPdi(&Page_txt[0].ppsOwner,Page_txt[0].u16X0,Page_txt[0].u16Y0,Page_txt[0].eTXAlign,Page_txt[0].eTXFont,Page_txt[0].ePenColor,Page_txt[0].eTXV,Page_txt[0].eTXFlash)
+				
+				--Allocates Text Box structure
+				STUB TextBoxPdiAllocate (Ap_page_tbs)
+                
+                --disables the text box
+                STUB TextBoxOff(&Prim_cool_down_pop_up_box)
+                
+                --turns off the back light for 1/10 second
+                STUB PwmBlink()
+                
+                --turns off the background
+                STUB LCDBackgroundOff()
+                
+            END SIMUL 
+            
+            -- Calling the Unit Under Test 
+            #GrappSwithcScreens(e_new_page_num);
+            
+        END ELEMENT
+
+
+END TEST -- TEST 3
+
+END SERVICE -- GrappSwithcScreens
+
+--------------------------------------------------------------------------------
+-- Declaration of the service ExmonCheck
+--------------------------------------------------------------------------------
+SERVICE ExmonCheck
+SERVICE_TYPE extern
+
+#T_PARAM_READING PTU_param,PTU_param1;
+
+TEST 1
+FAMILY nominal
+    
+    COMMENT  <TD>
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-001]
+    COMMENT The function 'ExmonCheck' loops for 1 time from loop index 0 till loop index is less than Bg_cnt and for 
+    COMMENT each it loop does the following:
+    COMMENT 1.Does the following if stat of psParam of Ap_page1_bar_graphs with array index as loop index 
+    COMMENT is less than PARAM_BAD.
+    COMMENT a)  For each counter from 0 till less than numLimit of Ap_page1_bar_graphs with array index as
+    COMMENT loop counter do the following.
+    COMMENT - Call the function CompareLimit with below parameters.
+    COMMENT 1.Member fread of psParam of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT 2.Member limVal with index as counter of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT 3.Member limValtype with index as counter of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT - Set ePenColor of Ap_page1_bar_graphs with index as loop counter to limColor with index counter of
+    COMMENT Ap_page1_bar_graphs with index as loop counter if the return value from function CompareLimit is equal to 1. 
+    COMMENT b)  Set stat of psParam of Ap_page1_bar_graphs with index as loop counter to PARAM_CAUTION if ePenColor of 
+    COMMENT Ap_page1_bar_graphs with index as loop counter is equal to YELLOW.
+    COMMENT 
+    COMMENT Equivalence Class 44,47,49  
+    COMMENT
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-002]
+    COMMENT The function 'ExmonCheck' loops for 1 time from loop index 0 till loop index is less than Nb_cnt and for each loop does the following:
+    COMMENT 1.Does the following if stat of psParam of PageNumBoxes with array index as loop index is less than PARAM_BAD.
+    COMMENT a)  For each counter from 0 till less than numLimit of PageNumBoxes with array index as loop counter do the following.
+    COMMENT - Call the function CompareLimit with below parameters.
+    COMMENT 1.Member fread of psParam of PageNumBoxes with array index as loop counter.
+    COMMENT 2.Member limVal with index as counter of PageNumBoxes with array index as loop counter.
+    COMMENT 3.Member limValtype with index as counter of PageNumBoxes with array index as loop counter.
+    COMMENT - Set ePenColor of PageNumBoxes with index as loop counter to limColor with index counter of PageNumBoxes 
+    COMMENT with index as loop counter if the return value from function CompareLimit is equal to 1. 
+    COMMENT b)Set stat of psParam of PageNumBoxes with index as loop counter to PARAM_CAUTION if ePenColor of PageNumBoxes
+    COMMENT with index as loop counter is equal to YELLOW.
+    COMMENT Equivalence Class 47,52,55
+    COMMENT </TD>
+    
+    ELEMENT
+     
+        COMMENT INPUT SECTION:
+            
+            --Counter value used to loop 
+            VAR Bg_cnt,                                         init = 1,                   ev = init
+            
+            --Counter value used to loop 
+            VAR Nb_cnt,                                         init = 1,                   ev = init
+            
+            --Number limit
+            VAR Ap_page1_bar_graphs[0].numLimit,                init = 1,                   ev = init   
+
+            VAR Ap_page1_bar_graphs[0].psParam,                 init = &PTU_param,          ev = init
+            
+            --value of the channel 
+            VAR PTU_param.fread,                                init = 1,                   ev = init
+            
+            --limit value
+            VAR Ap_page1_bar_graphs[0].limVal[0],               init = 1,                   ev = init   
+            
+            --limit value type
+            VAR Ap_page1_bar_graphs[0].limValtype[0],           init = EQUAL,               ev = init   
+            
+            --Color for different limits
+            VAR Ap_page1_bar_graphs[0].limColor[0],             init = YELLOW,              ev = init   
+                
+            --Color of the bargraph
+            --VAR Ap_page1_bar_graphs[0].ePenColor,               init = YELLOW,              ev = init
+			
+			VAR Ap_page1_bar_graphs[0].limType[0],				init = PARAM_CAUTION,		 ev = init
+			
+			VAR Page_num_boxes[0].limType[0],					init = PARAM_CAUTION,			ev = init
+                
+            --Number limit
+            VAR Page_num_boxes[0].numLimit,                     init = 1,                   ev = init               
+            
+            VAR Page_num_boxes[0].psParam,                      init = &PTU_param1,         ev = init
+            
+            --Parameter r driving the number
+            VAR PTU_param1.fread,                               init = 1,                   ev = init
+            
+            --limit value
+            VAR Page_num_boxes[0].limVal[0],                    init = 1,                   ev = init   
+            
+            --limit value type
+            VAR Page_num_boxes[0].limValtype[0],                init = EQUAL,               ev = init
+            
+            --Color for different limits
+            VAR Page_num_boxes[0].limColor[0],                  init = YELLOW,              ev = init   
+            
+            --Pen color
+            --VAR Page_num_boxes[0].ePenColor,                    init = YELLOW,              ev = init   
+
+        COMMENT OUTPUT SECTION:
+                                                                    
+            --Status of channel
+            VAR PTU_param.stat,                                 init = PARAM_ADVISORY,                   ev = PARAM_CAUTION  
+            
+            --Parameter stat driving the number
+            VAR PTU_param1.stat,                                init = PARAM_ADVISORY,                   ev = PARAM_CAUTION  
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                                    
+            --None  
+        SIMUL
+                    
+            --None
+            
+        END SIMUL
+        
+        --Calling the Unit Under Test 
+        #ExmonCheck();
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+    COMMENT  <TD>
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-001]
+    COMMENT The function 'ExmonCheck' loops for 2 times from loop index 0 till loop index is less than Bg_cnt and for 
+    COMMENT each it loop does the following:
+    COMMENT 1.Does the following if stat of psParam of Ap_page1_bar_graphs with array index as loop index 
+    COMMENT is less than PARAM_BAD.
+    COMMENT a)  For each counter from 0 till less than numLimit of Ap_page1_bar_graphs with array index as
+    COMMENT loop counter do the following.
+    COMMENT - Call the function CompareLimit with below parameters.
+    COMMENT 1.Member fread of psParam of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT 2.Member limVal with index as counter of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT 3.Member limValtype with index as counter of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT - Set ePenColor of Ap_page1_bar_graphs with index as loop counter to limColor with index counter of
+    COMMENT Ap_page1_bar_graphs with index as loop counter when the return value from function CompareLimit is not equal to 1. 
+    COMMENT c)  Set stat of psParam of Ap_page1_bar_graphs with index as loop counter to PARAM_WARNING if ePenColor of 
+    COMMENT Ap_page1_bar_graphs with index as loop counter is equal to RED.
+    COMMENT Equivalence Class 44,47,50
+    COMMENT
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-002]
+    COMMENT The function 'ExmonCheck' loops from loop index 0 till loop index is less than Nb_cnt and for each loop do the following:
+    COMMENT 1.Does the following if stat of psParam of PageNumBoxes with array index as loop index is less than PARAM_BAD.
+    COMMENT a)  For each counter from 0 till less than numLimit of PageNumBoxes with array index as loop counter do the following.
+    COMMENT - Call the function CompareLimit with below parameters.
+    COMMENT 1.Member fread of psParam of PageNumBoxes with array index as loop counter.
+    COMMENT 2.Member limVal with index as counter of PageNumBoxes with array index as loop counter.
+    COMMENT 3.Member limValtype with index as counter of PageNumBoxes with array index as loop counter.
+    COMMENT - Set ePenColor of PageNumBoxes with index as loop counter to limColor with index counter of PageNumBoxes 
+    COMMENT with index as loop counter when the return value from function CompareLimit is not equal to 1. 
+    COMMENT c)Set stat of psParam of PageNumBoxes with index as loop counter to PARAM_WARNING if ePenColor of PageNumBoxes
+    COMMENT with index as loop counter is equal to RED.
+    COMMENT Equivalence Class 47,52,56
+    COMMENT </TD>
+    
+    ELEMENT
+     
+        COMMENT INPUT SECTION:
+                    
+            --Counter value used to loop 
+            VAR Bg_cnt,                                         init = 1,               ev = init
+
+            --Counter value used to loop 
+            VAR Nb_cnt,                                         init = 1,               ev = init
+
+            --Number limit
+            VAR Ap_page1_bar_graphs[0].numLimit,                init = 1,               ev = init   
+
+            VAR Ap_page1_bar_graphs[0].psParam,                 init = &PTU_param,      ev = init
+
+            --value of the channel 
+            VAR PTU_param.fread,                                init = 1,               ev = init
+
+            --limit value
+            VAR Ap_page1_bar_graphs[0].limVal[0],               init = 1,               ev = init   
+
+            --limit value type
+            VAR Ap_page1_bar_graphs[0].limValtype[0],           init = EQUAL,           ev = init   
+
+            --Color for different limits
+            VAR Ap_page1_bar_graphs[0].limColor[0],             init = RED,             ev = init   
+
+            --Color of the bargraph
+            --VAR Ap_page1_bar_graphs[0].ePenColor,               init = RED,             ev = init
+			
+			VAR Ap_page1_bar_graphs[0].limType[0],				init = PARAM_WARNING,		 ev = init
+			
+			VAR Page_num_boxes[0].limType[0],					init = PARAM_WARNING,			ev = init			
+
+            --Number limit
+            VAR Page_num_boxes[0].numLimit,                     init = 1,               ev = init               
+
+            VAR Page_num_boxes[0].psParam,                      init = &PTU_param1,     ev = init
+
+            --Parameter r driving the number
+            VAR PTU_param1.fread,                               init = 1,               ev = init
+
+            --limit value
+            VAR Page_num_boxes[0].limVal[0],                    init = 1,               ev = init   
+
+            --limit value type
+            VAR Page_num_boxes[0].limValtype[0],                init = EQUAL,           ev = init
+
+            --Color for different limits
+            VAR Page_num_boxes[0].limColor[0],                  init = RED,             ev = init   
+
+            --Pen color
+            --VAR Page_num_boxes[0].ePenColor,                    init = RED,             ev = init   
+
+        COMMENT OUTPUT SECTION:
+
+            --Status of channel
+            VAR PTU_param.stat,                                 init = PARAM_ADVISORY,  ev = PARAM_WARNING  
+
+            --Parameter stat driving the number
+            VAR PTU_param1.stat,                                init = PARAM_ADVISORY,  ev = PARAM_WARNING  
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None  
+        
+        SIMUL
+        
+            --None
+
+        END SIMUL
+        
+        --Calling the Unit Under Test 
+        #ExmonCheck();
+        
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+    
+    COMMENT  <TD>
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-001]
+    COMMENT The function 'ExmonCheck' loops for 2 times from loop index 0 till loop index is less than Bg_cnt and for 
+    COMMENT each it loop does the following:
+    COMMENT 1.Does the following if stat of psParam of Ap_page1_bar_graphs with array index as loop index 
+    COMMENT is less than PARAM_BAD.
+    COMMENT a)  For each counter from 0 till less than numLimit of Ap_page1_bar_graphs with array index as
+    COMMENT loop counter do the following.
+    COMMENT - Call the function CompareLimit with below parameters.
+    COMMENT 1.Member fread of psParam of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT 2.Member limVal with index as counter of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT 3.Member limValtype with index as counter of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT - Set ePenColor of Ap_page1_bar_graphs with index as loop counter to limColor with index counter of
+    COMMENT Ap_page1_bar_graphs with index as loop counter when the return value from function CompareLimit is not equal to 1. 
+    COMMENT d)  Set stat of psParam of Ap_page1_bar_graphs with index as loop counter to PARAM_OK if ePenColor of
+    COMMENT Ap_page1_bar_graphs with index as loop counter is equal to GREEN.
+    COMMENT Equivalence Class 44,47,51
+    COMMENT
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-002]
+    COMMENT The function 'ExmonCheck' loops from loop index 0 till loop index is less than Nb_cnt and for each loop do the following:
+    COMMENT 1.Does the following if stat of psParam of PageNumBoxes with array index as loop index is less than PARAM_BAD.
+    COMMENT a)  For each counter from 0 till less than numLimit of PageNumBoxes with array index as loop counter do the following.
+    COMMENT - Call the function CompareLimit with below parameters.
+    COMMENT 1.Member fread of psParam of PageNumBoxes with array index as loop counter.
+    COMMENT 2.Member limVal with index as counter of PageNumBoxes with array index as loop counter.
+    COMMENT 3.Member limValtype with index as counter of PageNumBoxes with array index as loop counter.
+    COMMENT - Set ePenColor of PageNumBoxes with index as loop counter to limColor with index counter of PageNumBoxes 
+    COMMENT with index as loop counter when the return value from function CompareLimit is not equal to 1. 
+    COMMENT d)Set stat of psParam of PageNumBoxes with index as loop counter to PARAM_OK if ePenColor of PageNumBoxes with
+    COMMENT index as loop counter is equal to GREEN.
+    COMMENT Equivalence Class 47,52,57
+    COMMENT </TD>
+    
+    ELEMENT
+     
+        COMMENT INPUT SECTION:
+                    
+            --Counter value used to loop 
+            VAR Bg_cnt,                                         init = 1,                       ev = init
+
+            --Counter value used to loop 
+            VAR Nb_cnt,                                         init = 1,                       ev = init
+
+            --Number limit
+            VAR Ap_page1_bar_graphs[0].numLimit,                init = 1,                       ev = init   
+
+            VAR Ap_page1_bar_graphs[0].psParam,                 init = &PTU_param,              ev = init
+
+            --value of the channel 
+            VAR PTU_param.fread,                                init = 1,                       ev = init
+    
+            --limit value
+            VAR Ap_page1_bar_graphs[0].limVal[0],               init = 1,                       ev = init   
+
+            --limit value type
+            VAR Ap_page1_bar_graphs[0].limValtype[0],           init = EQUAL,                   ev = init   
+
+            --Color for different limits
+            VAR Ap_page1_bar_graphs[0].limColor[0],             init = GREEN,          			 ev = init   
+
+            --Color of the bargraph
+            --VAR Ap_page1_bar_graphs[0].ePenColor,               init = GREEN,           		ev = init
+			
+			VAR Ap_page1_bar_graphs[0].limType[0],				init = PARAM_OK,		 ev = init
+			
+			VAR Page_num_boxes[0].limType[0],					init = PARAM_OK,			ev = init	
+
+            --Number limit
+            VAR Page_num_boxes[0].numLimit,                     init = 1,                       ev = init               
+
+            VAR Page_num_boxes[0].psParam,                      init = &PTU_param1,             ev = init
+
+            --Parameter r driving the number
+            VAR PTU_param1.fread,                               init = 1,                       ev = init
+
+            --limit value
+            VAR Page_num_boxes[0].limVal[0],                    init = 1,                       ev = init   
+
+            --limit value type
+            VAR Page_num_boxes[0].limValtype[0],                init = EQUAL,                   ev = init
+
+            --Color for different limits
+            VAR Page_num_boxes[0].limColor[0],                  init = GREEN,           		ev = init   
+
+            --Pen color
+            --VAR Page_num_boxes[0].ePenColor,                    init = GREEN,          			ev = init   
+            
+            
+            
+        COMMENT OUTPUT SECTION:
+
+            --Status of channel
+            VAR PTU_param.stat,                                 init = PARAM_ADVISORY,         	ev = PARAM_OK   
+
+            --Parameter stat driving the number
+            VAR PTU_param1.stat,                                init = PARAM_ADVISORY,          ev = PARAM_OK   
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None  
+        
+        SIMUL
+        
+            --None
+
+        END SIMUL
+        
+        --Calling the Unit Under Test 
+        #ExmonCheck();
+        
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+    
+    COMMENT  <TD>
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-001]
+    COMMENT The function 'ExmonCheck' loops for 2 times from loop index 0 till loop index is less than Bg_cnt and for 
+    COMMENT each it loop does the following:
+    COMMENT 1.Does the following if stat of psParam of Ap_page1_bar_graphs with array index as loop index 
+    COMMENT is less than PARAM_BAD.
+    COMMENT a)  For each counter from 0 till less than numLimit of Ap_page1_bar_graphs with array index as
+    COMMENT loop counter do the following.
+    COMMENT - Call the function CompareLimit with below parameters.
+    COMMENT 1.Member fread of psParam of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT 2.Member limVal with index as counter of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT 3.Member limValtype with index as counter of Ap_page1_bar_graphs with array index as loop counter.
+    COMMENT - does nothing when the return value from function CompareLimit is not equal to 1. 
+    COMMENT Equivalence Class 44,48,58
+    COMMENT
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-002]
+    COMMENT The function 'ExmonCheck' loops from loop index 0 till loop index is less than Nb_cnt and for each loop do the following:
+    COMMENT 1.Does the following if stat of psParam of PageNumBoxes with array index as loop index is less than PARAM_BAD.
+    COMMENT a)  For each counter from 0 till less than numLimit of PageNumBoxes with array index as loop counter do the following.
+    COMMENT - Call the function CompareLimit with below parameters.
+    COMMENT 1.Member fread of psParam of PageNumBoxes with array index as loop counter.
+    COMMENT 2.Member limVal with index as counter of PageNumBoxes with array index as loop counter.
+    COMMENT 3.Member limValtype with index as counter of PageNumBoxes with array index as loop counter.
+    COMMENT - does nothing when the return value from function CompareLimit is not equal to 1. 
+    COMMENT Equivalence Class 52,59
+    COMMENT </TD>
+    
+    ELEMENT
+     
+        COMMENT INPUT SECTION:
+                    
+            --Counter value used to loop 
+            VAR Bg_cnt,                                         init = 2,                       ev = init
+
+            --Counter value used to loop 
+            VAR Nb_cnt,                                         init = 2,                       ev = init
+
+            --Number limit
+            VAR Ap_page1_bar_graphs[0].numLimit,                init = 2,                       ev = init   
+            VAR Ap_page1_bar_graphs[1].numLimit,                init = 1,                       ev = init   
+
+            VAR Ap_page1_bar_graphs[0].psParam,                 init = &PTU_param,              ev = init
+            VAR Ap_page1_bar_graphs[1].psParam,                 init = &PTU_param,              ev = init
+
+            --value of the channel 
+            VAR Ap_page1_bar_graphs[0].psParam->fread,          init = 1.0,                     ev = init
+            VAR Ap_page1_bar_graphs[1].psParam->fread,          init = 1.0,                     ev = init
+
+            --limit value
+            VAR Ap_page1_bar_graphs[0].limVal[0],               init = 1,                       ev = init   
+            VAR Ap_page1_bar_graphs[1].limVal[0],               init = 1,                       ev = init   
+
+            --limit value type
+            VAR Ap_page1_bar_graphs[0].limValtype[0],           init = NOT_EQUAL,               ev = init   
+            VAR Ap_page1_bar_graphs[1].limValtype[0],           init = NOT_EQUAL,               ev = init   
+
+            --Color of the bargraph
+            --VAR Ap_page1_bar_graphs[0].ePenColor,               init = BLACK,                   ev = init
+            --VAR Ap_page1_bar_graphs[1].ePenColor,               init = BLACK,                   ev = init
+			
+			VAR Ap_page1_bar_graphs[0].limType[0],				init = PARAM_ADVISORY,		 ev = init
+			VAR Ap_page1_bar_graphs[1].limType[0],				init = PARAM_ADVISORY,		 ev = init
+			
+			VAR Page_num_boxes[0].limType[0],					init = PARAM_ADVISORY,			ev = init			
+			VAR Page_num_boxes[1].limType[0],					init = PARAM_ADVISORY,			ev = init
+			
+
+            --Number limit
+            VAR Page_num_boxes[0].numLimit,                     init = 2,                       ev = init   
+            VAR Page_num_boxes[1].numLimit,                     init = 1,                       ev = init   
+
+            VAR Page_num_boxes[0].psParam,                      init = &PTU_param1,             ev = init
+            VAR Page_num_boxes[1].psParam,                      init = &PTU_param1,             ev = init
+
+            --Parameter r driving the number
+            VAR Page_num_boxes[0].psParam->fread,               init = 1,                       ev = init
+            VAR Page_num_boxes[1].psParam->fread,               init = 1,                       ev = init
+
+            --limit value
+            VAR Page_num_boxes[0].limVal[0],                    init = 1,                       ev = init   
+            VAR Page_num_boxes[1].limVal[0],                    init = 1,                       ev = init   
+
+            --limit value type
+            VAR Page_num_boxes[0].limValtype[0],                init = NOT_EQUAL,               ev = init
+            VAR Page_num_boxes[1].limValtype[0],                init = NOT_EQUAL,               ev = init
+
+            --Pen color
+            --VAR Page_num_boxes[0].ePenColor,                    init = BLACK,                   ev = init   
+            --VAR Page_num_boxes[1].ePenColor,                    init = BLACK,                   ev = init   
+            
+            --Status of channel
+            VAR Ap_page1_bar_graphs[0].psParam->stat,           init = PARAM_ADVISORY,          ev = init
+            VAR Ap_page1_bar_graphs[1].psParam->stat,           init = PARAM_ADVISORY,          ev = init
+
+            --Parameter stat driving the number
+            VAR Page_num_boxes[0].psParam->stat,                init = PARAM_ADVISORY,          ev = init   
+            VAR Page_num_boxes[1].psParam->stat,                init = PARAM_ADVISORY,          ev = init   
+            
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None  
+        
+        SIMUL
+        
+            --None
+
+        END SIMUL
+        
+        --Calling the Unit Under Test 
+        #ExmonCheck();
+        
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+    
+    COMMENT  <TD>
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-001]
+    COMMENT The function 'ExmonCheck' loops for 2 times from loop index 0 till loop index is less than Bg_cnt and for 
+    COMMENT each it loop does the following:
+    COMMENT 1.Does nothing when stat of psParam of Ap_page1_bar_graphs with array index as loop index 
+    COMMENT is less than PARAM_BAD.
+    COMMENT Equivalence Class 45,46
+    COMMENT
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-002]
+    COMMENT The function 'ExmonCheck' loops from loop index 0 till loop index is less than Nb_cnt and for each loop do the following:
+    COMMENT 1.Does nothing when stat of psParam of PageNumBoxes with array index as loop index is less than PARAM_BAD.
+    COMMENT a)  For each counter from 0 till less than numLimit of PageNumBoxes with array index as loop counter do the following.
+    COMMENT Equivalence Class 53,54
+    COMMENT </TD>
+    
+    ELEMENT
+     
+        COMMENT INPUT SECTION:
+                    
+            --Counter value used to loop 
+            VAR Bg_cnt,                                         init = 2,                   ev = init
+
+            --Counter value used to loop 
+            VAR Nb_cnt,                                         init = 2,                   ev = init
+            
+            VAR Ap_page1_bar_graphs[0].psParam,                 init = &PTU_param,          ev = init
+            VAR Ap_page1_bar_graphs[1].psParam,                 init = &PTU_param,          ev = init
+                    
+            VAR Page_num_boxes[0].psParam,                      init = &PTU_param1,         ev = init
+            VAR Page_num_boxes[1].psParam,                      init = &PTU_param1,         ev = init
+                
+            --Status of channel
+            VAR Ap_page1_bar_graphs[0].psParam->stat,           init = RANGE_ERROR,         ev = init
+            VAR Ap_page1_bar_graphs[1].psParam->stat,           init = RANGE_ERROR,         ev = init
+
+            --Parameter stat driving the number
+            VAR Page_num_boxes[0].psParam->stat,                init = RANGE_ERROR,         ev = init
+            VAR Page_num_boxes[1].psParam->stat,                init = RANGE_ERROR,         ev = init
+
+            
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None  
+        
+        SIMUL
+        
+            --None
+
+        END SIMUL
+        
+        --Calling the Unit Under Test 
+        #ExmonCheck();
+        
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+    
+    COMMENT  <TD>
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-001]
+    COMMENT The function 'ExmonCheck' loops from loop index 0 till loop index is less than Bg_cnt and for 
+    COMMENT each it loop does the following:
+    COMMENT 1.Does nothing when stat of psParam of Ap_page1_bar_graphs with array index as loop index 
+    COMMENT is not less than PARAM_BAD.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-002]
+    COMMENT The function 'ExmonCheck' loops from loop index 0 till loop index is less than Nb_cnt and for each loop do the following:
+    COMMENT 1.Does nothing when  stat of psParam of PageNumBoxes with array index as loop index is not less than PARAM_BAD.
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+    
+    ELEMENT
+     
+        COMMENT INPUT SECTION:
+            
+            --Counter value used to loop 
+            VAR Bg_cnt,             init = 0,           ev = init
+            
+            --Counter value used to loop 
+            VAR Nb_cnt,             init = 0,           ev = init
+        
+            
+        COMMENT OUTPUT SECTION:
+                                                                    
+            -- None
+                                                                    
+        COMMENT INPUT/OUTPUT SECTION:
+                                                                    
+            --None  
+        SIMUL
+                    
+            --None
+            
+        END SIMUL
+        
+        --Calling the Unit Under Test 
+        #ExmonCheck();
+        
+    END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+    
+    COMMENT  <TD>
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-001]
+    COMMENT The function 'ExmonCheck' loops for 2 times from loop index 0 till loop index is less than Bg_cnt and for 
+    COMMENT each it loop does the following:
+    COMMENT 1.Does the following if stat of psParam of Ap_page1_bar_graphs with array index as loop index 
+    COMMENT is less than PARAM_BAD.
+    COMMENT a)  loops for 0 time from 0 till less than numLimit of Ap_page1_bar_graphs with array index as
+    COMMENT loop counter does nothing 
+    COMMENT Equivalence Class 44
+    COMMENT
+    COMMENT [hdudispfgrapp-ExmonCheck-DB-LLR-002]
+    COMMENT The function 'ExmonCheck' loops from loop index 0 till loop index is less than Nb_cnt and for each loop do the following:
+    COMMENT 1.Does the following if stat of psParam of PageNumBoxes with array index as loop index is less than PARAM_BAD.
+    COMMENT a)  loops for 0 time from 0 till less than numLimit of PageNumBoxes with array index as loop counter does nothing
+    COMMENT Equivalence Class 52
+    COMMENT </TD>
+    
+    ELEMENT
+     
+        COMMENT INPUT SECTION:
+                    
+            --Counter value used to loop 
+            VAR Bg_cnt,                                         init = 1,                       ev = init
+
+            --Counter value used to loop 
+            VAR Nb_cnt,                                         init = 1,                       ev = init
+
+            --Number limit
+            VAR Ap_page1_bar_graphs[0].numLimit,                init = 0,                       ev = init   
+
+            VAR Ap_page1_bar_graphs[0].psParam,                 init = &PTU_param,          	ev = init
+
+            --Color of the bargraph
+            --VAR Ap_page1_bar_graphs[0].ePenColor,               init = BLACK,               	ev = init
+			
+			VAR Ap_page1_bar_graphs[0].limType[0],				init = PARAM_ADVISORY,		 ev = init
+			
+			VAR Page_num_boxes[0].limType[0],					init = PARAM_ADVISORY,			ev = init	
+
+            --Number limit
+            VAR Page_num_boxes[0].numLimit,                     init = 0,                   	ev = init   
+
+            VAR Page_num_boxes[0].psParam,                      init = &PTU_param1,         	ev = init
+
+            --Pen color
+            --VAR Page_num_boxes[0].ePenColor,                    init = BLACK,               	ev = init   
+            
+            --Status of channel
+            VAR Ap_page1_bar_graphs[0].psParam->stat,           init = PARAM_ADVISORY,          ev = init
+
+            --Parameter stat driving the number
+            VAR Page_num_boxes[0].psParam->stat,                init = PARAM_ADVISORY,          ev = init       
+            
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None  
+        
+        SIMUL
+        
+            --None
+
+        END SIMUL
+        
+        --Calling the Unit Under Test 
+        #ExmonCheck();
+        
+    END ELEMENT
+
+END TEST -- TEST 7
+
+END SERVICE -- ExmonCheck
+
+--------------------------------------------------------------------------------
+-- Declaration of the service AppExDraw
+--------------------------------------------------------------------------------
+SERVICE AppExDraw
+SERVICE_TYPE extern
+
+#T_PARAM_READING PTU_exceed_reading;
+
+TEST 1
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-001]
+    COMMENT The function 'AppExDraw' loops for 1 time  from zero to Exceed_cnt and display the exceedance by calling the function 
+    COMMENT 'TextDispString' with parameters U8_circle, u16_x of exceed_axis of Exceed_data with index as loops counter, u16_y of
+    COMMENT  exceed_axis of Exceed_data with index as loops counter, exceed_font of Exceed_data with index as loops counter, YELLOW,
+    COMMENT TX_NO_FLASH, V_NORMAL and ALIGN_CENTER when all of the below conditions are satisfied
+	COMMENT
+   	COMMENT i)(COND1 bitwise AND COND2) AND COND3 OR (S32_data_exceed bitwise AND COND2)
+    COMMENT  COND1 : r value of exceed_reading of Exceed_data with loops counter
+    COMMENT  COND2 : ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE
+    COMMENT  COND3 : stat of exceed_reading of Exceed_data with loops counter as index is equal to PARAM_OK
+    COMMENT Equivalence Class 121,123,126,127,129
+    COMMENT </TD>
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Excedence reading
+            VAR Exceed_data[0].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Counter for exceed variable
+            VAR Exceed_cnt,                                     init = 1,                       ev = init
+            
+            --Exceed bit of Exceed data
+            VAR Exceed_data[0].exceed_bit,                      init = 2,                       ev = init
+            
+            --X coordinate of text box center
+            VAR Exceed_data[0].exceed_axis.u16_x,               init = 1,                       ev = init
+            
+            --Y coordinate of exceed center
+            VAR Exceed_data[0].exceed_axis.u16_y,               init = 1,                       ev = init
+            
+            --holds the exceed font value
+            VAR Exceed_data[0].exceed_font,                     init = E_TINY_FONT,    			ev = init
+            
+            --Status of channel
+            VAR Exceed_data[0].exceed_reading->stat,            init = PARAM_OK,                ev = init
+            
+            --number to use in normal operation
+            VAR Exceed_data[0].exceed_reading->r,               init = 2,                       ev = init
+			
+			VAR Exceed_data[0].sdi,              				init = 0,                       ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --Holds the exceed data
+            VAR S32_data_exceed[0],                                init = 2,                       ev = init
+                
+        COMMENT OUTPUT SECTION:
+            
+            --String to be displayed
+            VAR PTU_pc_string,                                  init = CIRCLE_E,                ev = init
+                                 
+        -- Stub Calls:
+        SIMUL
+            
+            --Converts a binary number to ascii
+            STUB TextDispString(Exceed_data[0].exceed_axis.u16_x,Exceed_data[0].exceed_axis.u16_y,
+            &   (T_ETXFONT )Exceed_data[0].exceed_font, YELLOW,TX_NO_FLASH, V_NORMAL, ALIGN_CENTER)
+                
+        END SIMUL 
+            
+        -- Calling the Unit Under Test 
+        #AppExDraw();
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-001]
+    COMMENT The function 'AppExDraw' loops for 1 time  from zero to Exceed_cnt and does nothing when 
+   	COMMENT i)(COND1 bitwise AND COND2) AND COND3 OR (S32_data_exceed bitwise AND COND2) is false 
+    COMMENT  COND1 : r value of exceed_reading of Exceed_data with loops counter
+    COMMENT  COND2 : ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE
+    COMMENT  COND3 : stat of exceed_reading of Exceed_data with loops counter as index is equal to PARAM_OK
+    COMMENT Equivalence Class 121,124,126,128
+    COMMENT MCDC Covered FXF
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Excedence reading
+            VAR Exceed_data[0].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Counter for exceed variable
+            VAR Exceed_cnt,                                     init = 1,                       ev = init
+            
+            --X coordinate of text box center
+            VAR Exceed_data[0].exceed_axis.u16_x,               init = 1,                       ev = init
+            
+            --Y coordinate of exceed center
+            VAR Exceed_data[0].exceed_axis.u16_y,               init = 1,                       ev = init
+            
+            --holds the exceed font value
+            VAR Exceed_data[0].exceed_font,                     init = (T_UINT16)E_TINY_FONT,    ev = init
+            
+            --Status of channel
+            VAR Exceed_data[0].exceed_reading->stat,            init = PARAM_OK,                ev = init
+            
+            --number to use in normal operation
+            VAR Exceed_data[0].exceed_reading->r,               init = 2,                       ev = init
+            
+            --Exceed bit of Exceed data
+            VAR Exceed_data[0].exceed_bit,                      init = 0,                       ev = init
+			
+			VAR Exceed_data[0].sdi,              				init = 0,                       ev = init
+            
+            --Holds the exceed data
+            VAR S32_data_exceed[0],                                init = 0,                       ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --None
+                
+        COMMENT OUTPUT SECTION:
+            
+            --String to be displayed
+            VAR PTU_pc_string,                                  init = CIRCLE_E,                ev = init
+            
+            
+        -- Stub Calls:
+        SIMUL
+            
+            --None
+                
+        END SIMUL 
+            
+        -- Calling the Unit Under Test 
+        #AppExDraw();
+        
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-001]
+    COMMENT The function 'AppExDraw' loops for 1 time  from zero to Exceed_cnt and does nothing when 
+   	COMMENT i)(COND1 bitwise AND COND2) AND COND3 OR (S32_data_exceed bitwise AND COND2) is false
+    COMMENT  COND1 : r value of exceed_reading of Exceed_data with loops counter
+    COMMENT  COND2 : ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE
+    COMMENT  COND3 : stat of exceed_reading of Exceed_data with loops counter as index is equal to PARAM_OK
+     COMMENT Equivalence Class 122
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Excedence reading
+            VAR Exceed_data[0].exceed_reading,                  init = &PTU_exceed_reading, 	ev = init
+            
+            --Counter for exceed variable
+            VAR Exceed_cnt,                                     init = 1,                       ev = init
+            
+            --Exceed bit of Exceed data
+            VAR Exceed_data[0].exceed_bit,                      init = 1,                       ev = init
+			
+			VAR Exceed_data[0].sdi,              				init = 1,                       ev = init
+            
+            --Holds the exceed data
+            VAR S32_data_exceed[1],                                init = 2,                       ev = init
+            
+            --X coordinate of text box center
+            VAR Exceed_data[0].exceed_axis.u16_x,               init = 1,                       ev = init
+            
+            --Y coordinate of exceed center
+            VAR Exceed_data[0].exceed_axis.u16_y,               init = 1,                       ev = init
+            
+            --holds the exceed font value
+            VAR Exceed_data[0].exceed_font,                     init = (T_UINT16)E_TINY_FONT,   ev = init
+            
+            --Status of channel
+            VAR Exceed_data[0].exceed_reading->stat,            init = PARAM_BAD,               ev = init
+
+            --Status of channel
+            VAR Exceed_data[0].exceed_reading->r,               init = 0,                       ev = init
+
+            
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --None
+                
+        COMMENT OUTPUT SECTION:
+            
+            --String to be displayed
+            VAR PTU_pc_string,                                  init = CIRCLE_E,                ev = init
+                                 
+        -- Stub Calls:
+        SIMUL
+            
+            --None
+                
+        END SIMUL 
+            
+        -- Calling the Unit Under Test 
+        #AppExDraw();
+        
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-001]
+    COMMENT The function 'AppExDraw' loops for 2 time from zero to Exceed_cnt and does nothing when
+  	COMMENT i)(COND1 bitwise AND COND2) AND COND3 OR (S32_data_exceed bitwise AND COND2) is false
+    COMMENT  COND1 : r value of exceed_reading of Exceed_data with loops counter
+    COMMENT  COND2 : ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE
+    COMMENT  COND3 : stat of exceed_reading of Exceed_data with loops counter as index is equal to PARAM_OK
+    COMMENT Equivalence Class 122
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Excedence reading
+            VAR Exceed_data[0].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Excedence reading
+            VAR Exceed_data[1].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Counter for exceed variable
+            VAR Exceed_cnt,                                     init = 2,                       ev = init
+            
+            --Status of channel
+            VAR Exceed_data[0].exceed_reading->stat,            init = PARAM_BAD,               ev = init
+            
+            --Status of channel
+            VAR Exceed_data[1].exceed_reading->stat,            init = PARAM_BAD,               ev = init
+
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --None
+                
+        COMMENT OUTPUT SECTION:
+            
+            --String to be displayed
+            VAR PTU_pc_string,                                  init = CIRCLE_E,                ev = init
+                                 
+        -- Stub Calls:
+        SIMUL
+            
+            --None
+                
+        END SIMUL 
+            
+        -- Calling the Unit Under Test 
+        #AppExDraw();
+        
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-001]
+    COMMENT The function 'AppExDraw' loops 0 time  and does nothing when
+    COMMENT Exceed count is greater than loop counter .
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Excedence reading
+            VAR Exceed_data[0].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Counter for exceed variable
+            VAR Exceed_cnt,                                     init = 0,                       ev = init
+            
+            
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --None
+                
+        COMMENT OUTPUT SECTION:
+            
+            --None
+                                 
+        -- Stub Calls:
+        SIMUL
+            
+            --None
+                
+        END SIMUL 
+            
+        -- Calling the Unit Under Test 
+        #AppExDraw();
+        
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-001]
+    COMMENT The function 'AppExDraw' loops for 1 time  from zero to Exceed_cnt and display the exceedance by calling the function 
+    COMMENT 'TextDispString' with parameters U8_circle, u16_x of exceed_axis of Exceed_data with index as loops counter, u16_y of
+    COMMENT  exceed_axis of Exceed_data with index as loops counter, exceed_font of Exceed_data with index as loops counter, YELLOW,
+    COMMENT TX_NO_FLASH, V_NORMAL and ALIGN_CENTER when all of the below conditions are satisfied
+   	COMMENT i)(COND1 bitwise AND COND2) AND COND3 OR (S32_data_exceed bitwise AND COND2)
+    COMMENT  COND1 : r value of exceed_reading of Exceed_data with loops counter
+    COMMENT  COND2 : ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE
+    COMMENT  COND3 : stat of exceed_reading of Exceed_data with loops counter as index is equal to PARAM_OK
+	COMMENT Equivalence Class 121,123,125,127,129
+    COMMENT MCDC Covered TTX
+    COMMENT 
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-002]
+    COMMENT The function 'AppExDraw' loops from zero to Exceed_cnt and sets the S32_data_exceed with S32_data_exceed bitwise OR
+    COMMENT with value of (ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE)    
+    COMMENT when all of the below conditions are not satisfied
+  	COMMENT i)(COND1 bitwise AND COND2) AND COND3 OR (S32_data_exceed bitwise AND COND2)
+   	COMMENT COND1 : r value of exceed_reading of Exceed_data with loops counter
+   	COMMENT COND2 : ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE
+   	COMMENT COND3 : stat of exceed_reading of Exceed_data with loops counter as index is equal to PARAM_OK 
+   	COMMENT ii) S32_data_exceed bitwise And with result of ONE left shift by exceed_bit of Exceed_data with index as 
+   	COMMENT loops counter minus ONE is not true.
+    COMMENT Equivalence Class 128
+    COMMENT </TD>
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Excedence reading
+            VAR Exceed_data[0].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Counter for exceed variable
+            VAR Exceed_cnt,                                     init = 1,                       ev = init
+            
+            --Exceed bit of Exceed data
+            VAR Exceed_data[0].exceed_bit,                      init = 2,                       ev = init
+            
+            --X coordinate of text box center
+            VAR Exceed_data[0].exceed_axis.u16_x,               init = 1,                       ev = init
+            
+            --Y coordinate of exceed center
+            VAR Exceed_data[0].exceed_axis.u16_y,               init = 1,                       ev = init
+            
+            --holds the exceed font value
+            VAR Exceed_data[0].exceed_font,                     init = E_TINY_FONT,    			ev = init
+            
+            --Status of channel
+            VAR Exceed_data[0].exceed_reading->stat,            init = PARAM_OK,                ev = init
+            
+            --number to use in normal operation
+            VAR Exceed_data[0].exceed_reading->r,               init = 2,                       ev = init
+			
+			VAR Exceed_data[0].sdi,              				init = 2,                       ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --Holds the exceed data
+            VAR S32_data_exceed[2],                                init = 0,                       ev = 2
+                
+        COMMENT OUTPUT SECTION:
+            
+            --String to be displayed
+            VAR PTU_pc_string,                                  init = CIRCLE_E,                ev = init
+                                 
+        -- Stub Calls:
+        SIMUL
+            
+            --Converts a binary number to ascii
+            STUB TextDispString(Exceed_data[0].exceed_axis.u16_x,Exceed_data[0].exceed_axis.u16_y,
+            &   (T_ETXFONT )Exceed_data[0].exceed_font, YELLOW,TX_NO_FLASH, V_NORMAL, ALIGN_CENTER)
+                
+        END SIMUL 
+            
+        -- Calling the Unit Under Test 
+        #AppExDraw();
+        
+    END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-002]
+    COMMENT The function 'AppExDraw' loops from zero to Exceed_cnt and does nothing   
+    COMMENT when all of the below conditions are satisfied
+  	COMMENT i)(COND1 bitwise AND COND2) AND COND3 OR (S32_data_exceed bitwise AND COND2)
+   	COMMENT COND1 : r value of exceed_reading of Exceed_data with loops counter
+   	COMMENT COND2 : ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE
+   	COMMENT COND3 : stat of exceed_reading of Exceed_data with loops counter as index is equal to PARAM_OK 
+   	COMMENT ii) S32_data_exceed bitwise And with result of ONE left shift by exceed_bit of Exceed_data with index as 
+   	COMMENT loops counter minus ONE is not true.
+    COMMENT TFT
+    COMMENT Equivalence Class 122,123,125,127,129
+    COMMENT </TD>
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Excedence reading
+            VAR Exceed_data[0].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Counter for exceed variable
+            VAR Exceed_cnt,                                     init = 1,                       ev = init
+            
+            --Exceed bit of Exceed data
+            VAR Exceed_data[0].exceed_bit,                      init = 2,                       ev = init
+            
+            --X coordinate of text box center
+            VAR Exceed_data[0].exceed_axis.u16_x,               init = 1,                       ev = init
+            
+            --Y coordinate of exceed center
+            VAR Exceed_data[0].exceed_axis.u16_y,               init = 1,                       ev = init
+            
+            --holds the exceed font value
+            VAR Exceed_data[0].exceed_font,                     init = E_TINY_FONT,    			ev = init
+            
+            --Status of channel
+            VAR Exceed_data[0].exceed_reading->stat,            init = PARAM_ADVISORY,          ev = init
+            
+            --number to use in normal operation
+            VAR Exceed_data[0].exceed_reading->r,               init = 2,                       ev = init
+			
+			VAR Exceed_data[0].sdi,              				init = 3,                       ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --Holds the exceed data
+            VAR S32_data_exceed[3],                                init = 2,                       ev = init
+                
+        COMMENT OUTPUT SECTION:
+            
+            --String to be displayed
+            VAR PTU_pc_string,                                  init = CIRCLE_E,                ev = init
+                                 
+        -- Stub Calls:
+        SIMUL
+            
+            --Converts a binary number to ascii
+            STUB TextDispString(Exceed_data[0].exceed_axis.u16_x,Exceed_data[0].exceed_axis.u16_y,
+            &   (T_ETXFONT )Exceed_data[0].exceed_font, YELLOW,TX_NO_FLASH, V_NORMAL, ALIGN_CENTER)
+                
+        END SIMUL 
+            
+        -- Calling the Unit Under Test 
+        #AppExDraw();
+        
+    END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-001]
+    COMMENT The function 'AppExDraw' loops for 1 time from zero to Exceed_cnt and does nothing when
+   	COMMENT i)(COND1 bitwise AND COND2) AND COND3 OR (S32_data_exceed bitwise AND COND2) is false
+    COMMENT  COND1 : r value of exceed_reading of Exceed_data with loops counter
+    COMMENT  COND2 : ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE
+    COMMENT  COND3 : stat of exceed_reading of Exceed_data with loops counter as index is equal to PARAM_OK
+    COMMENT TFF
+    COMMENT Equivalence Class 121,123,126,127,129
+    COMMENT </TD>
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Excedence reading
+            VAR Exceed_data[0].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Counter for exceed variable
+            VAR Exceed_cnt,                                     init = 1,                       ev = init
+            
+            --Exceed bit of Exceed data
+            VAR Exceed_data[0].exceed_bit,                      init = 2,                       ev = init
+            
+            --X coordinate of text box center
+            VAR Exceed_data[0].exceed_axis.u16_x,               init = 1,                       ev = init
+            
+            --Y coordinate of exceed center
+            VAR Exceed_data[0].exceed_axis.u16_y,               init = 1,                       ev = init
+            
+            --holds the exceed font value
+            VAR Exceed_data[0].exceed_font,                     init = (T_UINT16)E_TINY_FONT,   ev = init
+            
+            --Status of channel
+            VAR Exceed_data[0].exceed_reading->stat,            init = PARAM_ADVISORY,          ev = init
+            
+            --number to use in normal operation
+            VAR Exceed_data[0].exceed_reading->r,               init = 2,                       ev = init
+			
+			VAR Exceed_data[0].sdi,              				init = 0,                       ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --Holds the exceed data
+            VAR S32_data_exceed[0],                                init = 0,                       ev = init
+                
+        COMMENT OUTPUT SECTION:
+            
+            --String to be displayed
+            VAR PTU_pc_string,                                  init = CIRCLE_E,                ev = init
+                                 
+        -- Stub Calls:
+        SIMUL
+            
+            -- None
+                
+        END SIMUL 
+            
+        -- Calling the Unit Under Test 
+        #AppExDraw();
+        
+    END ELEMENT
+
+END TEST -- TEST 8
+
+
+TEST 9
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-001]
+    COMMENT The function 'AppExDraw' loops for 1 time  from zero to Exceed_cnt and display the exceedance by calling the function 
+    COMMENT 'TextDispString' with parameters U8_circle, u16_x of exceed_axis of Exceed_data with index as loops counter, u16_y of
+    COMMENT  exceed_axis of Exceed_data with index as loops counter, exceed_font of Exceed_data with index as loops counter, YELLOW,
+    COMMENT TX_NO_FLASH, V_NORMAL and ALIGN_CENTER when all of the below conditions are satisfied
+   	COMMENT i)(COND1 bitwise AND COND2) AND COND3 OR (S32_data_exceed bitwise AND COND2)
+    COMMENT  COND1 : r value of exceed_reading of Exceed_data with loops counter
+    COMMENT  COND2 : ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE
+    COMMENT  COND3 : stat of exceed_reading of Exceed_data with loops counter as index is equal to PARAM_OK
+    COMMENT MCDC Covered FXT
+    COMMENT Equivalence Class 121,124,126,128
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Excedence reading
+            VAR Exceed_data[0].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Counter for exceed variable
+            VAR Exceed_cnt,                                     init = 1,                       ev = init
+            
+            --X coordinate of text box center
+            VAR Exceed_data[0].exceed_axis.u16_x,               init = 1,                       ev = init
+            
+            --Y coordinate of exceed center
+            VAR Exceed_data[0].exceed_axis.u16_y,               init = 1,                       ev = init
+            
+            --holds the exceed font value
+            VAR Exceed_data[0].exceed_font,                     init = E_TINY_FONT,    			ev = init
+            
+            --Status of channel
+            VAR Exceed_data[0].exceed_reading->stat,            init = PARAM_OK,                ev = init
+            
+            --number to use in normal operation
+            VAR Exceed_data[0].exceed_reading->r,               init = 2,                       ev = init
+            
+            --Exceed bit of Exceed data
+            VAR Exceed_data[0].exceed_bit,                      init = 1,                       ev = init
+			
+			VAR Exceed_data[0].sdi,              				init = 0,                       ev = init
+            
+            --Holds the exceed data
+            VAR S32_data_exceed[0],                                init = 1,                       ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --None
+                
+        COMMENT OUTPUT SECTION:
+            
+            --String to be displayed
+            VAR PTU_pc_string,                                  init = CIRCLE_E,                ev = init
+            
+            
+        -- Stub Calls:
+        SIMUL
+            
+            --Converts a binary number to ascii
+            STUB TextDispString(Exceed_data[0].exceed_axis.u16_x,Exceed_data[0].exceed_axis.u16_y,
+            &   (T_ETXFONT )Exceed_data[0].exceed_font, YELLOW,TX_NO_FLASH, V_NORMAL, ALIGN_CENTER)
+                
+        END SIMUL 
+            
+        -- Calling the Unit Under Test 
+        #AppExDraw();
+        
+    END ELEMENT
+
+END TEST -- TEST 9
+
+
+TEST 10
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT [hdudispfgrapp-AppExDraw-DB-LLR-001]
+    COMMENT The function 'AppExDraw' loops for 2 time from zero to Exceed_cnt and does nothing when
+  	COMMENT i)(COND1 bitwise AND COND2) AND COND3 OR (S32_data_exceed bitwise AND COND2) is false
+    COMMENT  COND1 : r value of exceed_reading of Exceed_data with loops counter
+    COMMENT  COND2 : ONE left shift by result of exceed_bit of Exceed_data with index as loops counter minus ONE
+    COMMENT  COND3 : stat of exceed_reading of Exceed_data with loops counter as index is equal to PARAM_OK
+    COMMENT Equivalence Class 122
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Excedence reading
+            VAR Exceed_data[0].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Excedence reading
+            VAR Exceed_data[1].exceed_reading,                  init = &PTU_exceed_reading,     ev = init
+            
+            --Counter for exceed variable
+            VAR Exceed_cnt,                                     init = 66,                       ev = init
+            
+            --Status of channel
+            VAR Exceed_data[0].exceed_reading->stat,            init = PARAM_BAD,               ev = init
+            
+            --Status of channel
+            VAR Exceed_data[1..65].exceed_reading->stat,            init = PARAM_BAD,               ev = init
+
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --None
+                
+        COMMENT OUTPUT SECTION:
+            
+            --String to be displayed
+            VAR PTU_pc_string,                                  init = CIRCLE_E,                ev = init
+			
+            -- Stub parameter "RterrWidget" is updated with the string "Too many exceedances"
+            VAR PTU_rterr_message,              init = "ERROR",                 ev = "Too many exceedances"
+		
+                                 
+        -- Stub Calls:
+        SIMUL
+            
+            STUB RterrWidget(919)
+
+		STUB TextDispString(Exceed_data[0].exceed_axis.u16_x,Exceed_data[0].exceed_axis.u16_y,
+            &   (T_ETXFONT )Exceed_data[0].exceed_font, YELLOW,TX_NO_FLASH, V_NORMAL, ALIGN_CENTER)
+                
+        END SIMUL 
+            
+        -- Calling the Unit Under Test 
+        #AppExDraw();
+        
+    END ELEMENT
+
+END TEST -- TEST 10
+
+END SERVICE -- AppExDraw
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CoolDownTimer
+--------------------------------------------------------------------------------
+SERVICE CoolDownTimer
+SERVICE_TYPE extern
+
+#T_PARAM_READING PTU_wog_data,PTU_acdt_reading;;
+#PTU_temp11[0] = 1;
+
+#PTU_char[0]= &PTU_temp11[0];
+
+TEST 1
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-001]
+    COMMENT  The function 'CoolDownTimer' does nothing when value returned by function CompareLimit logical 
+    COMMENT  AND with NOT of Inside_n1 is FALSE.
+    COMMENT  MCDC covered FX
+    COMMENT  Equivalence Class 130
+    COMMENT 
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-002]
+    COMMENT  The function 'CoolDownTimer' does nothing when Inside_n1 is not equal to TRUE. 
+    COMMENT  Equivalence Class 133,136
+    COMMENT
+    COMMENT  </TD>
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+            
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,                 ev = init
+            
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 101,                 ev = init
+            
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+            
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 101,                 ev = init
+            
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+            
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+            
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_OK,            ev = init
+            
+            --Status of channel
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --None
+            
+        COMMENT OUTPUT SECTION:
+        
+            --None
+            
+        -- Stub Calls:
+        SIMUL
+            
+            --None
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-001]
+    COMMENT  The function 'CoolDownTimer' set Inside_n1 to TRUE if value returned by function CompareLimit logical 
+    COMMENT  AND with NOT of Inside_n1 is TRUE.   
+    COMMENT  MCDC covered TF
+    COMMENT  Equivalence Class 131,132
+    COMMENT
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-004]
+    COMMENT  The function 'CoolDownTimer' does the following,
+	COMMENT  a)  set state to FALSE
+	COMMENT  b)  Call function CoolTimerReset
+	COMMENT  c) Call TextBoxOff with reference of Prim_cool_down_pop_up_box as parameter.
+	COMMENT  If all of the below conditions are satisfied,
+	COMMENT  i)  Inside_n1 is equal to TRUE.
+	COMMENT  ii) Return value of function CompareLimit is not equal to 1 or r of wog_data of Auto_cool_down_tmr is not equal to ONE
+	COMMENT  iii)Return value of function CompareLimit is not equal to 1 OR state value is FALSE OR return value of function CompareLimit is
+	COMMENT  not equal to 1 OR r of wog_data of Auto_cool_down_tmr is not equal to ONE
+	COMMENT  iv) Return value of function CompareLimit is equal to 1 OR  r of wog_data of Auto_cool_down_tmr is  equal to ONE
+    COMMENT  MCDC covered FT
+    COMMENT  Equivalence Class 130,136,140,141,142,144
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 101,             	ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,             	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            -- Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 101,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 0,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_OK,            ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+
+            --Auto Cool Down Timer OFF Condition value
+            VAR  Auto_cool_down_tmr.acdt_off_condition_value,           init = 101,             	ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+            
+            --
+            STUB CoolTimerReset()
+            
+            --
+            STUB TextBoxOff(&Prim_cool_down_pop_up_box)
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-002]
+    COMMENT  The function 'CoolDownTimer' does the following,
+    COMMENT  a) Call function CoolTimerStart
+	COMMENT	 b) Call TextBoxOn with reference of Prim_cool_down_pop_up_box as parameter when all the below conditions are satisfied:
+    COMMENT     - Acdt_flag is TRUE 
+    COMMENT     - Cool_down_select is equal to TRUE
+    COMMENT     - stat of acdt_reading of Auto_cool_down_tmr is less than PARAM_BAD 
+    COMMENT     - stat of wog_data of Auto_cool_down_tmr is less than PARAM_BAD.
+	COMMENT c) set state to TRUE
+	COMMENT	If all of the below conditions are satisfied ,
+	COMMENT   i)    Inside_n1 is equal to TRUE.
+	COMMENT	 ii)   Return value of function CompareLimit is equal to one AND r of wog_data of Auto_cool_down_tmr is equal to ONE
+	COMMENT  MCDC covered TTTT
+    COMMENT  </TD>
+    COMMENT  Equivalence Class 131,132,134,137,138,139,143
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+            
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+            
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 99,             		ev = init
+            
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+            
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 101,             	ev = init
+            
+            --
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+            
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+            
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_OK,            ev = init
+            
+            --Status of channel
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --None
+            
+        COMMENT OUTPUT SECTION:
+        
+            --None
+            
+        -- Stub Calls:
+        SIMUL
+            
+            --starts the cooldown timer
+            STUB CoolTimerStart()
+            
+            --enables the text box
+            STUB TextBoxOn(&Prim_cool_down_pop_up_box)
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-002]
+    COMMENT  The function 'CoolDownTimer' does the following,
+    COMMENT  a) Call function CoolTimerStart
+	COMMENT  c) set state to TRUE
+	COMMENT	If all of the below conditions are satisfied ,
+	COMMENT   i)    Inside_n1 is equal to TRUE.
+	COMMENT	 ii)   Return value of function CompareLimit is equal to one AND r of wog_data of Auto_cool_down_tmr is equal to ONE 
+    COMMENT  MCDC covered FTXX
+    COMMENT  Equivalence Class 135
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+            
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+            
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 101,             	ev = init
+            
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = FALSE,               ev = init
+            
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 101,             	ev = init
+            
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+            
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+            
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_OK,            ev = init
+            
+            --Status of channel
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --None
+            
+        COMMENT OUTPUT SECTION:
+        
+            --None
+            
+        -- Stub Calls:
+        SIMUL
+            
+            --starts the cooldown timer
+            STUB CoolTimerStart()
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 4
+
+
+TEST 5
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-002]
+    COMMENT  The function 'CoolDownTimer' does the following,
+    COMMENT  a) Call function CoolTimerStart
+	COMMENT  c) set state to TRUE
+	COMMENT	 If all of the below conditions are satisfied ,
+	COMMENT  i) Inside_n1 is equal to TRUE.
+	COMMENT	 ii)Return value of function CompareLimit is equal to one AND r of wog_data of Auto_cool_down_tmr is equal to ONE 
+    COMMENT  MCDC covered TTFX
+    COMMENT  Equivalence Class 134,136,138,147,148
+    COMMENT  </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            
+            
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 99,              	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,        		ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 101,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_BAD,           ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_BAD,           ev = init
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+
+            --starts the cooldown timer
+            STUB CoolTimerStart()
+
+
+    END SIMUL
+
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-004]
+    COMMENT  The function 'CoolDownTimer' does the following,
+    COMMENT  a) set state to FALSE
+    COMMENT  b) Call function CoolTimerStop
+    COMMENT  c) Call function CoolTimerReset
+    COMMENT  d) Call TextBoxOff with reference of Prim_cool_down_pop_up_box as parameter.
+    COMMENT  If all of the below conditions are satisfied,
+    COMMENT  i) Cool_down_select is TRUE AND Inside_n1 is equal to TRUE.
+    COMMENT  ii)    Return value of function CompareLimit is not equal to 1 or r of wog_data of 
+    COMMENT  Auto_cool_down_tmr is not equal to ONE
+    COMMENT  iii)   Return value of function CompareLimit is not equal to 1 OR state value is FALSE OR return value of
+    COMMENT  function CompareLimit is not equal to 1 OR r of wog_data of Auto_cool_down_tmr is not equal to ONE
+    COMMENT  iv)    Return value of function CompareLimit is equal to 1 OR  r of wog_data of Auto_cool_down_tmr is not equal to ONE
+    COMMENT  MCDC covered TX
+    COMMENT  Equivalence Class 131,137,140,141,142,144,
+    COMMENT  </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            
+            
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 500,             	ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,             	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,        		ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 101,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_BAD,           ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_BAD,           ev = init
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+            
+            --
+            --STUB CoolTimerStop()
+            
+            --
+            STUB CoolTimerReset()
+            
+            --
+            STUB TextBoxOff(&Prim_cool_down_pop_up_box)
+
+    END SIMUL
+
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 6
+
+
+
+TEST 7
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-002]
+    COMMENT  The function 'CoolDownTimer' does the following,
+    COMMENT  a) Call function CoolTimerStart
+	COMMENT  c) set state to TRUE
+	COMMENT	 If all of the below conditions are satisfied ,
+	COMMENT  i) Inside_n1 is equal to TRUE.
+	COMMENT	 ii)Return value of function CompareLimit is equal to one AND r of wog_data of Auto_cool_down_tmr is equal to ONE 
+    COMMENT  MCDC covered FXXX
+    COMMENT  Equivalence Class 134,136,138,149
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 99,              	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 101,            	 	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = FALSE,               ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_OK,            ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+
+            --
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+
+            --starts the cooldown timer
+            STUB CoolTimerStart()
+    
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-002]
+    COMMENT  The function 'CoolDownTimer' does the following,
+    COMMENT  a) Call function CoolTimerStart
+	COMMENT  c) set state to TRUE
+	COMMENT	 If all of the below conditions are satisfied ,
+	COMMENT  i) Inside_n1 is equal to TRUE.
+	COMMENT	 ii)Return value of function CompareLimit is equal to one AND r of wog_data of Auto_cool_down_tmr is equal to ONE 
+    COMMENT  MCDC covered TTTF
+    COMMENT  Equivalence Class 134,136,138,148,145,151
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 99,              	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 101,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_OK,            ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_BAD,           ev = init
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+
+            --starts the cooldown timer
+            STUB CoolTimerStart()
+
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-003]
+	COMMENT The function 'CoolDownTimer' does the following,
+	COMMENT  a. Call function CoolTimerStart
+	COMMENT  b. Call TextBoxOn with reference of Prim_cool_down_pop_up_box as parameter when all the below conditions are satisfied :
+	COMMENT     - Acdt_flag is TRUE 
+	COMMENT     - Cool_down_select is TRUE
+	COMMENT     - stat of acdt_reading of Auto_cool_down_tmr is less than PARAM_BAD 
+	COMMENT     - stat of wog_data of Auto_cool_down_tmr is less than PARAM_BAD.
+	COMMENT If all of the below conditions are satisfied,
+	COMMENT i)Inside_n1 is equal to TRUE.
+	COMMENT ii)Return value of function CompareLimit is not equal to 1 or r of wog_data of Auto_cool_down_tmr is not equal to ONE
+	COMMENT iii)Return value of function CompareLimit is equal to 1 AND state is TRUE AND return value of function CompareLimit is equal
+	COMMENT to 1 AND r of wog_data of Auto_cool_down_tmr is equal to ONE
+    COMMENT  MCDC covered TTTT
+    COMMENT  Equivalence Class 131,139,145,148
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,             	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 100,            		ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_OK,            ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+
+            --Auto Cool Down Timer OFF Condition value
+            VAR  Auto_cool_down_tmr.acdt_off_condition_value,           init = 100,            		ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+            
+            --starts the cooldown timer
+            STUB CoolTimerStart()
+            
+            --
+            STUB TextBoxOn(&Prim_cool_down_pop_up_box)
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 9
+
+TEST 10
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-003]
+    COMMENT  The function 'CoolDownTimer' does nothing,
+    COMMENT  If all of the below conditions are  not satisfied,
+    COMMENT  i) Cool_down_select is TRUE  AND Inside_n1 is equal to TRUE.
+    COMMENT  ii)Return value of function CompareLimit is not equal to 1 or r of wog_data of Auto_cool_down_tmr is not equal to ONE  
+    COMMENT  iii)Return value of function CompareLimit is equal to 1 AND state is TRUE AND return value of function 
+    COMMENT  CompareLimit is equal to 1 AND r of wog_data of Auto_cool_down_tmr is equal to ONE  
+    COMMENT  MCDC covered FXXX
+    COMMENT  Equivalence Class 131,145,149,150
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,             	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 100,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = FALSE,               ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_OK,            ev = init
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+
+            --Auto Cool Down Timer OFF Condition value
+            VAR  Auto_cool_down_tmr.acdt_off_condition_value,           init = 100,             	ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+            
+            --starts the cooldown timer
+            STUB  CoolTimerStart()
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 10
+
+TEST 11
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-003]
+	COMMENT The function 'CoolDownTimer' does the following,
+	COMMENT  a. Call function CoolTimerStart.
+	COMMENT If all of the below conditions are satisfied,
+	COMMENT i)Inside_n1 is equal to TRUE.
+	COMMENT ii)Return value of function CompareLimit is not equal to 1 or r of wog_data of Auto_cool_down_tmr is not equal to ONE
+	COMMENT iii)Return value of function CompareLimit is equal to 1 AND state is TRUE AND return value of function CompareLimit is equal
+	COMMENT to 1 AND r of wog_data of Auto_cool_down_tmr is equal to ONE
+	COMMENT  MCDC covered TTTF
+    COMMENT  Equivalence Class 131,138,148,144,152
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,             	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 100,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_OK,            ev = init
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_BAD,           ev = init
+
+            --Auto Cool Down Timer OFF Condition value
+            VAR  Auto_cool_down_tmr.acdt_off_condition_value,           init = 100,             	ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+            
+            --starts the cooldown timer
+            STUB  CoolTimerStart()
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 11
+
+TEST 12
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-003]
+	COMMENT The function 'CoolDownTimer' does the following,
+	COMMENT  a. Call function CoolTimerStart.
+	COMMENT If all of the below conditions are satisfied,
+	COMMENT i)Inside_n1 is equal to TRUE.
+	COMMENT ii)Return value of function CompareLimit is not equal to 1 or r of wog_data of Auto_cool_down_tmr is not equal to ONE
+	COMMENT iii)Return value of function CompareLimit is equal to 1 AND state is TRUE AND return value of function CompareLimit is equal
+	COMMENT to 1 AND r of wog_data of Auto_cool_down_tmr is equal to ONE
+    COMMENT  MCDC covered TTFX
+    COMMENT  Equivalence Class 131,138,148,146
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,            		ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,            		ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 100,            		ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_BAD,           ev = init
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+
+            --Auto Cool Down Timer OFF Condition value
+            VAR  Auto_cool_down_tmr.acdt_off_condition_value,           init = 100,             	ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+            
+            --starts the cooldown timer
+            STUB  CoolTimerStart()
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 12
+
+TEST 13
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-004]
+    COMMENT  The function 'CoolDownTimer' does the following,
+    COMMENT  a) set state to FALSE
+    COMMENT  b) Call function CoolTimerStop
+    COMMENT  c) Call function CoolTimerReset
+    COMMENT  d) Call TextBoxOff with reference of Prim_cool_down_pop_up_box as parameter.
+    COMMENT  If all of the below conditions are satisfied,
+    COMMENT  i) Cool_down_select is TRUE AND Inside_n1 is equal to TRUE.
+    COMMENT  ii)Return value of function CompareLimit is not equal to 1 or r of wog_data of 
+    COMMENT  Auto_cool_down_tmr is not equal to ONE
+    COMMENT  iii)Return value of function CompareLimit is not equal to 1 OR state value is FALSE OR return value of
+    COMMENT  function CompareLimit is not equal to 1 OR r of wog_data of Auto_cool_down_tmr is not equal to ONE
+    COMMENT  iv)Return value of function CompareLimit is equal to 1 OR  r of wog_data of Auto_cool_down_tmr is not equal to ONE 
+    COMMENT  MCDC covered FT
+    COMMENT  Equivalence Class 131,144,141,142,140
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,            		ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,            		ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 100,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 0,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = FALSE,               ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_BAD,           ev = init
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_BAD,           ev = init
+
+            --Auto Cool Down Timer OFF Condition value
+            VAR  Auto_cool_down_tmr.acdt_off_condition_value,           init = 100,            		ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+         
+            --
+            STUB CoolTimerReset()
+            
+            --
+            STUB TextBoxOff(&Prim_cool_down_pop_up_box)
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 13
+
+TEST 14
+FAMILY nominal
+
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-004]
+    COMMENT  The function 'CoolDownTimer' calls the function 'CoolTimerReset'.
+    COMMENT  MCDC covered FF
+    COMMENT  Equivalence Class 142
+    COMMENT</TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,             	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 100,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = FALSE,               ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_BAD,           ev = init
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_BAD,           ev = init
+
+            --acdt_off_condition_value
+            VAR  Auto_cool_down_tmr.acdt_off_condition_value,           init = 100,             	ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+        
+            --
+            STUB CoolTimerReset()
+            
+            
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 14
+
+TEST 15
+FAMILY nominal
+
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-004]
+    COMMENT  The function 'CoolDownTimer' does the following,
+    COMMENT  a) set state to FALSE
+    COMMENT  b) Call function CoolTimerStop
+    COMMENT  c) Call function CoolTimerReset
+    COMMENT  d) Call TextBoxOff with reference of Prim_cool_down_pop_up_box as parameter.
+    COMMENT  If all of the below conditions are satisfied,
+    COMMENT  i) Cool_down_select is TRUE AND Inside_n1 is equal to TRUE.
+    COMMENT  ii)Return value of function CompareLimit is not equal to 1 or r of wog_data of 
+    COMMENT  Auto_cool_down_tmr is not equal to ONE
+    COMMENT  iii)Return value of function CompareLimit is not equal to 1 OR state value is FALSE OR return value of
+    COMMENT  function CompareLimit is not equal to 1 OR r of wog_data of Auto_cool_down_tmr is not equal to ONE
+    COMMENT  iv)Return value of function CompareLimit is equal to 1 OR  r of wog_data of Auto_cool_down_tmr is not equal to ONE  
+    COMMENT  MCDC covered FT
+    COMMENT  Equivalence Class 130,144,141,142,140
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+
+            --
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 99,              	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 101,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 0,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_OK,            ev = init
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+
+            --
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+
+            --
+            STUB CoolTimerReset()
+            
+            --
+            STUB TextBoxOff(&Prim_cool_down_pop_up_box)
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 15
+
+TEST 16
+FAMILY nominal
+    
+    COMMENT <TD>
+    COMMENT  [hdudispfgrapp-CoolDownTimer-DB-LLR-003]
+	COMMENT The function 'CoolDownTimer' does the following,
+	COMMENT  a. Call function CoolTimerStart
+	COMMENT  b. Call TextBoxOn with reference of Prim_cool_down_pop_up_box as parameter when all the below conditions are satisfied :
+	COMMENT     - Acdt_flag is TRUE 
+	COMMENT     - Cool_down_select is TRUE
+	COMMENT     - stat of acdt_reading of Auto_cool_down_tmr is less than PARAM_BAD 
+	COMMENT     - stat of wog_data of Auto_cool_down_tmr is less than PARAM_BAD.
+	COMMENT If all of the below conditions are satisfied,
+	COMMENT i)Inside_n1 is equal to TRUE.
+	COMMENT ii)Return value of function CompareLimit is not equal to 1 or r of wog_data of Auto_cool_down_tmr is not equal to ONE
+	COMMENT iii)Return value of function CompareLimit is equal to 1 AND state is TRUE AND return value of function CompareLimit is equal
+	COMMENT to 1 AND r of wog_data of Auto_cool_down_tmr is equal to ONE 
+    COMMENT  MCDC covered TFXX
+    COMMENT  Equivalence Class 131,138,148,144,152
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 101,            		ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,            		ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 100,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_BAD,           ev = init
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+
+            --Auto Cool Down Timer OFF Condition value
+            VAR  Auto_cool_down_tmr.acdt_off_condition_value,           init = 100,            		ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+            
+            --
+            STUB TextBoxOff(&Prim_cool_down_pop_up_box)
+            
+            --
+            STUB CoolTimerReset()
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 99,             		ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,             	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = TRUE,                ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 100,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_BAD,           ev = init
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+
+            --Auto Cool Down Timer OFF Condition value
+            VAR  Auto_cool_down_tmr.acdt_off_condition_value,           init = 100,             	ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+            
+            --starts the cooldown timer
+            STUB  CoolTimerStart()
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --wog_data
+            VAR Auto_cool_down_tmr.wog_data,                            init = &PTU_wog_data,       ev = init
+
+            --Auto Cool Down Timer redings
+            VAR Auto_cool_down_tmr.acdt_reading,                        init = &PTU_acdt_reading,   ev = init
+            
+            --Holds the cool down timer attributes
+            VAR Auto_cool_down_tmr.acdt_reading->fread,                 init = 100,             	ev = init
+
+            --Auto Cool Down Timer Trigger Point value
+            VAR Auto_cool_down_tmr.acdt_on_trigger_value,               init = 100,             	ev = init
+
+            --holds the cool down state
+            VAR Cool_down_select,                                       init = FALSE,               ev = init
+
+            --Auto Cool Down Timer ON Condition value
+            VAR Auto_cool_down_tmr.acdt_on_cond_value,                  init = 100,             	ev = init
+
+            --number to use in normal operation
+            VAR Auto_cool_down_tmr.wog_data->r,                         init = 1,                   ev = init
+
+            --Flag for auto cool down timer
+            VAR Acdt_flag,                                              init = TRUE,                ev = init
+
+            --Status of channel
+            VAR Auto_cool_down_tmr.acdt_reading->stat,                  init = PARAM_BAD,           ev = init
+            VAR Auto_cool_down_tmr.wog_data->stat,                      init = PARAM_OK,            ev = init
+
+            --Auto Cool Down Timer OFF Condition value
+            VAR  Auto_cool_down_tmr.acdt_off_condition_value,           init = 100,             	ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls:
+        SIMUL
+            --
+            STUB CoolTimerStart()
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test 
+        #CoolDownTimer();
+
+    END ELEMENT
+
+END TEST -- TEST 16
+
+END SERVICE -- CoolDownTimer
+
+--------------------------------------------------------------------------------
+-- Declaration of the service GrappApp
+--------------------------------------------------------------------------------
+SERVICE GrappApp
+SERVICE_TYPE extern
+
+    #T_PARAM_READING PTU_param,PTU_param1;
+	#T_UINT32 PTU_temp;
+    ENVIRONMENT ENV_GrappApp
+
+        VAR Port1_label_count,          init = 0,       ev = init
+
+        VAR Splash_done,                init = 0,       ev = init       
+
+        VAR Splash_b1_press,            init = 0,       ev = init
+
+        --Right Twist selection
+        VAR Switches.sRE.twist,         init = 0,       ev = init   
+
+        --Button 1
+        VAR Switches.b1,                init = 0,       ev = init
+
+        --Button 2
+        VAR Switches.b2,                init = 0,       ev = init
+
+        --Button 3
+        VAR Switches.b3,                init = 0,       ev = init
+
+        --Button 4
+        VAR Switches.b4,                init = 0,       ev = init
+
+        --Button 5
+        VAR Switches.b5,                init = 0,       ev = init
+
+        --Button 6
+        VAR Switches.b6,                init = 0,       ev = init
+
+        --Button 7
+        VAR Switches.b7,                init = 0,       ev = init
+
+        --Button 8
+        VAR Switches.b8,                init = 0,       ev = init
+
+        --Button c1
+        VAR Switches.c1,                init = 0,       ev = init
+
+        --Button c2
+        VAR Switches.c2,                init = 0,       ev = init
+
+        --Button c3
+        VAR Switches.c3,                init = 0,       ev = init
+
+        --Left Encoder selection
+        VAR Switches.sLE.pressed,       init = 0,       ev = init
+
+        --Right Encoder selection
+        VAR Switches.sRE.pressed,       init = 0,       ev = init
+
+    END ENVIRONMENT -- ENV_GrappApp
+    USE ENV_GrappApp
+
+
+TEST 39
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT  [hdudispfgrapp-GrappApp-DB-LLR-006]
+    COMMENT  The function 'GrappApp' does the following
+	COMMENT  1.Increment Airframe counter by one.
+	COMMENT  2.Do the following when airframe counter is  equalL to AIFRAME_CHECK_SEC
+	COMMENT  Set counter airframe to AIFRAME_CHECK_SEC
+	COMMENT  CallS the function ProcessAirframeInfoWords 
+    COMMENT   
+    COMMENT  Equivalence class 207,204
+	COMMENT
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            VAR Pg_cnt,        init = 1,       ev = init
+			
+            VAR Ap_poly_graph[0].polygon_shape,        init = FG_RED_X_SHAPE,       ev = init
+        
+        COMMENT OUTPUT SECTION:
+
+            -- None
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+
+            VAR Splash_done,            	init = 1,       ev = init    
+	
+			
+        -- Stub Calls:                                                              
+        SIMUL
+
+            --Performs page menu operations
+            STUB PageMenu()
+            
+        END SIMUL           
+       
+        -- Calling the Unit Under Test 
+        #GrappApp();
+            
+    END ELEMENT
+	
+	--Function GrappApp is called 1498 times to increment counter_airframe to 1499
+	#Splash_done=1;
+	#for(PTU_temp=0;PTU_temp<1498;PTU_temp++)
+	#GrappApp();
+	
+	ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            VAR Pg_cnt,        init = 1,       ev = init
+			
+            VAR Ap_poly_graph[0].polygon_shape,        init = FG_RED_X_SHAPE,       ev = init
+        
+        COMMENT OUTPUT SECTION:
+
+            -- None
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+
+            
+            VAR Splash_done,            init = 1,       ev = init                                                           
+            
+			
+        -- Stub Calls:                                                              
+        SIMUL
+
+            --Performs page menu operations
+            STUB PageMenu()
+
+			--system information words read from label 370
+            STUB ProcessAirframeInfoWords()
+        END SIMUL           
+       
+        -- Calling the Unit Under Test 
+        #GrappApp();
+            
+    END ELEMENT
+END TEST -- TEST 39
+
+END SERVICE -- GrappApp
+
+
+

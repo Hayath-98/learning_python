@@ -1,0 +1,1253 @@
+HEADER hdudispfucos,Source Code Ver : 1.4,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name          : Swathi G 
+--
+-- File Name            : hdudispfucos_2.ptu 
+--
+-- Test Creation Date   : 15.10.2017
+--
+-- Tested Functions     : OsTcbInit
+--
+-- Version History      :
+--
+--  TEST-VERSION        TEST-DATE           TESTER NAME        MODIFICATIONS
+--  ------------        ---------           -----------        -------------
+--  1.1                 15.10.2017          Swathi G      Created the PTU file.
+--  1.2                 10.11.2017          Swathi G      Updated as per #PR100171.
+--  1.3                 14.11.2017          Swathi G      Updated as per #PR100171.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdudispfucos.h"                 
+##include "hdulibbasictypes.h"          
+##include "hdudispfoscpu.h"              
+
+--------------------------------------------------------------------------------
+-- TESTED FILE DECLARATIONS
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    # T_OS_TCB  *Os_tcb_high_rdy;
+
+    # T_OS_TCB  *Os_tcb_cur;
+
+    # T_BOOLEAN  Os_running;
+
+    # T_UINT32 U32_critical_sr;
+
+    # T_OS_TCB  *Os_tcb_prio_tbl[64];
+
+    #volatile T_ULONG Os_idle_ctr;
+    
+-- Declarations of the temporary variables
+
+    -- Temporary variable to hold Os_tcb_prio_tbl[64]
+    # T_OS_TCB PTU_Os_tcb_prio_tbl[64];
+
+    -- Temporary variable to hold stck
+    # T_UINT32 PTU_Stack;
+	
+-- Declarations of macro defined in source file
+   ##define  OS_STAT_RDY       0x00U 
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      :  Swathi G
+    COMMENT
+    COMMENT File Name        :  hdudispfucos_2.ptu 
+    COMMENT
+    COMMENT Tested Functions :  OsTcbInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1'for' loops cannot be covered for '0' and '1' times since it is controlled by Macro in function 'OsInit'.  
+    COMMENT
+    COMMENT 2.Ptu's are split into 3 because of static dependency and memory constraint on Target.
+    COMMENT
+    COMMENT 3.Source file "hdudispfucos.c" is modified for testing LLR "hdudispfucos-OsTaskIdle-DB-LLR-001". 
+    COMMENT     The while(TRUE) is modified for terminating the infinite loop.
+    COMMENT
+    COMMENT         Snippet of code is added in function 'OsTaskIdle':
+    COMMENT
+    COMMENT         T_UINT8 PTU_counter =0 /*local variable declared for testing purpose*/
+    COMMENT
+    COMMENT         while(TRUE)
+    COMMENT         {
+    COMMENT             .................
+    COMMENT
+    COMMENT             /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT             PTU_counter = PTU_counter +1;
+    COMMENT             if(PTU_counter > 3)
+    COMMENT             {
+    COMMENT                                break;
+    COMMENT             } 
+    COMMENT             else
+    COMMENT             {
+    COMMENT                                ;/*nothing*/
+    COMMENT             }
+    COMMENT         }/*End of while loop*/
+    COMMENT     Hence while loop cannot be covered for 0 and 1 times and FALSE condition.
+    COMMENT
+    COMMENT 4.Source file "hdudispfucos.c" is modified for testing LLR "hdudispfucos-OsTimeTick-DB-LLR-001". 
+    COMMENT     The while(TRUE) is modified for terminating the infinite.
+    COMMENT     loop.
+    COMMENT
+    COMMENT         Snippet of code is added in function 'OsTimeTick':
+    COMMENT
+    COMMENT         T_UINT8 PTU_counter =0 /*local variable declared for testing purpose*/
+    COMMENT
+    COMMENT         while(...)
+    COMMENT         {
+    COMMENT             .................
+    COMMENT
+    COMMENT             /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT             PTU_counter++;
+    COMMENT             if(PTU_counter > 3)
+    COMMENT             {
+    COMMENT                                break;
+    COMMENT             } 
+    COMMENT             else
+    COMMENT             {
+    COMMENT                                ;/*nothing*/
+    COMMENT             }
+    COMMENT         }/*End of while loop*/
+    COMMENT     Hence while loop cannot be covered for 1 time.
+    COMMENT
+    COMMENT  5. Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+    COMMENT     warning #191-D: type qualifier is meaningless on cast type.
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT The function 'OsInit',calls the function 'OsTaskCreate'.
+    COMMENT
+    COMMENT Class 2
+    COMMENT The function 'OsInit',calls the function 'OsTaskIdle'.
+    COMMENT
+    COMMENT Class 3
+    COMMENT The function 'OsTaskIdle', Calls the funciton 'SaveStatusReg'
+    COMMENT
+    COMMENT Class 4
+    COMMENT The function 'OsStart',calls the funciton 'OsStartHighRdy' 
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'OsSched',the Interrupt nesting level OR Multitasking lock nesting level are ZERO. 
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'OsSched',the Interrupt nesting level OR Multitasking lock nesting level are not ZERO. 
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'OsSched',scheduled next 'Os_tcb_high_rdy' is not the current running task 'Os_tcb_cur'  
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'OsSched',scheduled next 'Os_tcb_high_rdy' is the current running task 'Os_tcb_cur' 
+    COMMENT
+    COMMENT Class 9
+    COMMENT The function 'OsIntEnter',Calls the function 'SaveStatusReg'
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'OsTcbInit',free TCB is obtained successfully from the free TCB list Os_tcb_free_list. 
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'OsTcbInit',free TCB is not obtained from the free TCB list Os_tcb_free_list.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'OsTcbInit',Pointer to doubly linked list of TCBs has valid data. 
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'OsTcbInit',Pointer to doubly linked list of TCBs has no valid data. 
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'OsIntExit', decremented Interrupt nesting level and Multitasking lock nesting level are ZERO.
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'OsIntExit', decremented Interrupt nesting level and Multitasking lock nesting level are not ZERO.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'OsIntExit',task to be next 'Os_tcb_high_rdy' is not the current running task 'Os_tcb_cur'.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'OsIntExit',task to be next 'Os_tcb_high_rdy' is the current running task 'Os_tcb_cur'.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'OsTimeDly',Clock ticks equal to 0
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'OsTimeDly',Clock ticks is greater than 0
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'OsTimeDly',current task is present in the ready list.
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'OsTimeDly',current task is not present in the ready list.
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'OsTimeTick',task priority for the TCB is not equal to OS_LOWEST_PRIO.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'OsTimeTick',task priority for the TCB is equal to OS_LOWEST_PRIO.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'OsTimeTick',Nbr ticks OSTCBDly for the TCB is not equal to 0
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'OsTimeTick',Nbr ticks OSTCBDly for the TCB is equal to 0
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'OsTimeTick',decremented OSTCBDly counter is equal to 0
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'OsTimeTick',decremented OSTCBDly counter is not equal to 0
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'OsTimeTick',task status OSTCBStat for the TCB is Suspended 
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'OsTimeTick',task status OSTCBStat for the TCB is not Suspended 
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'OsSemCreate',the free ECB pool is not empty.
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'OsSemCreate',the free ECB pool is empty.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'OsSemCreate',the reference to the selected ECB is not NULL.
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'OsSemCreate',the reference to the selected ECB is NULL.
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'OsSemPend',the event counter of the current TCB p_event is greater than ZERO
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'OsSemPend',the event counter of the current TCB p_event equal to ZERO
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'OsSemPend',current task is present in the ready list Os_rdy_tbl.
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'OsSemPend',current task is not present in the ready list Os_rdy_tbl.
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'OsSemPend',Task status OSTCBStat for the current running TCB Os_tcb_cur is pending on Semaphore(OS_STAT_SEM).
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'OsSemPend',Task status OSTCBStat for the current running TCB Os_tcb_cur is not pending on Semaphore(OS_STAT_SEM) 
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'OsSemPend',the current task waiting time is ZERO .
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'OsSemPend',the current task waiting time is not ZERO .
+    COMMENT
+    COMMENT Class 42
+    COMMENT In function 'OsSemPost', OSEventGrp of ECB p_event not equal to ZERO.
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function 'OsSemPost', OSEventGrp of ECB p_event equal to ZERO.
+    COMMENT
+    COMMENT Class 84
+    COMMENT In function 'OsSemPost',the list of task waiting for the event to occur in OSEventTbl is ZERO.
+    COMMENT
+    COMMENT Class 85
+    COMMENT In function 'OsSemPost',the list of task waiting for the event to occur in OSEventTbl is not ZERO.
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'OsSemPost',the task status OSTCBStat of the current task TCB is ready to run (i.e. OS_STAT_RDY).
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function 'OsSemPost',the task status OSTCBStat of the current task TCB is not ready to run (i.e. OS_STAT_RDY).
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'OsSemPost',os_event_cnt is less than MAX_SEMPHORE.
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'OsSemPost',os_event_cnt is equal to MAX_SEMPHORE.
+    COMMENT
+    COMMENT Class 48
+    COMMENT In the Function "OsTaskIdle",calls the function 'RestoreStatusReg'.
+    COMMENT
+    COMMENT Class 50 
+    COMMENT The the Function "OsSched", calls the function "SaveStatusReg".
+    COMMENT
+    COMMENT Class 51
+    COMMENT The the Function "OsSched", calls the function "RestoreStatusReg".
+    COMMENT
+    COMMENT Class 52 
+    COMMENT The Function "OsTcbInit",calls the function 'SaveStatusReg'.                      
+    COMMENT
+    COMMENT Class 53
+    COMMENT The Function "OsTcbInit",calls the function "RestoreStatusReg".
+    COMMENT 
+    COMMENT Class 54
+    COMMENT The Function "OsIntEnter",calls the function "RestoreStatusReg".
+    COMMENT 
+    COMMENT Class 55
+    COMMENT The Function "OsIntExit",calls the function 'SaveStatusReg'.
+    COMMENT 
+    COMMENT Class 56
+    COMMENT The Function "OsIntExit",calls the function 'OsIntCtxSw'.
+    COMMENT 
+    COMMENT Class 57
+    COMMENT The Function "OsIntExit", calls the function "RestoreStatusReg".
+    COMMENT
+    COMMENT Class 58
+    COMMENT The Function "OsTimeDly", calls the function "RestoreStatusReg".
+    COMMENT
+    COMMENT Class 59
+    COMMENT The Function "OsTimeDly", calls the function "OsSched"
+    COMMENT 
+    COMMENT Class 60
+    COMMENT The Function "OsTimeTick",calls the function 'SaveStatusReg'.
+    COMMENT 
+    COMMENT Class 61
+    COMMENT The Function "OsTimeTick", calls the function "RestoreStatusReg".
+    COMMENT 
+    COMMENT Class 62 
+    COMMENT The Function "OsSemCreate",calls the function 'SaveStatusReg'.
+    COMMENT 
+    COMMENT Class 63
+    COMMENT The Function "OsSemCreate",  calls the function "RestoreStatusReg".
+    COMMENT 
+    COMMENT Class 64
+    COMMENT The Function "OsSemPend", calls the function "SaveStatusReg".
+    COMMENT 
+    COMMENT Class 65
+    COMMENT The Function "OsSemPend",calls the function "RestoreStatusReg".
+    COMMENT 
+    COMMENT Class 66
+    COMMENT The Function "OsSemPend", calls the function "OsSched".
+    COMMENT
+    COMMENT Class 67
+    COMMENT The Function "OsSemPost", calls the function "SaveStatusReg"
+    COMMENT 
+    COMMENT Class 68
+    COMMENT The Function "OsSemPost",calls the function "RestoreStatusReg"
+    COMMENT
+    COMMENT Class 69
+    COMMENT The Function "OsSemPost",calls the function "OsSched"
+    COMMENT
+    COMMENT Class 70
+    COMMENT The Function "OsTimeDly", calls the function "SaveStatusReg".                    
+    COMMENT
+    COMMENT Class 71
+    COMMENT The function 'OsSched',calls the function "OsCtxSw"
+    COMMENT
+    COMMENT Class 76
+    COMMENT In function "OsSemAccept", the event counter value is greater than ZERO
+    COMMENT
+    COMMENT Class 77
+    COMMENT In function "OsSemAccept", the event counter value is not greater than ZERO
+    COMMENT
+    COMMENT Class 78
+    COMMENT The Function "OsSemAccept", calls the function "SaveStatusReg".                    
+    COMMENT
+    COMMENT Class 79
+    COMMENT The Function "OsSemAccept", calls the function "RestoreStatusReg".                    
+    COMMENT
+    COMMENT Class 80
+    COMMENT The Function "OSSemPeek", calls the function "RestoreStatusReg".                    
+    COMMENT
+    COMMENT Class 81
+    COMMENT The Function "OSSemPeek", calls the function "SaveStatusReg".                    
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT Class 72
+    COMMENT In function 'OsTcbInit',Invalid Reference is passed to stck parameter
+    COMMENT
+    COMMENT Class 73
+    COMMENT In function 'OsSemPost',Invalid Reference is passed to p_event parameter
+    COMMENT
+    COMMENT Class 74
+    COMMENT In function 'Ossempend',Invalid Reference is passed to p_event parameter 
+    COMMENT
+    COMMENT Class 75
+    COMMENT In function 'Ossempend',Invalid Reference is passed to error parameter
+    COMMENT
+    COMMENT Class 82
+    COMMENT In function 'OsSemAccept',Invalid Reference is passed to param_event parameter 
+    COMMENT
+    COMMENT Class 83
+    COMMENT In function 'OSSemPeek',Invalid Reference is passed to p_event parameter 
+    COMMENT	
+    COMMENT </ECD> 
+    
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hdudispfucos_c
+
+        # void  OsIntCtxSw (void);
+
+        # void  OsStartHighRdy (void);
+
+        # void  WdogKickWatchDog (void);
+
+        --In stub OsTaskCreate Ptr_task variable made as _no becuase static function address cannot be expected,
+        # T_UINT8  OsTaskCreate ( void _no (*Ptr_task)( void* double_ptr ),void _in *Ptr_data,void _no *Ptr_Stack,T_UINT8  _in  Task_prio )
+        #{
+        #   (*Ptr_task)(Ptr_data);
+        #}
+
+        #void OsCtxSw (void);
+
+        # void  RestoreStatusReg ( T_UINT32  _in U32_critical_sr );
+
+        # T_UINT32 SaveStatusReg(void);
+
+    END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+   
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfucos.c
+ENVIRONMENT ENV_hdudispfucos_c
+  VAR Os_tcb_high_rdy,                 init = NIL,              ev = init
+  VAR Os_int_nesting,                  init = 0,                ev = init
+  VAR Os_tcb_cur,                      init = NIL,              ev = init
+  VAR Os_idle_ctr,                     init = (T_ULONG)0,       ev = (T_ULONG)init
+  VAR Os_ctx_sw_ctr,                   init = 0,                ev = init
+  VAR Os_running,                      init = 0,                ev = init
+END ENVIRONMENT -- ENV_hdudispfucos_c
+USE ENV_hdudispfucos_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OsTcbInit
+--------------------------------------------------------------------------------
+
+SERVICE OsTcbInit
+SERVICE_TYPE extern
+
+-- Tested UNIT Parameters declarations
+
+    # T_UBYTE  prio;
+    # void  *stck;
+
+-- Returned Type Declarations
+
+    # T_UINT8  ret_OsTcbInit;
+
+-- Default Variables 
+
+ENVIRONMENT  ENV_OsTcbInit
+
+    VAR ret_OsTcbInit,                  init = 0  ,    ev = init 
+
+    VAR prio,                           init = 0  ,    ev = init   
+
+    VAR stck,                           init = NULL ,  ev = init 
+
+    VAR U32_critical_sr,                init = 0  ,    ev = init 
+
+END ENVIRONMENT --ENV_OsTcbInit
+
+USE  ENV_OsTcbInit
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsTcbInit-DB-LLR-001]
+    COMMENT The function calls SaveStatusReg to disable interrupts before creation of TCB.
+    COMMENT Equivalence Class 52 
+    COMMENT
+    COMMENT [hdudispfucos-OsTcbInit-DB-LLR-004]
+    COMMENT The function calls RestoreStatusReg to restore the priority mask register  when the TCB not free in TCB list ptcb or 
+    COMMENT after the successful creation of TCB is completed
+    COMMENT Equivalence Class 11,53
+    COMMENT
+    COMMENT [hdudispfucos-OsTcbInit-DB-LLR-005]
+    COMMENT The function returns OS_NO_MORE_TCB as error status when TCB not free in the TCB list
+    COMMENT In this test case prio tested for minimum value(0).
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds Task prio. value
+            VAR prio,                           init = 0,                           ev = init   
+
+            --Holds pointer to the top-of-stck
+            VAR stck,                           init =(void *) &PTU_Stack,          ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                init = 0,                           ev = 50 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of function 'OsTcbInit'
+            VAR ret_OsTcbInit,                  init = 30,                          ev = OS_NO_MORE_TCB 
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()50
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (50)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OsTcbInit = OsTcbInit(prio,stck);
+
+    END ELEMENT
+   
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsTcbInit-DB-LLR-003]
+    COMMENT The function performs following operations when free TCB is obtained successfully from the free TCB list
+    COMMENT a)Updates the free TCB list with the pointer to the next TCB (OSTCBNext) in the free TCB list
+    COMMENT b) Calls RestoreStatusReg to restore the priority mask register
+    COMMENT c)Sets the following members of the free TCB list
+    COMMENT     - pointers to current stack(OSTCBStkPtr) to stack pointer 'stck'
+    COMMENT     - task priority (OSTCBPrio) to the current task prioirty 'prio'
+    COMMENT     - task status (OSTCBStat) to OS_STAT_RDY
+    COMMENT     - task delay (OSTCBDly) to ZERO
+    COMMENT     - OSTCBY to current task priority 'prio' right shifted by THREE.
+    COMMENT     - OSTCBBitY to value of Os_map_tbl with index as OSTCBY of free TCB list structure
+    COMMENT     - OSTCBX to current task priority 'prio' bitwise AND of HEX_SEVEN.
+    COMMENT     - OSTCBBitX to value of Os_map_tbl with index as OSTCBX of free TCB list structure
+    COMMENT     - OSTCBEventPtr to ZERO
+    COMMENT     - call SaveStatusReg to disable interrupts
+    COMMENT  d)sets Os_tcb_prio_tbl with index 'prio' to free TCB   
+    COMMENT  e) sets the free TCB member
+    COMMENT     - OSTCBNext to pointer to next TCB in the Pointer to doubly linked list of TCBs
+    COMMENT     - OSTCBPrev to NULL
+    COMMENT f)the function does nothing when Pointer to doubly linked list of TCBs has no valid data
+    COMMENT g)Sets the Pointer to doubly linked list of TCBs to free TCB list
+    COMMENT h)Makes the task ready to run by updating the following values
+    COMMENT     - Os_rdy_grp Bitwise OR with OSTCBBitY of free TCB
+    COMMENT     - Os_rdy_tbl index OSTCBY of free TCB  to Os_rdy_tbl Bitwise OR with OSTCBBitX of free TCB
+    COMMENT i)Sends a request to uCOS to enable all the interrupt by calling function RestoreStatusReg
+    COMMENT j)Returns OS_NO_ERR
+    COMMENT Equivalence Class 10,13,52,53
+    COMMENT
+    COMMENT [hdudispfucos-OsTcbInit-DB-LLR-002]
+    COMMENT The function gets a free TCB from the free TCB list.
+    COMMENT In this test case prio tested for minimum+1 value(1) and stck tested for valid
+    COMMENT pointer address and Os_tcb_prio_tbl tested for minimum+1 index value(1).
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    --Address of PTU_Os_tcb_prio_tbl is assigned to 1st index(prio value) of Os_tcb_prio_tbl
+    #Os_tcb_prio_tbl[1] = PTU_Os_tcb_prio_tbl;
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds Task prio. value
+            VAR prio,                                       init = 1,                           ev = init   
+
+            --Holds pointer to the top-of-stck
+            VAR stck,                                       init =(void *) &PTU_Stack,          ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                            init = 0,                           ev = 100 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of function 'OsTcbInit'
+            VAR ret_OsTcbInit,                              init = 10,                          ev = OS_NO_ERR 
+
+            --Global variable holds Pointer to current top of stck
+            VAR Os_tcb_prio_tbl[1]->OSTCBStkPtr,            init = 1,                           ev = (void *)&PTU_Stack
+
+            --Global variable holds Task prio value
+            VAR Os_tcb_prio_tbl[1]->OSTCBPrio,              init = 0,                           ev = 1
+
+            --Global variable holds Task status 
+            VAR Os_tcb_prio_tbl[1]->OSTCBStat,              init = 1,                           ev = OS_STAT_RDY
+
+            --Global variable holds Nbr ticks to delay task
+            VAR Os_tcb_prio_tbl[1]->OSTCBDly,               init = 1,                           ev = ZERO
+
+            --Global variable holds Index into ready table corresponding to task prio value
+            VAR Os_tcb_prio_tbl[1]->OSTCBY,                 init = 1,                           ev = 0
+
+            --Global variable holds Bit mask value to access bit position in ready group
+            VAR Os_tcb_prio_tbl[1]->OSTCBBitY,              init = 0,                           ev = 1
+
+            --Global variable holds Bit position value in group  corresponding to task prio
+            VAR Os_tcb_prio_tbl[1]->OSTCBX,                 init = 1,                           ev = 1
+
+            --Global variable holds Bit mask value to access bit position in ready table
+            VAR Os_tcb_prio_tbl[1]->OSTCBBitX,              init = 0,                           ev = 0x02
+
+            --Global variable holds Pointer to event control block 
+            VAR Os_tcb_prio_tbl[1]->OSTCBEventPtr,          init = 1,                           ev = ZERO
+
+            --Global variable holds Pointer to next TCB in the TCB list
+            VAR Os_tcb_prio_tbl[1]->OSTCBNext,              init = 1,                           ev = NULL
+
+            --Global variable holds Pointer to previous TCB in the TCB list
+            VAR Os_tcb_prio_tbl[1]->OSTCBPrev,              init = 1,                           ev = NULL
+			
+			--Holds the idle counter value
+            VAR Os_idle_ctr,                                init = (T_ULONG)0,                  ev = (T_ULONG)4
+            
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+	      --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to create OsTaskIdle
+            STUB OsTaskCreate (NULL,OS_LOWEST_PRIO)0
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+            
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+
+        -- Called function for initialization purpose :
+        #OsInit();
+
+        -- Calling the Unit Under Test :
+        #ret_OsTcbInit = OsTcbInit(prio,stck);
+
+    END ELEMENT
+   
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsTcbInit-DB-LLR-003]
+    COMMENT The function Sets OSTCBPrev of Pointer to doubly linked list of TCBs to free TCB list
+    COMMENT when Pointer to doubly linked list of TCBs has valid data.
+    COMMENT In this test case prio tested for nominal value(60) and Os_tcb_prio_tbl
+    COMMENT tested for nominal index value(60).
+    COMMENT Equivalence Class 12 
+    COMMENT </TD>
+
+    --Address of PTU_Os_tcb_prio_tbl is assigned to 60th index(prio value) of Os_tcb_prio_tbl
+    #Os_tcb_prio_tbl[60] = PTU_Os_tcb_prio_tbl;
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds Task prio. value
+            VAR prio,                                       init = 60,                  ev = init   
+
+            --Holds pointer to the top-of-stck
+            VAR stck,                                       init = (void *)&PTU_Stack,  ev = init 
+            
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                            init = 0,                   ev = 65535 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of function 'OsTcbInit'
+            VAR ret_OsTcbInit,                              init = 20,                  ev = OS_NO_ERR 
+
+            --Global variable holds Pointer to current top of stck
+            VAR Os_tcb_prio_tbl[60]->OSTCBStkPtr,           init = 1,                   ev =(void *) &PTU_Stack
+
+            --Global variable holds Task prio value
+            VAR Os_tcb_prio_tbl[60]->OSTCBPrio,             init = 0,                   ev = 60
+
+            --Global variable holds Task status 
+            VAR Os_tcb_prio_tbl[60]->OSTCBStat,             init = 1,                   ev = 0
+
+            --Global variable holds Nbr ticks to delay task
+            VAR Os_tcb_prio_tbl[60]->OSTCBDly,              init = 1,                   ev = 0
+
+            --Global variable holds Index into ready table corresponding to task prio value
+            VAR Os_tcb_prio_tbl[60]->OSTCBY,                init = 1,                   ev = 0x07
+
+            --Global variable holds Bit mask value to access bit position in ready group
+            VAR Os_tcb_prio_tbl[60]->OSTCBBitY,             init = 1,                   ev = 0x80
+
+            --Global variable holds Bit position value in group  corresponding to task prio
+            VAR Os_tcb_prio_tbl[60]->OSTCBX,                init = 1,                   ev = 0x04
+
+            --Global variable holds Bit mask value to access bit position in ready table
+            VAR Os_tcb_prio_tbl[60]->OSTCBBitX,             init = 0,                   ev = 0x10
+
+            --Global variable holds Pointer to event control block
+            VAR Os_tcb_prio_tbl[60]->OSTCBEventPtr,         init = 1,                   ev = NULL
+			
+			--Holds the idle counter value
+            VAR Os_idle_ctr,                                init = (T_ULONG)0,          ev = (T_ULONG)4
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()65535
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (65535)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()65535
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (65535)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()65535
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (65535)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()65535
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (65535)
+
+            --called to create OsTaskIdle
+            STUB OsTaskCreate (NULL,OS_LOWEST_PRIO)0
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()65535
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (65535)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()65535
+
+            --called to restore the prio mask regist
+            STUB RestoreStatusReg (65535)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()65535
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (65535)
+            
+            --called to disable interrupts
+            STUB SaveStatusReg ()65535
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (65535)
+
+        END SIMUL
+
+        -- Called function for initialization purpose :
+        #OsInit();
+        #OsTcbInit(prio,stck);
+
+        -- Calling the Unit Under Test :
+        #ret_OsTcbInit = OsTcbInit(prio,stck);
+
+    END ELEMENT
+
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsTcbInit-DB-LLR-003]
+    COMMENT The function performs following operations when free TCB is obtained successfully from the free TCB list
+    COMMENT a)Updates the free TCB list with the pointer to the next TCB (OSTCBNext) in the free TCB list
+    COMMENT b) Calls RestoreStatusReg to restore the priority mask register
+    COMMENT c)Sets the following members of the free TCB list
+    COMMENT     - pointers to current stack(OSTCBStkPtr) to stack pointer 'stck'
+    COMMENT     - task priority (OSTCBPrio) to the current task prioirty 'prio'
+    COMMENT     - task status (OSTCBStat) to OS_STAT_RDY
+    COMMENT     - task delay (OSTCBDly) to ZERO
+    COMMENT     - OSTCBY to current task priority 'prio' right shifted by THREE.
+    COMMENT     - OSTCBBitY to value of Os_map_tbl with index as OSTCBY of free TCB list structure
+    COMMENT     - OSTCBX to current task priority 'prio' bitwise AND of HEX_SEVEN.
+    COMMENT     - OSTCBBitX to value of Os_map_tbl with index as OSTCBX of free TCB list structure
+    COMMENT     - OSTCBEventPtr to null
+    COMMENT     - call SaveStatusReg to disable interrupts
+    COMMENT  d)sets Os_tcb_prio_tbl with index 'prio' to free TCB   
+    COMMENT  e) sets the free TCB member
+    COMMENT     - OSTCBNext to pointer to next TCB in the Pointer to doubly linked list of TCBs
+    COMMENT     - OSTCBPrev to NULL
+    COMMENT f)the function does nothing when Pointer to doubly linked list of TCBs has no valid data
+    COMMENT g)Sets the Pointer to doubly linked list of TCBs to free TCB list
+    COMMENT h)Makes the task ready to run by updating the following values
+    COMMENT     - Os_rdy_grp Bitwise OR with OSTCBBitY of free TCB
+    COMMENT     - Os_rdy_tbl index OSTCBY of free TCB  to Os_rdy_tbl Bitwise OR with OSTCBBitX of free TCB
+    COMMENT i)Sends a request to uCOS to enable all the interrupt by calling function RestoreStatusReg
+    COMMENT j)Returns OS_NO_ERR
+    COMMENT In this test case prio tested for nominal value(63) and Os_tcb_prio_tbl
+    COMMENT tested for maximum index value(63). 
+    COMMENT Equivalence Class 10,13,52,53     
+    COMMENT </TD>
+
+    --Address of PTU_Os_tcb_prio_tbl is assigned to 63rd index(prio value) of Os_tcb_prio_tbl
+    #Os_tcb_prio_tbl[63] = PTU_Os_tcb_prio_tbl;
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds Task prio. value
+            VAR prio,                                       init = 63,                              ev = init   
+
+            --Holds pointer to the top-of-stck
+            VAR stck,                                       init =(void *) &PTU_Stack,              ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                            init = 0,                               ev = 100 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of function 'OsTcbInit'
+            VAR ret_OsTcbInit,                              init = 20,                              ev = OS_NO_ERR 
+
+            --Global variable holds Pointer to current top of stck
+            VAR Os_tcb_prio_tbl[63]->OSTCBStkPtr,           init = 1,                               ev =(void *) &PTU_Stack
+
+            --Global variable holds Task prio value
+            VAR Os_tcb_prio_tbl[63]->OSTCBPrio,             init = 0,                               ev = 63
+
+            --Global variable holds Task status 
+            VAR Os_tcb_prio_tbl[63]->OSTCBStat,             init = 1,                               ev = 0
+
+            --Global variable holds Nbr ticks to delay task
+            VAR Os_tcb_prio_tbl[63]->OSTCBDly,              init = 1,                               ev = 0
+
+            --Global variable holds Index into ready table corresponding to task prio value
+            VAR Os_tcb_prio_tbl[63]->OSTCBY,                init = 1,                               ev = 0x07
+
+            --Global variable holds Bit mask value to access bit position in ready group
+            VAR Os_tcb_prio_tbl[63]->OSTCBBitY,             init = 0,                               ev = 0x80
+
+            --Global variable holds Bit position value in group  corresponding to task prio
+            VAR Os_tcb_prio_tbl[63]->OSTCBX,                init = 1,                               ev = 0x07
+
+            --Global variable holds Bit mask value to access bit position in ready table
+            VAR Os_tcb_prio_tbl[63]->OSTCBBitX,             init = 0,                               ev = 0x80
+
+            --Global variable holds Pointer to event control block
+            VAR Os_tcb_prio_tbl[63]->OSTCBEventPtr,         init = 1,                               ev = NULL
+
+            --Global variable holds Pointer to next TCB in the TCB list
+            VAR Os_tcb_prio_tbl[63]->OSTCBNext,             init = 1,                               ev = NULL
+
+            --Global variable holds Pointer to previous TCB in the TCB list
+            VAR Os_tcb_prio_tbl[63]->OSTCBPrev,             init = 1,                               ev = NULL
+			
+			--Holds the idle counter value
+            VAR Os_idle_ctr,                                init = (T_ULONG)0,                      ev = (T_ULONG)4
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to create OsTaskIdle
+            STUB OsTaskCreate (NULL,OS_LOWEST_PRIO)0
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+
+        -- Called function for initialization purpose :
+        #OsInit();
+
+        -- Calling the Unit Under Test :
+        #ret_OsTcbInit = OsTcbInit(prio,stck);
+
+    END ELEMENT
+
+END TEST  -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsTcbInit-DB-LLR-003]
+    COMMENT The function performs following operations when free TCB is obtained successfully from the free TCB list
+    COMMENT a)Updates the free TCB list with the pointer to the next TCB (OSTCBNext) in the free TCB list
+    COMMENT b) Calls RestoreStatusReg to restore the priority mask register
+    COMMENT c)Sets the following members of the free TCB list
+    COMMENT     - pointers to current stack(OSTCBStkPtr) to stack pointer 'stck'
+    COMMENT     - task priority (OSTCBPrio) to the current task prioirty 'prio'
+    COMMENT     - task status (OSTCBStat) to OS_STAT_RDY
+    COMMENT     - task delay (OSTCBDly) to ZERO
+    COMMENT     - OSTCBY to current task priority 'prio' right shifted by THREE.
+    COMMENT     - OSTCBBitY to value of Os_map_tbl with index as OSTCBY of free TCB list structure
+    COMMENT     - OSTCBX to current task priority 'prio' bitwise AND of HEX_SEVEN.
+    COMMENT     - OSTCBBitX to value of Os_map_tbl with index as OSTCBX of free TCB list structure
+    COMMENT     - OSTCBEventPtr to null
+    COMMENT     - call SaveStatusReg to disable interrupts
+    COMMENT  d)sets Os_tcb_prio_tbl with index 'prio' to free TCB   
+    COMMENT  e) sets the free TCB member
+    COMMENT     - OSTCBNext to pointer to next TCB in the Pointer to doubly linked list of TCBs
+    COMMENT     - OSTCBPrev to NULL
+    COMMENT f)the function does nothing when Pointer to doubly linked list of TCBs has no valid data
+    COMMENT g)Sets the Pointer to doubly linked list of TCBs to free TCB list
+    COMMENT h)Makes the task ready to run by updating the following values
+    COMMENT     - Os_rdy_grp Bitwise OR with OSTCBBitY of free TCB
+    COMMENT     - Os_rdy_tbl index OSTCBY of free TCB  to Os_rdy_tbl Bitwise OR with OSTCBBitX of free TCB
+    COMMENT i)Sends a request to uCOS to enable all the interrupt by calling function RestoreStatusReg
+    COMMENT j)Returns OS_NO_ERR
+    COMMENT In this test case prio tested for maximum value(255)
+    COMMENT Equivalence Class 10,13,52,53     
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds Task prio. value
+            VAR prio,                               init = 255,                             ev = init   
+
+            --Holds pointer to the top-of-stck
+            VAR stck,                               init =(void *) &PTU_Stack,              ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                    init = 0,                               ev = 100 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of function 'OsTcbInit'
+            VAR ret_OsTcbInit,                      init = 20,                              ev = OS_NO_ERR 
+			
+			--Holds the idle counter value
+            VAR Os_idle_ctr,                        init = (T_ULONG)0,                      ev = (T_ULONG)4
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to create OsTaskIdle
+            STUB OsTaskCreate (NULL,OS_LOWEST_PRIO)0
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+            
+        END SIMUL
+
+        -- Called function for initialization purpose :
+        #OsInit();
+
+        -- Calling the Unit Under Test :
+        #ret_OsTcbInit = OsTcbInit(prio,stck);
+
+    END ELEMENT
+
+END TEST  -- TEST 5
+
+TEST 6
+FAMILY robustness
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsTcbInit-DB-LLR-003]
+    COMMENT The function performs following operations when free TCB is obtained successfully from the free TCB list
+    COMMENT a)Updates the free TCB list with the pointer to the next TCB (OSTCBNext) in the free TCB list
+    COMMENT b) Calls RestoreStatusReg to restore the priority mask register
+    COMMENT c)Sets the following members of the free TCB list
+    COMMENT     - pointers to current stack(OSTCBStkPtr) to stack pointer 'stck'
+    COMMENT     - task priority (OSTCBPrio) to the current task prioirty 'prio'
+    COMMENT     - task status (OSTCBStat) to OS_STAT_RDY
+    COMMENT     - task delay (OSTCBDly) to ZERO
+    COMMENT     - OSTCBY to current task priority 'prio' right shifted by THREE.
+    COMMENT     - OSTCBBitY to value of Os_map_tbl with index as OSTCBY of free TCB list structure
+    COMMENT     - OSTCBX to current task priority 'prio' bitwise AND of HEX_SEVEN.
+    COMMENT     - OSTCBBitX to value of Os_map_tbl with index as OSTCBX of free TCB list structure
+    COMMENT     - OSTCBEventPtr to null
+    COMMENT     - call SaveStatusReg to disable interrupts
+    COMMENT  d)sets Os_tcb_prio_tbl with index 'prio' to free TCB   
+    COMMENT  e) sets the free TCB member
+    COMMENT     - OSTCBNext to pointer to next TCB in the Pointer to doubly linked list of TCBs
+    COMMENT     - OSTCBPrev to NULL
+    COMMENT f)the function does nothing when Pointer to doubly linked list of TCBs has no valid data
+    COMMENT g)Sets the Pointer to doubly linked list of TCBs to free TCB list
+    COMMENT h)Makes the task ready to run by updating the following values
+    COMMENT     - Os_rdy_grp Bitwise OR with OSTCBBitY of free TCB
+    COMMENT     - Os_rdy_tbl index OSTCBY of free TCB  to Os_rdy_tbl Bitwise OR with OSTCBBitX of free TCB
+    COMMENT i)Sends a request to uCOS to enable all the interrupt by calling function RestoreStatusReg
+    COMMENT j)Returns OS_NO_ERR
+    COMMENT In this test case prio tested for minimum value(0) and Os_tcb_prio_tbl
+    COMMENT tested for minimum index value(0) and stck tested for NULL value. 
+    COMMENT Equivalence Class 10,13,52,53,72  
+    COMMENT </TD>
+
+    --Address of PTU_Os_tcb_prio_tbl is assigned to 0th index(prio value) of Os_tcb_prio_tbl
+    #Os_tcb_prio_tbl[0] = PTU_Os_tcb_prio_tbl;
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds Task prio. value
+            VAR prio,                                       init = 0,                       ev = init   
+
+            --Holds pointer to the top-of-stck
+            VAR stck,                                       init = NULL,                    ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                            init = 0,                       ev = 100 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of function 'OsTcbInit'
+            VAR ret_OsTcbInit,                              init = 10,                      ev = OS_NO_ERR 
+
+            --Global variable holds Pointer to current top of stck
+            VAR Os_tcb_prio_tbl[0]->OSTCBStkPtr,            init = 1,                       ev = NULL
+
+            --Global variable holds Task prio value
+            VAR Os_tcb_prio_tbl[0]->OSTCBPrio,              init = 0,                       ev = 0
+
+            --Global variable holds Task status 
+            VAR Os_tcb_prio_tbl[0]->OSTCBStat,              init = 1,                       ev = 0
+
+            --Global variable holds Nbr ticks to delay task
+            VAR Os_tcb_prio_tbl[0]->OSTCBDly,               init = 1,                       ev = 0
+
+            --Global variable holds Index into ready table corresponding to task prio value
+            VAR Os_tcb_prio_tbl[0]->OSTCBY,                 init = 1,                       ev = 0
+
+            --Global variable holds Bit mask value to access bit position in ready group
+            VAR Os_tcb_prio_tbl[0]->OSTCBBitY,              init = 0,                       ev = 1
+
+            --Global variable holds Bit position value in group  corresponding to task prio
+            VAR Os_tcb_prio_tbl[0]->OSTCBX,                 init = 1,                       ev = 0
+
+            --Global variable holds Bit mask value to access bit position in ready table
+            VAR Os_tcb_prio_tbl[0]->OSTCBBitX,              init = 0,                       ev = 1
+
+            --Global variable holds Pointer to event control block
+            VAR Os_tcb_prio_tbl[0]->OSTCBEventPtr,          init = 1,                       ev = NULL
+
+            --Global variable holds Pointer to next TCB in the TCB list
+            VAR Os_tcb_prio_tbl[0]->OSTCBNext,              init = 1,                       ev = NULL
+
+            --Global variable holds Pointer to previous TCB in the TCB list
+            VAR Os_tcb_prio_tbl[0]->OSTCBPrev,              init = 1,                       ev = NULL
+			
+			--Holds the idle counter value
+            VAR Os_idle_ctr,                                init = (T_ULONG)0,              ev = (T_ULONG)4
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to create OsTaskIdle
+            STUB OsTaskCreate (NULL,OS_LOWEST_PRIO)0
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+
+        -- Called function for initialization purpose :
+        #OsInit();
+
+        -- Calling the Unit Under Test :
+        #ret_OsTcbInit = OsTcbInit(prio,stck);
+
+    END ELEMENT
+   
+END TEST  -- TEST 6
+
+END SERVICE --OsTcbInit
+

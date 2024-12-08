@@ -1,0 +1,641 @@
+HEADER hducommfcbit, Source Code Ver : 1.4, TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Priyanka N
+--
+-- File Name           : hducommfcbit.ptu
+--
+-- Test Creation Date  : 28.10.2017
+--
+-- Tested Functions    : StackTest
+--                       CbitTask
+--                       CbitInit
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--   1.1                28.10.2017      Priyanka N         Created the PTU file.
+--   1.2                11.11.2017      Priyanka N         Updated as per #PR100171
+--   1.3                14.11.2017      Priyanka N         Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hducommfcbit.h"
+##include "hducommfoscfg.h"
+##include "hducommfucos.h"
+##include "hducommfapp.h"
+##include "hducommfinit.h"
+##include "hducommfa429.h"
+##include "hducommfwdog.h"
+##include "hducommftbase.h"
+##include "hducommfarinc825.h"
+
+##define CBIT_ERR_VAL 1U
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+-- Declarations of the global variables of the tested file
+    
+    -- Array used to handle the parameter 'buffer' in static function "StackTest"
+    #T_OS_STK A429_task_stk[1024U];
+    #T_OS_STK Init_task_stk[1024U];
+    #T_OS_STK L_app_task_stk[1024U];
+    #T_OS_STK Os_task_idle_stk[512U];
+
+-- Declarations of the temporary variable
+
+    -- Variable used  in function OsSemPend
+    #T_UINT8 PTU_error;
+                
+    -- Variable used as return value of stub OsSemCreate
+    #T_OS_EVENT PTU_ret_OsSemCreate;
+    
+    -- Temporary variable created to handle the stub parameter 'ps_semaphore'
+    # T_OS_EVENT *PTU_ps_semaphore;
+    
+    -- Temporary variable created to handle the stub parameter 'pevent'
+    # T_OS_EVENT *PTU_pevent;
+
+    -- Temporary variable created for loop usage
+    #T_UINT8 PTU_i;
+    
+    -- Temporary variables created to verify the parameter "p_dest" in function "HwMemset"
+    #T_UINT8 PTU_s_tx_message[8];
+    # T_UINT8 *PTU_temp;
+    
+    -- Temporary variable created to verify the parameter "ps_xm" in function "A825Xmit"
+    #T_A825_MESSAGE PTU_ps_xm;
+    
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hducommfcbit.ptu
+    COMMENT
+    COMMENT Tested Functions : StackTest
+    COMMENT                    CbitTask
+    COMMENT                    CbitInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT 1. Snippet of code is added in functions "CbitInit" and "CbitTask".
+    COMMENT  to terminate the infinite loop
+    COMMENT
+    COMMENT T_UINT16 PTU_count =0; /*local variable declared for testing purpose*/
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT .......
+    COMMENT    /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT    PTU_count++;
+    COMMENT    if(PTU_count == 3)
+    COMMENT    {
+    COMMENT         break;
+    COMMENT    } 
+    COMMENT    else
+    COMMENT    {
+    COMMENT         /*nothing*/
+    COMMENT    }
+    COMMENT }/*End of while loop*/
+    COMMENT Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition.
+    COMMENT
+    COMMENT 2. In function "StackTest", due to memory constraints 'break' statement is added to terminate the infinite loop 
+    COMMENT
+    COMMENT for(index = DEC_ZERO; index<=DEC_TEN; index++)
+    COMMENT {
+    COMMENT .......
+    COMMENT   else
+    COMMENT   {
+    COMMENT   ....
+    COMMENT    while(TRUE)
+    COMMENT     {
+    COMMENT     ....
+    COMMENT      break;
+    COMMENT     }/*End of while loop*/
+    COMMENT   }
+    COMMENT  ....
+    COMMENT }
+    COMMENT Hence while loop cannot be covered for 0 and 2 or more times and coverage cannot be obtained for the FALSE part of while condition.
+    COMMENT </AC>
+    COMMENT
+    COMMENT 1. Due to local variable 'index' in function "StackTest" below for loop is covered for 2 or more times.
+    COMMENT
+    COMMENT for(index = DEC_ZERO; index<=DEC_TEN; index++)
+    COMMENT {
+    COMMENT .......
+    COMMENT   ....
+    COMMENT }
+    COMMENT Hence for loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part.
+    COMMENT
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function "CbitInit", calls the "OsSemCreate" and return value equal to NULL
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function "CbitInit", calls the "OsSemCreate" and return value not equal to NULL
+    COMMENT 
+    COMMENT Class 3
+    COMMENT Function "CbitInit", calls the "OsTaskCreate" and return value equal to OS_NO_ERR
+    COMMENT
+    COMMENT Class 4
+    COMMENT Function "CbitInit", calls the "OsTaskCreate" and return value not equal to OS_NO_ERR
+    COMMENT
+    COMMENT Class 5
+    COMMENT Function "CbitInit", calls the function "WdogKickWatchDog"
+    COMMENT
+    COMMENT Class 6
+    COMMENT Function "CbitInit", calls the function "TbaseTaskSignaling"
+    COMMENT
+    COMMENT Class 7
+    COMMENT Function "CbitInit", calls the function "OsTaskCreate" which intern calls the function "CbitTask"
+    COMMENT
+    COMMENT Class 8
+    COMMENT Function "CbitTask" calls the function "OsSemPend" 
+    COMMENT
+    COMMENT Class 9
+    COMMENT Function "CbitTask" calls the static function "StackTest"   
+    COMMENT
+    COMMENT Class 10
+    COMMENT In Function "StackTest", value of buffer is equal to 'STK_VAL'
+    COMMENT
+    COMMENT Class 11
+    COMMENT In Function "StackTest", value of buffer is not equal to 'STK_VAL'
+    COMMENT
+    COMMENT Class 12
+    COMMENT Function "StackTest", calls the function "HwMemset". 
+    COMMENT
+    COMMENT Class 13
+    COMMENT Function "StackTest", calls the function "A825Xmit".
+    COMMENT
+    COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+DEFINE STUB hducommfcbit_c 165
+
+    -- Parameter 'ptask' is made as _no since function pointer to the task is passed as a parameter
+    -- hence verified explicitly
+    #T_UINT8 OsTaskCreate(void _no (  *ptask)(void* dptr), void _in *p_data, void _in *pt_os, T_UINT8 _in u8_prio)
+    # {
+    # (*ptask)(p_data);
+    # }
+
+    -- Parameter 'ps_semaphore' is made as _no since static variable address is passed as a parameter
+    #void TbaseTaskSignaling(T_UINT16 _in u16_task_ticks, T_OS_EVENT _inout _no *ps_semaphore)
+    # {
+    # PTU_ps_semaphore = ps_semaphore;
+    # }
+
+    #void WdogKickWatchDog(void);
+    #T_OS_EVENT* OsSemCreate(T_UWORD _in value);
+
+    -- Parameter 'error' is made as _no since local variable address is passed as a parameter
+    #void OsSemPend(T_OS_EVENT _inout _no *pevent, T_UWORD _in timeout, T_UBYTE _inout _no *error)
+    # {
+    # PTU_error = *error;
+    # PTU_pevent = pevent;
+    # }
+
+    --Parameter 'ps_xm' is made as _no hence it is verified explicitly.
+    #T_A825_XMIT_RESULT A825Xmit(T_A825_MESSAGE _inout _no *ps_xm)
+    # {
+    # PTU_ps_xm = *ps_xm;
+    # }
+    
+    --Parameter 'p_dest' is made as _no hence it is verified explicitly.
+    #void HwMemset(void _in _no *p_dest, T_UINT8 _in value, T_UINT32 _in count)
+    #{
+    # PTU_temp = (T_UINT8*)p_dest;
+    # for(PTU_i=0;PTU_i<count;PTU_i++)
+    # {
+    # *PTU_temp = value;
+    # PTU_s_tx_message[PTU_i] = *PTU_temp;
+    # PTU_temp++;
+    # }
+    #}
+
+END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file
+
+ENVIRONMENT ENV_hducommfcbit_c
+
+  ARRAY Cbit_task_stack,        init = { others => 0 },     ev = init
+
+END ENVIRONMENT -- ENV_hducommfcbit_c
+
+USE ENV_hducommfcbit_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CbitInit
+--------------------------------------------------------------------------------
+SERVICE CbitInit
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+ 
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hducommfcbit-CbitInit-CB-LLR-001]
+    COMMENT The function calls 'OsSemCreate' with parameter (DEC_ZERO) to create a semaphore 
+    COMMENT and does the following when the function 'OsSemCreate' returns NULL,
+    COMMENT a)loops infinitely and call WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 1, 5
+    COMMENT
+    COMMENT [hducommfcbit-CbitInit-CB-LLR-002]
+    COMMENT The function calls 'TbaseTaskSignaling' with parameter (CBIT_TASK_TICKS,  Reference to the created semaphore)
+    COMMENT to initialize the task signalling parameters
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hducommfcbit-CbitInit-CB-LLR-003]
+    COMMENT Function 'OsTaskCreate' is called to create the Task for CBIT by passing following arguments
+    COMMENT and does nothing since return value of "OsTaskCreate" is equal to OS_NO_ERR
+    COMMENT -Pointer to the CbitTask's address.
+    COMMENT -NULL pointer passed as argument to the CbitTask.
+    COMMENT -CbitTask's top-of-stack i.e Cbit_task_Stack[CBIT_TASK_STK_SIZE].
+    COMMENT -Task priority as CBIT_TASK_PRIO
+    COMMENT Equivalence Class 3, 7
+    COMMENT
+    COMMENT [hducommfcbit-CbitTask-CB-LLR-001]
+    COMMENT The function "CbitTask" loops continuously to perform the following
+    COMMENT 1)Calls 'OsSemPend' for waiting on a semaphore.
+    COMMENT 2)Calls 'StackTest' with address of top of the stack Cbit_task_stack and length of CbitTask stack CBIT_TASK_STK_SIZE as parameters.
+    COMMENT 3)Calls 'StackTest' with address of top of the stack Os_task_idle_stk and length of IdleTask stack OS_IDLE_TASK_STK_SIZE as parameters.
+    COMMENT 4)Calls 'StackTest' with address of top of the stack L_app_task_stk and length of AppTask stack APP_TASK_STK_SIZE as parameters.
+    COMMENT 5)Calls 'StackTest' with address of top of the stack Init_task_stk and length of InitTask stack INIT_TASK_STK_SIZE as parameters.
+    COMMENT 6)Calls 'StackTest' with address of top of the stack A429_task_stk and length of A429Task stack A429_TASK_STK_SIZE as parameters.
+    COMMENT Here index values are exercised for nominal values
+    COMMENT Equivalence Class 8, 9
+    COMMENT
+    COMMENT [hducommfcbit-StackTest-CB-LLR-001]
+    COMMENT The function does the stack overflow condition check for the last 30 percent of the stack by performing the following 
+    COMMENT 1)Calculates the Stack test start index as  GET_80PERC_STACK with parameter length.
+    COMMENT 2)Read eleven contiguous memory locations for the pattern STK_VAL.Does nothing
+    COMMENT when pattern STK_VAL is matching with the pattern present in the stack location.
+    COMMENT Equivalence Class 10
+    COMMENT </TD>
+
+       ELEMENT
+
+        COMMENT INPUT SECTION:
+        
+          -- Array initialization
+          ARRAY Cbit_task_stack,    init = {others=> (T_UINT32)0xDEADDEADU},        ev = init
+          
+          ARRAY Os_task_idle_stk,       init = {others=> (T_UINT32)0xDEADDEADU},        ev = init
+          
+          ARRAY L_app_task_stk,         init = {others=> (T_UINT32)0xDEADDEADU},        ev = init
+          
+          ARRAY Init_task_stk,      init = {others=> (T_UINT32)0xDEADDEADU},        ev = init
+          
+          ARRAY A429_task_stk,      init = {others=> (T_UINT32)0xDEADDEADU},        ev = init
+
+          -- Variable initialized before usage
+          VAR PTU_ret_OsSemCreate ,     init = 10 ,                     ev = init
+          
+        COMMENT OUTPUT SECTION:
+            
+          -- 'PTU_error' holds the local variable 'u8_err' value
+          VAR PTU_error ,       init= DEC_ONE ,                 ev = DEC_ZERO
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+          -- 'PTU_ps_semaphore' holds the return value of "OsSemCreate"
+          VAR PTU_ps_semaphore ,    init = DEC_ONE ,                ev= NULL
+          
+          -- 'PTU_pevent' holds the return value of "OsSemCreate"
+          VAR PTU_pevent ,      init = DEC_ONE ,                ev= NULL
+
+        -- Stub Calls :
+        SIMUL
+
+          -- Creates and initializes the Semaphore
+          STUB OsSemCreate(DEC_ZERO)(T_OS_EVENT *)NULL
+    
+          -- Reload watchdog counter
+          STUB WdogKickWatchDog 1..3=>()
+    
+          -- Installs the following task signaling parameters into the timebase to be serviced
+          STUB TbaseTaskSignaling(CBIT_TASK_TICKS)
+    
+          -- Creates OS Task
+          STUB OsTaskCreate(NULL,&Cbit_task_stack[CBIT_TASK_STK_SIZE],CBIT_TASK_PRIO)OS_NO_ERR
+    
+          -- Waits on a Semaphore
+          STUB OsSemPend 1..3=> (DEC_ZERO)
+    
+        END SIMUL
+
+          -- Calling Unit Under Test
+          #CbitInit();
+       END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+ 
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hducommfcbit-CbitInit-CB-LLR-001]
+    COMMENT The function calls 'OsSemCreate' with parameter (DEC_ZERO) to create a semaphore 
+    COMMENT and does nothing when the function 'OsSemCreate' returns other than NULL,
+    COMMENT Equivalence Class 2, 5
+    COMMENT
+    COMMENT [hducommfcbit-CbitInit-CB-LLR-003]
+    COMMENT Function 'OsTaskCreate' is called to create the Task for CBIT by passing following arguments
+    COMMENT and loops infinitely when the function 'OsTaskCreate' returns other than OS_NO_ERR 
+    COMMENT -Pointer to the CbitTask's address.
+    COMMENT -NULL pointer passed as argument to the CbitTask.
+    COMMENT -CbitTask's top-of-stack i.e Cbit_task_Stack[CBIT_TASK_STK_SIZE].
+    COMMENT -Task priority as CBIT_TASK_PRIO
+    COMMENT Equivalence Class 4, 7
+    COMMENT
+    COMMENT [hducommfcbit-CbitTask-CB-LLR-001]
+    COMMENT The function "CbitTask" loops continuously to perform the following
+    COMMENT 1)Calls 'OsSemPend' for waiting on a semaphore.
+    COMMENT 2)Calls 'StackTest' with address of top of the stack Cbit_task_stack and length of CbitTask stack CBIT_TASK_STK_SIZE as parameters.
+    COMMENT 3)Calls 'StackTest' with address of top of the stack Os_task_idle_stk and length of IdleTask stack OS_IDLE_TASK_STK_SIZE as parameters.
+    COMMENT 4)Calls 'StackTest' with address of top of the stack L_app_task_stk and length of AppTask stack APP_TASK_STK_SIZE as parameters.
+    COMMENT 5)Calls 'StackTest' with address of top of the stack Init_task_stk and length of InitTask stack INIT_TASK_STK_SIZE as parameters.
+    COMMENT 6)Calls 'StackTest' with address of top of the stack A429_task_stk and length of A429Task stack A429_TASK_STK_SIZE as parameters.
+    COMMENT Here index values are exercised for minimum values
+    COMMENT Equivalence Class 8, 9
+    COMMENT
+    COMMENT [hducommfcbit-StackTest-CB-LLR-001]
+    COMMENT The function does the stack overflow condition check for the last 30 percent of the stack by performing the following 
+    COMMENT 1) Calculates the Stack test start index as  GET_80PERC_STACK with parameter length.
+    COMMENT 2) Reads eleven contiguous memory locations for the pattern STK_VAL. when the pattern STK_VAL is not matching with the pattern present
+    COMMENT in the stack location then does the following, to transmit the CBIT error message
+    COMMENT i)Sets the parameters of A825 message as follows. 
+    COMMENT -lcc of A825 message to NOC.
+    COMMENT -sfid of BID of sID to HOWELL_DAU_FID.
+    COMMENT -rsd of BID of sID to DEC_ZERO.
+    COMMENT -lcl of BID of sID to DEC_ONE.
+    COMMENT -pvt of BID of sID to DEC_ONE.
+    COMMENT -rci of BID of  sID to DEC_ZERO.
+    COMMENT -u8PaySize to DEC_ONE.
+    COMMENT ii)The function loops infinitely and does the following:
+    COMMENT -Calls HwMemset with payload of  A825 message, DEC_ZERO and DEC_EIGHT as parameter.
+    COMMENT -Sets doc of BID of sID of  A825 message  to CBIT_ERROR.
+    COMMENT -Sets u8PayLoad[0] of  A825 message  to CBIT_ERR_VAL.
+    COMMENT -Calls the function A825Xmit with A825 message as parameter.
+    COMMENT -Calls the function WdogKickWatchDog
+    COMMENT Equivalence Class 5, 11, 12, 13
+    COMMENT </TD>
+
+       ELEMENT
+
+        COMMENT INPUT SECTION:
+        
+          -- Array initialization
+          ARRAY Cbit_task_stack,        init = {others=> (T_UINT32)0x0U},       ev = init
+          
+          ARRAY Os_task_idle_stk,           init = {others=> (T_UINT32)0x0U},       ev = init
+          
+          ARRAY L_app_task_stk,             init = {others=> (T_UINT32)0x0U},       ev = init
+          
+          ARRAY Init_task_stk,          init = {others=> (T_UINT32)0x0U},       ev = init
+          
+          ARRAY A429_task_stk,          init = {others=> (T_UINT32)0x0U},       ev = init
+
+          -- Variable initialized before usage
+          VAR PTU_ret_OsSemCreate ,         init = 10 ,                 ev = init
+          
+        COMMENT OUTPUT SECTION:
+            
+          -- 'PTU_error' holds the local variable 'u8_err' value
+          VAR PTU_error ,           init= DEC_ONE ,             ev = DEC_ZERO
+   
+          -- Paramter of stub "HwMemset" is updated with value zero
+          VAR PTU_s_tx_message ,            init = { others => 10 } ,           ev = { others => 0 }
+
+          -- structure members 'lcc' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.lcc ,               init = EEC ,                    ev = NOC
+
+          -- structure members 'sfid' are verified through the paramter of stub "A825Xmit"          
+          VAR PTU_ps_xm.sID.BID.sfid ,      init = 0 ,                      ev = HOWELL_DAU_FID
+
+          -- structure members 'rsd' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.sID.BID.rsd ,       init = 0 ,                      ev = DEC_ZERO
+
+          -- structure members 'lcl' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.sID.BID.lcl ,       init = 0 ,                      ev = DEC_ONE
+
+          -- structure members 'pvt' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.sID.BID.pvt ,       init = 0 ,                      ev = DEC_ONE
+
+          -- structure members 'rci' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.sID.BID.rci ,       init = 1 ,                      ev = 0
+
+          -- structure members 'u8PaySize' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.u8PaySize ,             init = 0 ,                      ev = DEC_ONE
+
+          -- structure members 'doc' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.sID.BID.doc ,       init = 0 ,                      ev = CBIT_ERROR
+
+          -- structure members 'u8PayLoad' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.u8PayLoad[0] ,      init = 10 ,                     ev = CBIT_ERR_VAL
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+          -- 'PTU_ps_semaphore' holds the return value of "OsSemCreate"
+          VAR PTU_ps_semaphore ,        init = DEC_ONE ,            ev= &PTU_ret_OsSemCreate
+          
+          -- 'PTU_pevent' holds the return value of "OsSemCreate"
+          VAR PTU_pevent ,          init = DEC_ONE ,            ev= &PTU_ret_OsSemCreate
+
+        -- Stub Calls :
+        SIMUL
+
+          -- Creates and initializes the Semaphore
+          STUB OsSemCreate(DEC_ZERO)(T_OS_EVENT *)&PTU_ret_OsSemCreate
+
+          -- Installs the following task signaling parameters into the timebase to be serviced
+          STUB TbaseTaskSignaling(CBIT_TASK_TICKS)
+    
+          -- Creates OS Task
+          STUB OsTaskCreate(NULL,&Cbit_task_stack[CBIT_TASK_STK_SIZE],CBIT_TASK_PRIO)OS_NO_MORE_TCB
+    
+          -- Waits on a Semaphore
+          STUB OsSemPend 1..3=> (DEC_ZERO)
+    
+          -- Function copies value to destination buffer. 
+          STUB HwMemset 1..165=>(DEC_ZERO,DEC_EIGHT)
+          
+          -- function builds a CAN message from the user supplied ARINC 825 message
+          STUB A825Xmit 1..165=>()A825_XM_OK
+          
+        END SIMUL
+
+          -- Calling Unit Under Test
+          #CbitInit();
+          
+       END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+ 
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hducommfcbit-CbitTask-CB-LLR-001]
+    COMMENT The function "CbitTask" loops continuously to perform the following
+    COMMENT 1)Calls 'OsSemPend' for waiting on a semaphore.
+    COMMENT 2)Calls 'StackTest' with address of top of the stack Cbit_task_stack and length of CbitTask stack CBIT_TASK_STK_SIZE as parameters.
+    COMMENT 3)Calls 'StackTest' with address of top of the stack Os_task_idle_stk and length of IdleTask stack OS_IDLE_TASK_STK_SIZE as parameters.
+    COMMENT 4)Calls 'StackTest' with address of top of the stack L_app_task_stk and length of AppTask stack APP_TASK_STK_SIZE as parameters.
+    COMMENT 5)Calls 'StackTest' with address of top of the stack Init_task_stk and length of InitTask stack INIT_TASK_STK_SIZE as parameters.
+    COMMENT 6)Calls 'StackTest' with address of top of the stack A429_task_stk and length of A429Task stack A429_TASK_STK_SIZE as parameters.
+    COMMENT Here index values are exercised for maximum values
+    COMMENT Equivalence Class 8, 9
+    COMMENT </TD>
+
+       ELEMENT
+
+        COMMENT INPUT SECTION:
+        
+          -- Array initialization
+          ARRAY Cbit_task_stack,        init = {others=> (T_UINT32)0xFFFFFFFFU},        ev = init
+          
+          ARRAY Os_task_idle_stk,           init = {others=> (T_UINT32)0xFFFFFFFFU},        ev = init
+          
+          ARRAY L_app_task_stk,             init = {others=> (T_UINT32)0xFFFFFFFFU},        ev = init
+          
+          ARRAY Init_task_stk,          init = {others=> (T_UINT32)0xFFFFFFFFU},        ev = init
+          
+          ARRAY A429_task_stk,          init = {others=> (T_UINT32)0xFFFFFFFFU},        ev = init
+
+          -- Variable initialized before usage
+          VAR PTU_ret_OsSemCreate ,         init = 10 ,                     ev = init
+          
+        COMMENT OUTPUT SECTION:
+            
+          -- 'PTU_error' holds the local variable 'u8_err' value
+          VAR PTU_error ,           init= DEC_ONE ,                 ev = DEC_ZERO
+
+          -- Paramter of stub "HwMemset" is updated with value zero
+          VAR PTU_s_tx_message ,            init = { others => 10 } ,               ev = { others => 0 }
+
+          -- structure members 'lcc' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.lcc ,               init = EEC ,                        ev = NOC
+
+          -- structure members 'sfid' are verified through the paramter of stub "A825Xmit"          
+          VAR PTU_ps_xm.sID.BID.sfid ,      init = 0 ,                          ev = HOWELL_DAU_FID
+
+          -- structure members 'rsd' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.sID.BID.rsd ,       init = 0 ,                          ev = DEC_ZERO
+
+          -- structure members 'lcl' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.sID.BID.lcl ,       init = 0 ,                          ev = DEC_ONE
+
+          -- structure members 'pvt' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.sID.BID.pvt ,       init = 0 ,                          ev = DEC_ONE
+
+          -- structure members 'rci' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.sID.BID.rci ,       init = 1 ,                          ev = 0
+
+          -- structure members 'u8PaySize' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.u8PaySize ,             init = 0 ,                          ev = DEC_ONE
+
+          -- structure members 'doc' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.sID.BID.doc ,       init = 0 ,                          ev = CBIT_ERROR
+
+          -- structure members 'u8PayLoad' are verified through the paramter of stub "A825Xmit"
+          VAR PTU_ps_xm.u8PayLoad[0] ,      init = 10 ,                         ev = CBIT_ERR_VAL
+      
+        COMMENT INPUT/OUTPUT SECTION:
+            
+          -- 'PTU_ps_semaphore' holds the return value of "OsSemCreate"
+          VAR PTU_ps_semaphore ,        init = DEC_ONE ,                ev= &PTU_ret_OsSemCreate
+
+          -- 'PTU_pevent' holds the return value of "OsSemCreate"
+          VAR PTU_pevent ,          init = DEC_ONE ,                ev= &PTU_ret_OsSemCreate
+          
+        -- Stub Calls :
+        SIMUL
+
+          -- Creates and initializes the Semaphore
+          STUB OsSemCreate(DEC_ZERO)(T_OS_EVENT *)&PTU_ret_OsSemCreate
+
+          -- Installs the following task signaling parameters into the timebase to be serviced
+          STUB TbaseTaskSignaling(CBIT_TASK_TICKS)
+    
+          -- Creates OS Task
+          STUB OsTaskCreate(NULL,&Cbit_task_stack[CBIT_TASK_STK_SIZE],CBIT_TASK_PRIO)OS_NO_MORE_TCB
+    
+          -- Waits on a Semaphore
+          STUB OsSemPend 1..3=> (DEC_ZERO)
+  
+          -- Function copies value to destination buffer. 
+          STUB HwMemset 1..165=>(DEC_ZERO,DEC_EIGHT)
+          
+          -- function builds a CAN message from the user supplied ARINC 825 message
+          STUB A825Xmit 1..165=>()A825_XM_OK
+  
+        END SIMUL
+
+          -- Calling Unit Under Test
+          #CbitInit();
+          
+       END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- CbitInit
+

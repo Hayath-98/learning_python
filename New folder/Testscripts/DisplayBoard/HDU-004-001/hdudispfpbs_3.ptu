@@ -1,0 +1,916 @@
+HEADER hdudispfpbs,Source Code Ver : 1.5 ,TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name         : Soumya Patil
+--                       Manu K M
+--
+-- File Name           : hdudispfpbs_3.ptu
+--
+-- Test Creation Date  : 09.10.2017
+--
+-- Tested Functions    : PbsGet
+--                       HwPbsGet
+--
+-- Version History     :
+--
+--  TEST-VERSION           TEST-DATE      TESTER NAME        MODIFICATIONS
+--  ------------           ---------      -----------        -------------
+--    1.1                  09.10.2017     Soumya Patil       Created the PTU file.
+--                                        Manu K M
+--    1.2                  10.11.2017     Soumya Patil       Updated as per #PR100171
+--                                        Manu K M
+--    1.3                  14.11.2017     Soumya Patil       Updated to synchronise PTU version.
+--                                        Manu K M
+--    1.4				   29.07.2020	  Harshitha R		 Updated as per #PR100267
+
+--   
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+##include "hdudispfpbs.h"       
+##include "hdudispfpolygon1.h" 
+##include "hdudispfstandard.h"   
+##include "hdudispftimer.h"     
+##include "hdulibstm32f7xxhalrccex.h" 
+##include "hdudispfucos.h"       
+##include "hdulibstm32f7xxhalgpio.h" 
+##include "hdulibstm32f7xxhal.h" 
+##include "hdulibstm32hallegacy.h" 
+##include "hdulibbasictypes.h" 
+##include "hdudispfgrapp.h" 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+# T_UINT32 U32_critical_sr;
+# T_UINT8 Splash_b1_press;
+# T_UINT8 Splash_done;
+    
+-- Declarations of the temporary variable    
+--Temporary variable to hold gpio_init_struct
+#T_GPIO_INIT PTU_gpio_init_struct, PTU_gpio_init_struct2;
+
+--Temporary variable to hold timer
+#T_TIMER PTU_timer, PTU_timer_in = 0;
+
+--Temporary variable for condition check 
+#T_UINT8 PTU_count;
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Names     : Soumya Patil,
+    COMMENT                    Manu K M
+    COMMENT
+    COMMENT File Name        : hdudispfpbs_3.ptu
+    COMMENT
+    COMMENT Tested Functions : PbsGet
+    COMMENT                    HwPbsGet
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT 1. Header file 'hdulibstm32f4xx.h' is modified for testing purpose.
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define GPIOA               ((T_GPIO *) GPIOA_BASE)*/
+    COMMENT /* Modified for stubbing hardware address */
+    COMMENT T_GPIO PTU_GPIOA;
+    COMMENT #define GPIOA               ((T_GPIO *) &PTU_GPIOA)
+    COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define GPIOB               ((T_GPIO *) GPIOB_BASE)*/
+    COMMENT /* Modified for stubbing hardware address */
+    COMMENT T_GPIO PTU_GPIOB;
+    COMMENT #define GPIOB               ((T_GPIO *) &PTU_GPIOB)
+    COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define GPIOC               ((T_GPIO *) GPIOC_BASE)*/
+    COMMENT /* Modified for stubbing hardware address */
+    COMMENT T_GPIO PTU_GPIOC;
+    COMMENT #define GPIOC               ((T_GPIO *) &PTU_GPIOC)
+    COMMENT 
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define RCC                 ((T_RCC *) RCC_BASE)*/
+    COMMENT /* Modified for stubbing hardware address */
+    COMMENT T_RCC PTU_RCC;
+    COMMENT 
+    COMMENT 2. Due to a static variable dependency test script is split into hdudispfpbs_1, hdudispfpbs_2 and hdudispfpbs_3
+    COMMENT
+    COMMENT 4.In Source file "hdudispfpbs.c" for LLRs hdudispfpbs-BspSwitchesInit-DB-LLR-001, 
+    COMMENT   hdudispfpbs-BspSwitchesInit-DB-LLR-002, hdudispfpbs-PbsInit-DB-LLR-001, hdudispfpbs-PbsInit-DB-LLR-002
+    COMMENT   and hdudispfpbs-PbsInit-DB-LLR-003 coverage cannot be 
+    COMMENT   obtained for do while loop two or more times and TRUE condition. 
+    COMMENT   Since while(0) is mentioned which loops for only one time in the below snippets:
+    COMMENT   a. #define __HAL_RCC_GPIOB_CLK_ENABLE()\
+    COMMENT                              do { \
+    COMMENT                                  __IO T_UINT32 tmpreg; \
+    COMMENT                                 SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOBEN);\
+    COMMENT                                 /* Delay after an RCC peripheral clock enabling */ \
+    COMMENT                                tmpreg = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOBEN);\
+    COMMENT                                 UNUSED(tmpreg); \
+    COMMENT                               } while(0)
+    COMMENT      
+    COMMENT  b.  #define __HAL_RCC_GPIOC_CLK_ENABLE() \
+    COMMENT                             do { \
+    COMMENT                              __IO T_UINT32 tmpreg; \
+    COMMENT                              SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN);\
+    COMMENT                              /* Delay after an RCC peripheral clock enabling */ \
+    COMMENT                              tmpreg = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOCEN);\
+    COMMENT                              UNUSED(tmpreg); \
+    COMMENT                             } while(0)
+    COMMENT
+    COMMENT  c. #define __HAL_RCC_GPIOA_CLK_ENABLE()\
+    COMMENT                             do { \
+    COMMENT                                    __IO T_UINT32 tmpreg; \
+    COMMENT                                    SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOAEN);\
+    COMMENT                                   /* Delay after an RCC peripheral clock enabling */ \
+    COMMENT                                   tmpreg = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOAEN);\
+    COMMENT                                   UNUSED(tmpreg); \
+    COMMENT                                  } while(0)
+    COMMENT 
+    COMMENT 5. Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+    COMMENT warning #191-D: type qualifier is meaningless on cast type
+    COMMENT 
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT The function 'BspSwitchesInit', calls the macro __HAL_RCC_GPIOB_CLK_ENABLE.
+    COMMENT
+    COMMENT Class 2
+    COMMENT The function 'BspSwitchesInit', calls the macro __HAL_RCC_GPIOC_CLK_ENABLE.
+    COMMENT
+    COMMENT Class 3
+    COMMENT The function 'BspSwitchesInit', calls the function HalGpioInit.
+    COMMENT
+    COMMENT Class 4
+    COMMENT The function 'EncoderDriverL', result of new encoder value  is equal to ZERO. 
+    COMMENT
+    COMMENT Class 5
+    COMMENT The function 'EncoderDriverL', result of new encoder value  is not equal to ZERO.
+    COMMENT
+    COMMENT Class 6
+    COMMENT The function 'EncoderDriverL', Result of bitwise AND of new encoder value and CHA_MASK is equal to ZERO.
+    COMMENT
+    COMMENT Class 7
+    COMMENT The function 'EncoderDriverL', Result of bitwise AND of new encoder value and CHA_MASK is not equal to ZERO.
+    COMMENT
+    COMMENT Class 8
+    COMMENT The function 'EncoderDriverL', Result of bitwise AND of extracted value and CHA_MASK is equal to ZERO.
+    COMMENT
+    COMMENT Class 9
+    COMMENT The function 'EncoderDriverL', Result of bitwise AND of extracted value and CHA_MASK is not equal to ZERO.
+    COMMENT
+    COMMENT Class 10
+    COMMENT The function 'EncoderDriverL', Result of bitwise AND of extracted value and CHB_MASK is not equal to ZERO.
+    COMMENT
+    COMMENT Class 11
+    COMMENT The function 'PbsClear' resets all Switches to not pressed.
+    COMMENT
+    COMMENT Class 12
+    COMMENT The function 'PbsInit'  call the macro __HAL_RCC_GPIOA_CLK_ENABLE.
+    COMMENT
+    COMMENT Class 13
+    COMMENT The function 'PbsInit'  call the macro __HAL_RCC_GPIOB_CLK_ENABLE.
+    COMMENT
+    COMMENT Class 14
+    COMMENT The function 'PbsInit'  call the macro __HAL_RCC_GPIOC_CLK_ENABLE.
+    COMMENT
+    COMMENT Class 15
+    COMMENT The function 'PbsInit'  call the function BspSwitchesInit.
+    COMMENT
+    COMMENT Class 16
+    COMMENT The function 'PbsInit'  call the function TimerInstall.
+    COMMENT
+    COMMENT Class 17
+    COMMENT The function 'PbsInit'  call the function EncoderDriverL.
+    COMMENT
+    COMMENT Class 18
+    COMMENT The function 'PbsInit'  call the function EncoderDriverR.
+    COMMENT
+    COMMENT Class 19
+    COMMENT The function 'EncoderDriverL', Result of bitwise AND of extracted value and CHB_MASK is equal to ZERO.
+    COMMENT
+    COMMENT Class 20
+    COMMENT The function 'PbsDriver' calls the function EncoderDriverL.
+    COMMENT
+    COMMENT Class 21
+    COMMENT The function 'PbsDriver' calls the function EncoderDriverR.
+    COMMENT
+    COMMENT Class 22
+    COMMENT The function 'PbsDriver' calls the function HwPbsGet.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In the function 'PbsDriver' New switches is set to ZERO.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In the function 'PbsDriver' New switches is not set to ZERO.
+    COMMENT
+    COMMENT Class 25
+    COMMENT In the function 'PbsDriver' Switches_fetched is set to ZERO.
+    COMMENT
+    COMMENT Class 26
+    COMMENT In the function 'PbsDriver' Switches_fetched is not set to ZERO.
+    COMMENT
+    COMMENT Class 27
+    COMMENT In the function 'PbsDriver' New switches is set to Old_switches.
+    COMMENT
+    COMMENT Class 28
+    COMMENT In the function 'PbsDriver' New switches is not set to Old_switches.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In the function 'PbsDriver' Result of bitwise AND operation of Value of most recent raw pbs, Switch Mask and REPEAT_MASK 
+    COMMENT is not set to ZERO.
+    COMMENT
+    COMMENT Class 34
+    COMMENT In the function 'PbsDriver' first_press is set to ZERO.
+    COMMENT
+    COMMENT Class 35
+    COMMENT In the function 'PbsDriver' first_press is not set to ZERO.
+    COMMENT
+    COMMENT Class 36
+    COMMENT In the function 'PbsDriver' Switches_used is set to ZERO.
+    COMMENT
+    COMMENT Class 37
+    COMMENT In the function 'PbsDriver' Switches_used is not set to ZERO.
+    COMMENT
+    COMMENT Class 38
+    COMMENT The function 'PbsGet' calls the function OS_ENTER_CRITICAL.
+    COMMENT
+    COMMENT Class 39
+    COMMENT The function 'PbsGet' calls the function OS_EXIT_CRITICAL.
+    COMMENT
+    COMMENT Class 40
+    COMMENT In the function 'PbsGet' S8_position_l is set to ZERO.
+    COMMENT
+    COMMENT Class 41
+    COMMENT In the function 'PbsGet' S8_position_l is not set to ZERO.
+    COMMENT
+    COMMENT Class 42
+    COMMENT In the function 'PbsGet' S8_position_r is set to ZERO.
+    COMMENT
+    COMMENT Class 43
+    COMMENT In the function 'PbsGet' S8_position_r is not set to ZERO.
+    COMMENT
+    COMMENT Class 44
+    COMMENT The function 'PbsGet' calls the function HwPbsGet.
+    COMMENT
+    COMMENT Class 45
+    COMMENT In the function 'PbsGet' return value of HwPbsGet is set to ZERO.
+    COMMENT
+    COMMENT Class 46
+    COMMENT In the function 'PbsGet' return value of HwPbsGet is not set to ZERO.
+    COMMENT
+    COMMENT Class 47
+    COMMENT The function 'HwPbsGet' returns the Pbs value.
+    COMMENT
+    COMMENT Class 48
+    COMMENT In the function 'EncoderDriverR',new_encoder_val is set to ZERO.
+    COMMENT
+    COMMENT Class 49
+    COMMENT In the function 'EncoderDriverR',new_encoder_val is not set to ZERO.
+    COMMENT
+    COMMENT Class 50
+    COMMENT In the function 'EncoderDriverR',result of bitwise AND of new encoder value and CHA_MASK is set to ZERO.
+    COMMENT
+    COMMENT Class 51
+    COMMENT In the function 'EncoderDriverR',result of bitwise AND of new encoder value and CHA_MASK is not set to ZERO.
+    COMMENT
+    COMMENT Class 52
+    COMMENT In the function 'EncoderDriverR',result of bitwise AND of extracted value and CHA_MASK is set to ZERO.
+    COMMENT
+    COMMENT Class 53
+    COMMENT In the function 'EncoderDriverR',result of bitwise AND of extracted value and CHA_MASK is not set to ZERO.
+    COMMENT
+    COMMENT Class 54
+    COMMENT In the function 'EncoderDriverR',result of bitwise AND of extracted value and CHB_MASK is set to ZERO.
+    COMMENT
+    COMMENT Class 55
+    COMMENT In the function 'EncoderDriverR',result of bitwise AND of extracted value and CHB_MASK is not set to ZERO.  
+    COMMENT
+    COMMENT Class 58
+    COMMENT In the function 'PbsDriver' switch timer value is greater or set to zero.
+    COMMENT
+    COMMENT Class 59
+    COMMENT In the function 'PbsDriver' switch timer value is not greater than or set to zero.
+    COMMENT     
+    COMMENT Class 60
+    COMMENT In the function 'PbsDriver' Button 1 switch used is FALSE 
+    COMMENT     
+    COMMENT Class 61
+    COMMENT In the function 'PbsDriver' Button 1 switch used is TRUE
+    COMMENT      
+    COMMENT Class 62
+    COMMENT In the function 'PbsDriver', first time flag is equal to TRUE 
+    COMMENT     
+    COMMENT Class 63
+    COMMENT In the function 'PbsDriver', first time flag is not equal to TRUE 
+    COMMENT      
+    COMMENT Class 64
+    COMMENT In the function 'PbsDriver', Splash_done is not equal to ONE 
+    COMMENT       
+    COMMENT Class 65
+    COMMENT In the function 'PbsDriver', Splash_done is equal to ONE 
+    COMMENT       
+    COMMENT Class 66
+    COMMENT In the function 'PbsDriver', Splash_b1_press is not equal to ZERO
+    COMMENT         
+    COMMENT Class 67
+    COMMENT In the function 'PbsDriver', Splash_b1_press is equal to ZERO
+    COMMENT           
+    COMMENT Class 68
+    COMMENT In the function 'PbsDriver', most recent raw pbs is not equal to ZERO
+    COMMENT           
+    COMMENT Class 69
+    COMMENT In the function 'PbsDriver', Splash_b1_press is equal to ONE
+    COMMENT            
+    COMMENT Class 70
+    COMMENT In the function 'PbsDriver', Splash_b1_press is not equal to ONE
+    COMMENT            
+    COMMENT Class 71
+    COMMENT In the function 'PbsDriver', most recent raw pbs is equal to ZERO
+    COMMENT  
+    COMMENT Invalid Class(es)
+    COMMENT None
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+DEFINE STUB hdudispfpbs_c
+
+    --In stub TimerInstall, 'timer' variable made as _no because local varible address cannot be expected. 
+    #void TimerInstall( volatile  T_TIMER _no *timer)
+    #{
+    #  PTU_timer = *timer;
+    #  *timer = PTU_timer_in;
+    #}
+
+    #void RestoreStatusReg(T_UINT32 _in U32_critical_sr); 
+    #T_UINT32 SaveStatusReg(void);
+
+    --In stub HalGpioInit, 'GPIO_Init' variable made as _no because local varible address cannot be expected. 
+    #void HalGpioInit(T_GPIO _in *GPIOx, T_GPIO_INIT _no *GPIO_Init)    
+    #{
+    # PTU_count++;
+    # if(PTU_count==1)
+    # {
+    #   PTU_gpio_init_struct = *GPIO_Init;
+    # }
+    # else
+    # {
+    #  PTU_gpio_init_struct2 = *GPIO_Init;
+    # }
+    #}   
+    
+END DEFINE
+
+ELSE_SIMUL
+
+ -- No action defined as of now if the module is not simulated
+ 
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfpbs.c
+ENVIRONMENT ENV_hdudispfpbs_c
+
+  STRUCTURE Switches,   init = { activity => 0, pressed => 0, raw => 0, b1 => 0, b2 => 0, b3 => 0, b4 => 0, b5 => 0, b6 => 0,
+  &                              b7 => 0, b8 => 0, c1 => 0, c2 => 0, c3 => 0, sLE => { pressed => 0, twist => 0 }, 
+  &                              sRE => { pressed => 0, twist => 0 } }, ev = init
+  
+END ENVIRONMENT -- ENV_hdudispfpbs_c
+
+USE ENV_hdudispfpbs_c
+
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PbsGet
+--------------------------------------------------------------------------------
+SERVICE PbsGet
+SERVICE_TYPE extern
+
+#T_INT8 PTU_tmp;
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-001]
+    COMMENT The function calls the macro OS_ENTER_CRITICAL
+    COMMENT Equivalence Class 38 
+    COMMENT
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-002]
+    COMMENT The function does the following.
+    COMMENT 1.Stores the value returned from the application to application value.
+    COMMENT 2.Seta Flag for last software used by application to TRUE.
+    COMMENT 3.Reseta the value returned from the application.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-003]
+    COMMENT The function calls the macro OS_EXIT_CRITICAL.
+    COMMENT Equivalence Class 39  
+    COMMENT
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-004]
+    COMMENT The function sets the value of the push button Switches as follows
+    COMMENT 1.Sets b1 of Switches to 1 when result of bitwise AND of application value and PBS1_M is not set to ZERO else sets to 0.
+    COMMENT 2.Sets b2 of Switches to 1 when result of bitwise AND of application value and PBS2_M is not set to ZERO else sets to 0.
+    COMMENT 3.Sets b3 of Switches to 1 when result of bitwise AND of application value and PBS3_M is not set to ZERO else sets to 0.
+    COMMENT 4.Sets b4 of Switches to 1 when result of bitwise AND of application value and PBS4_M is not set to ZERO else sets to 0.
+    COMMENT 5.Sets b5 of Switches to 1 when result of bitwise AND of application value and PBS5_M is not set to ZERO else sets to 0.
+    COMMENT 6.Sets b6 of Switches to 1 when result of bitwise AND of application value and PBS6_M is not set to ZERO else sets to 0.
+    COMMENT 7.Sets b7 of Switches to 1 when result of bitwise AND of application value and PBS7_M is not set to ZERO else sets to 0.
+    COMMENT 8.Sets b8 of Switches to 1 when result of bitwise AND of application value and PBS8_M is not set to ZERO else sets to 0.
+    COMMENT 9.Sets c1 of Switches to 1 when result of bitwise AND of application value and PBS9_M is not set to ZERO else sets to 0.
+    COMMENT 10.Sets c2 of Switches to 1 when result of bitwise AND of application value and PBS10_M is not set to ZERO else sets to 0.
+    COMMENT 11.Sets c3 of Switches to 1 when result of bitwise AND of application value and PBS11_M is not set to ZERO else sets to 0.
+    COMMENT 12.Sets pressed of sLE of Switches to 1 when result of bitwise AND of application value and PBS12_M is not set to ZERO
+    COMMENT else set to 0.
+    COMMENT 13.Sets pressed of sRE of Switches to 1 when result of bitwise AND of application value and PBS13_M is not set to ZERO 
+    COMMENT else set to 0.
+    COMMENT 14.Sets twist of sLE of Switches to 0. 
+    COMMENT 15.Sets twist of sRE of Switches to 0. 
+    COMMENT Equivalence Class none 
+    COMMENT 
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-005]
+    COMMENT The function calls the macro OS_ENTER_CRITICAL
+    COMMENT Equivalence Class 38 
+    COMMENT
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-006]
+    COMMENT The function does nothing when left position value is set to ZERO.
+    COMMENT Equivalence Class 40
+    COMMENT
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-007]
+    COMMENT The function does nothing when right position value is set to ZERO.
+    COMMENT Equivalence Class 42
+    COMMENT
+    COMMENT [hdudispfpbs-HwPbsGet-DB-LLR-001]
+    COMMENT The function does the following.
+    COMMENT 1.Pbs value is set to result of bitwise OR operation of Pbs value  and result of bitwise AND operation of IDR of GPIOB
+    COMMENT and RESET_1_AND_2.
+    COMMENT 2. Pbs value is set to result of bitwise OR operation of Pbs value and result of bitwise AND operation of IDR of GPIOB
+    COMMENT and RESET_5 right shifted by TWO.
+    COMMENT 3. Pbs value is set to result of bitwise OR operation of Pbs value and result of bitwise AND operation of IDR of GPIOB
+    COMMENT and RESET_8 right shifted by FOUR.
+    COMMENT 4.Pbs value is set to result of bitwise OR operation of Pbs value  and result of bitwise AND operation of IDR of GPIOB 
+    COMMENT and RESET_11_TO_16 right shifted by SIX.
+    COMMENT 5.Pbs value is set to result of bitwise OR operation of Pbs value  and result of bitwise AND operation of IDR of GPIOC
+    COMMENT and RESET_3_TO_8 left  shifted by EIGHT.
+    COMMENT 6. Pbs value is set to result of XOR operation of Pbs value and MAX_16_BIT.
+    COMMENT 7. Pbs value is set to result of Bitwise AND operation of Pbs value and RESET_1_TO_13.
+    COMMENT 8.Return the Pbs value from the function.
+    COMMENT Equivalence Class 47 
+    COMMENT
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-008]
+    COMMENT The function sets activity value to ONE when return value of HwPbsGet is not set to ZERO.
+    COMMENT Equivalence Class 44,46
+    COMMENT 
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-009]
+    COMMENT The function sets activity of Switches to activity value.
+    COMMENT Equivalence Class None 
+    COMMENT 
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-010]
+    COMMENT The function calls the macro OS_EXIT_CRITICAL.
+    COMMENT Equivalence Class 39  
+    COMMENT 
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-011]
+    COMMENT The function sets pressed of Switches to result of bitwise OR operation of b1 of Switches,b2 of Switches,b3 of Switches,
+    COMMENT b4 of Switches,b5 of Switches,b6 of Switches,b7 of Switches,b8 of Switches,c1 of Switches,c2 of Switches,c3 of Switches,
+    COMMENT pressed  of sLE of Switches and pressed  of sRE of Switches
+    COMMENT Equivalence Class None 
+    COMMENT 
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-012]
+    COMMENT The function sets pressed of Switches to result of bitwise OR operation of set pressed of Switches,
+    COMMENT Value is 1 if twist of sLE of Switches is not set to 0 else sets to 0 and
+    COMMENT Value is 1 if twist of sRE of Switches is not set to 0 else sets to 0.
+    COMMENT Equivalence Class None  
+    COMMENT 
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-013]
+    COMMENT The function sets raw of Switches to return value of function HwPbsGet.
+    COMMENT Equivalence Class  44
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+             --Holds the value of IDR of GPIOA
+            VAR GPIOA->IDR,                 init = 768,                 ev = init
+        
+            --Holds the value of IDR of GPIOB
+            VAR GPIOB->IDR,                 init = 0,                   ev = init
+        
+            --Holds the value of IDR of GPIOC
+            VAR GPIOC->IDR,                 init = 0,                   ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --None
+        
+        COMMENT OUTPUT SECTION:
+      
+            --Holds the Critical status register value
+            VAR U32_critical_sr,            init = 0,                   ev = 10
+        
+            --Value of push button Switches are set
+            VAR Switches.b1,                init = TRUE,                ev = FALSE
+            VAR Switches.b2,                init = TRUE,                ev = FALSE
+            VAR Switches.b3,                init = TRUE,                ev = FALSE
+            VAR Switches.b4,                init = TRUE,                ev = FALSE
+            VAR Switches.b5,                init = TRUE,                ev = FALSE
+            VAR Switches.b6,                init = TRUE,                ev = FALSE
+            VAR Switches.b7,                init = TRUE,                ev = FALSE
+            VAR Switches.b8,                init = TRUE,                ev = FALSE
+            VAR Switches.c1,                init = TRUE,                ev = FALSE
+            VAR Switches.c2,                init = TRUE,                ev = FALSE
+            VAR Switches.c3,                init = TRUE,                ev = FALSE
+            VAR Switches.sLE.pressed,       init = TRUE,                ev = FALSE
+            VAR Switches.sLE.twist,         init = ONE,                 ev = ZERO       
+            VAR Switches.sRE.pressed,       init = TRUE,                ev = FALSE      
+            VAR  Switches.sRE.twist,        init = ONE,                 ev = ZERO       
+            VAR Switches.activity,          init = ZERO,                ev = ONE        
+            VAR Switches.pressed ,          init = TRUE,                ev = FALSE      
+            VAR Switches.raw,               init = 12,                  ev = 0x1FFF
+            
+        -- Stub Calls :
+        SIMUL
+        
+            --Calls SaveStatusReg to disable interrupts
+           STUB SaveStatusReg()10
+           
+           --Calls RestoreStatusReg to Restore Priority mask register
+           STUB RestoreStatusReg(10)
+           
+           --Calls SaveStatusReg to disable interrupts
+           STUB SaveStatusReg()10
+           
+           --Calls RestoreStatusReg to Restore Priority mask register
+           STUB RestoreStatusReg(10)
+           
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #PbsGet();
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-006]
+    COMMENT The function does the following when left position value is not set to ZERO.
+    COMMENT 1.Sets activity value to ONE.
+    COMMENT 2.Sets twist of sLE of Switches to left position value.
+    COMMENT 3.Sets left position value to ZERO.
+    COMMENT Equivalence Class 41  
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+        
+            --Holds the value of IDR of GPIOA
+            VAR GPIOA->IDR,                 init = 768,                 ev = init
+        
+            --Holds the value of IDR of GPIOB
+            VAR GPIOB->IDR,                 init = 0,                   ev = init
+        
+            --Holds the value of IDR of GPIOC
+            VAR GPIOC->IDR,                 init = 0,                   ev = init
+      
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+      
+        COMMENT OUTPUT SECTION:
+      
+            --Holds the Critical status register value
+            VAR U32_critical_sr,            init = 0,                   ev = 10
+        
+            --Value of push button Switches are set
+            VAR Switches.b1,                init = TRUE,                ev = FALSE
+            VAR Switches.b2,                init = TRUE,                ev = FALSE
+            VAR Switches.b3,                init = TRUE,                ev = FALSE
+            VAR Switches.b4,                init = TRUE,                ev = FALSE
+            VAR Switches.b5,                init = TRUE,                ev = FALSE
+            VAR Switches.b6,                init = TRUE,                ev = FALSE
+            VAR Switches.b7,                init = TRUE,                ev = FALSE
+            VAR Switches.b8,                init = TRUE,                ev = FALSE
+            VAR Switches.c1,                init = TRUE,                ev = FALSE
+            VAR Switches.c2,                init = TRUE,                ev = FALSE
+            VAR Switches.c3,                init = TRUE,                ev = FALSE              
+            VAR Switches.sLE.pressed,       init = TRUE,                ev = FALSE               
+            VAR Switches.sLE.twist,         init = ONE,                 ev = ZERO               
+            VAR Switches.sRE.pressed,       init = TRUE,                ev = FALSE              
+            VAR Switches.sRE.twist,         init = ONE,                 ev = ZERO               
+            VAR Switches.activity,          init = ZERO,                ev = ONE
+            VAR Switches.pressed ,          init = TRUE,                ev = FALSE              
+            VAR Switches.raw,               init = 12,                  ev = 0x1FFF
+  
+        -- Stub Calls :
+        SIMUL
+
+            --Calls SaveStatusReg to disable interrupts
+            STUB SaveStatusReg()10
+           
+            --Calls RestoreStatusReg to Restore Priority mask register
+            STUB RestoreStatusReg(10)
+           
+            --Calls SaveStatusReg to disable interrupts
+            STUB SaveStatusReg()10
+           
+            --Calls RestoreStatusReg to Restore Priority mask register
+            STUB RestoreStatusReg(10)
+
+
+        END SIMUL
+   
+        --Calling the Unit Under Test :
+        #PbsGet();
+        
+    END ELEMENT
+    
+        -- To make S8_position_l not equal to 0 'PbsDriver' is called.
+        #PbsDriver();   
+        
+    ELEMENT
+            
+        COMMENT INPUT SECTION:
+                
+            --Holds the value of IDR of GPIOA
+            VAR GPIOA->IDR,                 init = 768,                 ev = init
+                
+            --Holds the value of IDR of GPIOB
+            VAR GPIOB->IDR,                 init = 0,                   ev = init
+        
+            --Holds the value of IDR of GPIOC
+            VAR GPIOC->IDR,                 init = 0,                   ev = init
+              
+        COMMENT INPUT/OUTPUT SECTION:
+              
+            --None
+              
+        COMMENT OUTPUT SECTION:
+              
+            --Holds the Critical status register value
+            VAR U32_critical_sr,            init = 0,                   ev = 10
+        
+            --Value of push button Switches are set
+            VAR Switches.b1,                init = TRUE,                ev = FALSE
+            VAR Switches.b2,                init = TRUE,                ev = FALSE
+            VAR Switches.b3,                init = TRUE,                ev = FALSE
+            VAR Switches.b4,                init = TRUE,                ev = FALSE
+            VAR Switches.b5,                init = TRUE,                ev = FALSE
+            VAR Switches.b6,                init = TRUE,                ev = FALSE
+            VAR Switches.b7,                init = TRUE,                ev = FALSE
+            VAR Switches.b8,                init = TRUE,                ev = FALSE
+            VAR Switches.c1,                init = TRUE,                ev = FALSE
+            VAR Switches.c2,                init = TRUE,                ev = FALSE
+            VAR Switches.c3,                init = TRUE,                ev = FALSE
+            VAR Switches.sLE.pressed,       init = TRUE,                ev = FALSE
+            VAR Switches.sLE.twist,         init = 1,                   ev = (T_INT8)-1
+            VAR Switches.sRE.pressed,       init = TRUE,                ev = FALSE
+            VAR  Switches.sRE.twist,        init = ONE,                 ev = ZERO
+            VAR Switches.activity,          init = ZERO,                ev = ONE
+            VAR Switches.pressed ,          init = FALSE,               ev = TRUE       
+            VAR Switches.raw,               init = 12,                  ev = 0x1FFF
+          
+            -- Stub Calls :
+            SIMUL
+        
+                --Calls SaveStatusReg to disable interrupts
+                STUB SaveStatusReg()10
+           
+                --Calls RestoreStatusReg to Restore Priority mask register
+                STUB RestoreStatusReg(10)
+           
+                --Calls SaveStatusReg to disable interrupts
+                STUB SaveStatusReg()10
+           
+                --Calls RestoreStatusReg to Restore Priority mask register
+                STUB RestoreStatusReg(10)
+
+            END SIMUL
+           
+            -- Calling the Unit Under Test :
+            #PbsGet();
+                
+    END ELEMENT
+    
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-007]
+    COMMENT The function does the following if right position value is not equal to ZERO.
+    COMMENT 1.Sets activity value to ONE.
+    COMMENT 2.Sets twist of sRE of Switches to right position value.
+    COMMENT 3.Sets right position value to ZERO.
+    COMMENT Equivalence Class 43
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+        
+            --Holds the value of IDR of GPIOA
+            VAR GPIOA->IDR,                 init = 2,                   ev = init
+        
+            --Holds the value of IDR of GPIOB
+            VAR GPIOB->IDR,                 init = 0,                   ev = init
+        
+            --Holds the value of IDR of GPIOC
+            VAR GPIOC->IDR,                 init = 0,                   ev = init
+      
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+      
+        COMMENT OUTPUT SECTION:
+      
+             --Holds the Critical status register value
+            VAR U32_critical_sr,            init = 0,                   ev = 10
+        
+            --Value of push button Switches are set
+            VAR Switches.b1,                init = TRUE,                ev = FALSE
+            VAR Switches.b2,                init = TRUE,                ev = FALSE
+            VAR Switches.b3,                init = TRUE,                ev = FALSE
+            VAR Switches.b4,                init = TRUE,                ev = FALSE
+            VAR Switches.b5,                init = TRUE,                ev = FALSE
+            VAR Switches.b6,                init = TRUE,                ev = FALSE
+            VAR Switches.b7,                init = TRUE,                ev = FALSE
+            VAR Switches.b8,                init = TRUE,                ev = FALSE
+            VAR Switches.c1,                init = TRUE,                ev = FALSE
+            VAR Switches.c2,                init = TRUE,                ev = FALSE
+            VAR Switches.c3,                init = TRUE,                ev = FALSE              
+            VAR Switches.sLE.pressed,       init = TRUE,                ev = FALSE              
+            VAR Switches.sLE.twist,         init = ONE,                 ev = ZERO               
+            VAR Switches.sRE.pressed,       init =  TRUE,               ev = FALSE              
+            VAR  Switches.sRE.twist,        init = ONE,                 ev = ZERO               
+            VAR Switches.activity,          init = ZERO,                ev = ONE                
+            VAR Switches.pressed ,          init = TRUE,                ev = FALSE          
+            VAR Switches.raw,               init = 12,                  ev = 0x1FFF
+  
+        -- Stub Calls :
+        SIMUL
+
+        
+            --Calls SaveStatusReg to disable interrupts
+           STUB SaveStatusReg()10
+           
+           --Calls RestoreStatusReg to Restore Priority mask register
+           STUB RestoreStatusReg(10)
+           
+           --Calls SaveStatusReg to disable interrupts
+           STUB SaveStatusReg()10
+           
+           --Calls RestoreStatusReg to Restore Priority mask register
+           STUB RestoreStatusReg(10)
+
+
+        END SIMUL
+     
+        -- Calling the Unit Under Test :
+        #PbsGet();
+        
+        --To make S8_position_r  not equal to zero
+        #PbsDriver(); 
+        
+    END ELEMENT 
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT
+    COMMENT [hdudispfpbs-PbsGet-DB-LLR-008]
+    COMMENT The function does nothing when return value of HwPbsGet is set to ZERO.
+    COMMENT Equivalence Class 44,45 
+    COMMENT 
+    COMMENT </TD>
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+    
+        --Holds the value of IDR of GPIOB
+        VAR GPIOB->IDR,                 init = 4294967295,          ev = init
+      
+        --Holds the value of IDR of GPIOC
+        VAR GPIOC->IDR,                 init = 4294967295,          ev = init
+        
+        --Holds the value of IDR of GPIOA
+       VAR GPIOA->IDR,                 init = 0,                   ev = init
+
+    COMMENT INPUT/OUTPUT SECTION:
+      
+        --None
+      
+    COMMENT OUTPUT SECTION:
+      
+        --Holds the Critical status register value
+        VAR U32_critical_sr,            init = 0,                   ev = 10
+        
+        --Value of push button Switches are set
+        VAR Switches.b1,                init = TRUE,                ev = FALSE
+        VAR Switches.b2,                init = TRUE,                ev = FALSE
+        VAR Switches.b3,                init = TRUE,                ev = FALSE
+        VAR Switches.b4,                init = TRUE,                ev = FALSE
+        VAR Switches.b5,                init = TRUE,                ev = FALSE
+        VAR Switches.b6,                init = TRUE,                ev = FALSE
+        VAR Switches.b7,                init = TRUE,                ev = FALSE
+        VAR Switches.b8,                init = TRUE,                ev = FALSE
+        VAR Switches.c1,                init = TRUE,                ev = FALSE
+        VAR Switches.c2,                init = TRUE,                ev = FALSE
+        VAR Switches.c3,                init = TRUE,                ev = FALSE              
+        VAR Switches.sLE.pressed,       init = TRUE,                ev = FALSE              
+        VAR Switches.sLE.twist,         init = ONE,                 ev = (T_INT8)-1        
+        VAR Switches.sRE.pressed,       init = TRUE,                ev = FALSE              
+        VAR Switches.sRE.twist,         init = ONE,                 ev = (T_INT8)-1                 
+        VAR Switches.activity,          init = ZERO,                ev = ONE                
+        VAR Switches.pressed ,          init = FALSE,               ev = TRUE           
+        VAR Switches.raw,               init = 12,                  ev = 0
+  
+    -- Stub Calls :
+    SIMUL    
+        
+        --Calls SaveStatusReg to disable interrupts
+        STUB SaveStatusReg()10
+           
+        --Calls RestoreStatusReg to Restore Priority mask register
+        STUB RestoreStatusReg(10)
+           
+        --Calls SaveStatusReg to disable interrupts
+        STUB SaveStatusReg()10
+           
+        --Calls RestoreStatusReg to Restore Priority mask register
+        STUB RestoreStatusReg(10)
+
+    END SIMUL
+   
+    -- Calling the Unit Under Test :
+    #PbsGet();
+        
+    END ELEMENT
+    
+END TEST -- TEST 4
+
+END SERVICE -- PbsGet
+
+

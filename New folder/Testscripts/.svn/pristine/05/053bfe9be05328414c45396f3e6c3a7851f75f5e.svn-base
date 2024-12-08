@@ -1,0 +1,719 @@
+HEADER hducommfapp, Source Code Ver : 1.15 , TestScript Ver : 1.1
+--------------------------------------------------------------------------------
+-- Author Name          : Vignesh Sunil
+--
+-- File Name            : hducommfapp_18.ptu
+--
+-- Test Creation Date   : 30.04.2021
+--
+-- Tested Functions     : CheckChannelNOC
+--
+-- Version History      :
+--
+-- TEST-VERSION         TEST-DATE           TESTER NAME         MODIFICATIONS
+--  ------------        ---------           -----------         -------------
+--		1.1			30.04.2021			Vignesh Sunil		Updated as per #PR100338
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+--------------------------------------------------------------------------------
+##include "hducommfapp.h"          
+##include "hducommfa429.h"        
+##include "hducommfarinc825.h"    
+##include "hducommfdauprofile.h"  
+##include "hducommfhw.h"          
+##include "hducommfmemmap.h"      
+##include "hducommfoscfg.h"       
+##include "hducommfoscpu.h"       
+##include "hducommfrevno.h"       
+##include "hdulibstm32f4xxcan.h"  
+##include "hdulibstm32f4xxcrc.h"  
+##include "hdulibstm32f4xxrcc.h"  
+##include "hducommftbase.h"       
+##include "hducommfucos.h"        
+##include "hducommfwdog.h"        
+##include "hducommfxramdata.h"    
+##include "hdulibbasicfunc.h"     
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+ 
+   #T_FAULT_XRAM_LOG PTU_Fault_xram_log;
+   #T_FAULT_XRAM_LOG *Fault_xram_log = & PTU_Fault_xram_log; 
+ 
+    #T_UINT8 Revno_id_app[ 16U ]; 
+    #T_UINT8 A429_sdi_to_rci; 
+    
+    --Temporary variables created to access the address
+    #T_XRAM_DATA PTU_Xram_storage;
+    #T_XRAM_DATA PTU_Xram_backup; 
+
+    #T_XRAM_DATA *Xram_storage = & PTU_Xram_storage; 
+    #T_XRAM_DATA *Xram_backup = &PTU_Xram_backup; 
+
+    --Temporary variables created to access the address
+    #T_UINT8 PTU_Revno_maint_id[16];
+    #T_UINT8 PTU_Revno_boot_id[16]; 
+    #T_UINT8 PTU_Revno_swl_id[16]; 
+
+    
+    #T_UINT8 *Revno_maint_id = (T_UINT8 *)&PTU_Revno_maint_id[0]; 
+    #T_UINT8 *Revno_boot_id = (T_UINT8 *)&PTU_Revno_boot_id[0];
+    #T_UINT8 *Revno_swl_id = (T_UINT8 *)&PTU_Revno_swl_id[0];
+    
+--Declarations of the temporary variables
+    
+    --Variable created to verify function TbaseTaskSignaling
+    #T_OS_EVENT  *PTU1_ps_semaphore;
+    
+    --Variable created to pass valid address through OsSemCreate    
+    #T_OS_EVENT  PTU_ps_semaphore;
+    
+    --Variable created to verify function OsSemPend    
+    #T_OS_EVENT *PTU2_ps_semaphore;    
+    #T_UINT8 PTU_err;
+
+    --Variable created to verify function A825GetMessage
+    #T_A825_MESSAGE PTU_A825GetMessage[25],PTU2_A825GetMessage[25],PTU1_A825GetMessage[25];
+    #T_UINT8 PTU3_index = 0,PTU5_index =0;  
+    
+    --Variable created to verify function A825Xmit
+    #T_A825_MESSAGE PTU_A825Xmit[50];
+    #T_UINT16 PTU2_index=0;
+    
+    --Variable created to verify function HwMemcpy
+    #T_UINT8 PTU_HwMemcpy[500][8];
+    #T_UINT8 *PTU_ptr_dest;
+    #T_UINT8 *PTU_ptr_src;  
+    #T_UINT32 PTU_index = 0 , PTU4_index = 0;
+    
+    --Variable created to verify function HwMemset
+    #T_UINT8 PTU_p_dest[8];
+    #T_UINT32 PTU1_index;
+    
+    #T_OS_STK  *PTU_pt_os;
+    #T_XRAM_LOG PTU_Xram_log;
+    #T_XRAM_LOG *Xram_log = (T_XRAM_LOG *)&PTU_Xram_log; 
+    #T_UINT32 PTU6_index;
+    
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Hemalatha S
+    COMMENT
+    COMMENT File Name        : hducommfapp_15.ptu
+    COMMENT
+    COMMENT Tested Functions : CheckChannelNOC
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1.Header file "hducommfmemmap.h" is modified for testing purpose. The following macro's are modified
+    COMMENT   for stubbing hardware address.
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define MEMMAP_BOOT_CRC_ADDR    ( MEMMAP_BOOT_START \
+    COMMENT                                + MEMMAP_BOOT_SIZE \
+    COMMENT                                - MEMMAP_CRC_LEN)*/
+    COMMENT /* Modified for stubbing hardware address */
+    COMMENT T_UINT32 PTU_MEMMAP_BOOT_CRC_ADDR[4];
+    COMMENT #define MEMMAP_BOOT_CRC_ADDR    (&PTU_MEMMAP_BOOT_CRC_ADDR[0])
+    COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT/*#define MEMMAP_PRI_APP_CRC_ADDR    ( MEMMAP_PRI_APP_START \
+    COMMENT                                    + MEMMAP_PRI_APP_SIZE \
+    COMMENT                                    - MEMMAP_CRC_LEN)*/
+    COMMENT /* Modified for stubbing hardware address */
+    COMMENT T_UINT32 PTU_MEMMAP_PRI_APP_CRC_ADDR[4];
+    COMMENT #define MEMMAP_PRI_APP_CRC_ADDR   (&PTU_MEMMAP_PRI_APP_CRC_ADDR[0])
+    COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define MEMMAP_MAINT_APP_CRC_ADDR    ( MEMMAP_MAINT_APP_START \
+    COMMENT                                    + MEMMAP_MAINT_APP_SIZE \
+    COMMENT                                    - MEMMAP_CRC_LEN)*/
+    COMMENT /* Modified for stubbing hardware address */
+    COMMENT T_UINT32 PTU_MEMMAP_MAINT_APP_CRC_ADDR[4];
+    COMMENT #define MEMMAP_MAINT_APP_CRC_ADDR    (&PTU_MEMMAP_MAINT_APP_CRC_ADDR[0])
+    COMMENT 
+    COMMENT 2.Header file "hdulibcorecm4.h" is modified for stubbing hardware address.
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define SCB                 ((T_SCB_TYPE       *)     SCB_BASE      )*/
+    COMMENT 
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/ 
+    COMMENT T_SCB_TYPE PTU_SCB;
+    COMMENT #define SCB                 ((T_SCB_TYPE       *)     &PTU_SCB      )
+    COMMENT
+    COMMENT 3. Source file "hducommfapp.c" is modified for testing LLR "hducommfapp-AppTask-CB-LLR-002". 
+    COMMENT The while(TRUE) is modified for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'AppTask':
+    COMMENT
+    COMMENT T_UINT16 PTU_count =0; /*local variable declared for testing purpose*/
+    COMMENT 
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT     .................
+    COMMENT
+    COMMENT   /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT   PTU_count++;
+    COMMENT   if(PTU_count == 4)
+    COMMENT   {
+    COMMENT    break;
+    COMMENT   } 
+    COMMENT   else
+    COMMENT   {
+    COMMENT                                /*nothing*/
+    COMMENT   }
+    COMMENT     .................
+    COMMENT     
+    COMMENT }/*End of while loop*/
+    COMMENT
+    COMMENT Hence while loop cannot be covered for 0 and 1 times and FALSE condition cannot be covered.
+    COMMENT
+    COMMENT 4. In the function 'DoInit', 'for' loops cannot be covered for 0 or 1 times since the loop is
+    COMMENT     handled by local variable and macro NV_SIZE.
+    COMMENT
+    COMMENT 5. In the function 'CheckChannelNSC', 'for' loops cannot be covered for 0 or 1 times since the 
+    COMMENT    loop is handled by local variable and macros (NV_SIZE,DEC_TWO) respectively.
+    COMMENT
+    COMMENT 6. The ptu has been split into 16 parts due to static dependency.
+    COMMENT
+	COMMENT 7. In "hducommfapp.c" macro value "NV_SIZE" is reduced to 26U for testing purpose.
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+    COMMENT The function 'AppInit', calls 'TbaseTaskSignaling' to install task signalling
+    COMMENT parameters for the application task .
+    COMMENT
+    COMMENT Class 2
+    COMMENT The function 'AppInit', calls 'OsTaskCreate' to create a semaphore.
+    COMMENT
+    COMMENT Class 3
+    COMMENT The function 'AppInit', calls 'AppTask' to create the thread/task.
+    COMMENT 
+    COMMENT Class 4
+    COMMENT The function 'AppTask', calls the function 'DoInit' to initialize the task
+    COMMENT control parameters and error signals to default values.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'DoInit', transmiting of Xram_backup is TRUE.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'DoInit', transmiting of Xram_backup is FALSE.
+    COMMENT
+    COMMENT Class 7
+    COMMENT The function 'AppTask', calls the function 'OsSemPend'.
+    COMMENT 
+    COMMENT Class 8
+    COMMENT The function 'AppTask', calls the function 'WdogKickWatchDog'.
+    COMMENT
+    COMMENT Class 9
+    COMMENT The function 'AppTask', calls the function 'DoNormal'.
+    COMMENT
+    COMMENT Class 10
+    COMMENT The function 'DoNormal', calls the function 'CheckChannelNOC'.
+    COMMENT
+    COMMENT Class 11
+    COMMENT The function 'CheckChannelNOC', calls the function'A825GetMessage'.
+    COMMENT 
+    COMMENT Class 12
+    COMMENT The function 'A825GetMessage', returns other than A825_RX_OK.
+    COMMENT 
+    COMMENT Class 13
+    COMMENT The function 'A825GetMessage', returns A825_RX_OK.
+    COMMENT 
+    COMMENT Class 14
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to ACQUIRE.
+    COMMENT 
+    COMMENT Class 15
+    COMMENT The function 'CheckChannelNOC', calls the function 'HwMemset'.
+    COMMENT
+    COMMENT Class 16
+    COMMENT The function 'CheckChannelNOC', calls the function 'HwMemcpy'.
+    COMMENT
+    COMMENT Class 17
+    COMMENT The function 'CheckChannelNOC', calls the function 'A825Xmit'.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to other than 
+    COMMENT ACQUIRE , DIS_PEAK_ID , DIS_PEAK_DATA and DIS_PEAK_DUR.
+	COMMENT DIS_FAULT_LOG,DIS_FAULT_TIMESTAMP,DIS_FAULT_PARAM_WOG,DIS_FAULT_PARAM_TRQ
+    COMMENT DIS_FAULT_PARAM_N2,DIS_FAULT_PARAM_EOP,DIS_FAULT_PARAM_TOT,DIS_FAULT_PARAM_BUSV
+    COMMENT
+    COMMENT Class 19
+    COMMENT The function 'DoNormal', calls the function 'CheckChannelNSC'.
+    COMMENT
+    COMMENT Class 20
+    COMMENT The function 'CheckChannelNSC', calls 'A825GetMessage'.
+    COMMENT
+    COMMENT Class 21
+    COMMENT The function 'CheckChannelNSC', calls the function 'HwMemcpy'.
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'CheckChannelNSC', command is set to NSC_NVS.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'CheckChannelNSC', command is set to NSC_PUSH_MEM.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'CheckChannelNSC', command is set to NSC_SEND_A429.
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'CheckChannelNSC', command is set to NSC_PULL_MEM.
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'CheckChannelNSC', command is set to other than NSC_NVS , NSC_PUSH_MEM ,
+    COMMENT NSC_SEND_A429 , NSC_PULL_MEM and NSC_SYS_RESET.
+    COMMENT
+    COMMENT Class 28
+    COMMENT The function 'CheckChannelNSC', calls the function 'A825Xmit'.
+    COMMENT 
+    COMMENT Class 29
+    COMMENT In function 'AppTask', App_pulldata is set to TRUE.
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'AppTask', App_pulldata is set to FALSE.
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'PullData', Pull data first is set to TRUE.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'PullData', Pull data first is set to FALSE.
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'PullData', sequence is greater than NV_SIZE.
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'PullData', sequence is less than NV_SIZE.
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'CheckChannelNSC', sequence is greater than NV_SIZE.
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'CheckChannelNSC', sequence is less than NV_SIZE.
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'CheckChannelNSC', a429 transmission status is set to TRUE.
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'CheckChannelNSC', a429 transmission status is set to FALSE.
+    COMMENT
+    COMMENT Class 39
+    COMMENT The function 'PullData', calls the function 'A825Xmit'.
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'CheckChannelNSC', sequence is equal to NV_SIZE.
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'CheckChannelNSC', command is set to NSC_SYS_RESET.
+    COMMENT
+    COMMENT Class 42
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_PEAK_ID.
+    COMMENT 
+    COMMENT Class 43
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_PEAK_DATA.
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_PEAK_DUR.
+    COMMENT
+    COMMENT Class 45
+    COMMENT The function 'CheckChannelNOC', calls the function 'WdogKickWatchDog'.
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'CheckChannelNOC', exID_offset of App_temp_log is greater than the difference 
+    COMMENT between exceedance Id and MAX_EXCEED_LOG.
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'CheckChannelNOC', exID_offset of App_temp_log is less than difference 
+    COMMENT between exceedance Id and MAX_EXCEED_LOG.
+    COMMENT 
+    COMMENT Class 48
+    COMMENT In function 'CheckChannelNOC', exID_offset of App_temp_log is equal to difference 
+    COMMENT between exceedance Id and MAX_EXCEED_LOG.
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function 'CheckChannelNOC', difference between exceedance Id and
+    COMMENT exID_offset of App_temp_log is greater than MAX_EXCEED_LOG 
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function 'CheckChannelNOC', difference between exceedance Id and
+    COMMENT exID_offset of App_temp_log is less than MAX_EXCEED_LOG
+    COMMENT 
+    COMMENT Class 51
+    COMMENT In function 'CheckChannelNOC', difference between exceedance Id and
+    COMMENT exID_offset of App_temp_log is equal to MAX_EXCEED_LOG
+    COMMENT
+    COMMENT Class 52
+    COMMENT In function 'DoInit', "Hwmemcpy" is called
+    COMMENT
+    COMMENT Class 53
+    COMMENT In function 'RxExData', "Hwmemcpy" is called
+	COMMENT
+    COMMENT Class 54
+    COMMENT In function 'RxExData', record_id is equal to 0
+	COMMENT
+	COMMENT Class 55
+    COMMENT In function 'RxExData', record_id is not equal to 0
+	COMMENT 
+	COMMENT Class 56
+    COMMENT In function 'RxExData', record_id is greater than MAX_EXCEED_LOG
+	COMMENT 
+	COMMENT Class 57
+    COMMENT In function 'RxExData', record_id is less than MAX_EXCEED_LOG
+	COMMENT 
+	COMMENT Class 58
+    COMMENT In function 'RxExData', record_id is equal to MAX_EXCEED_LOG
+    COMMENT
+    COMMENT Class 59
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_FAULT_LOG.
+    COMMENT 
+    COMMENT Class 60
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_FAULT_TIMESTAMP.	
+    COMMENT 
+    COMMENT Class 61
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_FAULT_PARAM_WOG.	
+    COMMENT 
+    COMMENT Class 62
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_FAULT_PARAM_TRQ.	
+    COMMENT 
+    COMMENT Class 63
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_FAULT_PARAM_N2.	
+    COMMENT 
+    COMMENT Class 64
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_FAULT_PARAM_EOP.	
+    COMMENT 
+    COMMENT Class 65
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_FAULT_PARAM_TOT.	
+    COMMENT 
+    COMMENT Class 66
+    COMMENT In function 'CheckChannelNOC', doc id of BID of sID of the NOC message is set to DIS_FAULT_PARAM_BUSV.	
+    COMMENT
+    COMMENT Class 64
+    COMMENT In function 'RxFaultData', "Hwmemcpy" is called	
+	COMMENT
+    COMMENT Class 65
+    COMMENT In function 'RxFaultData', record_id is equal to 0
+	COMMENT
+	COMMENT Class 66
+    COMMENT In function 'RxFaultData', record_id is not equal to 0
+	COMMENT 
+	COMMENT Class 67
+    COMMENT In function 'RxFaultData', record_id is greater than MAX_FAULT_LOG
+	COMMENT 
+	COMMENT Class 68
+    COMMENT In function 'RxFaultData', record_id is less than MAX_FAULT_LOG
+	COMMENT 
+	COMMENT Class 69
+    COMMENT In function 'RxFaultData', record_id is equal to MAX_FAULT_LOG	
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT None
+    COMMENT </ECD>
+    
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hducommfapp_c 37
+
+        #T_UINT8 TransmitArinc429(T_A429_TX_CHAN _in u8_chan, T_SINT32 _in i32_arinc_word); 
+        
+        --Parameter '*ps_xm' is made _no since Local variable address can not be expected.
+        #T_A825_XMIT_RESULT A825Xmit(T_A825_MESSAGE  _no *ps_xm)
+        #{
+        # PTU_A825Xmit[PTU2_index++] = *ps_xm;
+        #}
+        
+        --Parameter '*p_dest','*p_src' is made _no since Local variable address can not be expected.
+        #void HwMemcpy(void  _no *p_dest, void _no *p_src, T_UINT32  _in count)
+        #{
+        #if (PTU4_index==999)
+        #{
+        #PTU4_index=0;
+        #}
+        #else {
+        #if (PTU6_index==1)
+        #{
+        #PTU6_index=0;
+        #}
+        #else {		
+        #   PTU_ptr_dest=(T_UINT8 *)p_dest;
+        #   PTU_ptr_src=(T_UINT8 *)p_src;
+        #   for(PTU_index=0;PTU_index<count;PTU_index++)
+        #{
+        #       PTU_ptr_dest[PTU_index] = PTU_ptr_src[PTU_index];
+        #       PTU_HwMemcpy[PTU4_index][PTU_index] = PTU_ptr_dest[PTU_index];
+        #}
+        #p_dest=(T_UINT8 *)PTU_ptr_dest;
+        #   PTU4_index++;  
+        #}
+        #}
+        #}
+        
+        --Parameter '*p_dest' is made _no since Local variable address can not be expected. 
+        #void HwMemset(void  _no *p_dest, T_UINT8  _in value, T_UINT32  _in count)
+        #{
+        -- _no - copy the cotents from value to dest
+        # for(PTU1_index=0;PTU1_index<count;PTU1_index++)
+        #{
+        #(* (T_UINT8 *) p_dest) = value;
+        # PTU_p_dest[PTU1_index] = (*(T_UINT8 *) p_dest);
+        # p_dest = ((T_UINT8 *)p_dest)+1;
+        #}
+        #} 
+        
+        --Parameter '*ps_destination' is made _no since Local variable address can not be expected
+        #T_A825_REC_RESULT A825GetMessage(T_LCC_TYPE _in e_channel, T_A825_MESSAGE _no *ps_destination) 
+        #{
+        # if(e_channel == NOC)
+        #{
+        # PTU_A825GetMessage[PTU5_index] = *ps_destination;
+        # *ps_destination = PTU1_A825GetMessage[PTU5_index];
+        # PTU5_index++;
+        #}
+        # else if(e_channel == NSC)
+        #{
+        # PTU_A825GetMessage[PTU3_index] = *ps_destination;
+        # *ps_destination = PTU2_A825GetMessage[PTU3_index];
+        # PTU3_index++;
+        #}
+        #}
+        
+        #void WdogKickWatchDog(void); 
+        
+        --Parameter '*p_event' is made _no since it is address of a Local variable
+        --Parameter '*error' is made _no since it is address of a Local variable 
+        #void OsSemPend(T_OS_EVENT _no *pevent, T_UWORD _in timeout, T_UBYTE _no *error)
+        #{
+        #   PTU2_ps_semaphore = pevent;
+        #   PTU_err = *error;
+        #}
+        
+        -- Parameter *ptask is made _no since address of static function cannot be expected
+        #T_UINT8 OsTaskCreate(void _no (  *ptask)(void* dptr), void _in *p_data, void _in *pt_os, T_UINT8 _in u8_prio)
+        #{
+        #  (*ptask)(p_data);
+        #}
+        
+        #T_OS_EVENT* OsSemCreate(T_UWORD _in value); 
+        
+        --Parameter 'ps_semaphore' is made as _no since it is a local address variable
+        #void TbaseTaskSignaling(T_UINT16 _in u16_task_ticks, T_OS_EVENT _no *ps_semaphore)
+        #{
+        #   PTU1_ps_semaphore = ps_semaphore;
+        #}
+        
+        #void section(); 
+    
+    END DEFINE
+    
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommfapp.c
+ENVIRONMENT ENV_hducommfapp_c
+ 
+    ARRAY L_app_task_stk,           init = { others => 0 },     ev = init
+  
+    VAR App_active_transmit,        init = 0,                   ev = init
+  
+    VAR App_pulldata,               init = 0,                   ev = init
+
+            
+END ENVIRONMENT -- ENV_hducommfapp_c
+
+USE ENV_hducommfapp_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service AppInit
+--------------------------------------------------------------------------------
+SERVICE AppInit
+SERVICE_TYPE extern
+
+TEST 25
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hducommfapp-CheckChannelNOC-CB-LLR-019]
+    COMMENT The function call the function RxFaultData with parameter a825
+    COMMENT message and DEC_EIGHT when doc id of BID of sID of the NOC message
+    COMMENT  is DIS_FAULT_TIMESTAMP.
+    COMMENT Equivalence Class: 60
+    COMMENT
+	COMMENT [hducommfapp-RxFaultData-CB-LLR-001]
+	COMMENT The function do the following.
+	COMMENT 1. Call the function HwMemcpy with parameters record Id, 
+	COMMENT u8PayLoad of s_rx_message and DEC_TWO.
+	COMMENT 2.set record Id to difference of record Id and offset index(one).
+	COMMENT Equivalence Class:64,66
+	COMMENT 
+	COMMENT [hducommfapp-RxFaultData-CB-LLR-002]
+	COMMENT The function do the following.
+	COMMENT 1.don't set record Id to remainder of record ID with MAX_FAULT_LOG if record Id
+	COMMENT  is less than MAX_FAULT_LOG.
+	COMMENT 2.Call the function HwMemcpy with parameter (sum of raw_data with index
+	COMMENT  record Id of App_temp_ft_log and index,u8PayLoad of s_rx_message and DEC_EIGHT.
+	COMMENT 3.Set App_update_ft_log to TRUE.
+	COMMENT Equivalence Class:68
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+        
+            --Holds the value of transmiting of PTU_Xram_backup
+            VAR PTU_Xram_backup.transmiting,                init = FALSE,               ev = init
+            
+            --Holds the App_pulldata value.
+            VAR App_pulldata,                               init = FALSE,               ev = init
+    
+            --Parameter ps_destination of 'A825GetMessage' function is verified using PTU_A825GetMessage 
+            
+            --Holds the doc of BID of sID of PTU1_A825GetMessage value.
+            VAR PTU1_A825GetMessage[0..3].sID.BID.doc,      init = DIS_FAULT_TIMESTAMP,            ev = init
+                        
+            --Holds u8PayLoad of PTU1_A825GetMessage value.
+            VAR PTU1_A825GetMessage[0..3].u8PayLoad[0],      init = 0x63,            ev = init
+            
+            VAR PTU1_A825GetMessage[0..3].u8PayLoad[1],      init = 0x0,            ev = init   
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --Holds the number of calls of A825GetMessage
+            VAR PTU3_index,                                 init = 0,                   ev = 4
+ 
+            --Holds the number of calls of HwMemcpy.
+            VAR PTU4_index,                                 init = 999,                 ev = 8
+			
+            VAR PTU6_index,                                 init = 1,                 ev = 0
+            
+        COMMENT OUTPUT SECTION:
+            
+            ARRAY PTU_HwMemcpy[0],                          init = {others=>5},         ev = {0=>99,1=>0,others=>5}
+            
+            -- Parameter 'ps_semaphore' of function 'TbaseTaskSignaling' is verified using 'PTU1_ps_semaphore'.
+            VAR PTU1_ps_semaphore,                          init = NULL,                ev = &PTU_ps_semaphore
+           
+            --Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err'  
+            VAR PTU_err,                                    init = 10,                  ev = DEC_ZERO
+            
+            --Parameter 'pevent' of function 'OsSemPend' is verified using 'PTU2_ps_semaphore'  
+            VAR PTU2_ps_semaphore,                          init = NULL,                ev = &PTU_ps_semaphore       
+			
+            --Holds updated log value
+            VAR App_update_ft_log,                             init = FALSE,                 ev = TRUE               
+            
+                                    
+        -- Stub Calls :
+        SIMUL
+            
+            --Creates a Semaphore
+            STUB OsSemCreate (DEC_ZERO) &PTU_ps_semaphore
+            
+            --Installs task signaling parameters for the application task
+            STUB TbaseTaskSignaling (APP_TASK_TICKS)
+            
+            --Creates the application Task
+            STUB OsTaskCreate (HW_NULL, &L_app_task_stk[APP_TASK_STK_SIZE],APP_TASK_PRIO) OS_NO_ERR
+            
+            STUB OsSemPend 1..4 => (DEC_ZERO)
+            
+            --Reloads watchdog counter
+            STUB WdogKickWatchDog 1..4 =>()
+            
+            --Stubs in DoNormal
+            STUB A825GetMessage (NOC) A825_RX_OK
+            
+            STUB A825GetMessage (NSC) A825_RX_OVERFLOW
+            
+            STUB A825GetMessage (NOC) A825_RX_OK
+            
+            STUB A825GetMessage (NSC)  A825_RX_OVERFLOW
+            
+            STUB A825GetMessage (NOC) A825_RX_OK
+            
+            STUB A825GetMessage (NSC) A825_RX_OVERFLOW
+            
+            STUB A825GetMessage (NOC) A825_RX_OK
+
+            STUB A825GetMessage (NSC) A825_RX_OVERFLOW
+                        
+            --Stubs in DoInit
+            STUB HwMemcpy 1=>(sizeof(T_XRAM_LOG))
+            STUB HwMemcpy 2=>(sizeof(T_FAULT_XRAM_LOG))
+            STUB HwMemcpy 3=>(DEC_TWO)
+            STUB HwMemcpy 4=>(DEC_EIGHT)
+            STUB HwMemcpy 5=>(DEC_TWO)
+            STUB HwMemcpy 6=>(DEC_EIGHT)
+            STUB HwMemcpy 7=>(DEC_TWO)
+            STUB HwMemcpy 8=>(DEC_EIGHT)
+            STUB HwMemcpy 9=>(DEC_TWO)
+            STUB HwMemcpy 10=>(DEC_EIGHT)
+            STUB HwMemset(DEC_ZERO,26)
+
+        END SIMUL
+
+    -- Calling the Unit Under Test :
+    #AppInit();
+    
+    END ELEMENT
+
+END TEST -- TEST 25
+
+END SERVICE -- AppInit
+
+
+

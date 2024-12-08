@@ -1,0 +1,1738 @@
+HEADER hdudispfpara, Source Code Ver : 1.12,TestScript Ver : 1.6
+--------------------------------------------------------------------------------
+-- Author Name         : Chaitra T N
+--						 Neha Rai R
+--
+-- File Name           : hdudispfpara.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : ParaConfigTopMenu
+--                       CheckforNewMessages
+--                       BuildMessageList
+--                       ParaGetMessageCount
+--                       BuildSysInfoList
+--                       ParaGetSysInfoCount
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE        TESTER NAME        MODIFICATIONS
+--  ------------        ---------        -----------        -------------
+--      1.1             30.10.2017       Chaitra T N    	 Created the ptu file.
+--										 Neha Rai R
+--      1.2             10.11.2017       Chaitra T N    	 Updated as per #PR100171.
+--										 Neha Rai R
+--      1.3             14.11.2017       Chaitra T N    	 Updated as per #PR100171.
+--										 Neha Rai R
+--      1.4             10.04.2018       Neha Rai R	    	 Updated as per #PR100201
+--										 
+--      1.5				13.08.2020		 Harshitha R		   Updated as per #PR100270
+--      1.6				12.04.2021		 Vignesh Sunil		   Updated as per #PR100388
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfa429.h"    
+##include "hdudispfpdidata.h" 
+##include "hdudispfrevno.h"   
+##include "hdudispfpara.h"    
+##include "hdulibbasictypes.h"
+##include "hdudispfconfig.h"  
+##include "hdudispfparams.h" 
+##include "hdudispfpdicheck.h"
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern T_UINT16 U16_old_message_words[3];
+    #T_PAGE Page_settings; 		
+    #T_UINT8 Eiucmum_part[31]; 	
+    #T_UINT8 Eiucmuf_part[31];	
+    #T_UINT8 Eiucmub_part[31]; 	
+    #T_UINT8 Eiucfg_part[31];	
+    #T_UINT8 Eiufli_part[31]; 	
+    #T_UINT8 Dau_config_id_dau[55]; 
+    #T_UINT8 Eiu_heading[18]; 	
+    #T_UINT8 Bitmap_revno[25]; 	
+    #T_UINT8 Config_id[55];		
+    #T_UINT8 Maint_part[31];
+    #T_UINT8 Commb_part[31];
+    #T_UINT8 Commf_part[31];
+    #T_UINT8 Maint_revno[31];	
+    #T_UINT8 Boot_revno[31]; 
+	#T_UINT8  Maint_config_revno[31];
+	#T_UINT8  Soft_loader_revno[31];
+	#T_UINT8  Commsl_part[31];
+    #T_UINT8 App_revno[31];	
+    #T_UINT8 Aircraft_regstrn[50]; 
+    #T_UINT8 Aircraft_serial[50]; 
+    #T_UINT8 Engine_serial[50];
+    #T_UINT8 Engine_type[60]; 
+    #T_UINT8 Aircraft_model[60]; 
+    #T_UINT8 Dau_config_info[25];    
+	#T_CHAR Error_msg_string[5][40];
+-- Declarations of the temporary variables of the tested file
+
+	--Temporary variable declared to provide valid address to Pc_sys_info_list
+	#T_CHAR PTU_Pc_sys_info_list[MAX_SYSINFO_MESSAGES+1];
+
+	--Temporary variable declared to provide valid address to Message_list
+	#T_CHAR PTU_Pc_message_text[MAX_MESSAGES+1];
+	
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Chaitra T N
+	COMMENT					   Neha Rai R 
+    COMMENT
+    COMMENT File Name        : hdudispfpara.ptu
+    COMMENT
+    COMMENT Tested Functions : ParaConfigTopMenu
+    COMMENT                    CheckforNewMessages
+    COMMENT                    BuildMessageList
+    COMMENT                    ParaGetMessageCount 
+    COMMENT                    BuildSysInfoList
+    COMMENT                    ParaGetSysInfoCount
+    COMMENT 
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT 1.To verify 'write the content of message pointer to message list pointer' of 
+    COMMENT   LLR 'hdudispfpara-BuildMessageList-DB-LLR-002' following values are expected 
+    COMMENT   from respective HLRs
+    COMMENT   HDU-SRS-DB-FNC-65:
+    COMMENT   1.'NO EIU COMMUNICATION'
+	COMMENT   2.'NO INTERSYSTEM COMMUNICATION'
+	COMMENT   3.'DISPLAY CROSS LINK FAILURE' 
+	COMMENT   4.'AIRFRAME CONFIG MISMATCH' when there is mismatch between the foreground parameter 
+	COMMENT      CONFIG_ENGINE and Engine type obtained from label 370 
+	COMMENT   5. "DEMO MODE" when demo mode is entered
+	COMMENT   6. 'PBIT ERROR - ERR XX' when there is any PBIT fail
+	COMMENT 	Note: where XX is the error code 
+	COMMENT 	00 - F4 ARINC Loopback fail 
+	COMMENT 	01 - F7 SDRAM fail, 
+	COMMENT 	02 - F7 CPU fail, 
+	COMMENT 	04 - F7 Foreground Settings File integrity fail, 
+	COMMENT 	05 - F4 NVRAM fail  
+	COMMENT 	06 - F4 Application CRC check fail
+	COMMENT 	07 - F4 Boot CRC check fail
+	COMMENT 	08 - F4 Maintenance CRC check fail
+	COMMENT 	09 - F4 CPU fail
+	COMMENT 	10 - F4 SRAM fail
+	COMMENT 	11 - F7 SRAM fail
+	COMMENT 	12 - F7 Background Settings File integrity fail, 
+	COMMENT   7. 'CBIT ERROR - ERR XX' when there is any CBIT fail
+	COMMENT 	Note: where XX is the error code
+	COMMENT 	01 - When ARINC labels from both DAU fails
+	COMMENT 	02 - F4 stack test fail
+	COMMENT 	03 - F7 stack test fail
+	COMMENT
+    COMMENT   HDU-SRS-DB-DRQ-446:
+    COMMENT     'WRONG CONFIG OR BITMAP LOADED'
+	COMMENT
+    COMMENT 2.To verify 'write the content of system information pointer to system information list pointer' of 
+    COMMENT   LLR 'hdudispfpara-BuildSysInfoList-DB-LLR-002' following values are expected 
+    COMMENT   from respective HLRs
+    COMMENT   HDU-SRS-DB-DRQ-230:
+    COMMENT		'DISPLAY SOFTWARE INFO'
+    COMMENT     'COMMUNICATION SOFTWARE INFO'
+    COMMENT     'DISPLAY CONFIGURATION INFO'
+    COMMENT     'DAU CONFIGURATION INFO'
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1. for loop cannot be covered for 0 and 1 times since it is controlled by Macros 
+    COMMENT    'MAX_MESSAGE_WORDS','MAX_CAUT_IN_ID' in function 'CheckforNewMessages'
+    COMMENT 2. for loop cannot be covered for 0 and 1 times since it is controlled by Macro 
+    COMMENT    'MAX_MESSAGE_WORDS' in function 'BuildMessageList'
+    COMMENT 3. while loop cannot be covered for 0 and 1 times since it is controlled by local variable
+    COMMENT    intialized to macro 'ONE' in function 'BuildMessageList'.
+    COMMENT 4. for loop cannot be covered for 0 and 1 times since it is controlled by Macro 
+    COMMENT    'MAX_SYSINFO_WORDS' in function 'BuildSysInfoList'.
+    COMMENT 5. while loop cannot be covered for 0 and 1 times since it is controlled by local 
+    COMMENT    variable intialized to macro 'ONE' in function 'BuildSysInfoList'.
+    COMMENT 6. while loop cannot be covered for 0 and 1 times since it is controlled by macro 'MAX_BUTTONS'  
+    COMMENT    in function 'ParaConfigTopMenu'
+    COMMENT </AC>
+
+    COMMENT
+    COMMENT
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+    COMMENT In function 'BuildMessageList', result of U16_message_words with index word counter
+    COMMENT bitwise AND with bit mask value is other than ZERO
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function 'BuildMessageList', result of U16_message_words with index word counter
+    COMMENT bitwise AND with bit mask value is ZERO
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'ParaGetMessageCount', function 'BuildMessageList' is called.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'ParaGetMessageCount',  number of messages minus ONE is less than
+    COMMENT s16_message_number.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'ParaGetMessageCount',  number of messages minus ONE is greater than
+    COMMENT s16_message_number.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'ParaGetMessageCount',  number of messages minus ONE is equal to
+    COMMENT s16_message_number.    
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'BuildSysInfoList', result of system information word with index word counter 
+    COMMENT bitwise AND with bit mask value is other than ZERO
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'BuildSysInfoList', result of system information word with index word counter
+    COMMENT bitwise AND with bit mask value is ZERO
+    COMMENT 
+    COMMENT Class 9
+    COMMENT In function 'ParaGetSysInfoCount', function 'BuildSysInfoList' is called.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'ParaGetSysInfoCount', number of system information minus ONE is less than 
+    COMMENT s16_message_number.
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'ParaGetSysInfoCount', number of system information minus ONE is greater than
+    COMMENT s16_message_number.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'ParaGetSysInfoCount', number of system information minus ONE is equal to 
+    COMMENT s16_message_number.  
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'ParaConfigTopMenu', page_num of Page_settings is equal to page_num 
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'ParaConfigTopMenu', page_num of Page_settings is not equal to page_num 
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'ParaConfigTopMenu', function 'TextBoxOn' is called    
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'ParaConfigTopMenu', page_menu of page_settings right shift by loop index 
+    COMMENT value bitwise and with EXTR_LAST_BIT is equal to ONE.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'ParaConfigTopMenu', page_menu of page_settings right shift by loop index
+    COMMENT value bitwise and with EXTR_LAST_BIT is not equal to ONE.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'CheckforNewMessages', U16_message_words with index message word count 
+    COMMENT bitwise AND with bit mask value is not equal to U16_old_message_words with index message 
+    COMMENT word count bitwise AND with bit mask value
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'CheckforNewMessages', U16_message_words with index message word count bitwise 
+    COMMENT AND with bit mask value is equal to U16_old_message_words with index message word count
+    COMMENT bitwise AND with bit mask value
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'CheckforNewMessages', caution count bit in U16_message_words with index message
+    COMMENT word count (U16_message_words with index  message word count right shift by caution count) is ONE
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'CheckforNewMessages', caution count bit in U16_message_words with index
+    COMMENT message word count (U16_message_words with index  message word count right shift by caution count) 
+    COMMENT is other than ONE
+    COMMENT    
+    COMMENT Class 22
+    COMMENT In function 'ParaConfigTopMenu', function 'TextBoxOff' is called
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT None
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdudispfpara_c
+
+    	#void TextBoxOff(T_STEXTBOXDATA  _in *ps_this_box);
+    	
+    	#void TextBoxOn(T_STEXTBOXDATA  _in *ps_this_box);
+
+	END DEFINE
+
+ELSE_SIMUL
+
+	--No action defined as of now if the module is not simulated
+   
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+-- Environment of the file hdudispfpara.c
+
+--ENVIRONMENT ENV_hdudispfpara_c
+	
+--	None
+
+--END ENVIRONMENT -- ENV_hdudispfpara_c
+
+--USE ENV_hdudispfpara_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service BuildSysInfoList
+--------------------------------------------------------------------------------
+SERVICE BuildSysInfoList
+SERVICE_TYPE extern
+
+    -- By function returned type declaration
+    #T_INT16 ret_BuildSysInfoList;
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-BuildSysInfoList-DB-LLR-002]
+	COMMENT The function 'BuildSysInfoList' loop from ZERO(word counter) to MAX_SYSINFO_WORDS minus
+	COMMENT one (word counter) times and does the following:
+	COMMENT a. Sets the bit mask to ONE.
+	COMMENT b. Loops till the bit mask value is other than ZERO and does nothing when result of
+	COMMENT    system information word with index word counter bitwise AND with bit mask value is ZERO
+	COMMENT c. Increments the system information pointer by one and left shift the content of bitmask
+	COMMENT    value by ONE
+	COMMENT Equivalence Class 8
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			ARRAY U16_sys_info_words,			init = {0 => 0,	1 => 0},			ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--Holds return value of function 'BuildSysInfoList'
+			VAR ret_BuildSysInfoList,			init = 1,							ev = 0
+
+		--Stub Calls
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+		--Calling Unit Under Test
+		#ret_BuildSysInfoList = BuildSysInfoList();
+
+	END ELEMENT
+	
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-BuildSysInfoList-DB-LLR-001]
+	COMMENT The function 'BuildSysInfoList' sets reference of Pc_sys_info_list to system information 
+	COMMENT list pointer and reference of system info text to system information pointer.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfpara-BuildSysInfoList-DB-LLR-002]
+	COMMENT The function 'BuildSysInfoList'  loop from ZERO(word counter) to MAX_SYSINFO_WORDS minus one
+	COMMENT (word counter) times and does the following:
+	COMMENT a. Sets the bit mask to ONE.
+	COMMENT b. Loops till the bit mask value is other than ZERO and does the following when result of
+	COMMENT    system information word with index word counter bitwise AND with bit mask value is other
+	COMMENT    than ZERO
+	COMMENT    i)   Writes the content of system information pointer to system information list pointer.
+	COMMENT    ii)  Increments the system information list pointer and return value(number of system 
+	COMMENT         information) by ONE
+	COMMENT c. Increments the system information pointer by one and left shift the content of bitmask 
+	COMMENT    value by ONE
+	COMMENT Equivalence Class 7
+	COMMENT
+	COMMENT [hdudispfpara-BuildSysInfoList-DB-LLR-003]
+	COMMENT The function 'BuildSysInfoList' reset the content of system information list pointer to ZERO 
+	COMMENT and returns the number of system information in list.
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+
+	--resets the value of Pc_sys_info_list
+	#Pc_sys_info_list[0]=0;
+	#Pc_sys_info_list[1]=0;
+	#Pc_sys_info_list[2]=0;
+	#Pc_sys_info_list[3]=0;
+	#Pc_sys_info_list[4]=0;
+	#Pc_sys_info_list[5]=0;
+	#Pc_sys_info_list[6]=0;
+	#Pc_sys_info_list[7]=0;
+	#Pc_sys_info_list[8]=0;
+	#Pc_sys_info_list[9]=0;
+	#Pc_sys_info_list[10]=0;
+	#Pc_sys_info_list[11]=0;
+	#Pc_sys_info_list[12]=0;
+	#Pc_sys_info_list[13]=0;
+	#Pc_sys_info_list[14]=0;
+	#Pc_sys_info_list[15]=0;
+	#Pc_sys_info_list[16]=0;
+	#Pc_sys_info_list[17]=0;
+	#Pc_sys_info_list[18]=0;
+	#Pc_sys_info_list[19]=0;
+	#Pc_sys_info_list[20]=0;
+	#Pc_sys_info_list[21]=0;	
+	#Pc_sys_info_list[22]=0;
+	#Pc_sys_info_list[23]=0;
+	#Pc_sys_info_list[24]=0;
+	#Pc_sys_info_list[25]=0;
+	#Pc_sys_info_list[26]=0;
+	#Pc_sys_info_list[27]=0;	
+	#Pc_sys_info_list[28]=0;	
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			ARRAY App_revno,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'3',
+			&											8=>'3',others=>' '},			ev = init
+			ARRAY Boot_revno,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'3',
+			&											8=>'2',others=>' '},			ev = init
+			ARRAY Maint_revno,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'3',
+			&											8=>'4',others=>' '},			ev = init
+			ARRAY Commf_part,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'3',
+			&											8=>'7',others=>' '},			ev = init
+			ARRAY Commb_part,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'3',
+			&											8=>'6',others=>' '},			ev = init
+			ARRAY Maint_part,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'3',
+			&											8=>'8',others=>' '},			ev = init
+
+			ARRAY Config_id,					init = {0=>'1',1=>'.',2=>'1',others=>' '},
+			&																			ev = init
+			ARRAY Bitmap_revno,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'3',
+			&											8=>'9',others=>' '},			ev = init
+			ARRAY Eiu_heading,					init = {0=>'D',1=>'A',2=>'U',3=>' ',4=>'S',5=>'O',6=>'F',7=>'T',
+			&											8=>'W',9=>'A',10=>'R',11=>'E',12=>' ',13=>'I',14=>'N',
+			&											15=>'F',16=>'O',others=>' '},	ev = init
+			ARRAY Dau_config_id_dau,			init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'3',
+			&											8=>'5',others=>' '},			ev = init
+			ARRAY Eiufli_part,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'1',
+			&											8=>'5',others=>' '},			ev = init
+			ARRAY Eiucfg_part,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'1',
+			&											8=>'6',others=>' '},			ev = init
+			ARRAY Eiucmub_part,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'2',
+			&											8=>'8',others=>' '},			ev = init
+			ARRAY Eiucmuf_part,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'2',
+			&											8=>'1',others=>' '},			ev = init
+			ARRAY Eiucmum_part,					init = {0=>'H',1=>'1',2=>'0',3=>'8',4=>'E',5=>'-',6=>'1',7=>'1',
+			&											8=>'9',others=>' '},			ev = init
+			
+			ARRAY Aircraft_model,				init = {0=>'M',1=>'D',2=>'5',3=>'3',4=>'0',5=>'F',others=>' '},			
+			&																			ev = init
+
+			ARRAY Engine_type,					init = {0=>'M',1=>'D',2=>'5',3=>'0',4=>'-',5=>'C',6=>'3',7=>'0',others=>' '},			
+			&																			ev = init
+
+			ARRAY Engine_serial,				init = {0=>'1',1=>'2',2=>'3',3=>'4',4=>'5',5=>'6',6=>'7',7=>'8',
+			&											8=>'9', 9=>'1',10=>'0', 11=>'A' ,others=>' '},			
+			&																			ev = init
+
+			ARRAY Aircraft_serial,				init = {0=>'1',1=>'2',2=>'3',3=>'4',4=>'5',5=>'6',6=>'7',7=>'8',
+			&											others=>' '},					ev = init
+
+			ARRAY Aircraft_regstrn,				init = {0=>'1',1=>'2',2=>'3',3=>'4',4=>'5',5=>'6',6=>'7',7=>'8',
+			&											others=>' '},					ev = init
+
+			ARRAY U16_sys_info_words,			init = {0 => 0xFFFF,	1 => 0xFFFF},	ev = init
+
+			ARRAY Dau_config_info,				init = {0=>'D',1=>'A',2=>'U',3=>' ',4=>'C',5=>'O',6=>'N',7=>'F',
+			&											8=>'I',9=>'G',10=>'U',11=>'R',12=>'A',13=>'T',14=>'I',15=>'O',
+			&											16=>'N',17=>' ',18=>'I',19=>'N',20=>'F',21=>'O',others=>' '},	
+			&																			ev = init
+			
+			ARRAY PTU_Pc_sys_info_list[0..32],	init = {others=>1},						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+ 			VAR Pc_sys_info_list[0],			init = &PTU_Pc_sys_info_list[0],		ev = "DISPLAY SOFTWARE INFO"
+ 			VAR Pc_sys_info_list[1],			init = &PTU_Pc_sys_info_list[1],		ev = &App_revno[0]
+ 			VAR Pc_sys_info_list[2],			init = &PTU_Pc_sys_info_list[2],		ev = &Boot_revno[0]
+ 			VAR Pc_sys_info_list[3],			init = &PTU_Pc_sys_info_list[3],		ev = &Maint_revno[0]
+ 			VAR Pc_sys_info_list[4],			init = &PTU_Pc_sys_info_list[4],		ev = ""
+ 			VAR Pc_sys_info_list[5],			init = &PTU_Pc_sys_info_list[5],		ev = ""
+ 			VAR Pc_sys_info_list[6],			init = &PTU_Pc_sys_info_list[6],		ev = ""
+ 			VAR Pc_sys_info_list[7],			init = &PTU_Pc_sys_info_list[7],		ev = "COMMUNICATION SOFTWARE INFO"
+ 			VAR Pc_sys_info_list[8],			init = &PTU_Pc_sys_info_list[8],		ev = &Commf_part[0]
+ 			VAR Pc_sys_info_list[9],			init = &PTU_Pc_sys_info_list[9],		ev = &Commb_part[0]
+ 			VAR Pc_sys_info_list[10],			init = &PTU_Pc_sys_info_list[10],		ev = &Maint_part[0]	
+ 			VAR Pc_sys_info_list[11],			init = &PTU_Pc_sys_info_list[11],		ev = ""
+ 			VAR Pc_sys_info_list[12],			init = &PTU_Pc_sys_info_list[12],		ev = ""
+ 			VAR Pc_sys_info_list[13],			init = &PTU_Pc_sys_info_list[13],		ev = "DISPLAY CONFIGURATION INFO"
+ 			VAR Pc_sys_info_list[14],			init = &PTU_Pc_sys_info_list[14],		ev = &Dau_config_id_dau[0]
+ 			VAR Pc_sys_info_list[15],			init = &PTU_Pc_sys_info_list[15],		ev = &Config_id[0]
+ 			VAR Pc_sys_info_list[16],			init = &PTU_Pc_sys_info_list[16],		ev = &Bitmap_revno[0]
+ 			VAR Pc_sys_info_list[17],			init = &PTU_Pc_sys_info_list[17],		ev = ""
+ 			VAR Pc_sys_info_list[18],			init = &PTU_Pc_sys_info_list[18],		ev = &Dau_config_info[0]
+ 			VAR Pc_sys_info_list[19],			init = &PTU_Pc_sys_info_list[19],		ev = &Aircraft_model[0]
+ 			VAR Pc_sys_info_list[20],			init = &PTU_Pc_sys_info_list[20],		ev = &Engine_type[0]
+ 			VAR Pc_sys_info_list[21],			init = &PTU_Pc_sys_info_list[21],		ev = &Engine_serial[0]
+
+ 			VAR Pc_sys_info_list[22],			init = &PTU_Pc_sys_info_list[22],		ev = &Aircraft_serial[0]
+ 			VAR Pc_sys_info_list[23],			init = &PTU_Pc_sys_info_list[23],		ev = &Aircraft_serial[0]
+ 			VAR Pc_sys_info_list[24],			init = &PTU_Pc_sys_info_list[24],		ev = ""
+ 			VAR Pc_sys_info_list[25],			init = &PTU_Pc_sys_info_list[25],		ev = "DAU SOFTWARE INFO "
+ 			VAR Pc_sys_info_list[26],			init = &PTU_Pc_sys_info_list[26],		ev = &Eiufli_part[0]
+ 			VAR Pc_sys_info_list[27],			init = &PTU_Pc_sys_info_list[27],		ev = &Eiucfg_part[0]
+ 			VAR Pc_sys_info_list[28],			init = &PTU_Pc_sys_info_list[28],		ev = &Eiucmub_part[0]
+																							 
+			--Holds return value of function 'BuildSysInfoList'
+			VAR ret_BuildSysInfoList,			init = 0,								ev = 32
+
+		--Stub Calls
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+		--Calling Unit Under Test
+		#ret_BuildSysInfoList = BuildSysInfoList();
+
+	END ELEMENT
+	
+END TEST -- TEST 2
+    
+END SERVICE -- BuildSysInfoList
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service ParaGetMessageCount
+--------------------------------------------------------------------------------
+SERVICE ParaGetMessageCount
+SERVICE_TYPE extern
+
+	-- Tested service parameters declarations
+	#T_INT16 s16_message_number;
+	-- By function returned type declaration
+	#T_INT16 ret_ParaGetMessageCount;
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-ParaGetMessageCount-DB-LLR-001]
+	COMMENT The function 'ParaGetMessageCount' builds the message list and get the number of messages 
+	COMMENT in a list by calling function 'BuildMessageList'.
+	COMMENT Equivalence Class 3
+	COMMENT
+	COMMENT [hdudispfpara-ParaGetMessageCount-DB-LLR-003]
+	COMMENT The function 'ParaGetMessageCount' returns s16_message_number when number of messages minus
+	COMMENT ONE is equal to s16_message_number.
+	COMMENT Equivalence Class 6
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-001]
+	COMMENT The function 'BuildMessageList' sets reference of Message_list to message list pointer and 
+	COMMENT reference of message text to message pointer.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-002]
+	COMMENT The function 'BuildMessageList' loops from ZERO(word counter) to MAX_MESSAGE_WORDS minus
+	COMMENT one(word counter) times and does the following 
+	COMMENT i)  sets the bit mask to ONE.
+	COMMENT ii) Loops till the bit mask value is other than ZERO and does the following when result 
+	COMMENT     of U16_message_words
+	COMMENT     with index word counter bitwise AND with bit mask value is other than ZERO
+	COMMENT 	a)writes the content of message pointer to message list pointer.(for 0th index of Message_list)
+	COMMENT 	b)Increments the list pointer  and return value(number of messages) by ONE.
+	COMMENT iii)Increments the message pointer by one and left shift the content of bitmask value by ONE
+	COMMENT Equivalence Class 1
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-003]
+	COMMENT The function 'BuildMessageList' resets the content of list pointer to ZERO and returns the 
+	COMMENT number of messages in list.
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+
+	#Message_list[0]=0;
+	#Message_list[1]=0;
+	#Message_list[2]=0;
+	#Message_list[3]=0;
+	#Message_list[4]=0;
+	#Message_list[5]=0;
+	#Message_list[6]=0;
+	#Message_list[7]=0;
+	#Message_list[8]=0;
+	#Message_list[9]=0;
+	#Message_list[10]=0;
+	#Message_list[11]=0;
+	#Message_list[12]=0;
+	#Message_list[13]=0;
+	#Message_list[14]=0;
+	#Message_list[15]=0;
+	#Message_list[16]=0;
+	#Message_list[17]=0;
+	#Message_list[18]=0;
+	#Message_list[19]=0;
+	#Message_list[20]=0;
+	#Message_list[21]=0;	
+	#Message_list[22]=0;
+	#Message_list[23]=0;
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds value of message number
+			VAR s16_message_number,				init = 31,						ev = init
+
+			--Holds the value of Message words 
+			ARRAY U16_message_words,			init = {0=>0xFFFF,1=>0xFFFF,2=>0xFFFF},	ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--Holds return value of function 'ParaGetMessageCount'
+			VAR ret_ParaGetMessageCount,		init = 0,						ev = 31
+
+			--Holds the value of Message List 
+    		VAR Message_list[0],				init = &PTU_Pc_message_text[0],
+    		&																	ev = "DISPLAY CROSSLINK FAILURE"
+    		VAR Message_list[1],				init = &PTU_Pc_message_text[1],	
+    		&																	ev = "NO EIU COMMUNICATION"
+    		VAR Message_list[2],				init = &PTU_Pc_message_text[2],	
+    		&																	ev = "PBIT ERROR - ERR 00"
+    		VAR Message_list[3],				init = &PTU_Pc_message_text[3],	
+    		&																	ev = "PBIT ERROR - ERR 01"
+    		VAR Message_list[4],				init = &PTU_Pc_message_text[4],	
+    		&																	ev = "PBIT ERROR - ERR 02"
+    		VAR Message_list[5],				init = &PTU_Pc_message_text[5],	
+    		&																	ev = "PBIT ERROR - ERR 03"
+    		VAR Message_list[6],				init = &PTU_Pc_message_text[6],	
+    		&																	ev = "PBIT ERROR - ERR 04"
+    		VAR Message_list[7],				init = &PTU_Pc_message_text[7],	
+    		&																	ev = "PBIT ERROR - ERR 05"
+    		VAR Message_list[8],				init = &PTU_Pc_message_text[8],	
+    		&																	ev = "PBIT ERROR - ERR 06"
+    		VAR Message_list[9],				init = &PTU_Pc_message_text[9],	
+    		&																	ev = "PBIT ERROR - ERR 07"
+    		VAR Message_list[10],				init = &PTU_Pc_message_text[10],
+    		&																	ev = "PBIT ERROR - ERR 08"
+    		VAR Message_list[11],				init = &PTU_Pc_message_text[11],
+    		&																	ev = "PBIT ERROR - ERR 09"
+    		VAR Message_list[12],				init = &PTU_Pc_message_text[12],
+    		&																	ev = "PBIT ERROR - ERR 10"
+    		VAR Message_list[13],				init = &PTU_Pc_message_text[13],
+    		&																	ev = "PBIT ERROR - ERR 11"
+    		VAR Message_list[14],				init = &PTU_Pc_message_text[14],
+    		&																	ev = "CBIT ERROR - ERR 01"
+    		VAR Message_list[15],				init = &PTU_Pc_message_text[15],
+    		&																	ev = "CBIT ERROR - ERR 02"
+    		VAR Message_list[16],				init = &PTU_Pc_message_text[16],
+    		&																	ev = "CBIT ERROR - ERR 03"
+    		VAR Message_list[17],				init = &PTU_Pc_message_text[17],
+    		&																	ev = "NO INTERSYSTEM COMMUNICATION"
+    		VAR Message_list[18],				init = &PTU_Pc_message_text[18],
+    		&																	ev = "DEMO MODE"
+    		VAR Message_list[19],				init = &PTU_Pc_message_text[19],
+    		&																	ev = ""
+    		VAR Message_list[20],				init = &PTU_Pc_message_text[20],
+    		&																	ev = ""
+    		VAR Message_list[21],				init = &PTU_Pc_message_text[21],
+    		&																	ev = "PBIT ERROR - ERR 12"
+     		VAR Message_list[22],				init = &PTU_Pc_message_text[22],
+    		&																	ev = "AIRFRAME CONFIG MISMATCH"
+    		VAR Message_list[23],				init = &PTU_Pc_message_text[23],
+    		&																	ev = ""
+
+		--Stub Calls
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+	--Calling Unit Under Test
+	#ret_ParaGetMessageCount = ParaGetMessageCount(s16_message_number);
+
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-ParaGetMessageCount-DB-LLR-001]
+	COMMENT The function 'ParaGetMessageCount' builds the message list and get the number of messages
+	COMMENT in a list by calling function 'BuildMessageList'.
+	COMMENT Equivalence Class 3
+	COMMENT
+	COMMENT [hdudispfpara-ParaGetMessageCount-DB-LLR-002]
+	COMMENT The function 'ParaGetMessageCount' returns the number of messages minus ONE when number
+	COMMENT of messages minus ONE is less than s16_message_number.
+	COMMENT Equivalence Class 4
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-003]
+	COMMENT The function 'BuildMessageList' resets the content of list pointer to ZERO and returns 
+	COMMENT the number of messages in list.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT </TD>
+
+	#Message_list[0]=0;
+	#Message_list[1]=0;
+	#Message_list[2]=0;
+	#Message_list[3]=0;
+	#Message_list[4]=0;
+	#Message_list[5]=0;
+	#Message_list[6]=0;
+	#Message_list[7]=0;
+	#Message_list[8]=0;
+	#Message_list[9]=0;
+	#Message_list[10]=0;
+	#Message_list[11]=0;
+	#Message_list[12]=0;
+	#Message_list[13]=0;
+	#Message_list[14]=0;
+	#Message_list[15]=0;
+	#Message_list[16]=0;
+	#Message_list[17]=0;
+	#Message_list[18]=0;
+	#Message_list[19]=0;
+	#Message_list[20]=0;
+	#Message_list[21]=0;	
+	#Message_list[22]=0;
+	#Message_list[23]=0;
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds value of message number
+			VAR s16_message_number,				init = 32,						ev = init
+
+			--Holds the value of Message words 
+			ARRAY U16_message_words,			init = {0=>0xFFFF,1=>0xFFFF,2=>0},	ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--Holds return value of function 'ParaGetMessageCount'
+			VAR ret_ParaGetMessageCount,		init = 0,						ev = 31
+
+			--Holds the value of Message List 
+    		VAR Message_list[0],				init = &PTU_Pc_message_text[0],
+    		&																	ev = "DISPLAY CROSSLINK FAILURE"
+    		VAR Message_list[1],				init = &PTU_Pc_message_text[1],	
+    		&																	ev = "NO EIU COMMUNICATION"
+    		VAR Message_list[2],				init = &PTU_Pc_message_text[2],	
+    		&																	ev = "PBIT ERROR - ERR 00"
+    		VAR Message_list[3],				init = &PTU_Pc_message_text[3],	
+    		&																	ev = "PBIT ERROR - ERR 01"
+    		VAR Message_list[4],				init = &PTU_Pc_message_text[4],	
+    		&																	ev = "PBIT ERROR - ERR 02"
+    		VAR Message_list[5],				init = &PTU_Pc_message_text[5],	
+    		&																	ev = "PBIT ERROR - ERR 03"
+    		VAR Message_list[6],				init = &PTU_Pc_message_text[6],	
+    		&																	ev = "PBIT ERROR - ERR 04"
+    		VAR Message_list[7],				init = &PTU_Pc_message_text[7],	
+    		&																	ev = "PBIT ERROR - ERR 05"
+    		VAR Message_list[8],				init = &PTU_Pc_message_text[8],	
+    		&																	ev = "PBIT ERROR - ERR 06"
+    		VAR Message_list[9],				init = &PTU_Pc_message_text[9],	
+    		&																	ev = "PBIT ERROR - ERR 07"
+    		VAR Message_list[10],				init = &PTU_Pc_message_text[10],
+    		&																	ev = "PBIT ERROR - ERR 08"
+    		VAR Message_list[11],				init = &PTU_Pc_message_text[11],
+    		&																	ev = "PBIT ERROR - ERR 09"
+    		VAR Message_list[12],				init = &PTU_Pc_message_text[12],
+    		&																	ev = "PBIT ERROR - ERR 10"
+    		VAR Message_list[13],				init = &PTU_Pc_message_text[13],
+    		&																	ev = "PBIT ERROR - ERR 11"
+    		VAR Message_list[14],				init = &PTU_Pc_message_text[14],
+    		&																	ev = "CBIT ERROR - ERR 01"
+    		VAR Message_list[15],				init = &PTU_Pc_message_text[15],
+    		&																	ev = "CBIT ERROR - ERR 02"
+    		VAR Message_list[16],				init = &PTU_Pc_message_text[16],
+    		&																	ev = "CBIT ERROR - ERR 03"
+    		VAR Message_list[17],				init = &PTU_Pc_message_text[17],
+    		&																	ev = "NO INTERSYSTEM COMMUNICATION"
+    		VAR Message_list[18],				init = &PTU_Pc_message_text[18],
+    		&																	ev = "DEMO MODE"
+    		VAR Message_list[19],				init = &PTU_Pc_message_text[19],
+    		&																	ev = ""
+    		VAR Message_list[20],				init = &PTU_Pc_message_text[20],
+    		&																	ev = ""
+    		VAR Message_list[21],				init = &PTU_Pc_message_text[21],
+    		&																	ev = "PBIT ERROR - ERR 12"
+     		VAR Message_list[22],				init = &PTU_Pc_message_text[22],
+    		&																	ev = "AIRFRAME CONFIG MISMATCH"
+    		VAR Message_list[23],				init = &PTU_Pc_message_text[23],
+    		&																	ev = ""
+
+		--Stub Calls
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+	--Calling Unit Under Test
+	#ret_ParaGetMessageCount = ParaGetMessageCount(s16_message_number);
+
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-ParaGetMessageCount-DB-LLR-001]
+	COMMENT The function 'ParaGetMessageCount' builds the message list and get the number of messages in 
+	COMMENT a list by calling  function 'BuildMessageList'.
+	COMMENT Equivalence Class 3
+	COMMENT
+	COMMENT [hdudispfpara-ParaGetMessageCount-DB-LLR-003]
+	COMMENT The function 'ParaGetMessageCount' returns s16_message_number when number of messages minus 
+	COMMENT ONE is greater than s16_message_number.
+	COMMENT Equivalence Class 5
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-003]
+	COMMENT The function 'BuildMessageList' resets the content of list pointer to ZERO and returns the
+	COMMENT number of messages in list.(for all indexes of Message_list )
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds value of message number
+			VAR s16_message_number,				init = 30,						ev = init
+
+			--Holds the value of Message words 
+			ARRAY U16_message_words,			init =  {0=>0xFFFF,1=>0xFFFF,2=>0xFFFF},				ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--Holds return value of function 'ParaGetMessageCount'
+			VAR ret_ParaGetMessageCount,		init = 1,						ev = 30
+
+		--Stub Calls
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+	--Calling Unit Under Test
+	#ret_ParaGetMessageCount = ParaGetMessageCount(s16_message_number);
+
+	END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- ParaGetMessageCount
+--------------------------------------------------------------------------------
+-- Declaration of the service BuildMessageList
+--------------------------------------------------------------------------------
+SERVICE BuildMessageList
+SERVICE_TYPE extern
+
+    -- By function returned type declaration
+    #T_INT16 ret_BuildMessageList;
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-001]
+	COMMENT The function 'BuildMessageList' sets reference of Message_list to message list pointer and 
+	COMMENT reference of message text to message pointer.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-002]
+	COMMENT The function 'BuildMessageList' loops from ZERO(word counter) to MAX_MESSAGE_WORDS minus 
+	COMMENT one(word counter) times and does the following 
+	COMMENT i)  sets the bit mask to ONE.
+	COMMENT ii) Loops till the bit mask value is other than ZERO and does the following when result of 
+	COMMENT     U16_message_words with index word counter bitwise AND with bit mask value is other than ZERO
+	COMMENT 	a)writes the content of message pointer to message list pointer. (for 0th index of Message_list)
+	COMMENT 	b)Increments the list pointer  and return value(number of messages) by ONE.
+	COMMENT iii)Increments the message pointer by one and left shift the content of bitmask value by ONE
+	COMMENT Equivalence Class 1
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-003]
+	COMMENT The function 'BuildMessageList' resets the content of list pointer to ZERO and returns the number of 
+	COMMENT messages in list.
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+
+	#Message_list[0]=0;
+	#Message_list[1]=0;
+	#Message_list[2]=0;
+	#Message_list[3]=0;
+	#Message_list[4]=0;
+	#Message_list[5]=0;
+	#Message_list[6]=0;
+	#Message_list[7]=0;
+	#Message_list[8]=0;
+	#Message_list[9]=0;
+	#Message_list[10]=0;
+	#Message_list[11]=0;
+	#Message_list[12]=0;
+	#Message_list[13]=0;
+	#Message_list[14]=0;
+	#Message_list[15]=0;
+	#Message_list[16]=0;
+	#Message_list[17]=0;
+	#Message_list[18]=0;
+	#Message_list[19]=0;
+	#Message_list[20]=0;
+	#Message_list[21]=0;	
+	#Message_list[22]=0;	
+	#Message_list[23]=0;	
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the value of Message words(Maximum value)
+			ARRAY U16_message_words,			init = {0=>0xFFFF,1=>0xFFFF,2=>0xFFFF},	ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+		COMMENT OUTPUT SECTION:
+
+			--Holds return value of function 'BuildMessageList'
+			VAR ret_BuildMessageList,			init = 0,						ev = 48
+
+			--Holds the value of Message List 
+    		VAR Message_list[0],				init = &PTU_Pc_message_text[0],
+    		&																	ev = "DISPLAY CROSSLINK FAILURE"
+    		VAR Message_list[1],				init = &PTU_Pc_message_text[1],	
+    		&																	ev = "NO EIU COMMUNICATION"
+    		VAR Message_list[2],				init = &PTU_Pc_message_text[2],	
+    		&																	ev = "PBIT ERROR - ERR 00"
+    		VAR Message_list[3],				init = &PTU_Pc_message_text[3],	
+    		&																	ev = "PBIT ERROR - ERR 01"
+    		VAR Message_list[4],				init = &PTU_Pc_message_text[4],	
+    		&																	ev = "PBIT ERROR - ERR 02"
+    		VAR Message_list[5],				init = &PTU_Pc_message_text[5],	
+    		&																	ev = "PBIT ERROR - ERR 03"
+    		VAR Message_list[6],				init = &PTU_Pc_message_text[6],	
+    		&																	ev = "PBIT ERROR - ERR 04"
+    		VAR Message_list[7],				init = &PTU_Pc_message_text[7],	
+    		&																	ev = "PBIT ERROR - ERR 05"
+    		VAR Message_list[8],				init = &PTU_Pc_message_text[8],	
+    		&																	ev = "PBIT ERROR - ERR 06"
+    		VAR Message_list[9],				init = &PTU_Pc_message_text[9],	
+    		&																	ev = "PBIT ERROR - ERR 07"
+    		VAR Message_list[10],				init = &PTU_Pc_message_text[10],
+    		&																	ev = "PBIT ERROR - ERR 08"
+    		VAR Message_list[11],				init = &PTU_Pc_message_text[11],
+    		&																	ev = "PBIT ERROR - ERR 09"
+    		VAR Message_list[12],				init = &PTU_Pc_message_text[12],
+    		&																	ev = "PBIT ERROR - ERR 10"
+    		VAR Message_list[13],				init = &PTU_Pc_message_text[13],
+    		&																	ev = "PBIT ERROR - ERR 11"
+    		VAR Message_list[14],				init = &PTU_Pc_message_text[14],
+    		&																	ev = "CBIT ERROR - ERR 01"
+    		VAR Message_list[15],				init = &PTU_Pc_message_text[15],
+    		&																	ev = "CBIT ERROR - ERR 02"
+    		VAR Message_list[16],				init = &PTU_Pc_message_text[16],
+    		&																	ev = "CBIT ERROR - ERR 03"
+    		VAR Message_list[17],				init = &PTU_Pc_message_text[17],
+    		&																	ev = "NO INTERSYSTEM COMMUNICATION"
+    		VAR Message_list[18],				init = &PTU_Pc_message_text[18],
+    		&																	ev = "DEMO MODE"
+    		VAR Message_list[19],				init = &PTU_Pc_message_text[19],
+    		&																	ev = ""
+    		VAR Message_list[20],				init = &PTU_Pc_message_text[20],
+    		&																	ev = ""
+    		VAR Message_list[21],				init = &PTU_Pc_message_text[21],
+    		&																	ev = "PBIT ERROR - ERR 12"
+     		VAR Message_list[22],				init = &PTU_Pc_message_text[22],
+    		&																	ev = "AIRFRAME CONFIG MISMATCH"
+    		VAR Message_list[23],				init = &PTU_Pc_message_text[23],
+    		&																	ev = ""
+		--Stub Calls
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+	--Calling Unit Under Test
+	#ret_BuildMessageList = BuildMessageList();
+
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-001]
+	COMMENT The function 'BuildMessageList' sets reference of Message_list to message list pointer and reference
+	COMMENT of message text to message pointer.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-002]
+	COMMENT The function 'BuildMessageList' loops from ZERO(word counter) to MAX_MESSAGE_WORDS minus one
+	COMMENT (word counter) times and does the following 
+	COMMENT i) sets the bit mask to ONE.
+	COMMENT ii)Loops till the bit mask value is other than ZERO and does nothing when result of U16_message_words
+	COMMENT     with index word counter bitwise AND with bit mask value is equal to ZERO
+	COMMENT iii)Increments the message pointer by one and left shift the content of bitmask value by ONE
+	COMMENT Equivalence Class 2
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-003]
+	COMMENT The function 'BuildMessageList' resets the content of list pointer to ZERO and returns the 
+	COMMENT number of messages in list.
+	COMMENT (for 1 to 31st index of Message_list )
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the value of Message words(Minimum value)
+			ARRAY U16_message_words,			init = {others=>0},				ev = init
+  		
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--Holds return value of function 'BuildMessageList'
+			VAR ret_BuildMessageList,			init = 1,						ev = 0
+
+		--Stub Calls
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+	--Calling Unit Under Test
+	#ret_BuildMessageList = BuildMessageList();
+
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-001]
+	COMMENT The function 'BuildMessageList' sets reference of Message_list to message list pointer and reference
+	COMMENT of message text to message pointer.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-002]
+	COMMENT The function 'BuildMessageList' loops from ZERO(word counter) to MAX_MESSAGE_WORDS minus one
+	COMMENT (word counter) times and does the following 
+	COMMENT i) sets the bit mask to ONE.
+	COMMENT ii)Loops till the bit mask value is other than ZERO and does nothing when result of U16_message_words
+	COMMENT     with index word counter bitwise AND with bit mask value is equal to ZERO
+	COMMENT iii)Increments the message pointer by one and left shift the content of bitmask value by ONE
+	COMMENT Equivalence Class 2
+	COMMENT
+	COMMENT [hdudispfpara-BuildMessageList-DB-LLR-003]
+	COMMENT The function 'BuildMessageList' resets the content of list pointer to ZERO and returns the 
+	COMMENT number of messages in list.
+	COMMENT (for 1 to 31st index of Message_list )
+	COMMENT Equivalence Class None
+	COMMENT This test case is written to test global variable U16_message_words for nominal value
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the value of Message words(Nominal value)
+			ARRAY U16_message_words,			init = {others=>2},				ev = init
+  		
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--Holds return value of function 'BuildMessageList'
+			VAR ret_BuildMessageList,			init = 1,						ev = 3
+
+		--Stub Calls
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+	--Calling Unit Under Test
+	#ret_BuildMessageList = BuildMessageList();
+
+	END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- BuildMessageList
+--------------------------------------------------------------------------------
+-- Declaration of the service CheckforNewMessages
+--------------------------------------------------------------------------------
+SERVICE CheckforNewMessages
+SERVICE_TYPE extern
+
+    -- By function returned type declaration
+    #T_UINT32 ret_CheckforNewMessages;
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-CheckforNewMessages-DB-LLR-001]
+	COMMENT The function 'CheckforNewMessages' loops from ZERO to MAX_MESSAGE_WORDS and ZERO to
+	COMMENT MAX_CAUT_IN_ID and sets the bit mask to one left shift by caution count.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfpara-CheckforNewMessages-DB-LLR-002]
+	COMMENT The function 'CheckforNewMessages' loops from ZERO to MAX_MESSAGE_WORDS and ZERO to MAX_CAUT_IN_ID
+	COMMENT and sets the U16_old_message_words with message word as index to  result of U16_old_message_words 
+	COMMENT bitwise or with bit mask and increment the new message count by one when:
+	COMMENT a. U16_message_words with index message word count bitwise AND with bit mask value is not equal
+	COMMENT    to U16_old_message_words with index message word count bitwise AND with bit mask value
+	COMMENT b. caution count bit in U16_message_words with index message word count(U16_message_words with 
+	COMMENT    index  message word count right shift by caution count) is ONE.
+	COMMENT    (when the function loops for 0th time(u16_i=0,u16_j=0))
+	COMMENT Equivalence Class 18,20
+	COMMENT
+	COMMENT The function 'CheckforNewMessages' loops from ZERO to MAX_MESSAGE_WORDS and ZERO to MAX_CAUT_IN_ID
+	COMMENT and does nothing when  U16_message_words with index message word count bitwise AND with bit mask 
+	COMMENT value equal to U16_old_message_words with index message word count bitwise AND with bit mask value
+	COMMENT Equivalence Class 19
+	COMMENT	
+	COMMENT [hdudispfpara-CheckforNewMessages-DB-LLR-003]
+	COMMENT The function 'CheckforNewMessages' loops from ZERO to MAX_MESSAGE_WORDS and ZERO to 
+	COMMENT MAX_CAUT_IN_ID and sets the U16_old_message_words with result of U16_old_message_words
+	COMMENT bitwise and with negation of bit mask when:
+	COMMENT a. U16_message_words with index message word count bitwise AND with bit mask value is not equal to
+	COMMENT    U16_old_message_words with index message word count bitwise AND with bit mask value 
+	COMMENT b. caution count bit in U16_message_words with index message word count(U16_message_words with 
+	COMMENT    index  message word count right shift by caution count) is not equal to TRUE)
+	COMMENT    (when the loop counter u16_i=0 and u16_j=1)
+	COMMENT Equivalence Class 21
+	COMMENT
+	COMMENT [hdudispfpara-CheckforNewMessages-DB-LLR-004]
+	COMMENT The function 'CheckforNewMessages' returns the new message count 
+	COMMENT Equivalence Class None
+	COMMENT </TD>  
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			ARRAY U16_message_words,			init = {0=>1,1=>0,2=>0},			ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--Old message words(Tested for nominal and minimum value)
+			ARRAY U16_old_message_words,		init = {0=>0,1=>1,2=>1},			ev = {0=>1,1=>0,2=>0}
+		
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_CheckforNewMessages,		init = 0,					ev = 1
+
+		--Stub Calls
+		SIMUL
+
+			--None
+
+		END SIMUL
+		
+		--Calling unit under test
+		#ret_CheckforNewMessages = CheckforNewMessages();
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-CheckforNewMessages-DB-LLR-001]
+	COMMENT The function 'CheckforNewMessages' loops from ZERO to MAX_MESSAGE_WORDS and ZERO to
+	COMMENT MAX_CAUT_IN_ID and sets the bit mask to one left shift by caution count.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfpara-CheckforNewMessages-DB-LLR-002]
+	COMMENT The function 'CheckforNewMessages' loops from ZERO to MAX_MESSAGE_WORDS and ZERO to MAX_CAUT_IN_ID
+	COMMENT and sets the U16_old_message_words with message word as index to  result of U16_old_message_words 
+	COMMENT bitwise or with bit mask and increment the new message count by one when:
+	COMMENT a. U16_message_words with index message word count bitwise AND with bit mask value is not equal
+	COMMENT    to U16_old_message_words with index message word count bitwise AND with bit mask value
+	COMMENT b. caution count bit in U16_message_words with index message word count(U16_message_words with 
+	COMMENT    index  message word count right shift by caution count) is ONE.
+	COMMENT    (when the function loops for 0th time(u16_i=0,u16_j=0))
+	COMMENT Equivalence Class 18,20
+	COMMENT
+	COMMENT The function 'CheckforNewMessages' loops from ZERO to MAX_MESSAGE_WORDS and ZERO to MAX_CAUT_IN_ID
+	COMMENT and does nothing when  U16_message_words with index message word count bitwise AND with bit mask 
+	COMMENT value equal to U16_old_message_words with index message word count bitwise AND with bit mask value
+	COMMENT Equivalence Class 19
+	COMMENT	
+	COMMENT [hdudispfpara-CheckforNewMessages-DB-LLR-003]
+	COMMENT The function 'CheckforNewMessages' loops from ZERO to MAX_MESSAGE_WORDS and ZERO to 
+	COMMENT MAX_CAUT_IN_ID and sets the U16_old_message_words with result of U16_old_message_words
+	COMMENT bitwise and with negation of bit mask when:
+	COMMENT a. U16_message_words with index message word count bitwise AND with bit mask value is not equal to
+	COMMENT    U16_old_message_words with index message word count bitwise AND with bit mask value 
+	COMMENT b. caution count bit in U16_message_words with index message word count(U16_message_words with 
+	COMMENT    index  message word count right shift by caution count) is not equal to TRUE)
+	COMMENT    (when the loop counter u16_i=0 and u16_j=1)
+	COMMENT Equivalence Class 21
+	COMMENT
+	COMMENT [hdudispfpara-CheckforNewMessages-DB-LLR-004]
+	COMMENT The function 'CheckforNewMessages' returns the new message count 
+	COMMENT Equivalence Class None
+	COMMENT This test case is written to test global variable U16_old_message_words for maximum value
+	COMMENT </TD>  
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			ARRAY U16_message_words,			init = {0=>1,1=>0,2=>0},			ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--Old message words(Tested for maximum range)
+			ARRAY U16_old_message_words,		init = {0=>0xFFFF,1=>0xFFFF,2=>0xFFFF},	
+			&																ev = {0=>1,1=>0,2=>0}
+		
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_CheckforNewMessages,		init = 1,					ev = 0
+
+		--Stub Calls
+		SIMUL
+
+			--None
+
+		END SIMUL
+		
+		--Calling unit under test
+		#ret_CheckforNewMessages = CheckforNewMessages();
+	END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- CheckforNewMessages
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service ParaConfigTopMenu
+--------------------------------------------------------------------------------
+SERVICE ParaConfigTopMenu
+SERVICE_TYPE extern
+
+	-- Tested temproory variables declarations
+	#T_STEXTBOXDATA PTU_pps_items[MAX_BUTTONS];
+
+	-- Tested service parameters declarations
+	#T_STEXTBOXDATA *pps_items[MAX_BUTTONS];
+	#T_EPAGE_NUM page_num;
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispfpara-ParaConfigTopMenu-DB-LLR-001]
+	COMMENT The function 'ParaConfigTopMenu' loops for MAX_BUTTON times when page_num of Page_settings is 
+	COMMENT page_num and does the following
+	COMMENT i)	Enables the text box by calling the function 'TextBoxOn' with parameter  content of pps_items
+	COMMENT ii)	 increments the pps_items by one to read next item in list
+	COMMENT When page_menu of page_settings right shift by loop index value bitwise AND with EXTR_LAST_BIT 
+	COMMENT is equal to ONE (for the 1st call)
+	COMMENT Equivalence Class 15,13,16
+	COMMENT
+	COMMENT [hdudispfpara-ParaConfigTopMenu-DB-LLR-002]
+	COMMENT (from 2nd to 12th call)
+	COMMENT The function 'ParaConfigTopMenu' loops for MAX_BUTTON times when page_num of Page_settings is
+	COMMENT page_num and does the following
+	COMMENT i)	Disables the text box by calling the function 'TextBoxOff' with parameter  content of pps_items
+	COMMENT ii)	increments the pps_items by one to read next item in list
+	COMMENT When page_menu of page_settings right shift by loop index value bitwise and with EXTR_LAST_BIT is
+	COMMENT not equal to ONE.
+	COMMENT Equivalence Class 22,17
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+			ARRAY pps_items,									init = {0=>&PTU_pps_items[0],1=>&PTU_pps_items[1],
+			&															2=>&PTU_pps_items[2],3=>&PTU_pps_items[3],
+			&															4=>&PTU_pps_items[4],5=>&PTU_pps_items[5],
+			&															6=>&PTU_pps_items[6],7=>&PTU_pps_items[7],
+			&															8=>&PTU_pps_items[8],9=>&PTU_pps_items[9],
+			&															10=>&PTU_pps_items[10],11=>&PTU_pps_items[11],
+			&															12=>&PTU_pps_items[12]},
+			&																						ev = init
+
+			VAR page_num,											init = EPAGE0,					ev = init
+
+			VAR Page_settings.page_num,								init = 0,						ev = init
+
+			VAR Page_settings.page_menu,							init = 2,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		--Stub Calls
+		SIMUL
+
+			STUB TextBoxOn(&PTU_pps_items[0])
+			STUB TextBoxOff 1 =>(&PTU_pps_items[1])
+			STUB TextBoxOff 2 =>(&PTU_pps_items[2])
+			STUB TextBoxOff 3 =>(&PTU_pps_items[3])
+			STUB TextBoxOff 4 =>(&PTU_pps_items[4])
+			STUB TextBoxOff 5 =>(&PTU_pps_items[5])
+			STUB TextBoxOff 6 =>(&PTU_pps_items[6])
+			STUB TextBoxOff 7 =>(&PTU_pps_items[7])
+			STUB TextBoxOff 8 =>(&PTU_pps_items[8])
+			STUB TextBoxOff 9 =>(&PTU_pps_items[9])
+			STUB TextBoxOff 10 =>(&PTU_pps_items[10])
+			STUB TextBoxOff 11 =>(&PTU_pps_items[11])
+			STUB TextBoxOff 12 =>(&PTU_pps_items[12])
+
+
+		END SIMUL
+
+	--Calling Unit Under Test
+	#ParaConfigTopMenu(&pps_items[0], page_num);
+
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+	COMMENT [hdudispfpara-ParaConfigTopMenu-DB-LLR-002]
+	COMMENT The function 'ParaConfigTopMenu' loops for MAX_BUTTON times when page_num of Page_settings 
+	COMMENT is page_num and does the following
+	COMMENT i)	Disables the text box by calling the function 'TextBoxOff' with parameter content of
+	COMMENT     pps_items
+	COMMENT ii)	increments the pps_items by one to read next item in list
+	COMMENT When page_menu of page_settings right shift by loop index value bitwise and with EXTR_LAST_BIT
+	COMMENT is not equal to ONE.
+	COMMENT This test case is written to test global variable Page_settings.page_num for minimum value
+	COMMENT Equivalence Class 22,13,17
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--Verifies the incrementing of address 'pps_items'
+			ARRAY pps_items,									init = {0=>&PTU_pps_items[0],1=>&PTU_pps_items[1],
+			&															2=>&PTU_pps_items[2],3=>&PTU_pps_items[3],
+			&															4=>&PTU_pps_items[4],5=>&PTU_pps_items[5],
+			&															6=>&PTU_pps_items[6],7=>&PTU_pps_items[7],
+			&															8=>&PTU_pps_items[8],9=>&PTU_pps_items[9],
+			&															10=>&PTU_pps_items[10],11=>&PTU_pps_items[11],
+			&															12=>&PTU_pps_items[12]},
+			&																						ev = init
+			
+			--Holds the value of Active page number
+			VAR page_num,											init = EPAGE0,					ev = init
+
+			--Holds value of page number of page setting
+			VAR Page_settings.page_num,								init = 0,						ev = init
+
+			--Holds page menu of page setting(Tested for minimum value)
+			VAR Page_settings.page_menu,							init = 0,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		--Stub Calls
+		SIMUL
+
+			STUB TextBoxOff 1 =>(&PTU_pps_items[0])
+			STUB TextBoxOff 2 =>(&PTU_pps_items[1])
+			STUB TextBoxOff 3 =>(&PTU_pps_items[2])
+			STUB TextBoxOff 4 =>(&PTU_pps_items[3])
+			STUB TextBoxOff 5 =>(&PTU_pps_items[4])
+			STUB TextBoxOff 6 =>(&PTU_pps_items[5])
+			STUB TextBoxOff 7 =>(&PTU_pps_items[6])
+			STUB TextBoxOff 8 =>(&PTU_pps_items[7])
+			STUB TextBoxOff 9 =>(&PTU_pps_items[8])
+			STUB TextBoxOff 10 =>(&PTU_pps_items[9])
+			STUB TextBoxOff 11 =>(&PTU_pps_items[10])
+			STUB TextBoxOff 12 =>(&PTU_pps_items[11])
+			STUB TextBoxOff 13 =>(&PTU_pps_items[12])
+
+
+		END SIMUL
+
+	--Calling Unit Under Test
+	#ParaConfigTopMenu(&pps_items[0], page_num);
+
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispfpara-ParaConfigTopMenu-DB-LLR-001]
+	COMMENT [hdudispfpara-ParaConfigTopMenu-DB-LLR-002]
+	COMMENT The function 'ParaConfigTopMenu' does nothing when page_num of Page_settings is not equal to
+	COMMENT page_num
+	COMMENT This test case is written to test global variable Page_settings.page_num for nominal value
+	COMMENT Equivalence Class 14
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+					
+			--Holds the value of Active page number
+			VAR page_num,											init = EPAGE0,					ev = init
+
+			--Holds value of page number of page setting(Tested for nominal value)
+			VAR Page_settings.page_num,								init = 1,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		--Stub Calls
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling Unit Under Test
+		#ParaConfigTopMenu(&pps_items[0], page_num);
+
+	END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispfpara-ParaConfigTopMenu-DB-LLR-001]
+	COMMENT [hdudispfpara-ParaConfigTopMenu-DB-LLR-002]
+	COMMENT The function 'ParaConfigTopMenu' does nothing when page_num of Page_settings is not equal to
+	COMMENT page_num
+	COMMENT This test case is written to test global variable Page_settings.page_num for maximum value
+	COMMENT Equivalence Class 14
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+					
+			--Holds the value of Active page number
+			VAR page_num,											init = EPAGE0,					ev = init
+
+			--Holds value of page number of page setting(Tested for maximum value)
+			VAR Page_settings.page_num,								init = 19,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		--Stub Calls
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+	--Calling Unit Under Test
+	#ParaConfigTopMenu(&pps_items[0], page_num);
+
+	END ELEMENT
+
+END TEST -- TEST 4
+
+END SERVICE -- ParaConfigTopMenu
+
+--------------------------------------------------------------------------------
+-- Declaration of the service ParaGetSysInfoCount
+--------------------------------------------------------------------------------
+SERVICE ParaGetSysInfoCount
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_INT16 s16_sys_info_index;
+    -- By function returned type declaration
+    #T_INT16 ret_ParaGetSysInfoCount;
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-ParaGetSysInfoCount-DB-LLR-001]
+	COMMENT The function 'ParaGetSysInfoCount' builds the system information list and get the count of
+	COMMENT list by calling 'BuildSysInfoList'
+	COMMENT Equivalence Class 9
+	COMMENT
+	COMMENT [hdudispfpara-ParaGetSysInfoCount-DB-LLR-002]
+	COMMENT The function 'ParaGetSysInfoCount' returns the number of system information minus ONE when
+	COMMENT number of system information minus ONE is less than s16_sys_info_index
+	COMMENT Equivalence Class 10
+	COMMENT </TD> 
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR s16_sys_info_index,				init = 32,							ev = init
+
+			ARRAY U16_sys_info_words[0..1],		init = {0 => 0xFFFF, 1 => 0xFFFF},			
+			&																		ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			VAR ret_ParaGetSysInfoCount,		init = 0,							ev = 31
+
+		--Calling unit under test
+		#ret_ParaGetSysInfoCount = ParaGetSysInfoCount(s16_sys_info_index);
+
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-ParaGetSysInfoCount-DB-LLR-003]
+	COMMENT The function 'ParaGetSysInfoCount' returns s16_sys_info_index when number of messages 
+	COMMENT minus ONE is equal to s16_sys_info_index
+	COMMENT Equivalence Class 12
+	COMMENT </TD> 
+
+	#Pc_sys_info_list[0]=0;
+	#Pc_sys_info_list[1]=0;
+	#Pc_sys_info_list[2]=0;
+	#Pc_sys_info_list[3]=0;
+	#Pc_sys_info_list[4]=0;
+	#Pc_sys_info_list[5]=0;
+	#Pc_sys_info_list[6]=0;
+	#Pc_sys_info_list[7]=0;
+	#Pc_sys_info_list[8]=0;
+	#Pc_sys_info_list[9]=0;
+	#Pc_sys_info_list[10]=0;
+	#Pc_sys_info_list[11]=0;
+	#Pc_sys_info_list[12]=0;
+	#Pc_sys_info_list[13]=0;
+	#Pc_sys_info_list[14]=0;
+	#Pc_sys_info_list[15]=0;
+	#Pc_sys_info_list[16]=0;
+	#Pc_sys_info_list[17]=0;
+	#Pc_sys_info_list[18]=0;
+	#Pc_sys_info_list[19]=0;
+	#Pc_sys_info_list[20]=0;
+	#Pc_sys_info_list[21]=0;	
+
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR s16_sys_info_index,				init = 31,							ev = init
+
+			ARRAY U16_sys_info_words[0..1],		init = {0 => 0xFFFF, 1 => 0xFFFF},			
+			&																		ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			VAR ret_ParaGetSysInfoCount,		init = 1,							ev = 31
+			
+			VAR Pc_sys_info_list[0],			init = &PTU_Pc_sys_info_list[0],	ev =  "DISPLAY SOFTWARE INFO"
+
+		--Calling unit under test
+		#ret_ParaGetSysInfoCount = ParaGetSysInfoCount(s16_sys_info_index);
+
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>  
+	COMMENT [hdudispfpara-ParaGetSysInfoCount-DB-LLR-003]
+	COMMENT The function 'ParaGetSysInfoCount' returns s16_sys_info_index when number of messages 
+	COMMENT minus ONE is greater than s16_sys_info_index
+	COMMENT Equivalence Class 11
+	COMMENT </TD> 
+
+	#Pc_sys_info_list[0]=0;
+	#Pc_sys_info_list[1]=0;
+	#Pc_sys_info_list[2]=0;
+	#Pc_sys_info_list[3]=0;
+	#Pc_sys_info_list[4]=0;
+	#Pc_sys_info_list[5]=0;
+	#Pc_sys_info_list[6]=0;
+	#Pc_sys_info_list[7]=0;
+	#Pc_sys_info_list[8]=0;
+	#Pc_sys_info_list[9]=0;
+	#Pc_sys_info_list[10]=0;
+	#Pc_sys_info_list[11]=0;
+	#Pc_sys_info_list[12]=0;
+	#Pc_sys_info_list[13]=0;
+	#Pc_sys_info_list[14]=0;
+	#Pc_sys_info_list[15]=0;
+	#Pc_sys_info_list[16]=0;
+	#Pc_sys_info_list[17]=0;
+	#Pc_sys_info_list[18]=0;
+	#Pc_sys_info_list[19]=0;
+	#Pc_sys_info_list[20]=0;
+	#Pc_sys_info_list[21]=0;	
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR s16_sys_info_index,				init = 30,							ev = init
+
+			ARRAY U16_sys_info_words[0..1],		init = {0 => 0xFFFF, 1 => 0xFFFF},			
+			&																		ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			VAR ret_ParaGetSysInfoCount,		init = 1,							ev = 30
+			
+			VAR Pc_sys_info_list[0],			init = &PTU_Pc_sys_info_list[0],	ev =  "DISPLAY SOFTWARE INFO"
+
+		--Calling unit under test
+		#ret_ParaGetSysInfoCount = ParaGetSysInfoCount(s16_sys_info_index);
+
+	END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- ParaGetSysInfoCount
+
+
+

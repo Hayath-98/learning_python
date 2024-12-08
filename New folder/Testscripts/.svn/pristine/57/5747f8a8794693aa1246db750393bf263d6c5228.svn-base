@@ -1,0 +1,576 @@
+HEADER hducommfa429 , Source Code Ver : 1.9 , TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name          :   Akshay Kanagali
+--                          Santosh Mithari
+--
+-- File Name            :   hducommfa429_8.ptu
+--
+-- Test Creation Date   :   30.10.2017
+--
+-- Tested Functions     :   ProcessArincWord
+--                                            
+-- Version History      :
+--
+-- TEST-VERSION         TEST-DATE         TESTER NAME           MODIFICATIONS
+-- ------------        -----------        -----------           -------------
+--    1.1              30.10.2017         Akshay Kanagali       Created the PTU file
+--                                        Santosh Mithari                           
+--    1.2              10.11.2017         Akshay Kanagali       Updated as per #PR100171
+--                                        Santosh Mithari
+--    1.3              14.11.2017         Akshay Kanagali       Updated as per #PR100171
+--                                        Santosh Mithari   
+--    1.4              10.04.2018         Hemalatha S           Updated as per #PR100201     
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hducommfa429.h"                
+##include "hducommfarinc825.h"            
+##include "hducommfhw.h"                  
+##include "hducommfoscfg.h"               
+##include "hducommftbase.h"               
+##include "hdulibbasicfunc.h"             
+##include "hdulibstm32f4xxfsmc.h"         
+##include "hducommfucos.h"                
+##include "hducommfdauprofile.h"     
+##include "hducommfapp.h"        
+##include "hducommfwdog.h"     
+
+##define A429_LOOP_ERR_VAL      0x40
+##define MS_HIGH                1U
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #T_UINT8 App_active_transmit; 
+
+-- Declarations of the temporary variables of the tested file
+
+    --variable used in stub FsmcNorSramInit
+    #T_FSMC_NORSRAM_INIT PTU_fsmc_norsraminit_struct;
+    #T_FSMC_NORSRAM_TIMING_INIT PTU_fsmc_write_timing_struct,PTU_fsmc_readwrite_timing_struct;
+    
+    --Variable used in stub OsSemPend
+    #T_OS_EVENT *PTU_ps_semaphore2;
+    #T_UBYTE PTU_error;
+    
+    --Variable used in stub TbaseTaskSignaling
+    #T_OS_EVENT *PTU_ps_semaphore1;
+     
+    -- Variable used in stub OsSemCreate
+    #T_OS_EVENT PTU_Sem_a429_task;
+    
+    --Variable used in stub HwMemcpy
+    #T_UINT8 PTU_p_dest[30][8],PTU_p_src[8];
+    #T_UINT8 PTU_loop_1,PTU_loop_2=0;
+    
+    --Variable used in stub HwMemset
+    #T_UINT8 PTU_mem_p_dest[8],PTU_mem_p_dest_prev[8];
+    #T_UINT8 PTU_loop;
+    
+    --Variable used in stub A825Xmit
+    #T_UINT8 PTU2_index=0;
+    #T_A825_MESSAGE PTU_A825Xmit[65];
+    
+    --variable used in stub OsTaskCreate
+    #T_OS_STK *PTU_pt_os;
+ 
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      :  Akshay Kanagali
+    COMMENT                     Santosh Mithari
+    COMMENT
+    COMMENT File Name        :  hducommfa429_8.ptu
+    COMMENT
+    COMMENT Tested Functions :  ProcessArincWord
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1.Source file "hducommfa429.c" is modified for testing purpose. The do-while loop is modified 
+    COMMENT   for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'ReceiveArinc429'.
+    COMMENT 
+    COMMENT     T_UINT16 PTU_count =0 /*local variable declared for testing purpose*/
+    COMMENT
+    COMMENT do
+    COMMENT {
+    COMMENT         .................
+    COMMENT      /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT 
+    COMMENT         PTU_count++;
+    COMMENT         if(PTU_count == 4)
+    COMMENT         {
+    COMMENT             PTU_count=0;
+    COMMENT             break;
+    COMMENT         }
+    COMMENT         else
+    COMMENT         {
+    COMMENT           ;  /*nothing*/
+    COMMENT         }
+    COMMENT      
+    COMMENT }while (u16_status & (A429_STATUS_RX1_MASK | A429_STATUS_RX2_MASK));
+    COMMENT
+    COMMENT In this case 'PTU_count' is set to zero since do-while loop is present within 'for' loop,
+    COMMENT For each 'for' loop counter do-while loop is executed for 4 times
+    COMMENT Hence while loop cannot be tested for 0 and 1 times.
+    COMMENT 
+    COMMENT 2.Source file "hducommfa429.c" is modified for testing purpose. The while(TRUE) is modified 
+    COMMENT for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'A429Task'.
+    COMMENT 
+    COMMENT     T_UINT16 PTU_count =0 /*local variable declared for testing purpose*/
+    COMMENT
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT         .................
+    COMMENT         /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT             PTU_count++;
+    COMMENT              if(PTU_count == 4)
+    COMMENT             {
+    COMMENT                 break;
+    COMMENT             }
+    COMMENT             else
+    COMMENT             {
+    COMMENT                 /*nothing*/
+    COMMENT             }     
+    COMMENT }/*End of while loop*/
+    COMMENT Hence while loop can not be coverd for 0 and 1 times.
+    COMMENT
+    COMMENT 3.Source file "hducommfa429.c" is modified for testing purpose. The while(TRUE) 
+    COMMENT is modified for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'ProcessArincWord'.
+    COMMENT
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT             ...........
+    COMMENT     /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT     PTU_count++;
+    COMMENT     if(PTU_count == 4)
+    COMMENT     {
+    COMMENT
+    COMMENT             break;
+    COMMENT     }
+    COMMENT     else
+    COMMENT     {
+    COMMENT         /*nothing*/
+    COMMENT     }
+    COMMENT }
+    COMMENT
+    COMMENT 4.Header file 'hducommfa429.h' is modified for testing purpose.
+    COMMENT     
+    COMMENT     /*Commented for testing purpose*/
+    COMMENT     /*#define A429_BASE_ADDR                     0x60000000U*/
+    COMMENT     
+    COMMENT     /*Modified for stubbing hardware address */
+    COMMENT     T_SINT16 PTU_A429_BASE_ADDR[3000];
+    COMMENT     #define A429_BASE_ADDR                       &PTU_A429_BASE_ADDR[0]
+    COMMENT
+    COMMENT 5.'for' loops cannot be covered for 'zero' and 'one' times since it is controlled by 
+    COMMENT    local variable and Macros 'A429_IC_COUNT' and 'DEC_ZERO' in following functions 
+    COMMENT    'A429Task' , 'ReceiveArinc429' ,'InitChannels'.
+    COMMENT
+    COMMENT 6.PTU has been split into 10 due to static dependency and memory constraint on target
+    COMMENT
+    COMMENT 7.Warning "enumerated type mixed with another type" is obtained when parameter  
+    COMMENT   (enum T_A429_TX_CHAN)u8_chan channel is exercised with 
+    COMMENT   value A429_TX_MAX_CHAN+1 to test LLR "hducommfa429-TransmitArinc429-CB-LLR-001"
+    COMMENT   in PTU "hducommfa429_1.ptu"
+    COMMENT
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'A429Init', function 'InitTimingA429' is called.
+    COMMENT
+    COMMENT Class 2 
+    COMMENT In function 'A429Init', function 'InitChannels' is called.
+    COMMENT
+    COMMENT Class 3 
+    COMMENT In function 'A429Init', function 'TbaseTaskSignaling' is called
+    COMMENT
+    COMMENT Class 4 
+    COMMENT In function 'A429Init', function 'OsSemCreate' is called.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'A429Init', function 'A429Task' is called.
+    COMMENT 
+    COMMENT Class 6
+    COMMENT In function 'A429Init', function 'OsSemCreate' returns OS_NO_ERR
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'A429Init', function 'OsSemCreate' returns other than OS_NO_ERR
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'InitTimingA429', function 'FsmcNorSramInit' is called 
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'InitTimingA429', function 'FsmcNorSramCmd' is called.
+    COMMENT
+    COMMENT Class 10 
+    COMMENT In function 'A429Task', function 'OsSemPend' is called.
+    COMMENT
+    COMMENT Class 11 
+    COMMENT In function 'A429Task', A429_mode is equal to A429_SELFTEST.
+    COMMENT
+    COMMENT Class 12 
+    COMMENT In function 'A429Task', A429_mode is equal to A429_NORMAL.
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'A429Task', self-test state is equal to TRUE.
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'A429Task', self-test state is  not  equal to TRUE.
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'A429Task', local counter is equal to DEC_ZERO.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'A429Task', local counter is  not  equal to DEC_ZERO.   
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'A429Task', normal state is equal to TRUE.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'A429Task', normal state is  not  equal to TRUE.
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'A429Task', function 'TransmitArinc429' is called. 
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'A429Task', function 'ReceiveArinc429' is called. 
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'ReceiveArinc429', sum of base address of the IC and A429_STATUS_REG_RD bitwise
+    COMMENT and A429_STATUS_RX1_MASK is equal to DEC_ZERO
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'ReceiveArinc429', sum of base address of the IC and A429_STATUS_REG_RD bitwise
+    COMMENT and A429_STATUS_RX1_MASK is not equal to DEC_ZERO
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'ReceiveArinc429', sum of base address of the IC and A429_STATUS_REG_RD bitwise
+    COMMENT and A429_STATUS_RX2_MASK is equal to  DEC_ZERO
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'ReceiveArinc429', sum of base address of the IC and A429_STATUS_REG_RD bitwise
+    COMMENT and A429_STATUS_RX2_MASK is not equal to  DEC_ZERO
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'ProcessArincWord',the received 32-bit ARINC word is DEC_ZERO.
+    COMMENT 
+    COMMENT Class 26
+    COMMENT In function 'ProcessArincWord',the received 32-bit ARINC word is other than DEC_ZERO.
+    COMMENT     
+    COMMENT Class 27
+    COMMENT In function 'ProcessArincWord',function 'HwMemset' is called. 
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'ProcessArincWord',App_active_transmit is true.
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'ProcessArincWord',App_active_transmit is false.
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'ProcessArincWord',channel number is DEC_ZERO.
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'ProcessArincWord',channel number is DEC_ONE.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'ProcessArincWord',channel number is other than DEC_ZERO and DEC_ONE.
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'ProcessArincWord',A429_mode is equal to A429_SELFTEST.
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'ProcessArincWord',A429_mode is  not  equal to A429_SELFTEST.
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'ProcessArincWord', test_data is equal to ARINC_TEST_DATA
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'ProcessArincWord', test_data is equal to  ARINC_TEST_DATA_INVRT
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'ProcessArincWord', test_data is not equal to ARINC_TEST_DATA_INVRT or ARINC_TEST_DATA
+    COMMENT     
+    COMMENT Class 39
+    COMMENT In function 'ProcessArincWord',function 'HwMemcpy' is called.
+    COMMENT     
+    COMMENT Class 40
+    COMMENT In function 'ProcessArincWord',function 'A825Xmit' is called.   
+    COMMENT
+    COMMENT Class 41
+    COMMENT The function 'TransmitArinc429',return FALSE when transmit FIFO is full.
+    COMMENT
+    COMMENT Class 42
+    COMMENT The function 'TransmitArinc429',return TRUE when transmit FIFO not full. 
+    COMMENT
+    COMMENT Class 43
+    COMMENT The function 'InitChannels',initializes A429 Chipset, and loads local Channel buffer.
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'ProcessArincWord',function 'WdogKickWatchDog' is called.
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function 'ReceiveArinc429', function 'ProcessArincWord' is called.
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'A429Init', function 'OsTaskCreate' is called.
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'ProcessArincWord', SID is greater than zero.
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function 'ProcessArincWord', SID is not greater than zero.         
+    COMMENT
+    COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+    --HwMemset is called for 16 times hence the STUB count is equal to 16 
+    DEFINE STUB hducommfa429_c 16
+
+    #void FsmcNorSramCmd(T_UINT32 _in fsmc_bank, T_FUNCTIONAL_STATE _in new_state); 
+    
+    -- Parameter fsmc_norsraminit_struct made as _no since the address of local variable is passed
+    #void FsmcNorSramInit(T_FSMC_NORSRAM_INIT _no *fsmc_norsraminit_struct)
+    #{
+    #   PTU_fsmc_norsraminit_struct=*fsmc_norsraminit_struct;
+    #   PTU_fsmc_write_timing_struct=*(fsmc_norsraminit_struct->fsmc_readwrite_timing_struct);
+    #   PTU_fsmc_readwrite_timing_struct=*(fsmc_norsraminit_struct->fsmc_write_timing_struct);
+    #}
+    
+    -- Parameter ps_xm made as _no since the address of local variable is passed 
+    #T_A825_XMIT_RESULT A825Xmit(T_A825_MESSAGE _no *ps_xm)
+    #{
+    #   PTU_A825Xmit[PTU2_index++] = *ps_xm;
+    #}
+
+    -- Parameter p_dest and p_src are made as _no since the address of local variable is passed 
+    #void HwMemcpy(void _no *p_dest, void _no *p_src, T_UINT32 _in count)
+    #{
+    #   for(PTU_loop_1=0;PTU_loop_1<count;PTU_loop_1++)
+    #   {   
+    #       *((T_UINT8 *)p_dest) = *((T_UINT8 *)p_src);
+    #       PTU_p_src[PTU_loop_1] = * ((T_UINT8 *)p_dest);
+    #       PTU_p_dest[PTU_loop_2][PTU_loop_1] = PTU_p_src[PTU_loop_1];
+    #       p_dest = ((T_UINT8 *)(p_dest)+1);
+    #       p_src = ((T_UINT8 *)(p_src)+1);
+    #   }
+    #   PTU_loop_2++;
+    # }
+
+    -- Parameter p_dest are made as _no since the address of local variable is passed 
+    #void HwMemset(void _no *p_dest, T_UINT8 _in value, T_UINT32 _in count)
+    #{  
+    #   for(PTU_loop=0;PTU_loop<count;PTU_loop++)
+    #   {
+    #       PTU_mem_p_dest_prev[PTU_loop] = *((T_UINT8 *)p_dest);
+    #       PTU_mem_p_dest[PTU_loop]= value;
+    #       p_dest = ((T_UINT8 *)(p_dest)+1);
+    #   }
+    #}
+
+    -- Parameter pevent and error made as _no since the address of local variable is passed
+    #void OsSemPend(T_OS_EVENT _no *pevent, T_UWORD _in timeout, T_UBYTE _no *error)
+    #{
+    # PTU_ps_semaphore2 = pevent;
+    # PTU_error=*error;
+    #}
+
+    -- Parameter ptask and pt_os made as _no since the address of local variable is passed
+    #T_UINT8 OsTaskCreate(void _no (  *ptask)(void* dptr), void _in *p_data, void _no *pt_os, T_UINT8 _in u8_prio)
+    #{
+    # (*ptask)(p_data);
+    # PTU_pt_os= (T_OS_STK*)pt_os;
+    #}
+
+    #T_OS_EVENT* OsSemCreate(T_UWORD _in value);
+    
+    -- Parameter ps_semaphore made as _no since the address of local variable is passed
+    #void TbaseTaskSignaling(T_UINT16 _in u16_task_ticks, T_OS_EVENT _no *ps_semaphore)
+    #{
+    #   PTU_ps_semaphore1 = ps_semaphore;
+    #}
+  
+    #void WdogKickWatchDog(void); 
+    
+    --Parameter 'gpio_x' is made as _in hence it is verified explicitly.in PTU hducommfa429_9
+    #void GpioSetBits(T_GPIO_TYPE _in *gpio_x, T_UINT16 _in gpio_pin);      
+  
+    END DEFINE
+    
+ELSE_SIMUL
+    
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommfa429.c
+ENVIRONMENT ENV_hducommfa429_c
+
+  VAR A429_mode,            init = A429_NORMAL,         ev = init
+  
+  VAR A429_sdi_to_rci,      init = 0,                   ev = init
+  
+  ARRAY A429_task_stk,      init = { others => 0 },     ev = init
+  
+END ENVIRONMENT -- ENV_hducommfa429_c
+
+USE ENV_hducommfa429_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service A429Init
+--------------------------------------------------------------------------------
+SERVICE A429Init
+SERVICE_TYPE extern
+   
+TEST 8
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hducommfa429-ProcessArincWord-CB-LLR-009]
+    COMMENT The function shall do nothing when test data is ARINC_TEST_DATA_INVRT 
+    COMMENT during the first call of ProcessArincWord
+    COMMENT and A429_mode is set to A429_SELFTEST.
+    COMMENT The value of local variable 'test_data' is set to a value which covers the else if condition
+    COMMENT Equivalence Class 34,37
+
+    COMMENT </TD>
+
+
+    ELEMENT
+            
+        COMMENT INPUT SECTION:
+        
+            -- Varibales of function ReceiveArinc429     
+            -- status register
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+8)),                         init = 0x9,                     ev = init
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+40)),                        init = 0x9,                     ev = init
+
+           --FIFO1
+           -- i32_arinc_word(lower 2 bytes)
+           VAR *((T_UINT16 *)(A429_BASE_ADDR)),                            init=0xFC00,                    ev=init
+           VAR *((T_UINT16 *)(A429_BASE_ADDR+32)),                         init=0xFC00,                    ev=init
+
+           -- i32_arinc_word(upper 2 bytes)
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+1)),                         init=0x07FF,                    ev=init
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+33)),                        init=0x07FF,                    ev=init
+
+            --FIFO2
+            -- i32_arinc_word(lower 2 bytes)
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+2)),                         init = 0xFC00,                  ev = init       
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+34)),                        init = 0xFC00,                  ev = init
+
+            -- i32_arinc_word(upper 2 bytes)
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+3)),                         init = 0x07FF,                  ev = init       
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+35)),                        init = 0x07FF,                  ev = init
+
+
+            -- Varibales of function ProcessArincWord
+            VAR App_active_transmit,                                       init = 1,                       ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Variable used in stub TbaseTaskSignaling
+            VAR PTU_ps_semaphore1,                                         init = NULL,                    ev = &PTU_Sem_a429_task
+
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            -- Varibales of function ProcessArincWord   
+            VAR A429_mode,                                                          init = A429_SELFTEST,           ev = A429_NORMAL
+            
+        -- Stub Calls:              
+        SIMUL
+            -- Stubs called in function A429Init
+            -- Creates the semaphore
+            STUB OsSemCreate(DEC_ZERO)&PTU_Sem_a429_task
+
+            -- Initializes task signalling parameters 
+            STUB TbaseTaskSignaling(A429_TASK_TICKS)
+
+            --Creates ARINC 429 task
+            STUB OsTaskCreate(HW_NULL,A429_TASK_PRIO) OS_NO_ERR
+
+            --Stubs called in function InitTimingA429
+            -- Initialize NORSRAM bank in FSMC 
+            STUB  FsmcNorSramInit()
+
+            -- Enable first block of bank 1 
+            STUB FsmcNorSramCmd (FSMC_BANK1_NORSRAM1, ENABLE)
+
+            --Stubs called in function A429Task
+            --wait forever for the semaphore by A429 task       
+            STUB OsSemPend 1..4=> ( DEC_ZERO)
+
+            --Stubs called in function ProcessArincWord
+
+            STUB HwMemset 1..16=>  (DEC_ZERO,DEC_EIGHT)
+
+            STUB HwMemcpy 1..8=>  (DEC_EIGHT)
+
+
+            STUB A825Xmit 1..8=> () A825_XM_OK
+
+        END SIMUL     
+            
+        --Calling the Unit Under Test:
+        #A429Init();
+
+    END ELEMENT      
+  
+END TEST -- TEST 8
+
+END SERVICE -- A429Init
+
+
+
+
+

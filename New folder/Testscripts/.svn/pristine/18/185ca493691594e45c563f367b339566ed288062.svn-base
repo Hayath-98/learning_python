@@ -1,0 +1,573 @@
+HEADER hdudispfnumbox, Source Code Ver : 1.10 , TestScript Ver : 1.1
+--------------------------------------------------------------------------------
+-- Author Name         : Vignesh Sunil
+--
+-- File Name           : hdudispfnumbox_5.ptu
+--
+-- Test Creation Date  : 03.10.2020 
+--
+-- Tested Functions    : NumboxAllocat
+--                  
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--  1.1                 03.10.2020      Vignesh Sunil      Updated as per #PR100281
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfpolygon1.h"
+##include "hdudispfrterror.h"
+##include "hdudispftext.h"
+##include "hdudispfconfig.h"
+##include "hdudispfnumbox.h"
+##include "hdulibbasictypes.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    -- None
+    
+-- Declarations of the temporary variables of the tested file
+
+    #extern T_CHAR glob_file_name[];
+
+    -- Variable created for loop usage.
+    #T_UINT16 PTU_i;
+    #T_UINT32 index1;
+    
+    -- Created to handle the members of structure "ps_num_box_def" 
+    #T_SNUMBOXDEF PTU_ps_num_box_def;
+
+    -- Variable created to assign as an address to structure member 'psParam' of structure "ps_num_box_def"
+    #T_PARAM_READING PTU_temp;
+
+    --Temporary variable used in "WidgetsRedX" stub native code
+    #T_SDISREGION       PTU_ps_dis_region;
+    #T_SPOLY            *PTU_Pps_poly_red_x;
+    #T_SPOLY        PTU_Pps_poly_red_x1;
+    
+    --Temporary variable created to verify the parameters of function "BinasByteFormatInfoBE"
+    #T_INT16 *PTU_InfoBE_src;
+    #T_INT8  *PTU_InfoBE_dest;
+
+    --Temporary variable created to verify the parameters of function "TextAllocat"
+    #T_PTEXT  *PTU_pps_handle_add;
+    #T_UINT8  *PTU_pu8_string;
+
+    --Temporary variable created to verify the parameters of function "RterrWidget"
+    #T_CHAR  PTU_rterr_file[100];
+    #T_CHAR  PTU_rterr_message[100];
+
+    --Temporary variable used in "WidgetsNumUpdate" stub native code
+    #T_PARAM_READING     PTU_NumUpdate;
+    #T_SWIDGETPARAM      PTU_ps_widget_param;
+    #T_CHAR              PTU_ac_dig_text[13];
+
+    -- Temporary variables created to verify the stub parameters of stub "TextUpdate" explicitly.
+    # T_PTEXT PTU_p_text; 
+
+    -- Temporary variables created to verify the stub parameters of stub "WidgetsUpdateRT" explicitly.
+    #T_PARAM_READING PTU_ps_param;
+    #T_SWIDGETPARAM PTU_ps_widget_parm_out;
+	# T_UINT8 PTU_i_1 = 0;
+    
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hdudispfnumbox_2.ptu
+    COMMENT
+    COMMENT Tested Functions : NumboxAllocat
+    COMMENT                    
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1. Due to static variable "U16_num_box_installed" PTU is split into four PTUs.
+    COMMENT
+    COMMENT 2. Below statement is added in 'hdudispfnumbox.c' file before the include section to fetch the actual path of source file independent
+    COMMENT    to different target machines.
+    COMMENT    Code:
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT
+    COMMENT 3.  Test script related warning is observed during Target Execution for stub function return value:
+    COMMENT    warning #120-D: 
+    COMMENT    return value type does not match the function type
+    COMMENT    return(Attol_ptr_out->ret);
+    COMMENT </AC>
+       
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+    COMMENT Function "NumboxClear", De-allocate all pointers.
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function "NumboxAllocat", calls the function "RterrWidget".
+    COMMENT
+    COMMENT Class 3
+    COMMENT Function "NumboxAllocat", calls the function "BinasGetWidth".
+    COMMENT
+    COMMENT Class 4
+    COMMENT Function "NumboxAllocat", calls the function "BinasByteFormatInfoBE".
+    COMMENT
+    COMMENT Class 5
+    COMMENT Function "NumboxAllocat", calls the function "TextAllocat".
+    COMMENT
+    COMMENT Class 6
+    COMMENT Function "NumboxAllocat", number box installed is equal to MAX_NUMBOX.
+    COMMENT
+    COMMENT Class 7
+    COMMENT Function "NumboxAllocat", number box installed is not equal to MAX_NUMBOX.
+    COMMENT
+    COMMENT Class 8
+    COMMENT Function "NumboxDraw", calls the function "WidgetsRedX".
+    COMMENT 
+    COMMENT Class 9
+    COMMENT Function "NumboxUpdate" , calls the function "WidgetsUpdateRT".
+    COMMENT 
+    COMMENT Class 10
+    COMMENT Function "NumboxUpdate" , calls the function "WidgetsNumUpdate". 
+    COMMENT 
+    COMMENT Class 11
+    COMMENT Function "NumboxUpdate" , calls the function "BinasGetWidth". 
+    COMMENT 
+    COMMENT Class 12
+    COMMENT Function "NumboxUpdate" , calls the function "TextUpdate". 
+    COMMENT
+    COMMENT Class 13
+    COMMENT Function "NumboxDraw" , Stat of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to PARAM_BAD 
+    COMMENT 
+    COMMENT Class 14
+    COMMENT Function "NumboxDraw" , Stat of psParam of psNumBoxDef of pointer to structure number box is lesser than PARAM_BAD
+    COMMENT 
+    COMMENT Class 15
+    COMMENT Function "NumboxDraw" ,psDisRegion of psNumBoxDef of pointer to structure number box is not equal to ZERO.
+    COMMENT 
+    COMMENT Class 16
+    COMMENT Function "NumboxDraw" ,psDisRegion of psNumBoxDef of pointer to structure number box is equal to ZERO.
+    COMMENT
+    COMMENT Class 17
+    COMMENT Function "NumboxUpdate" , Stat of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to PARAM_BAD. 
+    COMMENT
+    COMMENT Class 18
+    COMMENT Function "NumboxUpdate" , Stat of psParam of psNumBoxDef of pointer to structure number box is less than PARAM_BAD.
+    COMMENT
+    COMMENT Class 19
+    COMMENT Function "NumboxUpdate" , pText of sWidgetParm of number box is other than NULL.    
+    COMMENT
+    COMMENT Class 20
+    COMMENT Function "NumboxUpdate" , pText of sWidgetParm of number box is equal to NULL.  
+    COMMENT
+    COMMENT Class 21
+    COMMENT Function "NumboxUpdate" , decimal number is equal to ZERO.  
+    COMMENT
+    COMMENT Class 22
+    COMMENT Function "NumboxUpdate" , decimal number is other than ZERO.    
+    COMMENT
+    COMMENT Class 23
+    COMMENT Function "NumboxDraw", Stat of psParam of psNumBoxDef of pointer to structure number box is not equal to NCD
+    COMMENT
+    COMMENT Class 24
+    COMMENT Function "NumboxDraw", Stat of psParam of psNumBoxDef of pointer to structure number box is equal to NCD
+    COMMENT 
+    COMMENT Class 25
+    COMMENT Function "NumboxUpdate", calls the function "CalculatePower".
+    COMMENT 
+    COMMENT Class 26
+    COMMENT Function "NumboxUpdate", fread of psParam of psNumBoxDef of pointer to structure number box is less than zero.
+    COMMENT 
+    COMMENT Class 27
+    COMMENT Function "NumboxUpdate", fread of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to zero.
+    COMMENT 
+    COMMENT Class 28
+    COMMENT Function "NumboxUpdate", r of psParam of psNumBoxDef of pointer to structure number box is less than zero.
+    COMMENT 
+    COMMENT Class 29
+    COMMENT Function "NumboxUpdate", r of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to zero.
+    COMMENT 
+    COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+
+    DEFINE STUB hdudispfnumbox_c
+
+        -- Parameter 'p_text' is made as _no, since local variable address cannot expect
+        #void WidgetsRedX(T_SDISREGION _no *ps_dis_region, T_SPOLY _no **pps_poly_red_x)
+        # {
+        #    PTU_ps_dis_region  = *ps_dis_region;
+        #    PTU_Pps_poly_red_x = &PTU_Pps_poly_red_x1;
+        #    pps_poly_red_x =     &PTU_Pps_poly_red_x;
+        # }
+    
+        -- Parameter 'p_text' is made as _no, since local variable address cannot expect
+        #void TextUpdate(struct Text _no p_text, T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv)
+        # {
+        # PTU_p_text = p_text;
+        # } 
+
+        -- Parameters 'param', 'ac_dig_text' and 'ps_widget_param' are made as _no, since local variable address cannot expect
+        #void WidgetsNumUpdate(T_PARAM_READING _no *param, T_SWIDGETPARAM _no *ps_widget_param, T_CHAR _no *ac_dig_text, T_UINT16 _in u16_format,T_EPENCOLOR _in e_pen_color)
+        #{
+        #   for(index1 = 0; index1<30;   index1++)
+        #   {
+        #       PTU_ac_dig_text[index1]=*(T_CHAR *)ac_dig_text;
+        #       ac_dig_text++;
+        #   } 
+        #   PTU_NumUpdate             = *param;
+        #   PTU_ps_widget_param   = *ps_widget_param;
+        #}
+        
+
+    -- Parameter 'ps_param' and 'ps_widget_parm' are made as _no, since local variable address cannot expect        
+    #void WidgetsUpdateRT(T_PARAM_READING _no *ps_param, T_SWIDGETPARAM _no *ps_widget_parm)
+    # {
+    # PTU_ps_param = *ps_param;
+    # PTU_ps_widget_parm_out = *ps_widget_parm;
+    # }
+        
+        #T_FLOAT CalculatePower(T_FLOAT _in value, T_INT32 _in mul);
+    
+        -- Parameter 'pps_handle_add' and 'pu8_string' are made as _no, since local variable address cannot expect
+        #void TextAllocat(T_PTEXT _no *pps_handle_add, T_UINT8 _no *pu8_string, T_UINT16 _in u16_x0, T_UINT16 _in u16_y0, T_ETXALIGN _in e_tx_align, T_ETXFONT _in e_tx_font, T_EPENCOLOR _in e_pen_color, T_ETXV _in e_txv, T_ETXFLASH _in e_tx_flash)
+        #{
+        #     PTU_pps_handle_add = pps_handle_add;
+        #     PTU_pu8_string     = pu8_string;
+        #}
+    
+        -- Parameter 'src' and 'dest' are made as _no, since local variable address cannot expect
+        #T_INT8* BinasByteFormatInfoBE(void _no *src, T_UINT16 _in format, T_INT8 _no *dest)
+        # {
+        #    PTU_InfoBE_src  = src;
+        #    PTU_InfoBE_dest = dest;
+        # }
+    
+        #T_UINT16 BinasGetWidth(T_UINT16 _in format);
+
+        -- Parameter 'pc_file' and 'pc_message' are made as _no, since local variable address cannot expect
+        #void RterrWidget(T_CHAR _no *pc_file, T_INT32 _in s32_line_number, T_CHAR _no *pc_message)
+        #{
+        #   for(index1 = 0; index1<50;   index1++)
+        #   {
+        #    PTU_rterr_file[index1]=*(T_CHAR *)pc_file;
+        #    pc_file++;
+        #    PTU_rterr_message[index1]=*(T_CHAR *)pc_message;
+        #    pc_message++;
+        #   }
+        #}
+
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+    
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--Environment of the file hdudispfnumbox.c
+
+--ENVIRONMENT ENV_hdudispfnumbox_c
+
+--None
+
+--END ENVIRONMENT -- ENV_hdudispfnumbox_c
+
+--USE ENV_hdudispfnumbox_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service NumboxAllocat
+--------------------------------------------------------------------------------
+SERVICE NumboxAllocat
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_SNUMBOXDEF ps_num_box_def;
+
+    ENVIRONMENT ENV_NumboxAllocat
+
+    --Structure member 'psParam' initialized before usage.
+    VAR ps_num_box_def.psParam, init = &PTU_temp , ev =init
+
+    END ENVIRONMENT -- ENV_NumboxAllocat
+    
+    USE ENV_NumboxAllocat
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdudispfnumbox-NumboxAllocat-DB-LLR-002]
+    COMMENT do nothing when eFont of ps_num_box_def is equal to E_SMALL_FONT
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+        
+            -- Temporary variable is initialized before usage
+            VAR PTU_temp ,              init = MISSING ,            ev = init
+            
+            -- Structure Member 'u16X0' initialized before usage 
+            VAR ps_num_box_def.sCenter.u16X0 ,      init = 100 ,                ev =init
+
+            -- Structure Member 'u16Y0' initialized before usage 
+            VAR ps_num_box_def.sCenter.u16Y0 ,      init = 100 ,                ev =init
+
+            -- Structure Member 'eFont' initialized before usage             
+            VAR ps_num_box_def.eFont ,          init = E_SMALL_FONT ,            ev=init 
+
+            -- Structure Member 'u16Format' initialized before usage 
+            VAR ps_num_box_def.u16Format ,      init = 0,              ev = NB_DFT_FORMAT
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+
+ 
+             -- Stub Calls :
+        SIMUL
+
+            -- Returns the width of the supplied format word.
+            STUB BinasGetWidth(277)0
+    
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #NumboxAllocat(&ps_num_box_def);
+        
+        END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdudispfnumbox-NumboxAllocat-DB-LLR-002]
+    COMMENT do nothing when eFont of ps_num_box_def is equal to E_NORMAL_FONT
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+        
+            -- Temporary variable is initialized before usage
+            VAR PTU_temp ,              init = MISSING ,            ev = init
+            
+            -- Structure Member 'u16X0' initialized before usage 
+            VAR ps_num_box_def.sCenter.u16X0 ,      init = 100 ,                ev =init
+
+            -- Structure Member 'u16Y0' initialized before usage 
+            VAR ps_num_box_def.sCenter.u16Y0 ,      init = 100 ,                ev =init
+
+            -- Structure Member 'eFont' initialized before usage             
+            VAR ps_num_box_def.eFont ,          init = E_NORMAL_FONT ,            ev=init 
+
+            -- Structure Member 'u16Format' initialized before usage 
+            VAR ps_num_box_def.u16Format ,      init = 10,              ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+
+ 
+             -- Stub Calls :
+        SIMUL
+
+            -- Returns the width of the supplied format word.
+            STUB BinasGetWidth(ps_num_box_def.u16Format)0
+    
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #NumboxAllocat(&ps_num_box_def);
+        
+        END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdudispfnumbox-NumboxAllocat-DB-LLR-002]
+    COMMENT do nothing when eFont of ps_num_box_def is equal to E_LARGE_FONT
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+        
+            -- Temporary variable is initialized before usage
+            VAR PTU_temp ,              init = MISSING ,            ev = init
+            
+            -- Structure Member 'u16X0' initialized before usage 
+            VAR ps_num_box_def.sCenter.u16X0 ,      init = 100 ,                ev =init
+
+            -- Structure Member 'u16Y0' initialized before usage 
+            VAR ps_num_box_def.sCenter.u16Y0 ,      init = 100 ,                ev =init
+
+            -- Structure Member 'eFont' initialized before usage             
+            VAR ps_num_box_def.eFont ,          init = E_LARGE_FONT ,            ev=init 
+
+            -- Structure Member 'u16Format' initialized before usage 
+            VAR ps_num_box_def.u16Format ,      init = 10,              ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+
+ 
+             -- Stub Calls :
+        SIMUL
+
+            -- Returns the width of the supplied format word.
+            STUB BinasGetWidth(ps_num_box_def.u16Format)0
+    
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #NumboxAllocat(&ps_num_box_def);
+        
+        END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdudispfnumbox-NumboxAllocat-DB-LLR-002]
+    COMMENT do nothing when eFont of ps_num_box_def is equal to E_BEZEL_FONT
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+        
+            -- Temporary variable is initialized before usage
+            VAR PTU_temp ,              init = MISSING ,            ev = init
+            
+            -- Structure Member 'u16X0' initialized before usage 
+            VAR ps_num_box_def.sCenter.u16X0 ,      init = 100 ,                ev =init
+
+            -- Structure Member 'u16Y0' initialized before usage 
+            VAR ps_num_box_def.sCenter.u16Y0 ,      init = 100 ,                ev =init
+
+            -- Structure Member 'eFont' initialized before usage             
+            VAR ps_num_box_def.eFont ,          init = E_BEZEL_FONT ,            ev=init 
+
+            -- Structure Member 'u16Format' initialized before usage 
+            VAR ps_num_box_def.u16Format ,      init = 10,              ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+
+ 
+             -- Stub Calls :
+        SIMUL
+
+            -- Returns the width of the supplied format word.
+            STUB BinasGetWidth(ps_num_box_def.u16Format)0
+    
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #NumboxAllocat(&ps_num_box_def);
+        
+        END ELEMENT
+
+END TEST -- TEST 9
+
+END SERVICE -- NumboxAllocat
+
+
+
+
+
+
+
+
+
+
+
+
+
+

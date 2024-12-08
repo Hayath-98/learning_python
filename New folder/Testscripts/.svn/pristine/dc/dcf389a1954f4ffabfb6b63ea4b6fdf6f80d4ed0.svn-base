@@ -1,0 +1,300 @@
+HEADER hducommbwdog,Source Code Ver : 1.2,TestScript Ver : 1.2
+--------------------------------------------------------------------------------
+-- Author Name         : Manu K M
+--
+-- File Name           : hducommbwdog.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : WdogKickWatchDog
+--                       WdogInit
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE               TESTER NAME        MODIFICATIONS
+-- ------------        ---------               -----------        -------------
+--    1.1              30.10.2017              Manu K M           Created the PTU file.
+--    1.2              11.11.2017              Manu K M           Updated as per #PR100171
+--
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommfwdog.h"               
+##include "hdulibbasicfunc.h"            
+##include "hdulibstm32f4xxiwdg.h"   
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+    -- None
+    
+-- Declarations of the temporary variable
+    -- None
+    
+--------------------------------------------------------------------------------
+
+BEGIN
+    COMMENT Author Name             :   Manu K M
+    COMMENT
+    COMMENT File Name               :   hducommbwdog.ptu
+    COMMENT
+    COMMENT Tested Functions        :   WdogKickWatchDog
+    COMMENT                             WdogInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT 
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT None  
+    COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+    COMMENT Function 'WdogKickWatchDog', calls the function 'IwdgReloadCounter'.
+    COMMENT  
+    COMMENT Class 2
+    COMMENT In function 'WdogInit' calculated reload value is greater than MAX_RELOAD_VALUE.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function 'WdogInit' calculated reload value is not greater than MAX_RELOAD_VALUE.
+    COMMENT
+    COMMENT Class 4
+    COMMENT Function 'WdogInit' calls the function 'IwdgWriteAccessCmd'.
+    COMMENT
+    COMMENT Class 5
+    COMMENT Function 'WdogInit' calls the function 'IwdgSetPrescaler'.
+    COMMENT
+    COMMENT Class 6
+    COMMENT Function 'WdogInit' calls the function 'IwdgSetReload'.
+    COMMENT
+    COMMENT Class 7
+    COMMENT Function 'WdogInit' calls the function 'IwdgEnable'.
+    COMMENT
+    COMMENT Class 8
+    COMMENT Function 'WdogInit' calls the function 'IwdgReloadCounter'.
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT None
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+DEFINE STUB hducommfwdog_c
+
+    #void IwdgReloadCounter(void); 
+    #void IwdgEnable(void); 
+    #void IwdgSetReload(T_UINT16 _in reload); 
+    #void IwdgSetPrescaler(T_UINT8 _in iwdg_prescaler);
+    #void IwdgWriteAccessCmd(T_UINT16 _in iwdg_write_access);
+    
+END DEFINE
+
+ELSE_SIMUL
+
+   -- No action defined as of now if the module is not simulated
+ 
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF 
+
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommbwdog.c
+
+--ENVIRONMENT ENV_hducommbwdog_c
+
+    --None
+
+--END ENVIRONMENT --ENV_hducommbwdog_c
+
+--USE ENV_hducommbwdog_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service WdogKickWatchDog
+--------------------------------------------------------------------------------
+SERVICE WdogKickWatchDog
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfwdog-WdogKickWatchDog-CB-LLR-001]
+    COMMENT Function 'WdogKickWatchDog' reloads watchdog counter.
+    COMMENT Equivalence Class 1  
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+            
+            --Reload watchdog counter
+            STUB IwdgReloadCounter()
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #WdogKickWatchDog();
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- WdogKickWatchDog
+
+--------------------------------------------------------------------------------
+-- Declaration of the service WdogInit
+--------------------------------------------------------------------------------
+SERVICE WdogInit
+SERVICE_TYPE extern
+    
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfwdog-WdogInit-CB-LLR-001]
+    COMMENT Calculates the reload value for the independent watchdog timer
+    COMMENT Equivalence Class None.
+    COMMENT
+    COMMENT [hducommfwdog-WdogInit-CB-LLR-002]
+    COMMENT Does nothing since reload value not greater than MAX_RELOAD_VALUE.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT [hducommfwdog-WdogInit-CB-LLR-003]
+    COMMENT 1.The function Calls "IwdgWriteAccessCmd" with parameter IWDG_WRITEACCESS_ENABLE to enable write access to the prescaler and 
+    COMMENT reload registers before writing into the registers.
+    COMMENT 2.The function Calls "IwdgWriteAccessCmd" with parameter IWDG_WRITEACCESS_DISABLE to disable write access of prescaler and 
+    COMMENT reload registers after write has been completed.
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hducommfwdog-WdogInit-CB-LLR-004]
+    COMMENT The function calls "IwdgSetPrescaler" with parameter WDOG_PRESCALER to set the prescaler divider to 64.
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hducommfwdog-WdogInit-CB-LLR-005]  
+    COMMENT The function calls "IwdgSetReload" with the calculated reload value as parameter to write reload value to the reload register.
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hducommfwdog-WdogInit-CB-LLR-006]
+    COMMENT The function calls "IwdgEnable" to enable watchdog timer.
+    COMMENT Equivalence Class 7
+    COMMENT
+    COMMENT [hducommfwdog-WdogInit-CB-LLR-007]
+    COMMENT The function calls "IwdgReloadCounter" to reload watchdog counter.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+         
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+            
+        -- Stub Calls :
+        SIMUL 
+            
+            --Enable write access to the prescaler and reload registers
+            STUB IwdgWriteAccessCmd (IWDG_WRITEACCESS_ENABLE)
+            
+            --Initialize the prescaler divider to 64
+            STUB IwdgSetPrescaler (WDOG_PRESCALER)
+            
+            --Write reload value to the reload register
+            STUB IwdgSetReload(1000)
+            
+            --Disable write access to the prescaler and reload registers
+            STUB IwdgWriteAccessCmd(IWDG_WRITEACCESS_DISABLE)
+            
+            --Enable watchdog timer
+            STUB IwdgEnable()
+            
+            --Reload watchdog counter
+            STUB IwdgReloadCounter()
+            
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #WdogInit();
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+    
+END SERVICE -- WdogInit
+

@@ -1,0 +1,1660 @@
+HEADER hdudispbtext,Source Code Ver :1.4,TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name         : Samhitha Prasad L C
+--
+-- File Name           : hdudispbtext.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : DrawChar
+--                       TextPrintChar
+--			 			 TextPrintString
+--                       TextClearEOL
+--                       TextScroll
+--                       TextInit
+--                      
+-- Version History             :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME           MODIFICATIONS
+--  ------------        ---------       -----------           -------------
+--      1.1             30.10.2017      Samhitha Prasad L C   Created the ptu file.
+--      1.2 			11.11.2017		Samhitha Prasad L C	  Updated as per #PR100171
+--      1.3 			14.11.2017		Samhitha Prasad L C	  Updated as per #PR100171
+--		1.4				11.08.2020		Harshitha R			  Updated as per #PR100259
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+
+##include "hdudispbfonts.h"      
+##include "hdudispbpanel.h"      
+##include "hdulibbasictypes.h"   
+##include "hdudispbappdata.h"     
+##include "hdudispbtext.h"
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern void TextClearEOL(void);
+    #extern void TextInit(void);
+    #extern void TextPrintString(T_UINT8 * pu8_string);
+    #extern void TextPrintChar(T_UINT8 u8_char);
+    #void *Vp_fgfb;
+    #T_EPEN_COLOR Pen_color;
+	#T_APPDATA_APPDATA_BOOT PTU_Appdata_appdata_boot;
+	#T_APPDATA_APPDATA_BOOT *Appdata_appdata_boot = (T_APPDATA_APPDATA_BOOT*)&PTU_Appdata_appdata_boot;
+-- Declaration of temporary variables  
+
+	-- temporary variable used in execution of test
+    # T_UINT8 PTU_tmp;
+    
+    -- temporary structure declared for receiving the addres
+    # T_BFC_FONT PTU_ps_font;
+    # T_BFC_FONT PTU_FontsGetFont;
+	
+ 
+--------------------------------------------------------------------------------
+
+BEGIN
+
+
+	COMMENT Author Name      	: Samhitha Prasad L C
+	COMMENT		
+	COMMENT File Name        	: hdudispbtext.ptu
+	COMMENT
+	COMMENT Tested Functions	: DrawChar
+	COMMENT                       TextPrintChar
+	COMMENT			      		  TextPrintString
+	COMMENT 		  	  	      TextClearEOL
+	COMMENT                       TextScroll
+	COMMENT                       TextInit              
+	COMMENT
+	COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT 1. In function 'DrawChar', for loop cannot be covered for zero time since it is controlled by variables which are used in
+    COMMENT division operation.
+    COMMENT
+    COMMENT 2. In function 'TextScroll', while loop can not be covered for one time since it is controlled by macros's and variables 
+    COMMENT which are used in division operation.
+    COMMENT
+    COMMENT 3. In 'hdudispbappdata.h', the macro 'PANEL_WIDTH' value is changed from 800 to 60 and 'PANEL_HEIGHT' value is changed from 
+    COMMENT 480 to 30 to verify 'hdudispbtext-DrawChar-DB-LLR-002' LLR.Hence hardware stubbing is made to the variable
+	COMMENT Appdata_appdata_boot, hence values to the 'PANEL_WIDTH' and 'PANEL_HEIGHT' are given in environment section
+    COMMENT
+    COMMENT </AC>
+    
+	COMMENT
+	COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+	COMMENT In function 'TextClearEOL', Character Cell column is lesser than difference of 
+	COMMENT	Width of display of character and one
+	COMMENT 
+	COMMENT	Class 2
+	COMMENT	In function 'TextClearEOL', Character Cell column is greater than difference of
+	COMMENT	Width of display of character and one
+	COMMENT
+	COMMENT	Class 3
+	COMMENT In function 'TextClearEOL', 'TextPrintChar' is called.
+	COMMENT
+	COMMENT	Class 4
+	COMMENT	In function 'TextScroll', count is not equal to zero.
+	COMMENT
+	COMMENT	Class 5
+	COMMENT	In function 'TextScroll', count is equal to zero.
+	COMMENT
+	COMMENT Class 6
+	COMMENT	In function 'TextScroll', 'TextClearEOL' is called.
+	COMMENT
+	COMMENT Class 7
+	COMMENT In function 'TextInit', 'FontsGetCharWidth' is called.
+	COMMENT  
+	COMMENT Class 8
+	COMMENT In function 'TextInit', 'FontsGetFontHeight' is called.
+	COMMENT
+	COMMENT Class 9 
+	COMMENT In  function 'TextPrintChar', pu8_char_map is  NULL. 
+	COMMENT
+	COMMENT Class 10
+	COMMENT In function 'TextPrintString', pu8_string is equal to zero.
+	COMMENT
+	COMMENT	Class 11
+	COMMENT	In function 'TextPrintString', pu8_string is not equal to zero
+	COMMENT
+	COMMENT	Class 12
+	COMMENT	In function 'TextPrintString', 'TextPrintChar' is called.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function 'TextPrintChar', 'FontsGetFont' is called.
+	COMMENT
+	COMMENT Class 14
+	COMMENT In function 'TextPrintChar', ps_font is not NULL
+	COMMENT 
+	COMMENT Class 15
+	COMMENT In function 'TextPrintChar', ps_font is NULL
+	COMMENT
+	COMMENT	Class 16
+	COMMENT	In function 'TextPrintChar', u8_char is equal to macro TEN.
+	COMMENT
+	COMMENT Class 17
+	COMMENT	In function 'TextPrintChar', u8_char is equal to macro THIRTEEN.
+	COMMENT
+	COMMENT	Class 18
+	COMMENT In function 'TextPrintChar', character cell row is less than height of the display
+	COMMENT
+	COMMENT	Class 19
+	COMMENT In function 'TextPrintChar', character cell row is equal to height of the display
+	COMMENT
+	COMMENT	Class 20
+	COMMENT	In function 'TextPrintChar', 'TextScroll' is called to perform scroll operation.
+	COMMENT
+	COMMENT Class 21
+	COMMENT	In function 'TextPrintChar', 'Pu8GetCharBitMap' is called.
+	COMMENT
+	COMMENT	Class 22
+	COMMENT	In function 'TextPrintChar', pu8_char_map is not NULL.
+	COMMENT
+	COMMENT	Class 23
+	COMMENT In function 'TextPrintChar', sum of Pixel Column location and Width of a character 
+	COMMENT	is greater than PANEL_WIDTH
+	COMMENT
+	COMMENT Class 24
+	COMMENT	In function 'TextPrintChar', sum of Pixel Column location and Width of a character 
+	COMMENT	is less than PANEL_WIDTH
+	COMMENT
+	COMMENT	Class 25
+	COMMENT	In function 'TextPrintChar', sum of Pixel Column location and Width of a character 
+	COMMENT	is equal to PANEL_WIDTH
+	COMMENT
+	COMMENT	Class 26
+	COMMENT In function 'TextPrintChar', sum of Pixel Row location and Height of a character
+	COMMENT	is greater than PANEL_HEIGHT
+	COMMENT
+	COMMENT Class 27
+	COMMENT	In function 'TextPrintChar', sum of Pixel Row location and Height of a character
+	COMMENT	is less than PANEL_HEIGHT
+	COMMENT
+	COMMENT Class 28
+	COMMENT	In function 'TextPrintChar', sum of Pixel Row location and Width of a character 
+	COMMENT	is equal to PANEL_HEIGHT
+	COMMENT
+	COMMENT	Class 29
+	COMMENT	In function 'TextPrintChar', 'DrawChar' is called.
+	COMMENT 
+	COMMENT	Class 32
+	COMMENT	In function 'TextClearEOL', Character Cell column is equal difference of
+	COMMENT	Width of display of character and one
+	COMMENT 
+	COMMENT	Class 31
+	COMMENT In function 'TextPrintChar', character cell row is greater than to height of the display	
+	COMMENT
+    COMMENT Invalid class(es)
+    COMMENT 
+    COMMENT Class 30
+    COMMENT In function 'TextPrintString', invalid reference is passed. 
+    COMMENT  
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+	DEFINE STUB hdudispbtext_c
+	
+	    #T_INT16 FontsGetFontHeight(T_ETXFONT _in e_tx_font); 
+    
+    	#T_INT16 FontsGetCharWidth(T_ETXFONT _in e_tx_font, T_UINT8 _in u8_char); 
+    
+    	# const  T_UINT8* Pu8GetCharBitMap( const  T_BFC_FONT _no *ps_font, T_UINT8 _in u8_char)
+	    #{
+   		#  PTU_ps_font = *ps_font;
+    	#}
+
+    	# const  T_BFC_FONT* FontsGetFont(T_ETXFONT _in e_tx_font); 
+
+    END DEFINE
+
+ELSE_SIMUL
+	
+	-- No action defined as of now if the module is not simulated
+	
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--Environment of the file hdudispbtext.c
+
+ENVIRONMENT   ENV_hdudispbtext_c
+
+VAR Appdata_appdata_boot->PanelStruct.PanelWidth,	init = 60,		ev = init
+
+VAR Appdata_appdata_boot->PanelStruct.PanelHeight,		init = 30,		ev = init
+
+END ENVIRONMENT ENV_hdudispbtext_c
+
+USE ENV_hdudispbtext_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TextClearEOL
+--------------------------------------------------------------------------------
+SERVICE TextClearEOL
+SERVICE_TYPE extern
+
+-- temporary variable declared for testing.
+# T_UINT8 PTU_u8_char;
+
+--temporary arrays used for expecting address.
+#T_UINT8 PTU_font_h[2800], PTU_font_w[1400];
+
+    
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispbtext-TextClearEOL-DB-LLR-001]
+  	COMMENT The function does nothing when Character Cell column is greater than
+   	COMMENT	difference of Width of display of character and ONE.
+   	COMMENT While loop is verified for 0 times.
+   	COMMENT U16_font_width,U16_dis_width, U16_char_x are implecitly verified.
+   	COMMENT Equivalence Class 32
+   	COMMENT	</TD>
+   	
+    ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+		--VAR Appdata_appdata_boot->PanelStruct.PanelWidth,	init = 60,		ev = init
+
+		--VAR Appdata_appdata_boot->PanelStruct.PanelHeight,		init = 30,		ev = init
+		
+			-- initialization of temporary structure
+			STRUCTURE PTU_FontsGetFont,			init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, Reversed => 0, 
+			&											Font => { pData => NULL  } },		ev = init  
+		
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			-- None
+			
+		COMMENT OUTPUT SECTION:
+	    
+	    	-- None
+	    	
+	    --Stub Calls	
+   		SIMUL
+   	
+   			-- function used to get the widthof the character font indicated by T_ETXFONT and u8_char
+  			STUB FontsGetCharWidth(SYSFONT,(T_UINT8)'A') 50
+
+			-- it initializes font variable PTU_font_height variable 
+  			STUB FontsGetFontHeight(SYSFONT) 24
+          		
+  		END SIMUL
+  	
+  	-- Calling TextInit to initialize font height and font width
+  	#TextInit();
+  	
+  	-- Calling the Unit Under Test :
+    #TextClearEOL();
+    
+    END ELEMENT
+
+END TEST -- TEST 1     
+
+TEST 2
+FAMILY nominal 
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispbtext-TextClearEOL-DB-LLR-001]
+   	COMMENT The function  calls TextPrintChar till Character Cell column 
+   	COMMENT	is lesser than difference of Width of display of character and ONE.
+   	COMMENT While loop is verified for 1 times.
+   	COMMENT Equivalence Class 1,3
+   	COMMENT	</TD>
+    	
+    ELEMENT
+    
+		COMMENT INPUT SECTION
+
+			-- initialization of temporary structure
+			STRUCTURE PTU_FontsGetFont,  		init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, Reversed => 0,
+			&                                   Font => { pData => NULL } }, 	 	ev = init
+
+		COMMENT INPUT/OUTPUT SECTION
+        
+			--initialization of global pointer
+			VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init
+          
+            -- initialization of temporary variable
+			VAR PTU_u8_char, 					init=32, 							ev = init	        
+   
+ 		COMMENT OUTPUT SECTION
+		
+			-- initialization of temporary structure
+			STRUCTURE PTU_ps_font, 		init={FontType => 0x01010140, FontHeight => 24, Baseline => 19, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+    	
+			
+    	--Stub Calls
+        SIMUL
+         	-- This function is used to Get font indicated by e_tx_font_T 
+         	STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+         	
+         	-- function used to get the width of the character font indicated by T_ETXFONT and u8_char
+         	STUB FontsGetCharWidth(SYSFONT,(T_UINT8)'A') 30
+         	
+         	-- it initializes font variable PTU_font_height variable 
+         	STUB FontsGetFontHeight(SYSFONT) 24
+            
+            --   This function is used to Return a pointer to a character's bit map. Null when undefined
+         	STUB Pu8GetCharBitMap(PTU_u8_char) &PTU_font_w[0]
+    
+     	END SIMUL
+     	
+    -- Calling TextInit to initialize font height and font width
+    #TextInit();
+   
+    -- Calling the Unit Under Test :
+    #TextClearEOL();
+   
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal 
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispbtext-TextClearEOL-DB-LLR-001]
+   	COMMENT The function  calls TextPrintChar till Character Cell column 
+   	COMMENT	is lesser than difference of Width of display of character and ONE.
+   	COMMENT While loop is verified for 2 or more times.
+   	COMMENT second element block is used to make Character Cell column  greater than difference Width of 
+   	COMMENT display of character and one, equivalence class two is mapped for second element block
+   	COMMENT Equivalence Class 1,2,3
+   	COMMENT	</TD>
+    	
+    ELEMENT
+    
+		COMMENT INPUT SECTION
+
+			-- initialization of temporary structure
+			STRUCTURE PTU_FontsGetFont,  		init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, Reversed => 0,
+			&                                   Font => { pData => NULL } }, 	 	ev = init
+
+		COMMENT INPUT/OUTPUT SECTION
+        
+			--initialization of global pointer
+			VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init
+            
+            -- initialization of temporary variable
+			VAR PTU_u8_char, 					init=32, 							ev = init	        
+   
+ 		COMMENT OUTPUT SECTION
+		
+			-- initialization of temporary structure
+			STRUCTURE PTU_ps_font, 		init={FontType => 0x01010140, FontHeight => 24, Baseline => 19, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+    	
+			
+    	--Stub Calls
+        SIMUL
+         	-- This function is used to Get font indicated by e_tx_font_T 
+         	STUB FontsGetFont 1..2 => (SYSFONT) &PTU_FontsGetFont
+         	
+         	-- function used to get the width of the character font indicated by T_ETXFONT and u8_char
+         	STUB FontsGetCharWidth(SYSFONT,(T_UINT8)'A') 20
+         	
+         	-- it initializes font variable PTU_font_height variable 
+         	STUB FontsGetFontHeight(SYSFONT) 24
+            
+            --   This function is used to Return a pointer to a character's bit map. Null when undefined
+         	STUB Pu8GetCharBitMap 1..2 => (PTU_u8_char) &PTU_font_w[0]
+    
+     	END SIMUL
+     	
+    -- Calling TextInit to initialize font height and font width
+    #TextInit();
+   
+    -- Calling the Unit Under Test :
+    #TextClearEOL();
+   
+    END ELEMENT
+    
+    -- second element block is used to make Character Cell column  greater than difference Width of display of character and one
+    ELEMENT
+    
+		COMMENT INPUT SECTION
+
+			-- initialization of temporary structure
+			STRUCTURE PTU_FontsGetFont,  		init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, Reversed => 0,
+			&                                   Font => { pData => NULL } }, 	 	ev = init
+
+		COMMENT INPUT/OUTPUT SECTION
+        
+			--initialization of global pointer
+			VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init
+            
+            -- initialization of temporary variable
+			VAR PTU_u8_char, 					init=32, 							ev = init	        
+   
+ 		COMMENT OUTPUT SECTION
+		
+			-- initialization of temporary structure
+			STRUCTURE PTU_ps_font, 		init={FontType => 0x01010140, FontHeight => 24, Baseline => 19, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+    	
+			
+    	--Stub Calls
+        SIMUL
+         	
+         	-- function used to get the width of the character font indicated by T_ETXFONT and u8_char
+         	STUB FontsGetCharWidth(SYSFONT,(T_UINT8)'A') 40
+         	
+         	-- it initializes font variable PTU_font_height variable 
+         	STUB FontsGetFontHeight(SYSFONT) 24
+            
+     	END SIMUL
+     	
+    -- Calling TextInit to initialize font height and font width
+    #TextInit();
+   
+    -- Calling the Unit Under Test :
+    #TextClearEOL();
+   
+    END ELEMENT    
+
+END TEST -- TEST 3
+
+END SERVICE -- TextClearEOL
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TextInit
+--------------------------------------------------------------------------------
+SERVICE TextInit
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal
+
+	COMMENT	Test Description
+    COMMENT	<TD>
+    COMMENT [hdudispbtext-TextInit-DB-LLR-001]
+   	COMMENT The function  sets the width of the character to return 
+   	COMMENT value of functon FontGetCharWidth with parameter SYSFONT and ‘A’.
+   	COMMENT U16_font_width is implicitly verified 
+   	COMMENT Equivalence Class 7
+   	COMMENT
+   	COMMENT	[hdudispbtext-TextInit-DB-LLR-002]
+   	COMMENT The function  sets the height of the character to return
+   	COMMENT	value of functon FontGetFontHeight parameter SYSFONT.
+   	COMMENT U16_font_height is implicitly verified 
+   	COMMENT Equivalence Class 8
+   	COMMENT
+   	COMMENT	[hdudispbtext-TextInit-DB-LLR-003]
+   	COMMENT The Function  sets width of the display in characters to 
+   	COMMENT PANEL_WIDTH divided by width of character.
+   	COMMENT U16_dis_width is implicitly verified 
+   	COMMENT Equivalence Class None
+   	COMMENT
+   	COMMENT	[hdudispbtext-TextInit-DB-LLR-004]
+   	COMMENT	The Function  sets width of the display in characters to
+   	COMMENT	PANEL_HEIGHT divided by height of character.
+   	COMMENT U16_dis_height is implicitly verified
+   	COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+                
+    	COMMENT INPUT SECTION:
+    
+			--None
+    
+    	COMMENT INPUT/OUTPUT SECTION:
+    		
+    		-- initialization of temporary variable used for testing
+      		VAR PTU_tmp,    					init= 0, 							ev = init
+        
+    	COMMENT OUTPUT SECTION:
+    
+        	-- None
+    
+    	--Stub Calls
+    	SIMUL
+        
+        	-- function used to get the width of the character font indicated by T_ETXFONT and u8_char    
+        	STUB FontsGetCharWidth(SYSFONT,0x41) 10
+
+        	-- function used to get the height of the font indicated by T_ETXFONT   
+        	STUB FontsGetFontHeight(SYSFONT) 1
+
+    	END SIMUL   
+		 
+	-- Calling the Unit Under Test :
+    #TextInit();
+	
+	END ELEMENT
+	
+END TEST -- TEST 1
+    
+--TEST 2
+--FAMILY nominal
+--
+--  COMMENT	Test Description
+--  COMMENT	<TD>
+--	COMMENT [hdudispbtext-TextInit-DB-LLR-001]
+-- 	COMMENT The function  sets the width of the character to return 
+-- 	COMMENT value of functon FontGetCharWidth with parameter SYSFONT and ‘A’.
+-- 	COMMENT Equivalence Class 7
+--	COMMENT
+-- 	COMMENT	[hdudispbtext-TextInit-DB-LLR-002]
+-- 	COMMENT The function  sets the height of the character to return
+-- 	COMMENT	value of functon FontGetFontHeightwith parameter SYSFONT.
+-- 	COMMENT Equivalence Class 8
+--	COMMENT
+-- 	COMMENT	[hdudispbtext-TextInit-DB-LLR-003]
+-- 	COMMENT The Function  sets width of the display in characters to 
+-- 	COMMENT PANEL_WIDTH divided by width of character.
+-- 	COMMENT Equivalence Class None
+--  COMMENT
+-- 	COMMENT	[hdudispbtext-TextInit-DB-LLR-004]
+-- 	COMMENT	The Function  sets width of the display in characters to
+-- 	COMMENT	PANEL_HEIGHT divided by height of character.
+-- 	COMMENT Equivalence Class None
+--  COMMENT </TD>
+--
+--  ELEMENT
+--                 
+--     
+--     COMMENT INPUT SECTION:
+--     
+--         -- None
+--         
+--     COMMENT INPUT/OUTPUT SECTION:
+--     
+-- 		   -- initialization of temporary variable used for testing
+--         VAR PTU_tmp,    						init=0, 								ev = init
+--
+--     COMMENT OUTPUT SECTION:
+--     
+--        --None
+--
+--     --Stub Calls
+--     SIMUL
+--         -- function used to get the width of the character font indicated by T_ETXFONT and u8_char    
+--         STUB FontsGetCharWidth(SYSFONT,0x41) 0
+-- 
+--         -- function used to get the height of the font indicated by T_ETXFONT   
+--         STUB FontsGetFontHeight(SYSFONT) 0
+-- 
+--     END SIMUL   
+-- 			 
+--  Calling the Unit Under Test :
+--  #TextInit();
+-- 
+--  END ELEMENT
+--END TEST -- TEST 2
+
+END SERVICE -- TextInit
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TextPrintString
+--------------------------------------------------------------------------------
+SERVICE TextPrintString
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT8 *pu8_string;
+
+--temporary arrays used for initializing pointer.
+#T_UINT8 PTU_pu8_string[5];
+
+--temporary arrays used for expecting address.
+#T_UINT8 PTU_font_h[2800], PTU_font_w[1400];
+
+ENVIRONMENT ENV_TextPrintString
+
+	VAR pu8_string,     init = 0,       ev = init
+	
+END ENVIRONMENT -- ENV_TextPrintString
+
+USE ENV_TextPrintString
+
+TEST 1
+FAMILY nominal
+    
+	COMMENT Test Description
+    COMMENT	<TD>
+    COMMENT [hdudispbtext-TextPrintString-DB-LLR-001]
+    COMMENT The function does nothing when pu8_string is equal to ZERO
+    COMMENT Equivalence Class 10
+    COMMENT </TD>
+
+    ELEMENT
+        
+
+        
+        COMMENT INPUT SECTION:
+            
+            -- initialization of parameter variable
+            VAR  pu8_string,        			init = &PTU_pu8_string,      		ev = init
+            
+            -- temporary array declared for passing addres
+            VAR  PTU_pu8_string,        		init = {others=>0},        			ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+		COMMENT OUTPUT SECTION:
+			        
+            -- None
+			        
+        --Stub Calls
+		SIMUL
+                
+        	-- None
+
+    	END SIMUL   
+	
+	-- Calling the Unit Under Test :
+	#TextPrintString(pu8_string);
+	
+	END ELEMENT
+END TEST -- TEST 1
+        
+TEST 2
+FAMILY nominal
+
+    COMMENT	Test Description
+    COMMENT <TD>
+    COMMENT [hdudispbtext-TextPrintString-DB-LLR-001]
+    COMMENT The function does the following till pu8_string is not equal to ZERO
+    COMMENT 1. Call the function TextPrintChar with parameter as pu8_string.
+    COMMENT 2. Increment the address of pu8_string by ONE.while loop is covered for 2 or more times
+    COMMENT Equivalence Class 11,12
+    COMMENT </TD>
+        
+    ELEMENT
+        
+        
+        COMMENT INPUT SECTION:
+            
+            --initialization of global pointer
+            VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init
+            
+            -- initialization of parameter variable 
+            VAR  pu8_string,        			init = &PTU_pu8_string[0],     		ev = init
+            
+            -- temporary array declared for passing addres
+            VAR  PTU_pu8_string,        		init = {0=>1,1=>2,others=>0},       ev = init
+            
+            -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+        	&									 Font => { pData => NIL }}, 		ev = init
+        	
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+			        
+		    -- initialization of temporary structure
+			STRUCTURE PTU_ps_font, 				init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+        
+
+        --Stub Calls
+		SIMUL
+
+   	    	-- This function is used to Get font indicated by e_tx_font_T   
+   			STUB FontsGetFont 1..2 =>(SYSFONT) &PTU_FontsGetFont
+
+   			--   This function is used to Return a pointer to a character's bit map. Null when undefined.
+   			STUB Pu8GetCharBitMap (1) &PTU_font_w[0]
+   			STUB Pu8GetCharBitMap (2) &PTU_font_w[0]    
+
+   	 	END SIMUL   
+
+		-- Calling the Unit Under Test :
+    #TextPrintString(pu8_string);
+    
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT	Test Description
+    COMMENT <TD>
+    COMMENT [hdudispbtext-TextPrintString-DB-LLR-001]
+    COMMENT The function does the following till pu8_string is not equal to ZERO
+    COMMENT 1. Call the function TextPrintChar with parameter as pu8_string.
+    COMMENT 2. Increment the address of pu8_string by ONE.while loop is covered for one time.
+    COMMENT Equivalence Class 11,12
+    COMMENT </TD>  
+        
+    ELEMENT
+        
+
+        COMMENT INPUT SECTION:
+        
+            --initialization of global pointer
+            VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init
+            
+            -- initialization of parameter variable 
+            VAR  pu8_string,        			init = &PTU_pu8_string[0],      	ev = init
+            
+            -- temporary array declared for passing address
+            VAR  PTU_pu8_string,        		init = {0=>1,others=>0},       		ev = init
+            
+            -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+        	&										  Font => { pData => NIL }}, 	ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+        
+            -- initialization of temporary structure
+			STRUCTURE PTU_ps_font, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+        
+            
+            
+     --Stub Calls   
+   	 SIMUL
+
+		 -- This function is used to Get font indicated by e_tx_font_T   
+		 STUB FontsGetFont (SYSFONT) &PTU_FontsGetFont
+
+		 --   This function is used to Return a pointer to a character's bit map. Null when undefined.
+		 STUB Pu8GetCharBitMap (1) &PTU_font_w[0]
+
+   	 END SIMUL   
+	
+	-- Calling the Unit Under Test :
+    #TextPrintString(pu8_string);
+   
+    END ELEMENT
+
+END TEST -- TEST 3
+
+--TEST 4
+--FAMILY nominal
+--
+--    COMMENT	Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispbtext-TextPrintString-DB-LLR-001]
+--    COMMENT The function does nohing whne an invalid refrence to pu8_string passed.
+--    COMMENT Equivalence Class 30
+--    COMMENT
+--    COMMENT </TD>
+--    
+--        
+--    ELEMENT
+--        
+--
+--        COMMENT INPUT SECTION:
+--        
+--           -- None
+--        
+--        COMMENT INPUT/OUTPUT SECTION:
+--        
+--            -- None
+--            
+--        COMMENT OUTPUT SECTION:
+--        
+--            -- None
+--			           
+--     --Stub Calls   
+--   	 SIMUL
+--
+--       	-- None
+--
+--   	 END SIMUL   
+--	
+--	-- Calling the Unit Under Test :
+--    #TextPrintString(NULL);
+--   
+--    END ELEMENT
+--
+--END TEST -- TEST 4
+  
+END SERVICE -- TextPrintString
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TextPrintChar
+--------------------------------------------------------------------------------
+SERVICE TextPrintChar
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT8 u8_char;
+
+--temporary arrays used for expecting address.
+#T_UINT8 PTU_font_h[2800], PTU_font_w[1400];
+
+ENVIRONMENT ENV_TextPrintChar
+
+	VAR u8_char,        init = 0,       ev = init
+
+END ENVIRONMENT -- ENV_TextPrintChar
+
+USE ENV_TextPrintChar
+        
+TEST 1
+FAMILY nominal
+            
+    COMMENT Test Description
+	COMMENT	<TD>
+	COMMENT	[hdudispbtext-TextPrintChar-DB-LLR-002]
+	COMMENT The function  does the following when font is valid.
+	COMMENT	1.Does the following when u8_char ie equal to TEN.
+	COMMENT	a.Increment Character Cell Row by ONE.
+	COMMENT	b.Decrement Character Cell Row by ONE and call the function TextScroll when Character Cell Row is greater
+	COMMENT	than or equal to Height of the display in characters .
+	COMMENT c.Return from the function.
+	COMMENT U16_char_y is implicitly verified.
+	COMMENT	Equivalence class 16,18
+	COMMENT </TD>
+                 
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--initialization of parameter varaible
+			VAR u8_char,						init = 10,							ev = init
+
+			-- initialization of temporary structure
+			STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+			
+		COMMENT INPUT/OUTPUT SECTION:
+
+			-- None
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		--Stub Calls    		
+		SIMUL
+
+			-- This function is used to Get font indicated by e_tx_font_T	
+			STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+
+			-- it initializes font variable PTU_font_width variable		
+			STUB FontsGetCharWidth(SYSFONT,0x41) 60
+			
+			-- it initializes font variable PTU_font_height variable	
+			STUB FontsGetFontHeight(SYSFONT) 14
+
+		END SIMUL	
+    	   
+    -- Calling TextInit to initialize font height and font width    	
+    #TextInit();
+    
+    -- Calling the Unit Under Test 
+    #TextPrintChar(u8_char);
+	
+	END ELEMENT
+            
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+            
+    COMMENT Test Description
+	COMMENT	<TD>
+	COMMENT [hdudispbtext-TextPrintChar-DB-LLR-001]
+	COMMENT This function  sets ps_font to return value of FontsGetFont with parameter SYSFONT.
+	COMMENT Equivalence class 13
+	COMMENT
+	COMMENT	[hdudispbtext-TextPrintChar-DB-LLR-002]
+	COMMENT The function  does the following when font is valid.
+	COMMENT	1.Does the following when u8_char ie equal to TEN.
+	COMMENT	a.Increment Character Cell Row by ONE.
+	COMMENT	b.Decrement Character Cell Row by ONE and call the function TextScroll when Character Cell Row is greater
+	COMMENT	than or equal to Height of the display in characters .
+	COMMENT c.Return from the function.
+	COMMENT	Equivalence class 5,14,16,19,20
+	COMMENT	
+	COMMENT	[hdudispbtext-TextScroll-DB-LLR-004]
+	COMMENT	The function does nothing when count is equal to zero.
+	COMMENT	Equivalence Class 5.
+	COMMENT	
+	COMMENT </TD>
+                 
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--initialization of parameter varaible
+			VAR u8_char,						init = 10,							ev = init
+
+			-- initialization of temporary structure
+			STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+			
+		COMMENT INPUT/OUTPUT SECTION:
+
+			-- None
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		--Stub Calls    		
+		SIMUL
+
+			-- This function is used to Get font indicated by e_tx_font_T	
+			STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+
+			-- it initializes font variable PTU_font_width variable		
+			STUB FontsGetCharWidth(SYSFONT,0x41) 60
+
+			-- it initializes font variable PTU_font_height variable	
+			STUB FontsGetFontHeight(SYSFONT) 16
+
+		END SIMUL	
+    	   
+    -- Calling TextInit to initialize font height and font width    	
+    #TextInit();
+    
+    -- Calling the Unit Under Test 
+    #TextPrintChar(u8_char);
+	
+	END ELEMENT
+            
+END TEST -- TEST 2
+    
+TEST 3
+FAMILY nominal
+        
+	COMMENT Test Description
+	COMMENT	<TD>
+	COMMENT	[hdudispbtext-TextPrintChar-DB-LLR-002]
+	COMMENT The function  does the following when font is valid.
+	COMMENT	Sets Character Cell column to ZERO when u8_char is equal to THIRTEEN.	
+	COMMENT	Equivalence class 17
+	COMMENT </TD>
+         
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+	    	
+	    	--initialization of parameter varaible
+	    	VAR u8_char,						init = 13,							ev = init
+	    	
+	    	-- initialization of temporary structure
+	    	STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+	    	&										  Font => { pData => NIL }}, 	ev = init
+	    
+	    COMMENT INPUT/OUTPUT SECTION:
+	    
+	    	-- None
+	    	
+	    COMMENT OUTPUT SECTION:
+	     	 --None
+	    
+	    --Stub Calls 
+	    SIMUL
+	    			
+	    	-- This function is used to Get font indicated by e_tx_font_T	
+	    	STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+	    	
+	    	-- it initializes font variable PTU_font_width variable		
+	    	STUB FontsGetCharWidth(SYSFONT,0x41) 60
+	    		    	
+	    	-- it initializes font variable PTU_font_height variable	
+	    	STUB FontsGetFontHeight(SYSFONT) 20
+	    	
+	    END SIMUL	
+	    	
+	-- Calling TextInit to initialize font height and font width 
+	#TextInit();
+	
+	-- Calling the Unit Under Test
+	#TextPrintChar(u8_char);
+
+	END ELEMENT
+            
+END TEST -- TEST 3
+    
+TEST 4
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispbtext-TextPrintChar-DB-LLR-003]
+	COMMENT The function  sets Bit map of the character to  return value of Pu8GetCharBitMap.
+	COMMENT with parameter font and u8_char when font is valid.
+	COMMENT Equivalence Class 21
+	COMMENT
+	COMMENT	[hdudispbtext-TextPrintChar-DB-LLR-004]        	
+	COMMENT The function  does the following when font is valid and Bit map of the character is valid.
+	COMMENT	1.Sets Pixel Column location to Character Cell column multiplied with Width of a character.
+	COMMENT 2. Sets Pixel Row location to Character Cell row multiplied with Height of a character.
+	COMMENT	3.If sum of Pixel Column location and Width of a character is greater than or equal to PANEL_WIDTH 
+	COMMENT   then does the following :
+	COMMENT	 a.Set Character Cell column to ZERO.
+	COMMENT	 b.Set Pixel Column location to ZERO.
+	COMMENT	 c. Increment Character Cell Row by ONE.
+	COMMENT	 d.Increment Pixel Row  location by Height of a character.
+	COMMENT	4. If sum of Pixel Row location and Height of a character is greater than or equal to PANEL_HEIGHT 
+	COMMENT    then does the following :
+	COMMENT	 a.Decrement Pixel Row location by Height of a character.
+	COMMENT	 b.Decrement Character Cell Row by ONE.
+	COMMENT	 c. Call the function TextScroll.
+	COMMENT	5.Set Frame buffer location to sum of Vp_fgfb , Pixel Column location and Pixel Row location multiplied 
+	COMMENT   with PANEL_WIDTH.
+	COMMENT	6.Call the function DrawChar with parameter as Bit map of the character, Frame buffer location, 
+	COMMENT   Height of the Character and width of the Character.
+	COMMENT	7.Increment Character Cell column by ONE.
+	COMMENT	Equivalence Class 20,22,25,28,29
+	COMMENT 
+	COMMENT	[hdudispbtext-TextScroll-DB-LLR-001]
+	COMMENT The function  sets the source to sum of Vp_fgfb and product of Height of the character and PANEL_WIDTH.
+	COMMENT	Equivalence Class None
+	COMMENT 
+	COMMENT [hdudispbtext-TextScroll-DB-LLR-002]
+	COMMENT The function  sets the destination to Vp_fgfb.
+	COMMENT	Equivalence Class None
+	COMMENT
+	COMMENT [hdudispbtext-TextScroll-DB-LLR-003]
+	COMMENT The function sets the count to PANEL_HEIGHT subtracted by Height of the character multiplied with PANEL_WIDTH.
+	COMMENT	Equivalence Class None
+	COMMENT
+	COMMENT	[hdudispbtext-TextScroll-DB-LLR-004]
+	COMMENT The function  does the following till count is not equal to ZERO.
+	COMMENT	1. Set destination to content of source.
+	COMMENT	2. Increment the destination address by ONE.
+	COMMENT	3. Increment the source address by ONE.
+	COMMENT	4. Decrement the count by ONE.
+	COMMENT	Equivalence class 4,6
+	COMMENT 
+	COMMENT [hdudispbtext-TextScroll-DB-LLR-005]
+	COMMENT The function calls to clear the end of line.
+	COMMENT Equivalence class 6
+	COMMENT </TD>
+	
+    ELEMENT
+
+	
+		COMMENT INPUT SECTION:
+			
+			--initialization of global pointer
+			VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init 		
+    		
+    		--initialization of parameter varaible
+    		VAR u8_char,						init = 0,							ev = init
+    		
+    		-- initialization of temporary structure
+    		STRUCTURE PTU_FontsGetFont, 		init={FontType => 0x01010140, FontHeight => 24, Baseline => 19, Reversed => 0,
+    		&										  Font => { pData => NIL }}, 	ev = init
+    	
+   		COMMENT INPUT/OUTPUT SECTION:
+    		
+    		-- None
+    			
+    	COMMENT OUTPUT SECTION:
+     			
+     		-- initialization of temporary structure
+			STRUCTURE PTU_ps_font, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = {FontType => 0x01010140, FontHeight => 24,  
+			&										  Baseline => 19, Reversed => 0,Font => { pData => NIL }}
+    	
+    			
+    	--Stub Calls 	
+    	SIMUL
+    			
+    		-- This function is used to Get font indicated by e_tx_font_T	
+    			STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+    		
+    		-- it initializes font variable PTU_font_width variable		
+    		STUB FontsGetCharWidth(SYSFONT,0x41) 60
+    		    		
+    		-- it initializes font variable PTU_font_height variable	
+    		STUB FontsGetFontHeight(SYSFONT) 10
+    		   					
+    		--   This function is used to Return a pointer to a character's bit map. Null when undefined.
+    		STUB Pu8GetCharBitMap(u8_char) &PTU_font_w[0]
+    
+    
+    	END SIMUL	
+    	
+    -- Calling TextInit to initialize font height and font width
+    #TextInit();
+    
+    -- Calling the Unit Under Test
+    #TextPrintChar(u8_char);
+    
+    END ELEMENT
+            
+END TEST -- TEST 4
+    
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispbtext-TextPrintChar-DB-LLR-004]        	
+	COMMENT The function does the following when font is valid and Bit map of the character is valid.
+	COMMENT	1.Set Pixel Column location to Character Cell column multiplied with Width of a character.
+	COMMENT 2. Set Pixel Row location to Character Cell row multiplied with Height of a character.
+	COMMENT	3.If sum of Pixel Column location and Width of a character is greater than PANEL_WIDTH then does the following :
+	COMMENT	 a.Set Character Cell column to ZERO.
+	COMMENT	 b.Set Pixel Column location to ZERO.
+	COMMENT	 c. Increment Character Cell Row by ONE.
+	COMMENT	 d.Increment Pixel Row  location by Height of a character.
+	COMMENT	Equivalence Class 23 
+	COMMENT 
+	COMMENT	[hdudispbtext-DrawChar-DB-LLR-001]
+	COMMENT	The function sets bytes per line to s16_char_width add ONE divided by TWO.
+	COMMENT	Equivalence Class None
+	COMMENT
+	COMMENT	[hdudispbtext-DrawChar-DB-LLR-002]
+	COMMENT The function loops ZERO to less than s16_PTU_font_height and does the following:
+	COMMENT 1. Loops from ZERO to less than u16_bpl and does the following:
+	COMMENT	 a.Set pu8_dot_addr to LSB bits of pu8_char_map left shifted by FOUR OR with Pen_color.
+	COMMENT	 b.Increment pu8_dot_addr address with ONE.
+	COMMENT	 c. Set pu8_dot_addr to MSB bits of pu8_char_map OR with Pen_color.
+	COMMENT	 d.Increment pu8_dot_addr address and pu8_char_map address with ONE.
+	COMMENT	2. Address of pu8_dot_addr is set to sum of PANEL_WIDTH pu8_dot_addr and 
+	COMMENT	PANEL_WIDTH subtracted by bytes per line multiplied by TWO.
+	COMMENT Both the for loops are covered for two or more times.s
+	COMMENT	Equivalence Class None.
+	COMMENT </TD>
+	
+    ELEMENT
+				
+		COMMENT INPUT SECTION:
+			
+			--initialization of global pointer
+			VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init 		
+			
+			--initialization of parameter varaible
+			VAR u8_char,						init = 2,							ev = init
+																
+			-- initialization of temporary structure
+			STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+			&										 Font => { pData => NULL }}, 	ev = init
+		
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			-- None
+			
+		COMMENT OUTPUT SECTION:
+			
+			-- initialization of temporary structure
+			STRUCTURE PTU_ps_font, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+    	
+		
+		--Stub Calls 
+		SIMUL
+			
+			-- This function is used to Get font indicated by e_tx_font_T	
+			STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+		
+			-- it initializes font variable PTU_font_width variable		
+			STUB FontsGetCharWidth(SYSFONT,0x41) 65
+				
+			-- it initializes font variable PTU_font_height variable	
+			STUB FontsGetFontHeight(SYSFONT) 9
+							
+			--   This function is used to Return a pointer to a character's bit map. Null when undefined.
+			STUB Pu8GetCharBitMap(u8_char) &PTU_font_w[0]
+
+		END SIMUL
+	
+    -- Calling TextInit to initialize font height and font width
+    #TextInit();
+   
+    -- Calling the Unit Under Test
+    #TextPrintChar(u8_char);
+    
+    END ELEMENT
+            
+END TEST -- TEST 5
+    
+TEST 6
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispbtext-TextPrintChar-DB-LLR-004]        	
+	COMMENT The function does the following when font is valid and Bit map of the character is valid.
+	COMMENT	1.Function does not when sum of Pixel Column location and Width of a character is less than PANEL_WIDTH. 
+	COMMENT	2.Function does nothing when sum of Pixel Row location and Height of a character is less than PANEL_HEIGHT.
+	COMMENT	Equivalence Class 24,27    
+	COMMENT
+	COMMENT	[hdudispbtext-DrawChar-DB-LLR-002]
+	COMMENT The function loops ZERO to less than s16_PTU_font_height and does the following:
+	COMMENT 1. Loops from ZERO to less than u16_bpl and does the following:
+	COMMENT	 a.Set pu8_dot_addr to LSB bits of pu8_char_map left shifted by FOUR OR with Pen_color.
+	COMMENT	 b.Increment pu8_dot_addr address with ONE.
+	COMMENT	 c. Set pu8_dot_addr to MSB bits of pu8_char_map OR with Pen_color.
+	COMMENT	 d.Increment pu8_dot_addr address and pu8_char_map address with ONE.
+	COMMENT	2. Address of pu8_dot_addr is set to sum of PANEL_WIDTH pu8_dot_addr and 
+	COMMENT	PANEL_WIDTH subtracted by bytes per line multiplied by TWO.	 
+	COMMENT Both for loops covered for one time.
+	COMMENT	Equivalence Class None.
+
+	COMMENT </TD>
+	
+	ELEMENT
+
+
+   					
+   		COMMENT INPUT SECTION:
+   		
+   			--initialization of global pointer
+			VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init 		
+   			
+   			--initialization of parameter varaible
+   			VAR u8_char,						init = 1,							ev = init
+   			
+   			-- initialization of temporary structure
+   			STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+   			&										  Font => { pData => NIL }}, 	ev = init
+   			
+   		COMMENT INPUT/OUTPUT SECTION:
+   		
+   			-- None
+   			
+   		COMMENT OUTPUT SECTION:
+   		
+			-- initialization of temporary structure
+			STRUCTURE PTU_ps_font, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+    	
+   		--Stub Calls 
+   		SIMUL
+   			
+   			-- This function is used to Get font indicated by e_tx_font_T	
+   				STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+
+   			-- it initializes font variable PTU_font_width variable		
+   			STUB FontsGetCharWidth(SYSFONT,0x41) 1
+
+   			-- it initializes font variable PTU_font_height variable	
+   			STUB FontsGetFontHeight(SYSFONT) 1
+
+   			--   This function is used to Return a pointer to a character's bit map. Null when undefined.
+   			STUB Pu8GetCharBitMap(u8_char) &PTU_font_w[0]
+   
+   		END SIMUL
+   	
+   	-- Calling TextInit to initialize font height and font width
+   	#TextInit();
+   	
+   	-- Calling the Unit Under Test
+    #TextPrintChar(u8_char);
+   END ELEMENT
+            
+END TEST -- TEST 6
+ 
+TEST 7
+FAMILY nominal
+         
+ 	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispbtext-TextPrintChar-DB-LLR-004]        	
+	COMMENT The function does the following when font is valid and Bit map of the character is valid.
+	COMMENT	1. If sum of Pixel Row location and Height of a character is greater than PANEL_HEIGHT then does the following :
+	COMMENT	 a.Decrement Pixel Row location by Height of a character.
+	COMMENT	 b.Decrement Character Cell Row by ONE.
+	COMMENT	 c. Call the function TextScroll.
+	COMMENT Equivalence Class 26      	 	
+	COMMENT 
+	COMMENT [hdudispbtext-TextScroll-DB-LLR-004]
+	COMMENT The function  does the following till count is not equal to ZERO.
+	COMMENT	1. Set destination to content of source.
+	COMMENT	2. Increment the destination address by ONE.
+	COMMENT	3. Increment the source address by ONE.
+	COMMENT	4. Decrement the count by ONE
+	COMMENT While loop is covered for two or more times.
+	COMMENT Equivalence Class 4
+	COMMENT	
+ 	COMMENT </TD>
+
+	ELEMENT
+
+    					
+		COMMENT INPUT SECTION:
+    		    			
+   			--initialization of global pointer
+			VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init 		
+    		
+    		--initialization of parameter varaible
+    		VAR u8_char,						init = 123,							ev = init
+    		
+    		-- initialization of temporary structure
+    		STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+    		&										  Font => { pData => NIL }}, 	ev = init
+    			
+		COMMENT INPUT/OUTPUT SECTION:
+    		
+    		-- None
+    			   		    	
+ 		COMMENT OUTPUT SECTION:
+ 		
+			-- initialization of temporary structure
+			STRUCTURE PTU_ps_font, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+    	
+    	--Stub Calls 
+    	SIMUL
+    			
+    		-- This function is used to Get font indicated by e_tx_font_T	
+    		STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+    		
+    		-- it initializes font variable PTU_font_width variable		
+    		STUB FontsGetCharWidth(SYSFONT,0x41) 60
+    		   		
+    		-- it initializes font variable PTU_font_height variable	
+    		STUB FontsGetFontHeight(SYSFONT) 13
+    	    					
+    		--   This function is used to Return a pointer to a character's bit map. Null when undefined.
+    		STUB Pu8GetCharBitMap(u8_char) &PTU_font_w[0]
+    
+    	END SIMUL	
+    	
+	-- Calling TextInit to initialize font height and font width
+    #TextInit();
+    
+    -- Calling the Unit Under Test
+    #TextPrintChar(u8_char);
+    
+     END ELEMENT
+         
+ END TEST -- TEST 7
+                               
+    
+TEST 8
+FAMILY nominal
+    
+	COMMENT	Test Description
+	COMMENT <TD>    
+	COMMENT [hdudispbtext-TextPrintChar-DB-LLR-005]
+	COMMENT The function  returns when font is not valid
+	COMMENT Input parameter is passed with invalid paramter.
+	COMMENT Equivalence Class 9.
+	COMMENT </TD>
+  
+        
+    ELEMENT
+   	
+		COMMENT INPUT SECTION:
+	    		    			
+	   		--initialization of global pointer
+			VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init 		
+	    	
+	    	--initialization of parameter varaible
+	    	VAR u8_char,						init = 254,							ev = init
+	    	
+	    	-- initialization of temporary structure
+	    	STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+	    	&										   Font => { pData => NIL }}, 	ev = init		
+	    									
+	    COMMENT INPUT/OUTPUT SECTION:
+	    		
+	    	-- None
+	    			
+	   	COMMENT OUTPUT SECTION:
+			
+			-- initialization of temporary structure
+			STRUCTURE PTU_ps_font, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+    	
+			
+	    --Stub Calls 		
+	    SIMUL
+	    			
+	   		-- This function is used to Get font indicated by e_tx_font_T	
+	    	STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+	    		
+	    	-- it initializes font variable PTU_font_width variable		
+	    	STUB FontsGetCharWidth(SYSFONT,0x41) 50
+	    			    		
+	    	-- it initializes font variable PTU_font_height variable	
+	    	STUB FontsGetFontHeight(SYSFONT) 20
+	    			    					
+	    	--   This function is used to Return a pointer to a character's bit map. Null when undefined.
+	    	STUB Pu8GetCharBitMap(u8_char) NULL
+	    
+	    END SIMUL	
+	    	
+	-- Calling TextInit to initialize font height and font width
+ 	#TextInit();
+ 	
+ 	-- Calling the Unit Under Test
+    #TextPrintChar(u8_char);
+    
+	END ELEMENT
+        
+END TEST -- TEST 8
+    
+TEST 9
+FAMILY nominal
+            
+	COMMENT Test Description
+   	COMMENT	<TD>
+ 	COMMENT	[hdudispbtext-TextPrintChar-DB-LLR-002]
+	COMMENT The function  does nothing when font is not valid.
+	COMMENT Equivalence class 15
+ 	COMMENT </TD>
+             
+    ELEMENT
+
+ 		COMMENT INPUT SECTION:
+ 		
+ 			--initialization of global pointer		
+			VAR Vp_fgfb,						init = &PTU_font_h[0],				ev = init 		
+ 			
+ 			--initialization of parameter varaible
+ 			VAR u8_char,						init = 255,							ev = init
+ 			
+ 			-- initialization of temporary structure
+ 			STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+ 			&										  Font => { pData => NIL }}, 	ev = init
+ 			
+ 		COMMENT INPUT/OUTPUT SECTION:
+ 		
+ 			-- None
+ 						
+		COMMENT OUTPUT SECTION:
+			
+			-- None
+ 					
+ 		--Stub Calls 
+ 		SIMUL
+ 			
+ 			-- This function is used to Get font indicated by e_tx_font_T	
+ 			STUB FontsGetFont(SYSFONT) NULL
+ 		
+ 			-- it initializes font variable PTU_font_width variable		
+ 			STUB FontsGetCharWidth(SYSFONT,0x41) 20
+ 		 		
+ 			-- it initializes font variable PTU_font_height variable	
+ 			STUB FontsGetFontHeight(SYSFONT) 4
+ 		    	    
+ 		END SIMUL	
+ 	
+ 	-- Calling TextInit to initialize font height and font width
+ 	#TextInit();
+ 	
+ 	-- Calling the Unit Under Test
+    #TextPrintChar(u8_char);
+    
+    END ELEMENT
+       
+END TEST -- TEST 9
+
+    
+TEST 10
+FAMILY nominal
+    
+    COMMENT Test Description
+	COMMENT	<TD>
+	COMMENT	[hdudispbtext-TextPrintChar-DB-LLR-002]
+	COMMENT The function  does the following when font is valid.
+	COMMENT	1.Does the following when u8_char ie equal to TEN.
+	COMMENT	a.Increment Character Cell Row by ONE.
+	COMMENT	b.Decrement Character Cell Row by ONE and call the function TextScroll when Character Cell Row is greater
+	COMMENT	than or equal to Height of the display in characters .
+	COMMENT c.Return from the function.
+	COMMENT Second equivalence Class is used to verify the greater than condition in LLR-002
+	COMMENT	Equivalence class 16,31
+	COMMENT </TD>
+                 
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--initialization of parameter varaible
+			VAR u8_char,						init = 10,							ev = init
+
+			-- initialization of temporary structure
+			STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+			
+		COMMENT INPUT/OUTPUT SECTION:
+
+			-- None
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		--Stub Calls    		
+		SIMUL
+
+			-- This function is used to Get font indicated by e_tx_font_T	
+			STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+
+			-- it initializes font variable PTU_font_width variable		
+			STUB FontsGetCharWidth(SYSFONT,0x41) 60
+			
+			-- it initializes font variable PTU_font_height variable	
+			STUB FontsGetFontHeight(SYSFONT) 10
+
+		END SIMUL	
+    	   
+    -- Calling TextInit to initialize font height and font width    	
+    #TextInit();
+    
+    -- Calling the Unit Under Test 
+    #TextPrintChar(u8_char);
+	
+	END ELEMENT
+     
+    -- second element block is used to make character cell row is greater than height of the display 
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--initialization of parameter varaible
+			VAR u8_char,						init = 10,							ev = init
+
+			-- initialization of temporary structure
+			STRUCTURE PTU_FontsGetFont, 		init={FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0,
+			&										  Font => { pData => NIL }}, 	ev = init
+			
+		COMMENT INPUT/OUTPUT SECTION:
+
+			-- None
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		--Stub Calls    		
+		SIMUL
+
+			-- This function is used to Get font indicated by e_tx_font_T	
+			STUB FontsGetFont(SYSFONT) &PTU_FontsGetFont
+
+			-- it initializes font variable PTU_font_width variable		
+			STUB FontsGetCharWidth(SYSFONT,0x41) 60
+			
+			-- it initializes font variable PTU_font_height variable	
+			STUB FontsGetFontHeight(SYSFONT) 21
+
+		END SIMUL	
+    	   
+    -- Calling TextInit to initialize font height and font width    	
+    #TextInit();
+    
+    -- Calling the Unit Under Test 
+    #TextPrintChar(u8_char);
+	
+	END ELEMENT       
+	
+END TEST -- TEST 10	
+       
+END SERVICE -- TextPrintChar
+
+
+
+
+
+
+
+
+
+

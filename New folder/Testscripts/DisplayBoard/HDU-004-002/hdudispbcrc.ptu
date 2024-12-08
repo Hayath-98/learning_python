@@ -1,0 +1,476 @@
+HEADER hdudispbcrc, Source Code Ver : 1.4 , TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name         : Priyanka N
+--
+-- File Name           : hdudispbcrc.ptu
+--
+-- Test Creation Date  : 15.09.2017 
+--
+-- Tested Functions    : VCRCInit
+--                       CRCRom
+--                  
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--  1.1                 15.09.2017      Priyanka N         Created the ptu file.
+--  1.2                 11.11.2017      Priyanka N         Updated as per #PR100171
+--  1.3                 14.11.2017      Priyanka N         Updated as per #PR100171
+--	1.4					30.07.2020		Harshitha R 	   Updated as per #PR100267
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibstm32f7xxhalcrcex.h"   /* Header files for CRC EX HAL module */
+##include "hdudispbcrc.h"               /* Contains functions prototypes of hdudispbcrc*/
+##include "hdulibbasictypes.h"          /* Basic data types.*/
+##include "hdudispbboot.h"              /* Contains functions prototypes of hdudispbfonts*/
+##include "hdulibstm32f7xxhalcrc.h"     /* Header files for CRC HAL module */
+##include "hdulibstm32f7xxhaldef.h"     /*Contains the HAL definition module */
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+    
+    -- None
+
+-- Declarations of the temporary variables of the tested file
+
+    -- Temporary variable created to verify pointer to the input data buffer 
+    # T_UINT32 PTU_pBuffer;
+    
+    -- Temporary variables created to verify static variable address 'Crc_handle' 
+    # T_CRC_HANDLE PTU_hcrc, PTU_HalCrcInit_hcrc;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hdudispbcrc.ptu
+    COMMENT
+    COMMENT Tested Functions : VCRCInit
+    COMMENT                    CRCRom
+    COMMENT            
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT Snippet of code is added in function "VCRCInit" to terminate the infinite loop
+    COMMENT
+    COMMENT T_UINT16 PTU_count =0; /*local variable declared for testing purpose*/
+    COMMENT while(ONE)
+    COMMENT {
+    COMMENT     .....
+    COMMENT    /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT    PTU_count++;
+    COMMENT    if(PTU_count == 4)
+    COMMENT    {
+    COMMENT         break;
+    COMMENT    }
+    COMMENT    else
+    COMMENT    {
+    COMMENT         /*nothing*/
+    COMMENT    }
+    COMMENT }   
+    COMMENT Hence while loop cannot be tested for 0 and 1 times and FALSE condition cannot be achieved.
+    COMMENT
+    COMMENT 2. Header file "hdulibstm32f746xx.h" is modified for testing purpose. The macro 'CRC' is modified for stubbing hardware address.
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /* #define CRC                 ((T_CRC *) CRC_BASE) */
+    COMMENT
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_CRC PTU_CRC;
+    COMMENT #define CRC                 ((T_CRC *)&PTU_CRC)
+    COMMENT
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function "CRCRom", calls the function "VCRCInit".
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function "CRCRom", call the function "HalCrcAccumulate".
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function "VCRCInit", return value of "HalCrcInit" is not equal to HAL_OK.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function "VCRCInit", return value of "HalCrcInit" is equal to HAL_OK.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In Function "CRCRom", crc value is equal to flash crc.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In Function "CRCRom", crc value is not equal to flash crc.
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function "VCRCInit", calls the function "HalCrcInit"
+    COMMENT
+    COMMENT Invalid class(es)
+    COMMENT Class 8
+    COMMENT In the function "CRCRom", invalid reference is passed to the function parameter ps_boot_file.
+    COMMENT </ECD>
+    
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hdudispbcrc_c
+
+        -- Parameter 'hcrc' is made as _no since,address of the static variable 'Crc_handle' passed as parameter.
+        -- And Parameter 'pBuffer' is made as _no since pointer to the input data buffer is passed as parameter
+        #T_UINT32 HalCrcAccumulate(T_CRC_HANDLE _no *hcrc, T_UINT32 _no *pBuffer, T_UINT32 _in BufferLength)
+        #{
+        # PTU_hcrc = *hcrc;
+        # PTU_pBuffer = *pBuffer ;  
+        #}
+
+        --Parameter 'hcrc' is made as _no since,address of the static variable 'Crc_handle' passed as parameter.
+        #T_HAL_STATUS HalCrcInit(T_CRC_HANDLE _no *hcrc)
+        #{
+        # PTU_HalCrcInit_hcrc = *hcrc;
+        #}
+
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+--Environment of the file hdudispbcrc.c
+
+--ENVIRONMENT   hdudispbcrc_c
+
+--None
+
+--END ENVIRONMENT hdudispbcrc_c
+
+--USE hdudispbcrc_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CRCRom
+--------------------------------------------------------------------------------
+SERVICE CRCRom
+SERVICE_TYPE extern
+
+    -- Holds the contents to calculate the CRC value
+    #T_UINT32 array[100];
+    
+    -- Structure to hold CRC calculation information
+    #T_SBOOTFILE ps_boot_file;
+    
+    -- Holds the return value of function "CRCRom"
+    #T_UINT8 ret_CRCRom;
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdudispbcrc-CRCRom-DB-LLR-001]
+    COMMENT Function "CRCRom" calls "VCRCInit" to initialize the CRC unit.
+    COMMENT Equivalence Class 1
+    COMMENT
+    COMMENT [hdudispbcrc-VCRCInit-DB-LLR-001]
+    COMMENT Function "VCRCInit" does the followings:
+    COMMENT 1. Instance of Crc handle is set to CRC.
+    COMMENT 2. DefaultPolynomialUse of Init of Crc handle is set to DEFAULT_POLYNOMIAL_ENABLE.
+    COMMENT 3. DefaultInitValueUse of Init of Crc handle is set to DEFAULT_INIT_VALUE_ENABLE. 
+    COMMENT 4. InputDataInversionMode of Init of Crc handle is set to CRC_INPUTDATA_INVERSION_NONE.
+    COMMENT 5. OutputDataInversionMode of Init of Crc handle is set to CRC_OUTPUTDATA_INVERSION_DISABLE.
+    COMMENT 6. InputDataFormat of Init of Crc handle is set to CRC_INPUTDATA_FORMAT_WORDS.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispbcrc-VCRCInit-DB-LLR-002]
+    COMMENT Function "VCRCInit" calls "HalCrcInit" with parameter reference to Crc handle and does nothing when return value of
+    COMMENT "HalCrcInit" is equal to HAL_OK
+    COMMENT Equivalence Class 4, 7
+    COMMENT 
+    COMMENT [hdudispbcrc-CRCRom-DB-LLR-002]
+    COMMENT Function "CRCRom" sets CRC value to return value of "HalCrcAccumulate" with reference 
+    COMMENT to Crc handle, u32LoadAddr of ps_boot_file and u32LoadSize of ps_boot_file divided by FOUR minus ONE as its parameter.
+    COMMENT Equivalence Class 2
+    COMMENT
+    COMMENT [hdudispbcrc-CRCRom-DB-LLR-003]
+    COMMENT Function "CRCRom" sets Flash CRC address to sum of u32LoadAddr of ps_boot_file(holds address of variable 'array')
+    COMMENT  and u32LoadSize(size is 16U) of ps_boot_file subtracted by FOUR.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispbcrc-CRCRom-DB-LLR-004]
+    COMMENT Function "CRCRom" sets result to ONE when CRC value is equal to content of Flash crc else set result to ZERO.
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdudispbcrc-CRCRom-DB-LLR-005]
+    COMMENT Function "CRCRom" returns the result as ONE.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT </TD>
+        
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+    
+            -- Array values are initialized before usage
+            ARRAY array,                    init={0=>10,1=>1,2=>3,3=>6,others=>5},       ev=init
+
+            -- Holds member values for structure 'ps_boot_file'
+            STRUCTURE ps_boot_file,                 init = { u32LoadAddr => (T_UINT32)&array[0], u32LoadSize =>16U},     
+            &                                               ev = init
+         
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+    
+            -- Holds return value of function "CRCRom"
+            VAR ret_CRCRom ,                init = 0 ,                  ev = 1
+        
+            -- Sets DefaultPolynomialUse of Init of Crc handle to DEFAULT_POLYNOMIAL_ENABLE.
+            VAR PTU_hcrc.Init.DefaultPolynomialUse ,    init=10 ,                   ev = DEFAULT_POLYNOMIAL_ENABLE
+        
+            -- Sets DefaultInitValueUse of Init of Crc handle to DEFAULT_INIT_VALUE_ENABLE.        
+            VAR PTU_hcrc.Init.DefaultInitValueUse ,     init=20 ,                   ev = DEFAULT_INIT_VALUE_ENABLE
+
+            -- Sets InputDataInversionMode of Init of Crc handle to CRC_INPUTDATA_INVERSION_NONE.
+            VAR PTU_hcrc.Init.InputDataInversionMode  ,     init = 30 ,                 ev = CRC_INPUTDATA_INVERSION_NONE
+
+            -- Sets OutputDataInversionMode of Init of Crc handle to CRC_OUTPUTDATA_INVERSION_DISABLE.
+            VAR PTU_hcrc.Init.OutputDataInversionMode ,     init =40 ,                  ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+        
+            -- Sets InputDataFormat of Init of Crc handle to CRC_INPUTDATA_FORMAT_WORDS.
+            VAR PTU_hcrc.InputDataFormat  ,         init = 50 ,                     ev = CRC_INPUTDATA_FORMAT_WORDS
+ 
+            -- Sets Instance of Crc handle to CRC.
+            VAR PTU_hcrc.Instance ,             init=0 ,                    ev= CRC
+
+            -- Sets DefaultPolynomialUse of Init of Crc handle to DEFAULT_POLYNOMIAL_ENABLE.
+            VAR PTU_HalCrcInit_hcrc.Init.DefaultPolynomialUse ,    init=10 ,                   ev = DEFAULT_POLYNOMIAL_ENABLE
+        
+            -- Sets DefaultInitValueUse of Init of Crc handle to DEFAULT_INIT_VALUE_ENABLE.        
+            VAR PTU_HalCrcInit_hcrc.Init.DefaultInitValueUse ,     init=20 ,                   ev = DEFAULT_INIT_VALUE_ENABLE
+
+            -- Sets InputDataInversionMode of Init of Crc handle to CRC_INPUTDATA_INVERSION_NONE.
+            VAR PTU_HalCrcInit_hcrc.Init.InputDataInversionMode  ,     init = 30 ,                 ev = CRC_INPUTDATA_INVERSION_NONE
+
+            -- Sets OutputDataInversionMode of Init of Crc handle to CRC_OUTPUTDATA_INVERSION_DISABLE.
+            VAR PTU_HalCrcInit_hcrc.Init.OutputDataInversionMode ,     init =40 ,                  ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+        
+            -- Sets InputDataFormat of Init of Crc handle to CRC_INPUTDATA_FORMAT_WORDS.
+            VAR PTU_HalCrcInit_hcrc.InputDataFormat  ,         init = 50 ,                     ev = CRC_INPUTDATA_FORMAT_WORDS
+ 
+            -- Sets Instance of Crc handle to CRC.
+            VAR PTU_HalCrcInit_hcrc.Instance ,             init=0 ,                    ev= CRC
+  
+            -- Variable 'PTU_hcrc' is initialized before usage
+            VAR PTU_pBuffer,     init = 2000 ,                     ev = 10
+            
+        -- Stub Calls :
+    
+        SIMUL
+
+            -- To get crc value
+            STUB HalCrcAccumulate(3)6
+    
+            -- Initializes the CRC and returns status of CRC handle
+            STUB HalCrcInit()HAL_OK
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_CRCRom = CRCRom(&ps_boot_file);
+    
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdudispbcrc-VCRCInit-DB-LLR-002]
+    COMMENT Function "VCRCInit" calls "HalCrcInit" with parameter reference to Crc handle and it eneters into while loop  
+    COMMENT when return value of "HalCrcInit" is not equal to HAL_OK. 
+    COMMENT Equivalence Class 3, 7
+    COMMENT
+    COMMENT [hdudispbcrc-CRCRom-DB-LLR-005]
+    COMMENT Function "CRCRom" returns the result as ZERO.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+    
+            -- Array values are initialized before usage
+            ARRAY array,                            init={0=>20,1=>1,2=>3,3=>6,others=>5},           ev=init
+
+            -- Holds member values for structure 'ps_boot_file'
+            STRUCTURE ps_boot_file,                     init = { u32LoadAddr => (T_UINT32)&array[0], u32LoadSize =>16U},     
+            &                                                   ev = init
+ 
+        COMMENT INPUT/OUTPUT SECTION:
+         
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+
+            -- Holds return value of function "CRCRom"
+            VAR ret_CRCRom ,                        init = 1 ,                          ev = 0
+        
+            -- Sets DefaultPolynomialUse of Init of Crc handle to DEFAULT_POLYNOMIAL_ENABLE.
+            VAR PTU_hcrc.Init.DefaultPolynomialUse ,    init=10 ,                   ev = DEFAULT_POLYNOMIAL_ENABLE
+       
+            -- Sets DefaultInitValueUse of Init of Crc handle to DEFAULT_INIT_VALUE_ENABLE.        
+            VAR PTU_hcrc.Init.DefaultInitValueUse ,     init=20 ,                   ev = DEFAULT_INIT_VALUE_ENABLE
+
+            -- Sets InputDataInversionMode of Init of Crc handle to CRC_INPUTDATA_INVERSION_NONE.
+            VAR PTU_hcrc.Init.InputDataInversionMode  ,     init = 30 ,                     ev = CRC_INPUTDATA_INVERSION_NONE
+
+            -- Sets OutputDataInversionMode of Init of Crc handle to CRC_OUTPUTDATA_INVERSION_DISABLE.
+            VAR PTU_hcrc.Init.OutputDataInversionMode ,     init =40 ,                  ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+        
+            -- Sets InputDataFormat of Init of Crc handle to CRC_INPUTDATA_FORMAT_WORDS.
+            VAR PTU_hcrc.InputDataFormat  ,         init = 50 ,                 ev = CRC_INPUTDATA_FORMAT_WORDS
+        
+            -- Sets Instance of Crc handle to CRC.
+            VAR PTU_hcrc.Instance ,                 init=0 ,                        ev= CRC
+
+            -- Sets DefaultPolynomialUse of Init of Crc handle to DEFAULT_POLYNOMIAL_ENABLE.
+            VAR PTU_HalCrcInit_hcrc.Init.DefaultPolynomialUse ,    init=10 ,                   ev = DEFAULT_POLYNOMIAL_ENABLE
+        
+            -- Sets DefaultInitValueUse of Init of Crc handle to DEFAULT_INIT_VALUE_ENABLE.        
+            VAR PTU_HalCrcInit_hcrc.Init.DefaultInitValueUse ,     init=20 ,                   ev = DEFAULT_INIT_VALUE_ENABLE
+
+            -- Sets InputDataInversionMode of Init of Crc handle to CRC_INPUTDATA_INVERSION_NONE.
+            VAR PTU_HalCrcInit_hcrc.Init.InputDataInversionMode  ,     init = 30 ,                 ev = CRC_INPUTDATA_INVERSION_NONE
+
+            -- Sets OutputDataInversionMode of Init of Crc handle to CRC_OUTPUTDATA_INVERSION_DISABLE.
+            VAR PTU_HalCrcInit_hcrc.Init.OutputDataInversionMode ,     init =40 ,                  ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+        
+            -- Sets InputDataFormat of Init of Crc handle to CRC_INPUTDATA_FORMAT_WORDS.
+            VAR PTU_HalCrcInit_hcrc.InputDataFormat  ,         init = 50 ,                     ev = CRC_INPUTDATA_FORMAT_WORDS
+ 
+            -- Sets Instance of Crc handle to CRC.
+            VAR PTU_HalCrcInit_hcrc.Instance ,             init=0 ,                    ev= CRC
+
+            -- Variable 'PTU_hcrc' is initialized before usage
+            VAR PTU_pBuffer,     init = 1000 ,                     ev = 20
+            
+        -- Stub Calls :
+    
+        SIMUL
+              
+            -- To get crc value
+            STUB HalCrcAccumulate(3)7
+
+            -- Initializes the CRC and returns status of CRC handle
+            STUB HalCrcInit()HAL_ERROR
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_CRCRom = CRCRom(&ps_boot_file);
+    
+    END ELEMENT
+
+END TEST -- TEST 2
+
+--TEST 3
+--
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT
+--    COMMENT [*hdudispbcrc-CRCRom-DB-LLR-002]
+--    COMMENT The function is tested by passing NULL Value to the formal pointer parameter ps_boot_file.  
+--    COMMENT Equivalence Class 8
+--    COMMENT </TD>
+--    
+--    ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--    
+--            -- None
+-- 
+--        COMMENT INPUT/OUTPUT SECTION:
+--         
+--            -- None
+--            
+--        COMMENT OUTPUT SECTION:
+--
+--            -- Holds return value of function "CRCRom"
+--            VAR ret_CRCRom ,                        init = 1 ,                          ev = 0
+--        
+--        -- Stub Calls :
+--    
+--        SIMUL
+--              
+--            -- None
+--
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test :
+--        #ret_CRCRom = CRCRom(NULL);
+--    
+--    END ELEMENT
+--
+--END TEST -- TEST 3
+
+END SERVICE -- CRCRom
+
+

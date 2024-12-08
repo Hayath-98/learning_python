@@ -1,0 +1,2397 @@
+HEADER hdudispfoffside,Source Code Ver : 1.7 ,TestScript Ver :1.5
+--------------------------------------------------------------------------------
+-- Author Name         : Hemalatha S
+--
+-- File Name           : hdudispfoffside.ptu
+--                       
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : OffsideTimerStop
+--                       OffsideProcessA825NSC
+--                       OffsideTimerReset
+--                       OffsideTimerStart
+--                       OffsideHeartBeat
+--                       OffsideCoolTimer
+--                       OffsideProcessA825NOC
+--                       OffsideSwitchScreen
+--						 OffsideCalibrationA825
+--						 OffsideCalibration
+--						 ProcessCaliA825
+--
+-- Version History     :
+--
+-- TEST-VERSION     TEST-DATE       TESTER NAME        MODIFICATIONS
+-- ------------     ---------       -----------        -------------
+--     1.1          30.10.2017      Hemalatha S       Created the ptu file.
+--     1.2          11.11.2017      Hemalatha S       Updated as per #PR100171
+--     1.3          14.11.2017      Hemalatha S       Updated as per #PR100171
+--	   1.4			27.07.2020		Harshitha R		  Updated as per #PR100267
+--	   1.5			12.04.2021		Vignesh Sunil		  Updated as per #PR100338
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/  
+
+##include "hdudispfa429.h"
+##include "hdudispfdauprofile.h"  
+##include "hdudispfglobalsettings.h" 
+##include "hdudispfoffside.h"  
+##include "hdudispfpara.h"   
+##include "hdudispfrtd.h" 
+##include "hdudispfarinc825.h" 
+##include "hdulibbasictypes.h"
+##include "hdudispfpdidata.h" 
+##include "hdudispfgrapp.h" 
+##include "hdudispfmenu.h"
+
+--Macros are made available in the PTU for testing purpose
+##define HEARTBEAT_PAYLOAD     0x12345678UL
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #T_COOLDOWN_STATE Cool_down_state; 
+    #T_BOOL Cool_down_select;
+    #T_EIU Active_eiu; 
+    #T_UINT8 Max_num_of_pages; 
+    #T_EPAGE_NUM Toggle_screen; 
+    #T_EPAGE_NUM Page_num;
+    #T_UINT8 Du_position; 
+	#T_UINT32 Offset_value_cal[NUMBEROFENGINES];
+	#T_UINT32 Gain_value_cal[NUMBEROFENGINES];
+	#T_UINT8 Calibration_label[CALILABELCOUNT];
+	#T_BOOL Offset_bool[NUMBEROFENGINES];
+	#T_BOOL Gain_bool[NUMBEROFENGINES];
+	#T_UINT8 engine_count;
+	#T_UINT8 parameter_label;
+    #T_FUEL_FLOW_STATE Fuel_flow_state;
+    #T_BOOL Fuel_flow_select;
+
+-- Declarations of temporary variables of the tested file
+
+    -- Variable to handle stub A8252Xmit
+    #T_A825_MESSAGE PTU_ps_xm;
+    
+    -- Variable to handle stub RTDGetParamDdw
+    #T_PARAM_READING PTU_ps_dest;
+    
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT  Author Name         : Hemalatha S
+    COMMENT 
+    COMMENT  File Name           : hdudispfoffside.ptu
+    COMMENT 
+    COMMENT  Tested Functions    : OffsideTimerStop
+    COMMENT                        OffsideProcessA825NSC
+    COMMENT                        OffsideTimerReset
+    COMMENT                        OffsideTimerStart
+    COMMENT                        OffsideHeartBeat
+    COMMENT                        OffsideCoolTimer
+    COMMENT                        OffsideProcessA825NOC    
+    COMMENT                        OffsideSwitchScreen
+	COMMENT						   OffsideCalibrationA825
+	COMMENT						   OffsideCalibration
+	COMMENT 					   ProcessCaliA825
+    COMMENT
+    COMMENT  Assumptions and Constraints
+    COMMENT  <AC>
+    COMMENT
+    COMMENT  Assumption(s):
+    COMMENT  None
+    COMMENT 
+    COMMENT  Constraint(s):
+    COMMENT 1) The testscript is split into 2 due to static dependency.
+    COMMENT
+    COMMENT  </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT  <ECD>
+    COMMENT 
+    COMMENT  Valid Class(es)
+    COMMENT  Class 1
+    COMMENT  In Function'OffsideTimerStop',stat of temp is equal to MISSING.
+    COMMENT
+    COMMENT  Class 2
+    COMMENT  In Function'OffsideTimerStop',stat of temp is not  equal to MISSING.
+    COMMENT
+    COMMENT  Class 3
+    COMMENT  In Function'OffsideTimerStop','INIT_NSC_REQUEST' is called.
+    COMMENT
+    COMMENT  Class 4
+    COMMENT  In Function'OffsideTimerStop','A8252Xmit' is called.
+    COMMENT
+    COMMENT  Class 5
+    COMMENT  In Function'OffsideTimerStop','RTDGetParamDdw' is called.
+    COMMENT
+    COMMENT  Class 6
+    COMMENT  In Function'OffsideProcessA825NSC',node_service_code is NSC_SWITCH_SCREEN.
+    COMMENT
+    COMMENT  Class 7
+    COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_TIMER_START.
+    COMMENT
+    COMMENT  Class 8
+    COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_TIMER_STOP.
+    COMMENT
+    COMMENT  Class 9
+    COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_TIMER_RESET.
+    COMMENT
+    COMMENT  Class 10
+    COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_SET_EIU.
+    COMMENT
+    COMMENT  Class 11
+    COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_COOL_TIMER_STATE.
+    COMMENT
+    COMMENT  Class 12
+    COMMENT  In Function'OffsideProcessA825NSC',node_service_code is other than NSC_SWITCH_SCREEN,NSC_TIMER_START,NSC_TIMER_STOP
+    COMMENT  NSC_TIMER_RESET,NSC_SET_EIU,NSC_COOL_TIMER_STATE.
+    COMMENT
+    COMMENT  Class 13
+    COMMENT  In Function'OffsideProcessA825NSC',Page_num is equal to EPAGE0.
+    COMMENT
+    COMMENT  Class 14
+    COMMENT  In Function'OffsideProcessA825NSC',Page_num is not equal to EPAGE0.
+    COMMENT
+    COMMENT  Class 15
+    COMMENT  In Function'OffsideProcessA825NSC','GrappSetPage' is called.
+    COMMENT
+    COMMENT  Class 16
+    COMMENT  In Function'OffsideProcessA825NSC','OffsideManualTimerStart' is called.
+    COMMENT
+    COMMENT  Class 17
+    COMMENT  In Function'OffsideProcessA825NSC','OffsideManualTimerStop' is called.
+    COMMENT 
+    COMMENT  Class 18
+    COMMENT  In Function'OffsideProcessA825NSC','OffsideManualTimerReset' is called.
+    COMMENT 
+    COMMENT  Class 19
+    COMMENT  In Function'OffsideTimerReset',stat of temp is equal to MISSING.
+    COMMENT
+    COMMENT  Class 20
+    COMMENT  In Function'OffsideTimerReset',stat of temp is not equal to MISSING.
+    COMMENT
+    COMMENT  Class 21
+    COMMENT  In Function'OffsideTimerReset','INIT_NSC_REQUEST' is called.
+    COMMENT
+    COMMENT  Class 22
+    COMMENT  In Function'OffsideTimerReset','A8252Xmit' is called.
+    COMMENT
+    COMMENT  Class 23
+    COMMENT  In Function'OffsideTimerReset','RTDGetParamDdw' is called.
+    COMMENT 
+    COMMENT  Class 24
+    COMMENT  In Function'OffsideTimerStart',stat of temp is equal to MISSING.
+    COMMENT
+    COMMENT  Class 25
+    COMMENT  In Function'OffsideTimerStart',stat of temp is not  equal to MISSING.
+    COMMENT
+    COMMENT  Class 26
+    COMMENT  In Function'OffsideTimerStart','INIT_NSC_REQUEST' is called.
+    COMMENT
+    COMMENT  Class 27
+    COMMENT  In Function'OffsideTimerStart','A8252Xmit' is called.
+    COMMENT
+    COMMENT  Class 28
+    COMMENT  In Function'OffsideTimerStart','RTDGetParamDdw' is called.
+    COMMENT 
+    COMMENT  Class 29
+    COMMENT  In Function'OffsideHeartBeat','INIT_NOC_MESSAGE' is called.
+    COMMENT
+    COMMENT  Class 30
+    COMMENT  In Function'OffsideHeartBeat','A8252Xmit' is called.
+    COMMENT
+    COMMENT  Class 31
+    COMMENT  In Function'OffsideProcessA825NOC',doc of BID of SID of s_mess is equal to HEART_BEAT.
+    COMMENT
+    COMMENT  Class 32
+    COMMENT  In Function'OffsideProcessA825NOC',doc of BID of SID of s_mess is not equal to HEART_BEAT.
+    COMMENT
+    COMMENT  Class 33
+    COMMENT  In Function'OffsideSwitchScreen','INIT_NSC_REQUEST' is called.
+    COMMENT
+    COMMENT  Class 34
+    COMMENT  In Function'OffsideSwitchScreen','A8252Xmit' is called.
+    COMMENT 
+    COMMENT  Class 35
+    COMMENT  In Function'OffsideCoolTimer',stat of temp is equal to MISSING.
+    COMMENT
+    COMMENT  Class 36
+    COMMENT  In Function'OffsideCoolTimer',stat of temp is not  equal to MISSING.
+    COMMENT
+    COMMENT  Class 37
+    COMMENT  In Function'OffsideCoolTimer','INIT_NSC_REQUEST' is called.
+    COMMENT
+    COMMENT  Class 38
+    COMMENT  In Function'OffsideCoolTimer','A8252Xmit' is called.
+    COMMENT
+    COMMENT  Class 39
+    COMMENT  In Function'OffsideCoolTimer','RTDGetParamDdw' is called.
+    COMMENT 
+    COMMENT  Class 40
+    COMMENT  In Function'OffsideProcessA825NSC', page_num is equal to EPAGE0
+    COMMENT
+    COMMENT  Class 41
+    COMMENT  In Function'OffsideProcessA825NSC', page_num is not equal to EPAGE0
+    COMMENT 
+    COMMENT  Class 44
+    COMMENT  In function 'OffsideProcessA825NSC',Cool_down_select is TRUE
+    COMMENT
+    COMMENT  Class 45
+    COMMENT  In function 'OffsideProcessA825NSC',Cool_down_select is FALSE
+    COMMENT
+    COMMENT  Class 46
+    COMMENT  The function "OffsideProcessA825NOC", call RTDSetParam
+	COMMENT
+	COMMENT	 Class 47
+	COMMENT	 In function 'ProcessCaliA825',LABEL_051 is equal to u8_label
+	COMMENT
+	COMMENT	 Class 48
+	COMMENT	 In function 'ProcessCaliA825',LABEL_052 is equal to u8_label
+	COMMENT
+	COMMENT	 Class 49
+	COMMENT	 In function 'ProcessCaliA825',LABEL_052 and LABEL_051 is not equal to u8_label
+	COMMENT
+	COMMENT	 Class 50
+	COMMENT	 In function 'ProcessCaliA825',calls OffsetInttoIntArray function with u8_sdi as its parameter.
+	COMMENT
+	COMMENT	 Class 51
+	COMMENT	 In function 'ProcessCaliA825',calls GainInttoIntArray function with u8_sdi as its parameter.
+	COMMENT
+	COMMENT	Class 52
+	COMMENT	In function 'OffsideCalibrationA825',LABEL_051 is equal to parameter_label
+	COMMENT	
+	COMMENT	Class 53
+	COMMENT	In function 'OffsideCalibrationA825',LABEL_052 is equal to parameter_label
+	COMMENT
+	COMMENT	Class 54
+	COMMENT	In function 'OffsideCalibrationA825',LABEL_051 and LABEL_052 is not equal to parameter_label
+	COMMENT
+	COMMENT	Class 55
+	COMMENT	In function 'OffsideCalibration',Offset_bool with corresponding loop index is TRUE
+	COMMENT
+	COMMENT	Class 56
+	COMMENT	In function 'OffsideCalibration',Offset_bool with corresponding loop index is FALSE
+	COMMENT
+	COMMENT	Class 57
+	COMMENT	In function 'OffsideCalibration',A8251Xmit function is called.
+	COMMENT
+	COMMENT	Class 58
+	COMMENT	In function 'OffsideCalibration',Gain_bool with corresponding loop index is TRUE
+	COMMENT
+	COMMENT	Class 59
+	COMMENT	In function 'OffsideCalibration',Gain_bool with corresponding loop index is FALSE
+	COMMENT
+	COMMENT	Class 60
+	COMMENT	In function 'OffsideProcessA825NSC',ProcessCaliA825 function is called with cali_word as its parameter.
+	COMMENT
+	COMMENT	Class 61
+    COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_CALIBRATION.
+	COMMENT
+	COMMENT  Class 62
+	COMMENT	In function 'OffsideCalibrationA825',A8252Xmit is called
+	COMMENT Invalid Class(es)   
+	COMMENT
+    COMMENT  Class 42
+    COMMENT  In function 'OffsideProcessA825NSC',Invalid Reference is passed to s_mess parameter.
+    COMMENT
+    COMMENT  Class 43
+    COMMENT  In function 'OffsideProcessA825NOC',Invalid Reference is passed to s_mess parameter. 
+	COMMENT
+	COMMENT	Class 63
+    COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_FUEL_FLOW_STATE.
+	COMMENT
+	COMMENT	Class 64
+    COMMENT  In Function'OffsideProcessA825NSC',Fuel_flow_select is  TRUE.
+	COMMENT
+	COMMENT	Class 65
+    COMMENT  In Function'OffsideProcessA825NSC',Fuel_flow_select is  FALSE.
+	COMMENT
+	COMMENT	Class 66
+    COMMENT  In Function'OffsideFuelFlow',heartbeat message status is MISSING
+	COMMENT
+	COMMENT	Class 67
+    COMMENT  In Function'OffsideFuelFlow',heartbeat message status other than MISSING 
+	COMMENT
+	COMMENT	Class 68
+    COMMENT  In Function'OffsideFuelFlow',Function RTDGetParamDdw is called
+	COMMENT
+	COMMENT	Class 69
+    COMMENT  In Function'OffsideFuelFlow',Function A8252Xmit is called	
+    COMMENT  
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hdudispfoffside_c
+    
+        #void RTDSetParam(T_UINT8  _in channel, T_UINT16  _in a429_tag, T_FLOAT  _in s32_data, T_RTD_STATUS  _in ertd_stat); 
+        
+        #void OffsideManualTimerReset(void); 
+        
+        #void OffsideManualTimerStop(T_UINT32  _in u32_stop_val); 
+        
+        #void OffsideManualTimerStart(T_UINT32  _in u32_start_val); 
+        
+        #void GrappSetPage(T_UINT8  _in u8MyPage); 
+        
+        #void RTDGetParamDdw(T_UINT16  _in a429_tag, T_PARAM_READING  _no *ps_dest)
+        #{
+        #   *ps_dest = PTU_ps_dest;
+        #}
+
+        --Parameter '*ps_xm' is made _no since Local variable address can not be expected.
+        #T_A825_XMITRESULT A8252Xmit(T_A825_MESSAGE  _no *ps_xm)
+        #{
+        #   PTU_ps_xm = *ps_xm;
+        #}
+        
+		
+		#T_A825_XMITRESULT A8251Xmit(T_A825_MESSAGE  _no *ps_xm)
+        #{
+        #   PTU_ps_xm = *ps_xm;
+        #}
+		
+		#void GainInttoIntArray(T_UINT8 _in u8_sdi);
+	
+		#void OffsetInttoIntArray(T_UINT8 _in u8_sdi);
+    END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL 
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfoffside.c
+
+--ENVIRONMENT ENV_hdudispfoffside_c
+
+    --None
+
+--END ENVIRONMENT -- ENV_hdudispfoffside_c
+
+--USE ENV_hdudispfoffside_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service OffsideProcessA825NSC
+--------------------------------------------------------------------------------
+SERVICE OffsideProcessA825NSC
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_A825_MESSAGE *s_mess,PTU_s_mess;
+    
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-001]
+    COMMENT The function "OffsideProcessA825NSC" does the following when node service code is NSC_SWITCH_SCREEN 
+    COMMENT  and page number is other than EPAGE0 
+    COMMENT -   Set Toggle_screen to sum of COND1 and one where
+    COMMENT COND1 : page number modulus Max_num_of_pages minus one when Page_num is equal to EPAGE0 .
+    COMMENT  Equivalence Class 6,13,41
+    COMMENT </TD> 
+    
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_SWITCH_SCREEN,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2..7],     init =0x0A,                 ev = init
+
+        VAR Page_num,                       init =EPAGE0,               ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+        
+	SIMUL 
+
+		--None
+
+	END SIMUL 
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 1
+    
+TEST 2
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-001]
+    COMMENT  The function "OffsideProcessA825NSC", does the following when node service code 
+    COMMENT  is NSC_SWITCH_SCREEN and page number is other than EPAGE0 
+    COMMENT  Update the new page number by calling the function GrappSetPage with parameters as 
+    COMMENT  addition of one and result of page of sender DU  mod with Max_num_of_pages minus one
+    COMMENT  when Page_num is not equal to EPAGE0.
+    COMMENT  Equivalence Class 6,14,15,41
+    COMMENT </TD> 
+
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_SWITCH_SCREEN,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2..7],     init =0x0A,                 ev = init
+
+        VAR Page_num,                       init =EPAGE1,               ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+        
+    SIMUL  
+
+     STUB GrappSetPage(1)
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-003]
+    COMMENT The function "OffsideProcessA825NSC", calls OffsideManualTimerStart with initial timer 
+    COMMENT value extracted from ARINC payload content at index two, when the node service code 
+    COMMENT is NSC_TIMER_START.
+    COMMENT  Equivalence Class 7,16
+    COMMENT </TD> 
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,      ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_TIMER_START,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0xF,              ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,             ev = init
+
+        VAR Page_num,                       init =EPAGE1,           ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+        
+    SIMUL  
+
+    	STUB OffsideManualTimerStart(0xA0A0A0F)
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-004]
+    COMMENT  The function "OffsideProcessA825NSC", calls OffsideManualTimerStop 
+    COMMENT  with stop timer value extracted from ARINC payload content at index two, when the node 
+    COMMENT  service code is NSC_TIMER_STOP.
+    COMMENT  Equivalence Class 8,17
+    COMMENT </TD> 
+
+    ELEMENT 
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,      ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_TIMER_STOP,    ev = init
+    
+        VAR PTU_s_mess.u8PayLoad[2],        init =0xF,              ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,             ev = init
+
+        VAR Page_num,                       init =EPAGE1,           ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+        
+	SIMUL  
+
+	 	STUB OffsideManualTimerStop(0xA0A0A0F)
+
+	END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-005]
+    COMMENT  The function "OffsideProcessA825NSC", calls OffsideManualTimerReset 
+    COMMENT when the node service code is NSC_TIMER_RESET.
+    COMMENT  Equivalence Class 9,18
+    COMMENT </TD> 
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,      ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_TIMER_RESET,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0xF,              ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,             ev = init
+
+        VAR Page_num,                       init =EPAGE1,           ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+        
+    SIMUL  
+
+    	STUB OffsideManualTimerReset()
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-006]
+    COMMENT  The function "OffsideProcessA825NSC", sets Active_eiu as current EIU read from 
+    COMMENT ARINC payload content at index two, when the node service code is NSC_SET_EIU.
+    COMMENT  Equivalence Class 10
+    COMMENT </TD> 
+
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,  ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_SET_EIU,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0xF,          ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,         ev = init
+
+        VAR Page_num,                       init =EPAGE1,       ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        VAR Active_eiu,                     init =EIU1,            ev = 0xF
+    
+    SIMUL  
+
+     	--No Stub Calls
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-007]
+    COMMENT  The function "OffsideProcessA825NSC", does the following when the node service code is NSC_COOL_TIMER_STATE.
+    COMMENT   - Set Cool_down_select to content read from ARINC payload content at index two.
+    COMMENT   - Set Cool_down_state to  ECOOLDOWN_ON when Cool_down_select is TRUE.
+    COMMENT  Equivalence Class 11,44
+    COMMENT </TD> 
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          	ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_COOL_TIMER_STATE,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0x1,          			ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,         			ev = init
+
+        VAR Page_num,                       init =EPAGE1,           		ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        VAR Cool_down_select,               init = FALSE,            	ev = TRUE
+        
+        VAR Cool_down_state,                init = ECOOLDOWN_OFF,       ev = ECOOLDOWN_ON
+        
+    SIMUL  
+
+        --No Stub Calls
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-001]
+    COMMENT  The function "OffsideProcessA825NSC", does the nothing when the node service code is other than
+    COMMENT  NSC_SWITCH_SCREEN,NSC_TIMER_START,NSC_TIMER_STOP
+    COMMENT  NSC_TIMER_RESET,NSC_SET_EIU,NSC_COOL_TIMER_STATE.
+    COMMENT  Equivalence Class 12
+    COMMENT </TD> 
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_CHIP_BURN,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0xF,          ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,         ev = init
+
+        VAR Page_num,                       init =EPAGE1,           ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+    
+    SIMUL  
+
+    	--No Stub Calls
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-001]
+    COMMENT  The function "OffsideProcessA825NSC", does the nothing when node service code is NSC_SWITCH_SCREEN and page number is equal to EPAGE0 
+    COMMENT  Equivalence Class 6,13,40
+    COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_SWITCH_SCREEN,    ev = init
+        
+        VAR PTU_s_mess.u8PayLoad[2],        init =EPAGE0,           ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,         ev = init
+
+        VAR Page_num,                       init =EPAGE0,           ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+
+    SIMUL  
+
+    	--No Stub Calls
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 9
+
+--TEST 10
+--FAMILY robustness
+--  
+--  COMMENT Test Description 
+--  COMMENT <TD>  
+--  COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-001]
+--  COMMENT The address of the parameter 's_mess' is NULL.
+--  COMMENT Equivalence Class 42
+--    COMMENT </TD> 
+--
+--  ELEMENT
+--
+--  COMMENT INPUT SECTION:
+--
+--      --None
+--
+--  COMMENT OUTPUT SECTION:
+--
+--      --None
+--
+--  COMMENT INPUT/OUTPUT SECTION:
+--
+--      --None
+--      
+--  SIMUL  
+--  
+--  	--No Stub Calls
+--   
+--  END SIMUL
+--
+-- --Calling the Unit Under Test :  
+--	#OffsideProcessA825NSC(NULL);
+--  END ELEMENT
+--
+--END TEST -- TEST 10
+
+TEST 11
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-007]
+    COMMENT  The function "OffsideProcessA825NSC", does the following when the node service code is NSC_COOL_TIMER_STATE.
+    COMMENT   - Set Cool_down_select to content read from ARINC payload content at index two.
+    COMMENT   - Does nothing when Cool_down_select is FALSE.
+    COMMENT  Equivalence Class 11,45
+    COMMENT </TD> 
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_COOL_TIMER_STATE,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0x0,          ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,         ev = init
+
+        VAR Page_num,                       init =EPAGE1,           ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        VAR Cool_down_select,               init =TRUE,            ev = FALSE
+        
+    SIMUL  
+
+        --No Stub Calls
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 11
+
+TEST 12
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-008]
+    COMMENT  The function "OffsideProcessA825NSC", does the following when the node service code is NSC_CALIBRATION.
+    COMMENT   - Call "ProcessCaliA825" function with cali_word as its parameter.
+    COMMENT  Equivalence Class 61,60
+    COMMENT </TD> 
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_CALIBRATION,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0x29,          ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,         ev = init
+
+        VAR Page_num,                       init =EPAGE1,           ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        ARRAY Offset_value_cal,				init = {others=>0},			ev = {0=>0,1=>0,2=>33410,3=>0}
+
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+	        --None
+
+        
+    SIMUL  
+
+		STUB OffsetInttoIntArray(2)
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 12
+
+TEST 13
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-008]
+    COMMENT  The function "OffsideProcessA825NSC", does the following when the node service code is NSC_CALIBRATION.
+    COMMENT   - Set cali_word to content read from ARINC payload content at index two.
+    COMMENT   - Calls ProcessCaliA825 function with cali_word as its parameter.
+    COMMENT  Equivalence Class :60,61
+	COMMENT [hdudispfoffside-ProcessCaliA825-DB-LLR-001]
+	COMMENT  In function "ProcessCaliA825",the value of u8_label is equal to "LABEL_052",then Gain_value_cal is calculated,
+	COMMENT  then GainInttoIntArray stub is called with u8_label as its parameter.
+	COMMENT   Equivalence CLass:48,51
+    COMMENT </TD> 
+																		
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_CALIBRATION,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0x2A,          ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,         ev = init
+
+
+    COMMENT OUTPUT SECTION:
+
+        ARRAY Gain_value_cal,				init = {others=>0},			ev = {0=>0,1=>0,2=>33410,3=>0}
+		
+    COMMENT INPUT/OUTPUT SECTION:
+
+        
+    SIMUL  
+
+      STUB GainInttoIntArray(2)
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 13
+
+TEST 14
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-008]
+    COMMENT  The function "OffsideProcessA825NSC", does the following when the node service code is NSC_CALIBRATION.
+    COMMENT   - Set cali_word to content read from ARINC payload content at index two.
+    COMMENT   - Calls "ProcessCaliA825" function with cali_word as its parameter.
+	COMMENT		Equivalence Class:60,61
+	COMMENT [hdudispfoffside-ProcessCaliA825-DB-LLR-001]
+    COMMENT   Does nothing when u8_label value is not equal to LABEL_051 and LABEL_052.
+    COMMENT  Equivalence Class:49
+    COMMENT </TD> 
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_CALIBRATION,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0x2F,          ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,         ev = init
+
+
+    COMMENT OUTPUT SECTION:
+
+			--none
+    COMMENT INPUT/OUTPUT SECTION:
+
+        
+    SIMUL  
+
+		--none
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 14
+
+TEST 15
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-009]
+    COMMENT  The function perform the following when the node service code is NSC_FUEL_FLOW_STATE
+    COMMENT  1. set the fuel flow select to content read from ARINC payload content at index two
+    COMMENT  2. set the fuel flow select to FUEL_FLOW_ON when fuel flow select is TRUE
+    COMMENT  Equivalence Class: 63,64 
+    COMMENT  
+    COMMENT </TD> 
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          	ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_FUEL_FLOW_STATE,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0x1,          			ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,         			ev = init
+
+        VAR Page_num,                       init =EPAGE1,           		ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        VAR Fuel_flow_select,               init = FALSE,            	ev = TRUE
+        
+        VAR Fuel_flow_state,                init = FUEL_FLOW_OFF,       ev = FUEL_FLOW_ON
+        
+    SIMUL  
+
+        --No Stub Calls
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 15
+
+TEST 16
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideProcessA825NSC-DB-LLR-009]
+    COMMENT  The function perform the following when the node service code is NSC_FUEL_FLOW_STATE
+    COMMENT  1. set the fuel flow select to content read from ARINC payload content at index two
+    COMMENT  Equivalence Class: 63,65 
+    COMMENT 
+    COMMENT </TD> 
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess,                         init =&PTU_s_mess,          ev =init
+
+        VAR *((T_UINT16 *)PTU_s_mess.u8PayLoad),        init =NSC_FUEL_FLOW_STATE,    ev = init
+
+        VAR PTU_s_mess.u8PayLoad[2],        init =0x0,          ev = init
+
+        VAR PTU_s_mess.u8PayLoad[3..7],     init =0x0A,         ev = init
+
+        VAR Page_num,                       init =EPAGE1,           ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        VAR Fuel_flow_select,               init =TRUE,            ev = FALSE
+        
+    SIMUL  
+
+        --No Stub Calls
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NSC(s_mess);
+    END ELEMENT
+
+END TEST -- TEST 16
+
+END SERVICE -- OffsideProcessA825NSC
+--------------------------------------------------------------------------------
+-- Declaration of the service OffsideTimerReset
+--------------------------------------------------------------------------------
+SERVICE OffsideTimerReset
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+        
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfoffside-OffsideTimerReset-DB-LLR-003]
+    COMMENT The function "OffsideTimerReset", calls RTDGetParamDdw with zero and reference to T_PARAM_READING
+    COMMENT variable as parameters to get the status of heartbeat message.
+    COMMENT Equivalence Class 23
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideTimerReset-DB-LLR-001]
+    COMMENT The function "OffsideTimerReset", calls the macro INIT_NSC_REQUEST with NSC request as 
+    COMMENT its parameter and initialize NSC request for payload NSC_TIMER_RESET with 
+    COMMENT size TWO server identifier EISDSPLY_SID and  rci value as last two bits of 
+    COMMENT Du_position
+    COMMENT Equivalence Class 21,20
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideTimerReset-DB-LLR-002]
+    COMMENT The function "OffsideTimerReset", calls A8252Xmit to transmit initialized NSC request
+    COMMENT for payload NSC_TIMER_RESET when heartbeat message status is not MISSING.
+    COMMENT Equivalence Class 22,20
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Variables of function RTDGetParamDdw
+            VAR PTU_ps_dest.stat,               init = NCD,     ev = init
+
+            VAR PTU_ps_xm.u8PayLoad[2],         init = 0,       ev = init
+        
+            --Holds value of Du_position for ARINC 825 Message
+            VAR Du_position,                    init = 0,       ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds value for ARINC 825 Message
+            -- Variables of function A8252Xmit
+            VAR PTU_ps_xm.sID.PID.lcl ,         init = 0,       ev = 1
+            
+            VAR PTU_ps_xm.sID.PID.sid ,         init = 0,       ev = EISDSPLY_SID
+
+            VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = TWO
+
+            VAR PTU_ps_xm.sID.PID.rci,          init = 0,       ev = Du_position
+
+            VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = NSC_TIMER_RESET
+
+            VAR PTU_ps_xm.u8PayLoad[1],         init = 0,       ev = 192
+
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        SIMUL
+
+            --To start the offside manual timer
+            STUB A8252Xmit()A825_XM_OK
+            STUB RTDGetParamDdw(0)
+
+        END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideTimerReset();
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+        
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfoffside-OffsideTimerReset-DB-LLR-003]
+    COMMENT The function "OffsideTimerReset", calls RTDGetParamDdw with zero and reference to T_PARAM_READING
+    COMMENT variable as parameters to get the status of heartbeat message.
+    COMMENT Equivalence Class 23
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideTimerReset-DB-LLR-001]
+    COMMENT The function "OffsideTimerReset",does nothing when heartbeat message status is MISSING.
+    COMMENT Equivalence Class 19
+    COMMENT </TD>
+
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+            
+            -- Variables of function RTDGetParamDdw
+            VAR PTU_ps_dest.stat,       init = MISSING,     ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        SIMUL
+
+            --To start the offside manual timer
+        STUB RTDGetParamDdw(0)
+
+        END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideTimerReset();
+    END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- OffsideTimerReset
+--------------------------------------------------------------------------------
+-- Declaration of the service OffsideTimerStart
+--------------------------------------------------------------------------------
+SERVICE OffsideTimerStart
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 U32_initial_value;
+
+TEST 1
+FAMILY nominal
+        
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfoffside-OffsideTimerStart-DB-LLR-003]
+    COMMENT The function "OffsideTimerStart" calls RTDGetParamDdw with zero and reference to T_PARAM_READING 
+    COMMENT variable as parameters to get the status of heartbeat message.
+    COMMENT Equivalence Class 28
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideTimerStart-DB-LLR-001]
+    COMMENT The function "OffsideTimerStart",  calls the macro INIT_NSC_REQUEST with NSC request
+    COMMENT as its parameter and initialize NSC request for payload NSC_TIMER_START
+    COMMENT with size SIX, server identifier EISDSPLY_SID,rci value as last two bits 
+    COMMENT of Du_position and payload content at index two as initial timer value
+    COMMENT when heartbeat message status is not MISSING.
+    COMMENT Equivalence Class 26,25
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideTimerStart-DB-LLR-002]
+    COMMENT The function "OffsideTimerStart", calls A8252Xmit to transmit initialized NSC request for 
+    COMMENT payload NSC_TIMER_START when heartbeat message status is not MISSING.
+    COMMENT Equivalence Class 25,27
+    COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR U32_initial_value,      init = 5,       ev = init
+
+        VAR Du_position,            init = 0,       ev = init
+
+        -- Variables of function RTDGetParamDdw
+        VAR PTU_ps_dest.stat,       init = NCD,     ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        -- Holds value for ARINC 825 Message
+        -- Variables of function A8252Xmit
+        VAR PTU_ps_xm.sID.PID.sid ,         init = 0,       ev = EISDSPLY_SID
+
+        VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = SIX
+
+        VAR PTU_ps_xm.sID.BID.rci,          init = 0,       ev = Du_position
+
+        VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = NSC_TIMER_START
+
+        VAR PTU_ps_xm.u8PayLoad[1],         init = 0,       ev = 192
+
+        VAR PTU_ps_xm.u8PayLoad[2],         init = 0,       ev = 5
+
+    SIMUL
+
+        STUB A8252Xmit()A825_XM_OK
+        STUB RTDGetParamDdw(0)
+
+    END SIMUL
+
+	--Calling the Unit Under Test :
+    #OffsideTimerStart(U32_initial_value);
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+        
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfoffside-OffsideTimerStart-DB-LLR-003]
+    COMMENT The function "OffsideTimerStart" calls RTDGetParamDdw with zero and reference to T_PARAM_READING 
+    COMMENT variable as parameters to get the status of heartbeat message.
+    COMMENT Equivalence Class 28
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideTimerStart-DB-LLR-001]
+    COMMENT The function "OffsideTimerStart",  does nothing
+    COMMENT when heartbeat message status is  MISSING.
+    COMMENT Equivalence Class 24
+    COMMENT </TD>
+
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR U32_initial_value,      init = 5,       ev = init
+
+        -- Variables of function RTDGetParamDdw
+        VAR PTU_ps_dest.stat,       init = MISSING, ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+
+    SIMUL
+
+        STUB RTDGetParamDdw(0)
+
+    END SIMUL
+
+	--Calling the Unit Under Test :
+    #OffsideTimerStart(U32_initial_value);
+    END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- OffsideTimerStart
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OffsideHeartBeat
+--------------------------------------------------------------------------------
+SERVICE OffsideHeartBeat
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfoffside-OffsideHeartBeat-DB-LLR-001] 
+    COMMENT The function "OffsideHeartBeat", calls the macro INIT_NOC_MESSAGE with NOC message as its parameter and
+    COMMENT initialize NOC message for payload HEARTBEAT_PAYLOAD with size FOUR,Data Object Code for 
+    COMMENT payload as HEART_BEAT and rci value as Du_position.
+    COMMENT Equivalence Class 29,
+    COMMENT 
+    COMMENT [hdudispfoffside-OffsideHeartBeat-DB-LLR-002] 
+    COMMENT The function "OffsideHeartBeat",call's A8252Xmit to transmit initialized NOC message for payload HEARTBEAT_PAYLOAD.
+    COMMENT Equivalence Class 30
+    COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+                
+        --Holds value of Du_position for ARINC 825 Message
+        VAR Du_position,                    init = 0,       ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        -- Holds value for ARINC 825 Message
+        -- Variables of function A8252Xmit
+        VAR PTU_ps_xm.sID.BID.doc ,         init = 0,       ev = HEART_BEAT
+
+        VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = FOUR
+
+        VAR PTU_ps_xm.sID.BID.rci,          init = 0,       ev = Du_position
+
+        VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = HEARTBEAT_PAYLOAD
+
+    SIMUL
+
+        STUB A8252Xmit()A825_XM_OK
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideHeartBeat();
+    END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- OffsideHeartBeat
+----------------------------------------------------------------------------------
+-- Declaration of the service OffsideProcessA825NOC
+--------------------------------------------------------------------------------
+SERVICE OffsideProcessA825NOC
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_A825_MESSAGE s_mess;
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfoffside-OffsideProcessA825NOC-DB-LLR-001]
+    COMMENT The function "OffsideProcessA825NOC", call RTDSetParam with parameters channel as zero, 
+    COMMENT A429 tag as zero, address of u8PayLoad of s_mess and RTD_STAT_FAIL when the
+    COMMENT Data Object Code of the input ARINC message(i.e, doc of BID of sID of 
+    COMMENT s_mess ). is HEART_BEAT
+    COMMENT Equivalence Class 31,46
+    COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess.sID.BID.doc,         init = HEART_BEAT,  ev = init
+        
+        VAR s_mess.u8PayLoad[0..3],     init = 0x10,            ev = init
+
+    COMMENT INPUT/OUTPUT SECTION:
+    
+        --None
+    
+    COMMENT OUTPUT SECTION:
+    
+        --None
+        
+    SIMUL
+    
+        --To start the offside manual timer
+        STUB RTDSetParam(0,0,269488144.0,RTD_STAT_FAIL)
+    
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NOC(&s_mess);
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfoffside-OffsideProcessA825NOC-DB-LLR-001]
+    COMMENT The function does nothing when the
+    COMMENT Data Object Code of the input ARINC message(i.e, doc of BID of sID of 
+    COMMENT s_mess ). is other than HEART_BEAT
+    COMMENT Equivalence Class 32
+    COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR s_mess.sID.BID.doc,         init = ACQUIRE,         ev = init
+
+    COMMENT INPUT/OUTPUT SECTION:
+    
+        --None
+    
+    COMMENT OUTPUT SECTION:
+    
+        --None
+        
+    SIMUL
+
+        --No Stubs
+    
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideProcessA825NOC(&s_mess);
+    END ELEMENT
+
+END TEST -- TEST 2
+
+--TEST 3
+--FAMILY robustness
+--
+--  COMMENT Test Description 
+--  COMMENT <TD>
+--  COMMENT [hdudispfoffside-OffsideProcessA825NOC-DB-LLR-001]
+--  COMMENT The address of the parameter 's_mess' is NULL.
+--  COMMENT Equivalence Class 43
+--  COMMENT </TD>
+--
+--  ELEMENT
+--
+--  COMMENT INPUT SECTION:
+--
+--      --None
+--
+--  COMMENT INPUT/OUTPUT SECTION:
+--  
+--      --None
+--  
+--  COMMENT OUTPUT SECTION:
+--  
+--      --None
+--      
+--  SIMUL
+--
+--      --No Stubs
+--  
+--  END SIMUL
+--
+--  --Calling the Unit Under Test :
+--  #OffsideProcessA825NOC(&s_mess);
+--  END ELEMENT
+
+--END TEST -- TEST 3
+
+END SERVICE -- OffsideProcessA825NOC
+--------------------------------------------------------------------------------
+-- Declaration of the service OffsideSwitchScreen
+--------------------------------------------------------------------------------
+SERVICE OffsideSwitchScreen
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT8 u8_page_num;
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfoffside-OffsideSwitchScreen-DB-LLR-001]
+    COMMENT The function "OffsideSwitchScreen", call the macro INIT_NSC_REQUEST with NSC request as 
+    COMMENT its parameter and initialize NSC request for payload NSC_SWITCH_SCREEN with
+    COMMENT size THREE, server identifier EISDSPLY_SID , rci value as last two bits of Du_position and 
+    COMMENT payload content at index two with u8_page_num.
+    COMMENT Equivalence Class 33
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideSwitchScreen-DB-LLR-002]
+    COMMENT The function "OffsideSwitchScreen", calls A8252Xmit to transmit 
+    COMMENT initialized NSC request for payload NSC_SWITCH_SCREEN.
+    COMMENT Equivalence Class 34
+    COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR u8_page_num,                    init = 4,       ev = init
+        --Holds value of Du_position for ARINC 825 Message
+        VAR Du_position,                    init = 0,       ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        -- Holds value for ARINC 825 Message
+        -- Variables of function A8252Xmit
+        VAR PTU_ps_xm.sID.PID.sid ,         init = 0,       ev = EISDSPLY_SID
+        
+        VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = THREE
+        
+        VAR PTU_ps_xm.sID.PID.rci,          init = 0,       ev = Du_position
+        
+        VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = 10
+        
+        VAR PTU_ps_xm.u8PayLoad[1],         init = 0,       ev = 192
+        
+        VAR PTU_ps_xm.u8PayLoad[2],         init = 0,       ev = 4
+        
+    --Stub Calls :        
+    SIMUL
+
+        STUB A8252Xmit()A825_XM_OK
+
+    END SIMUL
+
+    -- Calling the Unit Under Test 
+    #OffsideSwitchScreen(u8_page_num);
+    
+    END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- OffsideSwitchScreen
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OffsideTimerStop
+--------------------------------------------------------------------------------
+SERVICE OffsideTimerStop
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT32 u32_stop_value;
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfoffside-OffsideTimerStop-DB-LLR-003]
+    COMMENT The function "OffsideTimerStop", calls RTDGetParamDdw with zero and reference to T_PARAM_READING 
+    COMMENT variable as parameters to get the status of heartbeat message.
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispfoffside-OffsideTimerStop-DB-LLR-001]
+    COMMENT The function "OffsideTimerStop",  calls the macro INIT_NSC_REQUEST with NSC request as its parameter 
+    COMMENT and initialize NSC request for payload NSC_TIMER_STOP with size SIX, server identifier 
+    COMMENT EISDSPLY_SID , rci value as Du_position and payload content at index two with u32_stop_value
+    COMMENT when heartbeat message status is not MISSING.
+    COMMENT Equivalence Class 2,3
+    COMMENT 
+    COMMENT [hdudispfoffside-OffsideTimerStop-DB-LLR-002]
+    COMMENT The function "OffsideTimerStop", calls A8252Xmit to transmit initialized NSC request 
+    COMMENT for payload NSC_TIMER_STOP when heartbeat message status is not MISSING.
+    COMMENT Equivalence Class 2,4
+    COMMENT </TD>
+    
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR u32_stop_value,                 init = 4,       ev = init
+        
+        --Holds value of Du_position for ARINC 825 Message
+        VAR Du_position,                    init = 0,       ev = init
+
+    COMMENT OUTPUT SECTION:
+        
+        -- Variables of function RTDGetParamDdw
+        VAR PTU_ps_dest.stat,               init = NCD,     ev = init
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        -- Holds value for ARINC 825 Message
+        -- Variables of function A8252Xmit
+        VAR PTU_ps_xm.sID.PID.sid ,         init = 0,       ev = EISDSPLY_SID
+        
+        VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = SIX
+        
+        VAR PTU_ps_xm.sID.PID.rci,          init = 0,       ev = Du_position
+        
+        VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = NSC_TIMER_STOP
+
+        VAR PTU_ps_xm.u8PayLoad[1],         init = 0,       ev = 192
+        
+        VAR PTU_ps_xm.u8PayLoad[2],         init = 0,       ev = 4
+        
+
+    --Stub Calls :        
+    SIMUL
+
+        STUB A8252Xmit()A825_XM_OK
+        STUB RTDGetParamDdw(0)
+
+    END SIMUL
+    
+    --Calling the Unit Under Test :
+    #OffsideTimerStop(u32_stop_value);
+    END ELEMENT
+
+END TEST -- TEST 1
+
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD> 
+    COMMENT [hdudispfoffside-OffsideTimerStop-DB-LLR-003]
+    COMMENT The function "OffsideTimerStop", calls RTDGetParamDdw with zero and reference to T_PARAM_READING 
+    COMMENT variable as parameters to get the status of heartbeat message.
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispfoffside-OffsideTimerStop-DB-LLR-001]
+    COMMENT The function "OffsideTimerStop", does nothing
+    COMMENT when heartbeat message status is MISSING.
+    COMMENT Equivalence Class 1
+    COMMENT </TD>
+
+ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR u32_stop_value,         init = 0,           ev = init
+        
+        -- Variables of function RTDGetParamDdw
+        VAR PTU_ps_dest.stat,       init = MISSING,     ev = init
+
+    COMMENT OUTPUT SECTION:
+    
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+        
+    --Stub Calls :        
+    SIMUL
+
+        STUB RTDGetParamDdw(0)
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #OffsideTimerStop(u32_stop_value);
+    END ELEMENT
+
+END TEST -- TEST 2
+END SERVICE -- OffsideTimerStop
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OffsideCoolTimer
+--------------------------------------------------------------------------------
+SERVICE OffsideCoolTimer
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT8 cool_timer_state;
+
+TEST 1
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideCoolTimer-DB-LLR-003]
+    COMMENT The function 'OffsideCoolTimer' call RTDGetParamDdw with zero and reference to T_PARAM_READING 
+    COMMENT variable as parameters to get the status of heartbeat message.
+    COMMENT Equivalence Class 39
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideCoolTimer-DB-LLR-001]
+    COMMENT The function 'OffsideCoolTimer' does the following when heartbeat message status is not MISSING.
+    COMMENT  1) Call the macro INIT_NSC_REQUEST with transmit message as parameter.
+    COMMENT  2) Set sid of PID of sID of transmit message to EISDSPLY_SID.
+    COMMENT  3) Set u8PaySize of transmit message to THREE.
+    COMMENT  4) Set rci of PID of sID of transmit message to last two bits of Du_position
+    COMMENT  5) Set first two payloads to NSC_COOL_TIMER_STATE
+    COMMENT  6) Set third payload to cool_timer_state.
+    COMMENT Equivalence Class 36,37
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideCoolTimer-DB-LLR-002]
+    COMMENT The function 'OffsideCoolTimer', calls A8252Xmit with transmit message as parameter when heartbeat 
+    COMMENT message status is not MISSING. 
+    COMMENT Equivalence Class 38, 36
+    COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR cool_timer_state,       init = 10,      ev = init
+
+        -- Variables of function RTDGetParamDdw
+        VAR PTU_ps_dest.stat,       init = NCD,     ev = init
+
+        --Holds value of Du_position for ARINC 825 Message
+        VAR Du_position,            init = 0,       ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        -- Holds value for ARINC 825 Message
+        -- Variables of function A8252Xmit
+        VAR PTU_ps_xm.sID.PID.sid ,         init = 0,       ev = EISDSPLY_SID
+
+        VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = THREE
+
+        VAR PTU_ps_xm.sID.PID.rci,          init = 0,       ev = Du_position
+
+        VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = NSC_COOL_TIMER_STATE
+
+        VAR PTU_ps_xm.u8PayLoad[2],         init = 0,       ev = 10
+
+     SIMUL 
+
+         STUB A8252Xmit()A825_XM_OK
+         STUB RTDGetParamDdw(0)
+
+     END SIMUL 
+
+    --Calling the Unit Under Test :
+    #OffsideCoolTimer(cool_timer_state);
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+    COMMENT Test Description 
+    COMMENT <TD>  
+    COMMENT [hdudispfoffside-OffsideCoolTimer-DB-LLR-003]
+    COMMENT The function 'OffsideCoolTimer' call RTDGetParamDdw with zero and reference to T_PARAM_READING 
+    COMMENT variable as parameters to get the status of heartbeat message.
+    COMMENT Equivalence Class 39
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideCoolTimer-DB-LLR-001]
+    COMMENT The function 'OffsideCoolTimer' does nothing when heartbeat message status is  MISSING.
+    COMMENT Equivalence Class 35
+    COMMENT
+    COMMENT [hdudispfoffside-OffsideCoolTimer-DB-LLR-002]
+    COMMENT The function 'OffsideCoolTimer', calls A8252Xmit with transmit message as parameter when heartbeat 
+    COMMENT message status is not MISSING. 
+    COMMENT Equivalence Class 38,35
+    COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR cool_timer_state,       init = 0,       ev = init
+
+        -- Variables of function RTDGetParamDdw
+        VAR PTU_ps_dest.stat,       init = MISSING,     ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+
+     SIMUL 
+
+        STUB RTDGetParamDdw(0)
+
+     END SIMUL 
+
+    --Calling the Unit Under Test :
+    #OffsideCoolTimer(cool_timer_state);
+    END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- OffsideCoolTimer
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OffsideCalibrationA825
+--------------------------------------------------------------------------------
+SERVICE OffsideCalibrationA825
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT8 engine_count,parameter_label;
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT[hdudispfoffside-OffsideCalibrationA825-DB-LLR-001 ]
+	COMMENT In function "OffsideCalibrationA825",s_message structure is initiated,
+	COMMENT Variable u8PayLoad with index 2 is calculated using parameter_label,engine_count and Offset_value_cal,
+	COMMENT when parameter_label is equal to LABEL_051.
+	COMMENT Stub A8252Xmit is called with s_message as its parameter.
+	COMMENT Equivalence Class:52,62
+	COMMENT
+	COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+		VAR parameter_label,		init = 41,			ev = init
+		
+		VAR engine_count,			init = 2,			ev = init
+		
+		VAR Du_position,			init = 0,			ev = init
+		
+		VAR Offset_value_cal[2],		init = 31,			ev = init 
+		
+    COMMENT OUTPUT SECTION:
+
+        VAR PTU_ps_xm.u8PayLoad[2],         init = 0,       ev = 32297
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        -- Holds value for ARINC 825 Message
+        -- Variables of function A8252Xmit
+        VAR PTU_ps_xm.sID.PID.sid ,         init = 0,       ev = EISDSPLY_SID
+        
+        VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = SEVEN
+        
+        VAR PTU_ps_xm.sID.PID.rci,          init = 0,       ev = Du_position & THREE
+        
+        VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = NSC_CALIBRATION
+        
+        VAR PTU_ps_xm.u8PayLoad[1],         init = 0,       ev = 192
+        
+
+        
+    --Stub Calls :        
+    SIMUL
+
+        STUB A8252Xmit()A825_XM_OK
+
+    END SIMUL
+
+    -- Calling the Unit Under Test 
+    #OffsideCalibrationA825(engine_count,parameter_label);
+    
+    END ELEMENT
+
+END TEST -- TEST 1
+
+
+TEST 2
+FAMILY nominal
+
+    
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT[hdudispfoffside-OffsideCalibrationA825-DB-LLR-001 ]
+	COMMENT In function "OffsideCalibrationA825",s_message structure is initiated,
+	COMMENT Variable u8PayLoad with index 2 is calculated using parameter_label,engine_count and Offset_value_cal,
+	COMMENT when parameter_label is equal to LABEL_051.
+	COMMENT Stub A8252Xmit is called with s_message as its parameter.
+	COMMENT Equivalence Class:52,62
+	COMMENT
+	COMMENT </TD>
+	
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+		VAR parameter_label,		init = 41,			ev= init
+		
+		VAR engine_count,			init = 1,			ev = init
+		
+		VAR Du_position,			init = 1,			ev = init
+		
+		VAR Offset_value_cal[1],		init = 90,			ev = init 
+		
+    COMMENT OUTPUT SECTION:
+
+        VAR PTU_ps_xm.u8PayLoad[2],         init = 0,       ev = 16169
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        -- Holds value for ARINC 825 Message
+        -- Variables of function A8252Xmit
+        VAR PTU_ps_xm.sID.PID.sid ,         init = 0,       ev = EISDSPLY_SID
+        
+        VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = SEVEN
+        
+        VAR PTU_ps_xm.sID.PID.rci,          init = 0,       ev = Du_position & THREE
+        
+        VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = NSC_CALIBRATION
+        
+        VAR PTU_ps_xm.u8PayLoad[1],         init = 0,       ev = 192
+        
+        
+    --Stub Calls :        
+    SIMUL
+
+        STUB A8252Xmit()A825_XM_OK
+
+    END SIMUL
+
+    -- Calling the Unit Under Test 
+    #OffsideCalibrationA825(engine_count,parameter_label);
+    
+    END ELEMENT
+
+END TEST -- TEST 2
+
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT[hdudispfoffside-OffsideCalibrationA825-DB-LLR-001 ]
+	COMMENT In function "OffsideCalibrationA825",s_message structure is initiated,
+	COMMENT Variable u8PayLoad with index 2 is calculated using parameter_label,engine_count and Offset_value_cal,
+	COMMENT when parameter_label is equal to LABEL_052.
+	COMMENT Stub A8252Xmit is called with s_message as its parameter.
+	COMMENT Equivalence Class:53,62
+	COMMENT
+	COMMENT </TD>    
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+		VAR parameter_label,		init = 42,			ev= init
+		
+		VAR engine_count,			init = 3,			ev = init
+		
+		VAR Du_position,			init = 1,			ev = init
+		
+		VAR Gain_value_cal[3],		init = 12,			ev = init 
+		
+    COMMENT OUTPUT SECTION:
+
+        VAR PTU_ps_xm.u8PayLoad[2],         init = 0,       ev = 14378
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        -- Holds value for ARINC 825 Message
+        -- Variables of function A8252Xmit
+        VAR PTU_ps_xm.sID.PID.sid ,         init = 0,       ev = EISDSPLY_SID
+        
+        VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = SEVEN
+        
+        VAR PTU_ps_xm.sID.PID.rci,          init = 0,       ev = Du_position & THREE
+        
+        VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = NSC_CALIBRATION
+        
+        VAR PTU_ps_xm.u8PayLoad[1],         init = 0,       ev = 192
+        
+        
+    --Stub Calls :        
+    SIMUL
+
+        STUB A8252Xmit()A825_XM_OK
+
+    END SIMUL
+
+    -- Calling the Unit Under Test 
+    #OffsideCalibrationA825(engine_count,parameter_label);
+    
+    END ELEMENT
+
+END TEST -- TEST 3
+
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT[hdudispfoffside-OffsideCalibrationA825-DB-LLR-001 ]
+	COMMENT In function "OffsideCalibrationA825",s_message structure is initiated,
+	COMMENT Variable u8PayLoad with index 2 is calculated using parameter_label,engine_count and Offset_value_cal,
+	COMMENT when parameter_label is equal to LABEL_052.
+	COMMENT Stub A8252Xmit is called with s_message as its parameter.
+	COMMENT Equivalence Class:53,62
+	COMMENT
+	COMMENT </TD>    
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+		VAR parameter_label,		init = 0x2A,			ev= init
+		
+		VAR engine_count,			init = 5,			ev = init
+		
+		VAR Du_position,			init = 1,			ev = init
+		
+		VAR Offset_value_cal[5],		init = 6,			ev = init 
+		
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        -- Holds value for ARINC 825 Message
+        -- Variables of function A8252Xmit
+        VAR PTU_ps_xm.sID.PID.sid ,         init = 0,       ev = EISDSPLY_SID
+        
+        VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = SEVEN
+        
+        VAR PTU_ps_xm.sID.PID.rci,          init = 0,       ev = Du_position & THREE
+        
+        VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = NSC_CALIBRATION
+        
+        VAR PTU_ps_xm.u8PayLoad[1],         init = 0,       ev = 192
+        
+        VAR PTU_ps_xm.u8PayLoad[2],         init = 0,       ev = 42
+        
+    --Stub Calls :        
+    SIMUL
+
+        STUB A8252Xmit()A825_XM_OK
+
+    END SIMUL
+
+    -- Calling the Unit Under Test 
+    #OffsideCalibrationA825(engine_count,parameter_label);
+    
+    END ELEMENT
+
+END TEST -- TEST 4
+
+
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT[hdudispfoffside-OffsideCalibrationA825-DB-LLR-001 ]
+	COMMENT In function "OffsideCalibrationA825",s_message structure is initiated,
+	COMMENT Does nothing when parameter_label is not equal to LABEL_051 or LABEL_052.
+	COMMENT Stub A8252Xmit is called with s_message as its parameter.
+	COMMENT Equivalence Class:54,62
+	COMMENT
+	COMMENT </TD>    
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+		VAR parameter_label,		init = 0x2F,			ev= init
+		
+		VAR engine_count,			init = 62,			ev = init
+		
+		VAR Du_position,			init = 1,			ev = init
+		
+		VAR Offset_value_cal[2],		init = 8,			ev = init 
+		
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+        -- Holds value for ARINC 825 Message
+        -- Variables of function A8252Xmit
+        VAR PTU_ps_xm.sID.PID.sid ,         init = 0,       ev = EISDSPLY_SID
+        
+        VAR PTU_ps_xm.u8PaySize,            init = 0,       ev = SEVEN
+        
+        VAR PTU_ps_xm.sID.PID.rci,          init = 0,       ev = Du_position & THREE
+        
+        VAR PTU_ps_xm.u8PayLoad[0],         init = 0,       ev = NSC_CALIBRATION
+        
+        VAR PTU_ps_xm.u8PayLoad[1],         init = 0,       ev = 192
+        
+        
+    --Stub Calls :        
+    SIMUL
+
+        STUB A8252Xmit()A825_XM_OK
+
+    END SIMUL
+
+    -- Calling the Unit Under Test 
+    #OffsideCalibrationA825(engine_count,parameter_label);
+    
+    END ELEMENT
+
+END TEST -- TEST 5
+END SERVICE -- OffsideCalibrationA825
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OffsideCalibration
+--------------------------------------------------------------------------------
+SERVICE OffsideCalibration
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT8 loop_i;
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT[hdudispfoffside-OffsideCalibration-DB-LLR-001 ]
+	COMMENT In function "OffsideCalibration",s_message structure is initiated,
+	COMMENT Variable u8PayLoad with index 2 is calculated using parameter_label,engine_count and Offset_value_cal,
+	COMMENT When Offset_bool and Gain_bool is equal to TRUE.
+	COMMENT Stub A8251Xmit is called with cal_mess as its parameter.
+	COMMENT Equivalence Class:55,58,57
+	COMMENT [hdudispfoffside-OffsideCalibration-DB-LLR-002]
+	COMMENT The function shall do the following
+	COMMENT Set four bytes (2, 3, 4, 5) of calibration message variable to (Calibration_Label with index zero logically ORed with 
+	COMMENT (loop_i left shifted by eight) logically ORed with (Offset_value_cal with index as loop_i left shifted by ten))
+	COMMENT Call the function A8251Xmit with reference of calibration message variable as parameter when Offset_bool with index 
+	COMMENT as loop_i is equal to TRUE
+	COMMENT Equivalence calss:55
+	COMMENT [hdudispfoffside-OffsideCalibration-DB-LLR-003]
+	COMMENT Set four bytes (2, 3, 4, 5) of calibration message variable to (Calibration_Label with index one logically 
+	COMMENT ORed with (loop_i left shifted by eight) logically ORed with (Gain_value_cal with index as loop_i left shifted by	ten))
+	COMMENT Call the function A8251Xmit with reference of calibration message variable as parameter if Gain_bool with index 
+	COMMENT as loop_i is equal to TRUE
+	COMMENT Equivalence calss:58
+
+
+	COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR PTU_ps_xm.sID.PID.sid ,         init = EISDSPLYGATEWAY_SID,       ev = init
+
+		-- Holds value for ARINC 825 Message
+        -- Variables of function A8251Xmit
+        
+        VAR PTU_ps_xm.u8PaySize,            init = SEVEN,					ev = init
+        
+        VAR PTU_ps_xm.sID.PID.rci,          init = Du_position & THREE,		ev = init
+        
+        VAR PTU_ps_xm.u8PayLoad[0],         init = NSC_SEND_A429,			ev = init
+
+        VAR PTU_ps_xm.u8PayLoad[1],         init = 192,						ev = init
+		
+		VAR loop_i,		init = 3,			ev = init 
+		
+		VAR Offset_value_cal[3],	init = 19,		ev = init 
+		
+		VAR Offset_bool[3],			init = TRUE,	ev = init
+		
+		VAR Calibration_label[0],	init = 21,		ev = init
+		
+		VAR Calibration_label[1],	init = 36,		ev = init
+		
+		VAR Gain_bool[3],			init = TRUE,	ev = init
+
+		 VAR Gain_value_cal[3],				init = 116,			ev = init
+    COMMENT OUTPUT SECTION:
+
+        VAR PTU_ps_xm.u8PayLoad[2],         init = 18,						ev = 36
+	
+    COMMENT INPUT/OUTPUT SECTION:
+
+
+        
+
+        
+    --Stub Calls :        
+    SIMUL
+
+        STUB A8251Xmit() A825_BAD_CHANNEL
+
+        STUB A8251Xmit() A825_BAD_CHANNEL
+
+    END SIMUL
+
+    -- Calling the Unit Under Test 
+		#OffsideCalibration(loop_i);
+    END ELEMENT
+
+END TEST -- TEST 1
+
+
+
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT[hdudispfoffside-OffsideCalibration-DB-LLR-001 ]
+	COMMENT In function "OffsideCalibration",s_message structure is initiated,
+	COMMENT Variable u8PayLoad with index 2 is calculated using parameter_label,engine_count and Offset_value_cal,
+	COMMENT when Offset_bool with corresponding loop index and Gain_bool becomes FALSE 
+	COMMENT Equivalence Class:56,59
+	COMMENT [hdudispfoffside-OffsideCalibration-DB-LLR-002]
+	COMMENT 
+	COMMENT [hdudispfoffside-OffsideCalibration-DB-LLR-002]
+	COMMENT The function shall do the following
+	COMMENT Set four bytes (2, 3, 4, 5) of calibration message variable to (Calibration_Label with index zero logically ORed with 
+	COMMENT (loop_i left shifted by eight) logically ORed with (Offset_value_cal with index as loop_i left shifted by ten))
+	COMMENT do nothing when Offset_bool with index 
+	COMMENT as loop_i is equal to FALSE
+	COMMENT Equivalence calss:56
+	COMMENT [hdudispfoffside-OffsideCalibration-DB-LLR-003]
+	COMMENT Set four bytes (2, 3, 4, 5) of calibration message variable to (Calibration_Label with index one logically 
+	COMMENT ORed with (loop_i left shifted by eight) logically ORed with (Gain_value_cal with index as loop_i left shifted by	ten))
+	COMMENT do nothing when Gain_bool with index 
+	COMMENT as loop_i is equal to FALSE
+	COMMENT Equivalence calss:59
+	COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+
+        VAR PTU_ps_xm.sID.PID.sid ,         init = EISDSPLYGATEWAY_SID,       ev = init
+
+		-- Holds value for ARINC 825 Message
+        -- Variables of function A8251Xmit
+        
+        VAR PTU_ps_xm.u8PaySize,            init = SEVEN,					ev = init
+        
+        VAR PTU_ps_xm.sID.PID.rci,          init = Du_position & THREE,		ev = init
+        
+        VAR PTU_ps_xm.u8PayLoad[0],         init = NSC_SEND_A429,			ev = init
+
+        VAR PTU_ps_xm.u8PayLoad[1],         init = 18,						ev = init
+		
+		VAR loop_i,		init = 7,			ev = init 
+		
+		VAR Offset_value_cal[7],	init = 8,		ev = init 
+		
+		VAR Offset_bool[7],			init = FALSE,	ev = init
+		
+		VAR Calibration_label[0],	init = 21,		ev = init
+		
+		VAR Calibration_label[1],	init = 36,		ev = init
+		
+		VAR Gain_bool[7],			init = FALSE,	ev = init
+
+		VAR Gain_value_cal[7],				init = 10,			ev = init
+
+    COMMENT OUTPUT SECTION:
+
+        --None
+
+    COMMENT INPUT/OUTPUT SECTION:
+
+
+        
+
+        
+    --Stub Calls :        
+    SIMUL
+
+        --STUB A8251Xmit() A825_BAD_CHANNEL
+
+        --STUB A8251Xmit() A825_BAD_CHANNEL
+
+    END SIMUL
+
+    -- Calling the Unit Under Test 
+		#OffsideCalibration(loop_i);
+    END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- OffsideCalibration
+
+
+
+
+

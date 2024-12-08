@@ -1,0 +1,2596 @@
+HEADER hdudispfpanel, Source Code Ver : 1.9, TestScript Ver : 1.6
+--------------------------------------------------------------------------------
+--
+-- Author Name         : Akshay R K
+--
+-- File Name           : hdudispfpanel_1.ptu
+--
+-- Test Creation Date  : 28.10.2017
+--
+-- Tested Functions    : LCDConfig
+--                       LCDBackgroundOn
+--              	 	 LCDBackgroundOff
+--						 DisplaySize
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--      1.1             28.10.2017      Akshay R K        Created the PTU file.
+--      1.2				10.11.2017		Akshay R K		  Updated as per #PR100171
+--      1.3				14.11.2017		Akshay R K		  Updated as per #PR100171
+--		1.4				30.07.2020		Harshitha R		Updated as per #PR100259
+--		1.5				15.09.2020		Harshitha R		Updated as per #PR100281
+--		1.6				29.04.2021		Vignesh Sunil		Updated as per #PR100338
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+##include "hdudispfpanel.h"  
+##include "hdulibstm32f7xxhalltdc.h"  
+##include "hdulibstm32f7xxhal.h"  
+##include "hdudispfconfig.h" 
+##include "hdulibbasictypes.h" 
+##include "hdulibstm32f746xx.h"
+##include "hdudispfpdidata.h"
+##include "hdudispfresource.h" 
+
+--##define PANEL  AA104XD12
+
+--#T_UINT32 PTU_PANEL;
+--##define PANEL		PTU_PANEL	
+
+##define HEX_TEN 0x10U
+##define MAX_VAL 255U
+##define CONFIG_DATA_ADDRESS   0x62880000UL
+##define PIXELS_480    480U
+##define PIXELS_272    272U
+##define PIXELS_640    640U
+##define PIXELS_800    800U
+##define PIXELS_320    320U
+##define PIXELS_600    600U
+##define PIXELS_1024   1024U
+##define PIXELS_768    768U
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+	--To handle the FG layer built during initialization
+    #extern T_LTDC_LAYERCFG P_layer_cfg;
+
+	--Variable used in hdulibcorecm7.h file 
+	#volatile  T_INT32 Itm_rx_buffer;
+	
+	--variable to verify function ConfigSetConfig
+	#T_CONFIG_STRUCT Config_data; 
+	
+	#T_BOOL Bitmap_crc_check_bit[20];
+	
+	#T_EPAGE_NUM Page_num;
+
+	
+-- Declarations of the temporary variable of the tested file
+	--temporary variable to verify ConfigExtract
+	#T_UINT8 *PTU_address;
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Akshay R K
+    COMMENT
+    COMMENT File Name        : hdudispfpanel.ptu
+    COMMENT
+    COMMENT Tested Functions : LCDConfig
+	COMMENT                    LCDBackgroundOn
+	COMMENT             	   LCDBackgroundOff
+    COMMENT					   DisplaySize
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+	COMMENT
+	COMMENT 1.Source file "hdudispfpanel.c" is modified for testing
+    COMMENT Snippet of code is added in function 'ErrorHandler' to terminate infinite loop
+	COMMENT T_UINT16 PTU_count = 0; /*local variable declared for testing purpose*/
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT    /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT    PTU_count++;
+    COMMENT    if(PTU_count == 4)
+    COMMENT    {
+    COMMENT         break;
+    COMMENT    } 
+    COMMENT    else
+    COMMENT    {
+    COMMENT      ;		   /*nothing*/
+    COMMENT    }
+    COMMENT }   
+	COMMENT Hence while loop cannot be tested for 0 and 1 times and FALSE condition cannot be achieved.
+	COMMENT
+	COMMENT 2. Header file "hdulibstm32f746xx.h" is modified for testing purpose. The macro 'LTDC' is modified for 
+    COMMENT stubbing hardware address.
+	COMMENT
+	COMMENT /*Commented for testing purpose*/
+	COMMENT //#define LTDC                ((T_LTDC *)LTDC_BASE)
+	COMMENT
+	COMMENT /*Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT T_LTDC	PTU_LTDC[135];
+	COMMENT #define LTDC                ((T_LTDC *)&PTU_LTDC[0])
+	COMMENT
+    COMMENT 3. Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+	COMMENT    warning #191-D: type qualifier is meaningless on cast type
+    COMMENT
+	COMMENT  4.PTU s are split into 2 due to static dependency
+    COMMENT </AC>
+	COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+	COMMENT The function 'LCDConfig' calls the function 'HalLtdcInit'.
+	COMMENT
+    COMMENT Class 2
+    COMMENT In the function 'LCDConfig', 'HalLtdcInit' function returns HAL_OK.
+	COMMENT
+    COMMENT Class 3
+    COMMENT In the function 'LCDConfig', 'HalLtdcInit' function returns other than HAL_OK.
+	COMMENT
+	COMMENT Class 4
+	COMMENT The function 'LCDConfig' calls the function 'HalLtdcConfigLayer'.
+	COMMENT
+    COMMENT Class 5
+    COMMENT In the function 'LCDConfig', 'HalLtdcConfigLayer' function returns HAL_OK.
+	COMMENT
+    COMMENT Class 6
+    COMMENT In the function 'LCDConfig', 'HalLtdcConfigLayer' function returns other than HAL_OK.
+	COMMENT
+	COMMENT Class 7
+	COMMENT The function 'LCDConfig' calls the function 'ErrorHandler'.
+	COMMENT
+	COMMENT Class 8
+	COMMENT The function 'LCDBackgroundOff' calls the function 'HalLtdcConfigLayer'.
+	COMMENT
+	COMMENT Class 9
+    COMMENT In the function 'LCDBackgroundOff', 'HalLtdcConfigLayer' function returns other than HAL_OK.
+	COMMENT
+	COMMENT Class 10
+    COMMENT In the function 'LCDBackgroundOff', 'HalLtdcConfigLayer' function returns HAL_OK.
+	COMMENT
+	COMMENT Class 11
+	COMMENT The function 'LCDBackgroundOff' calls the function 'ErrorHandler'.
+	COMMENT
+	COMMENT Class 12
+	COMMENT The function 'LCDBackgroundOn' calls the function 'HalLtdcConfigLayer'.
+	COMMENT
+	COMMENT Class 13
+    COMMENT In the function 'LCDBackgroundOn', 'HalLtdcConfigLayer' function returns other than HAL_OK.
+	COMMENT
+	COMMENT Class 14
+    COMMENT In the function 'LCDBackgroundOn', 'HalLtdcConfigLayer' function returns HAL_OK.
+	COMMENT
+	COMMENT Class 15
+	COMMENT The function 'LCDBackgroundOn' calls the function 'ErrorHandler'.
+	COMMENT
+	COMMENT Class 16
+	COMMENT In the function 'LCDBackgroundOn' S8_forground_off is set to ONE.
+	COMMENT
+	COMMENT Class 17
+	COMMENT In the function 'LCDBackgroundOn' S8_forground_off is set to other than ONE.
+	COMMENT
+	COMMENT Class 18
+	COMMENT The function 'LCDConfig' calls the function 'ConfigExtract'.
+	COMMENT
+	COMMENT Class 19
+	COMMENT The function 'LCDConfig' calls the function 'ConfigSetConfig'.
+	COMMENT
+	COMMENT Class 20
+	COMMENT The function 'LCDConfig' calls the function 'DisplaySize'.
+	COMMENT
+	COMMENT Class 21
+	COMMENT The function 'LCDConfig',Display_size is equal to E_10_INCH.
+	COMMENT
+	COMMENT Class 22
+	COMMENT The function 'LCDConfig',Display_size is equal to E_3_INCH.
+	COMMENT
+	COMMENT Class 23
+	COMMENT The function 'LCDConfig',Display_size is equal to E_7_INCH.
+	COMMENT
+	COMMENT Class 24
+	COMMENT The function 'LCDConfig',ConfigSetConfig function is called.
+	COMMENT
+	COMMENT Class 25
+	COMMENT The function 'LCDConfig',PANEL_WIDTH is equal to PIXELS_480.
+	COMMENT
+	COMMENT Class 26
+	COMMENT The function 'LCDConfig',PANEL_WIDTH is equal to PIXELS_640.
+	COMMENT
+	COMMENT Class 27
+	COMMENT The function 'LCDConfig',PANEL_WIDTH is equal to PIXELS_800.
+	COMMENT
+	COMMENT Class 28
+	COMMENT The function 'LCDConfig',PANEL_WIDTH is equal to PIXELS_320.
+	COMMENT
+	COMMENT Class 29
+	COMMENT The function 'LCDConfig',PANEL_WIDTH is equal to PIXELS_1024.
+	COMMENT
+	COMMENT Class 30
+	COMMENT The function 'LCDConfig',PANEL_WIDTH is other than PIXELS_1024,PIXELS_320,PIXELS_800,PIXELS_640,PIXELS_480.
+	COMMENT
+	COMMENT Class 31
+	COMMENT The function 'LCDConfig',PANEL_HEIGHT is equal to PIXELS_272.
+	COMMENT
+	COMMENT Class 32
+	COMMENT The function 'LCDConfig',PANEL_HEIGHT is equal to PIXELS_480.
+	COMMENT
+	COMMENT Class 33
+	COMMENT The function 'LCDConfig',PANEL_HEIGHT is equal to PIXELS_600.
+	COMMENT
+	COMMENT Class 34
+	COMMENT The function 'LCDConfig',PANEL_HEIGHT is equal to PIXELS_768.
+	COMMENT
+	COMMENT Class 35
+	COMMENT The function 'LCDConfig',PANEL_HEIGHT is not equal to PIXELS_272,PIXELS_480,PIXELS_600,PIXELS_768.
+	COMMENT
+	COMMENT
+	COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+	DEFINE STUB hdudispfpanel_c
+
+		#T_HAL_STATUS HalLtdcConfigLayer(T_LTDC_HANDLE *hltdc, T_LTDC_LAYERCFG *pLayerCfg, T_UINT32 _in LayerIdx);
+		
+		#T_HAL_STATUS HalLtdcInit(T_LTDC_HANDLE *hltdc); 
+		
+		#void ConfigSetConfig(T_ELANDSCAPEORPORTRIAT _in e_land_scape_or_portriat, T_INT16 _in panel_width, T_INT16 _in panel_height); 
+		
+		--Parameter is made as _no as it passes the address 
+		#void ConfigExtract(T_UINT8 _no *address)
+		#{
+		#	PTU_address = address  ;
+		#}
+		
+	END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file 
+
+ENVIRONMENT ENV_hdudispfpanel_c
+
+	--To handle the FG layer built during initialization
+	STRUCTURE P_layer_cfg1,		init = { WindowX0 => 0, WindowX1 => 0, WindowY0 => 0, WindowY1 => 0, PixelFormat => 0, Alpha => 0,
+	&									Alpha0 => 0, BlendingFactor1 => 0, BlendingFactor2 => 0, FBStartAdress => 0, ImageWidth => 0,
+	&									ImageHeight => 0, Backcolor => { Blue => 0, Green => 0, Red => 0, Reserved => 0 } },
+	&							ev = init
+
+	--To handle the FG layer built during initialization	
+	STRUCTURE P_layer_cfg,		init = { WindowX0 => 0, WindowX1 => 0, WindowY0 => 0, WindowY1 => 0, PixelFormat => 0, Alpha => 0,
+	&									Alpha0 => 0, BlendingFactor1 => 0, BlendingFactor2 => 0, FBStartAdress => 0, ImageWidth => 0,
+	&									ImageHeight => 0, Backcolor => { Blue => 0, Green => 0, Red => 0, Reserved => 0 } },	
+	&							ev = init
+ 
+	--Handle to the LCD built during initialization
+	STRUCTURE Ltdc_handle,		init = { Instance => NIL, Init => { HSPolarity => 0, VSPolarity => 0, DEPolarity => 0, PCPolarity => 0,
+	&									HorizontalSync => 0, VerticalSync => 0, AccumulatedHBP => 0, AccumulatedVBP => 0, 
+	&									AccumulatedActiveW => 0, AccumulatedActiveH => 0, TotalWidth => 0, TotalHeigh => 0, 
+	&									Backcolor => { Blue => 0, Green => 0, Red => 0, Reserved => 0 } }, 
+	&									LayerCfg => { others => { WindowX0 => 0, WindowX1 => 0, WindowY0 => 0, WindowY1 => 0,
+	&									PixelFormat => 0, Alpha => 0, Alpha0 => 0, BlendingFactor1 => 0, BlendingFactor2 => 0, 
+	&									FBStartAdress => 0, ImageWidth => 0, ImageHeight => 0, Backcolor => { Blue => 0, Green => 0, 
+	&									Red => 0, Reserved => 0 } } }, Lock => HAL_UNLOCKED, State => HAL_LTDC_STATE_RESET, ErrorCode => 0 },
+	&							ev = init
+	
+END ENVIRONMENT -- ENV_hdudispfpanel_c
+
+USE ENV_hdudispfpanel_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service LCDBackgroundOn
+--------------------------------------------------------------------------------
+SERVICE LCDBackgroundOn
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDBackgroundOn-DB-LLR-001]
+	COMMENT The function does the following,
+	COMMENT 1.Sets SRCR register of Instance of Ltdc_handle to LTDC_SRCR_IMR
+	COMMENT 2.CR register of return value of macro LTDC_LAYER with reference to Ltdc_handle and ZERO as parameters is 
+	COMMENT set with CR register of return value of macro LTDC_LAYER with reference to Ltdc_handle and ZERO as parameters 
+	COMMENT bitwise OR with negation of LTDC_LXCR_LEN
+	COMMENT 3.Sets SRCR register of Instance of Ltdc_handle to LTDC_SRCR_IMR
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDBackgroundOn-DB-LLR-002]
+	COMMENT The function does the following when foreground off is ONE.
+	COMMENT 1.Sets WindowX0 of P_layer_cfg1 to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg1 to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT Equivalence class 16
+	COMMENT
+	COMMENT [hdudispfpanel-LCDBackgroundOn-DB-LLR-003]
+	COMMENT The function calls ErrorHandler function when foreground off is ONE and when return value of function HalLtdcConfigLayer
+	COMMENT with reference to Ltdc_handle, reference to P_layer_cfg1 and ONE as parameters is not set to HAL_OK.
+	COMMENT Equivalence class 12,13,15,16
+	COMMENT
+	COMMENT [hdudispfpanel-LCDBackgroundOn-DB-LLR-004]
+	COMMENT The function sets foreground off to ZERO when foreground off is ONE.
+	COMMENT Equivalence class None
+	COMMENT
+    COMMENT </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			-- initialise 'Instance of Ltdc_handle' as LTDC.		
+			VAR Ltdc_handle.Instance,				init = LTDC,					ev = init
+			
+		COMMENT OUTPUT SECTION:
+		
+			-- Expected 'WindowX0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowX0,              init = ONE,						ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.WindowX1,              init = PANEL_HEIGHT,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowY0,              init = ONE,   					ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.WindowY1,              init = PANEL_WIDTH,				ev = PANEL_HEIGHT
+
+			VAR P_layer_cfg1.PixelFormat,			init = ONE,						ev = FOREGROUND_PIXEL_FORMAT1
+			
+			VAR P_layer_cfg1.FBStartAdress,			init = 0,						ev = FG_FB_ONE_ADDR
+			
+			VAR P_layer_cfg1.Alpha,					init = 0,						ev = MAX_VAL
+			
+			VAR P_layer_cfg1.Alpha0,					init = 0,						ev = MAX_VAL
+
+			VAR P_layer_cfg1.Backcolor.Blue,		init = 0,						ev = HEX_TEN
+			
+			VAR P_layer_cfg1.Backcolor.Green,		init = 0,						ev = HEX_TEN
+
+			VAR P_layer_cfg1.Backcolor.Red,		init = 0,						ev = HEX_TEN
+
+			VAR P_layer_cfg1.BlendingFactor1,		init =ONE,				ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			VAR P_layer_cfg1.BlendingFactor2,		init =ONE,				ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			VAR P_layer_cfg1.ImageWidth,			init = ONE ,				ev = PANEL_WIDTH
+
+			VAR P_layer_cfg1.ImageHeight,			init = ONE ,				ev = PANEL_HEIGHT
+
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			-- None
+		
+			-- Stub calls :
+		SIMUL
+		
+			-- To configure the LTDC Layer	
+			STUB HalLtdcConfigLayer 1..2=>(&Ltdc_handle, &P_layer_cfg1, ONE)HAL_ERROR
+			
+		END SIMUL
+		
+		-- Called to set S8_forground_off to ONE :
+		#LCDBackgroundOff();
+		
+		-- Calling the Unit Under Test :
+		#LCDBackgroundOn();
+		
+	END ELEMENT
+	
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDBackgroundOn-DB-LLR-003]
+	COMMENT The function does nothing when foreground off is ONE and when return value of function HalLtdcConfigLayer
+	COMMENT with reference to Ltdc_handle, reference to P_layer_cfg1 and ONE as parameters is set to HAL_OK.
+	COMMENT Equivalence class 16,12,14
+	COMMENT
+    COMMENT </TD>
+    
+	ELEMENT
+        
+		COMMENT INPUT SECTION:
+		
+			-- initialise 'Instance of Ltdc_handle' as LTDC.		
+			VAR Ltdc_handle.Instance,				init = LTDC,				ev = init	
+			
+		COMMENT OUTPUT SECTION:
+		
+			-- Expected 'WindowX0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowX0,             init = ONE ,                 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.WindowX1,             init = PANEL_HEIGHT ,    	ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowY0,             init = ONE ,                 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.WindowY1,             init = PANEL_WIDTH ,     	ev = PANEL_HEIGHT			
+		
+			VAR P_layer_cfg1.PixelFormat,			init = ONE,						ev = FOREGROUND_PIXEL_FORMAT1
+			
+			VAR P_layer_cfg1.FBStartAdress,			init = 0,						ev = FG_FB_ONE_ADDR
+			
+			VAR P_layer_cfg1.Alpha,					init = 0,						ev = MAX_VAL
+			
+			VAR P_layer_cfg1.Alpha0,					init = 0,						ev = MAX_VAL
+
+			VAR P_layer_cfg1.Backcolor.Blue,		init = 0,						ev = HEX_TEN
+			
+			VAR P_layer_cfg1.Backcolor.Green,		init = 0,						ev = HEX_TEN
+
+			VAR P_layer_cfg1.Backcolor.Red,		init = 0,						ev = HEX_TEN
+
+			VAR P_layer_cfg1.BlendingFactor1,		init =ONE,				ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			VAR P_layer_cfg1.BlendingFactor2,		init =ONE,				ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			VAR P_layer_cfg1.ImageWidth,			init = ONE ,				ev = PANEL_WIDTH
+
+			VAR P_layer_cfg1.ImageHeight,			init = ONE ,				ev = PANEL_HEIGHT
+		COMMENT INPUT/OUTPUT SECTION:
+            
+            -- None
+
+		-- Stub calls :
+        SIMUL
+        
+			-- To configure the LTDC Layer	
+			STUB HalLtdcConfigLayer 1..2=>(&Ltdc_handle, &P_layer_cfg1, ONE)HAL_OK
+            
+        END SIMUL
+         
+		-- Called to set S8_forground_off to ONE :
+        #LCDBackgroundOff();
+		
+		-- Calling the Unit Under Test :
+        #LCDBackgroundOn();
+		
+		END ELEMENT
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDBackgroundOn-DB-LLR-002]
+	COMMENT The function does nothing when foreground off is other than ONE.
+	COMMENT Equivalence class 17
+	COMMENT
+	COMMENT </TD>
+    
+	ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+			-- initialise 'Instance of Ltdc_handle' as LTDC.		
+			VAR Ltdc_handle.Instance,				init = LTDC,				ev = init
+		
+		COMMENT OUTPUT SECTION:
+		
+			--to verify SRCR register of Instance of Ltdc_handle	
+			VAR Ltdc_handle.Instance->SRCR,			init = 0,					ev = LTDC_SRCR_IMR 
+		
+			--to verify macro LTDC_LAYER 
+			VAR ((T_LTDC_LAYER *)((T_UINT32)((T_UINT32)LTDC+0x84)))->CR,
+			&										init = 0x00000000,			ev = 0x00000001	
+			
+		COMMENT INPUT/OUTPUT SECTION:
+            
+            -- None
+
+		-- Stub calls :
+        SIMUL
+        
+           --None
+            
+        END SIMUL
+         
+		-- Calling the Unit Under Test :
+        #LCDBackgroundOn();
+
+	END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- LCDBackgroundOn
+--------------------------------------------------------------------------------
+-- Declaration of the service LCDBackgroundOff
+--------------------------------------------------------------------------------
+SERVICE LCDBackgroundOff
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDBackgroundOff-DB-LLR-001]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg1 to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg1 to ZERO
+	COMMENT 3.Sets WindowY0 of P_layer_cfg1 to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg1 to ZERO
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDBackgroundOff-DB-LLR-002]
+	COMMENT The function does nothing when return value of function HalLtdcConfigLayer with reference to Ltdc_handle,
+	COMMENT reference to P_layer_cfg1 and ONE as parameters is set to HAL_OK.
+	COMMENT Equivalence class 8,10
+	COMMENT
+	COMMENT [hdudispfpanel-LCDBackgroundOff-DB-LLR-003]
+	COMMENT The function does the following,
+	COMMENT 1.Sets foreground off to ONE
+	COMMENT 2.Sets SRCR register of Instance of Ltdc_handle to LTDC_SRCR_IMR
+	COMMENT 3.CR register of return value of macro LTDC_LAYER with reference to Ltdc_handle and ZERO is set with CR register
+	COMMENT of return value of macro LTDC_LAYER bitwise AND with negation of LTDC_LXCR_LEN
+	COMMENT 4.Sets SRCR register of Instance of Ltdc_handle to LTDC_SRCR_IMR
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT </TD>
+    
+	ELEMENT
+        
+        COMMENT INPUT SECTION:
+	
+
+			VAR Bitmap_crc_check_bit[13],					init = TRUE,		ev = init 
+			
+			VAR Page_num,								init = 13,			ev = init 
+	
+			-- initialise 'Instance of Ltdc_handle' as LTDC.	
+			VAR Ltdc_handle.Instance,				init = LTDC,				ev = init	
+	
+		COMMENT OUTPUT SECTION:
+		
+			-- Expected 'WindowX0 of P_layer_cfg1' 
+			VAR P_layer_cfg1.WindowX0,             init = ONE, 					ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg1' 
+			VAR P_layer_cfg1.WindowX1,             init = PANEL_HEIGHT,			ev = ZERO
+			
+			-- Expected 'WindowY0 of P_layer_cfg1' 
+			VAR P_layer_cfg1.WindowY0,             init = ONE,					ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg1' 
+			VAR P_layer_cfg1.WindowY1,             init = PANEL_WIDTH, 			ev = ZERO
+			
+			VAR P_layer_cfg1.PixelFormat,			init = ONE,						ev = ZERO
+			
+			VAR P_layer_cfg1.FBStartAdress,			init = ONE,						ev = ZERO
+			
+			VAR P_layer_cfg1.Alpha,					init = ONE,						ev = ZERO
+			
+			VAR P_layer_cfg1.Alpha0,					init = ONE,						ev = ZERO
+
+			VAR P_layer_cfg1.Backcolor.Blue,		init = ONE,						ev = ZERO
+			
+			VAR P_layer_cfg1.Backcolor.Green,		init = ONE,						ev = ZERO
+
+			VAR P_layer_cfg1.Backcolor.Red,		init = ONE,						ev = ZERO
+
+			VAR P_layer_cfg1.BlendingFactor1,		init =ONE,				ev = ZERO
+			
+			VAR P_layer_cfg1.BlendingFactor2,		init =ONE,				ev = ZERO
+			
+			VAR P_layer_cfg1.ImageWidth,			init = ONE ,				ev = ZERO
+
+			VAR P_layer_cfg1.ImageHeight,			init = ONE ,				ev = ZERO
+	
+			--to verify SRCR register of Instance of Ltdc_handle	
+			VAR Ltdc_handle.Instance->SRCR,		   init = 0,					ev = LTDC_SRCR_IMR 
+
+			--to verify macro LTDC_LAYER			
+			VAR ((T_LTDC_LAYER *)((T_UINT32)((T_UINT32)LTDC+0x84)))->CR,
+			&									   init = 0x0000000B,		    ev = 0x0000000A
+
+		COMMENT INPUT/OUTPUT SECTION:
+            
+            -- None
+
+          -- Stub calls :
+        SIMUL
+ 
+			-- To configure the LTDC Layer 
+			STUB HalLtdcConfigLayer(&Ltdc_handle, &P_layer_cfg1, ONE)HAL_OK
+            
+        END SIMUL
+         
+		-- Calling the Unit Under Test :
+        #LCDBackgroundOff();
+		
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDBackgroundOff-DB-LLR-002]
+	COMMENT The function calls ErrorHandler function when return value of function HalLtdcConfigLayer with reference to Ltdc_handle,
+	COMMENT reference to P_layer_cfg1 and ONE as parameters is not set to HAL_OK.
+	COMMENT Equivalence class 8,9,11
+	COMMENT
+	COMMENT [hdudispfpanel-ErrorHandler-DB-LLR-001]
+	COMMENT The function "ErrorHandler" enters an infinite loop.
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT </TD>
+    
+	ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+			VAR Bitmap_crc_check_bit[9],					init = FALSE,		ev = init 
+			
+			VAR Page_num,								init = 9,			ev = init 
+		
+			-- initialise 'Instance of Ltdc_handle' as LTDC.		
+			VAR Ltdc_handle.Instance,					init = LTDC,		ev = init	
+			
+		COMMENT OUTPUT SECTION:
+		
+			--None
+		
+		COMMENT INPUT/OUTPUT SECTION:
+            
+            -- None
+
+          -- Stub calls :
+        SIMUL
+  
+			-- To configure the LTDC Layer  
+			STUB HalLtdcConfigLayer(&Ltdc_handle, &P_layer_cfg1, ONE)HAL_ERROR
+            
+        END SIMUL
+         
+		-- Calling the Unit Under Test :
+        #LCDBackgroundOff();
+        
+	END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- LCDBackgroundOff
+--------------------------------------------------------------------------------
+-- Declaration of the service LCDConfig
+--------------------------------------------------------------------------------
+SERVICE LCDConfig
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function does the following
+	COMMENT 1.calls the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT 2.calls the function ConfigSetConfig with parameter (E_PORTRAIT, u16_y of du_resolution of Config_data structure 
+	COMMENT	and u16_x of du_resolution of Config_data structure)
+	COMMENT Equivalence class 18,19
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-001]
+	COMMENT The function does the following,
+	COMMENT 1.Sets HSPolarity of Init of Ltdc_handle to LTDC_HSPOLARITY_AL
+	COMMENT 2.Sets VSPolarity of Init of Ltdc_handle to LTDC_VSPOLARITY_AL
+	COMMENT 3.Sets DEPolarity of Init of Ltdc_handle to LTDC_DEPOLARITY_AL
+	COMMENT 4.Sets PCPolarity of Init of Ltdc_handle to LTDC_PCPOLARITY_IPC
+	COMMENT 5.Sets HorizontalSync of Init of Ltdc_handle to PANEL_HSYNC subtracted by ONE
+	COMMENT 6.Sets VerticalSync of Init of Ltdc_handle to PANEL_VSYNC subtracted by ONE
+	COMMENT 7.Sets AccumulatedHBP of Init of Ltdc_handle to sum of PANEL_HSYNC and PANEL_HBP subtracted by ONE
+	COMMENT 8.Sets AccumulatedVBP of Init of Ltdc_handle to sum of PANEL_VSYNC and PANEL_VBP subtracted by ONE
+	COMMENT 9.Sets AccumulatedActiveH of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  and PANEL_VBP  subtracted by ONE
+	COMMENT 10.Sets AccumulatedActiveW of Init of Ltdc_handle to sum of PANEL_WIDTH, PANEL_HSYNC  and PANEL_HBP  subtracted by ONE
+	COMMENT 11.Sets TotalHeigh of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  , PANEL_VBP and PANEL_VFP  subtracted by ONE
+	COMMENT 12.Sets TotalWidth of Init of Ltdc_handle to PANEL_WIDTH, PANEL_HSYNC  , PANEL_HBP and PANEL_HFP  subtracted by ONE
+	COMMENT 13.Sets Blue of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 14.Sets Green of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 15.Sets Red of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 16.Sets Instance of Ltdc_handle to LTDC
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-002]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg to BACKGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg to BG_FB_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg to ZERO
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg to ZERO
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg to ZERO
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-003]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg1 to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg1 to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg1 to FOREGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg1 to FG_FB_ONE_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg1 to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg1 to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg1 to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg1 to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-004]
+	COMMENT The function does nothing when return value of function HalLtdcInit with 
+	COMMENT reference to Ltdc_handle as parameter is set to HAL_OK.
+	COMMENT Equivalence class 1,2
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-005]
+	COMMENT The function calls macro __HAL_LTDC_ENABLE_IT to configure the LTDC.
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-006]
+	COMMENT The function does nothing when return value of function HalLtdcConfigLayer with reference to Ltdc_handle,
+	COMMENT reference to P_layer_cfg and ZERO as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-007]
+	COMMENT The function does when return value of function HalLtdcConfigLayer with reference
+	COMMENT to Ltdc_handle, reference to P_layer_cfg1 and ONE as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function shall do the following
+	COMMENT a)Call the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT b)Call the function DisplaySize
+	COMMENT c)Call the function ConfigSetConfig with parameter (E_LAND_SCAPE, u16_y of du_resolution of Config_data structure 
+	COMMENT and u16_x of du_resolution of Config_data structure) if Display_size variable is equal to E_3_INCH OR Display_size
+	COMMENT Equivalence class:
+	COMMENT	[hdudispfpanel-DisplaySize-DB-LLR-001]
+	COMMENT The function shall do the following:
+	COMMENT set Display_size variable to E_3_INCH if PANEL_WIDTH is equal to PIXELS_480 AND PANEL_HEIGHT is equal to PIXELS_272
+	COMMENT Equivalence calss:
+	COMMENT </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+			--variables to verify function ConfigSetConfig
+			VAR Config_data.du_resolution.u16_y,		init = 2,						ev = init 
+			VAR Config_data.du_resolution.u16_x,		init = 4,						ev = init
+			
+			VAR Appdata_appdata->panelWidth,				init = 480,			ev = init
+			
+			VAR Appdata_appdata->panelHeight,				init = 272,			ev = init
+			
+			VAR Appdata_appdata->panelHSync,				init = 130,			ev = init	
+
+			VAR Appdata_appdata->panelVSync,				init =  10,			ev = init 
+			
+			VAR Appdata_appdata->panelHBP,				init = 160,			ev =  init 
+			
+			VAR Appdata_appdata->panelVbp,				init = 20,			ev =  init 
+			
+			VAR Appdata_appdata->panelVfp,				init = 10,			ev =  init 
+			
+			VAR Appdata_appdata->panelHFP,				init = 30,			ev =  init 
+
+
+
+
+		COMMENT OUTPUT SECTION:
+		
+			-- horizontal synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.HSPolarity,      		init = 10 ,                 	 ev = LTDC_HSPOLARITY_AL
+		
+			-- Vertical synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.VSPolarity,      		init = 10 ,                 	 ev = LTDC_VSPOLARITY_AL
+		
+			-- Data enable polarity updated as active low 
+			VAR Ltdc_handle.Init.DEPolarity,      		init= 10 ,                 		 ev = LTDC_DEPOLARITY_AL
+		
+			-- Pixel clock polarity updated as input pixel clock
+			VAR Ltdc_handle.Init.PCPolarity,          	init = 20 ,                 	 ev = LTDC_PCPOLARITY_IPC
+		
+			-- Expected 'HorizontalSync of Init of Ltdc_handle' as difference of PANEL_HSYNC and ONE.
+			VAR Ltdc_handle.Init.HorizontalSync,      	init = 130 ,                	 ev = 129
+		
+			-- Expected 'VerticalSync of Init of Ltdc_handle' as difference of PANEL_VSYNC and ONE.
+			VAR Ltdc_handle.Init.VerticalSync,        	init = 10 ,                 	 ev = 9
+			
+			-- Expected 'AccumulatedHBP of Init of Ltdc_handle' as sum of PANEL_HSYNC and PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedHBP,      	init = 160 ,                	 ev = 289
+			
+			-- Expected 'AccumulatedVBP of Init of Ltdc_handle' as sum of PANEL_VSYNC and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedVBP,      	init = 20 ,                 	 ev = 29
+			
+			-- Expected 'AccumulatedActiveH of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC
+			--    and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveH,  	init = 500 ,                	 ev = 301
+			
+			-- Expected 'AccumulatedActiveW of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC and 
+			--    PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveW,  	init  = 960 ,               	 ev = 769
+			
+			-- Expected 'TotalHeigh of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC, PANEL_VBP and
+			--    PANEL_VFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalHeigh,      		init = 520 ,                	 ev = 311
+			
+			-- Expected 'TotalWidth of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC, PANEL_HBP and
+			--    PANEL_HFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalWidth,      		init = 970 ,                	 ev = 799
+			
+			-- Expected 'Blue of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Blue,      	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Green,     	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Red,       	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg' as BG_FB_ADDR.
+			VAR P_layer_cfg.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)BG_FB_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Blue,       		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg' as ZERO
+			VAR P_layer_cfg.Backcolor.Green,      		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Red,        		init = 100 ,                	 ev = ZERO
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg.BlendingFactor1,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.ImageWidth,           		init =PANEL_HEIGHT ,            ev = PANEL_WIDTH 
+			
+			-- Expected 'ImageHeight of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.ImageHeight,          		init = PANEL_WIDTH  ,             ev =PANEL_HEIGHT
+			
+			
+			-- Expected 'WindowX0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.WindowX1,             		init = PANEL_HEIGHT,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.WindowY1,             		init = PANEL_WIDTH,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg1' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg1.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg1' as FG_FB_ONE_ADDR.
+			VAR P_layer_cfg1.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)FG_FB_ONE_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Blue,       		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg1' as ZERO
+			VAR P_layer_cfg1.Backcolor.Green,      		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Red,        		init = 100 ,                     ev = HEX_TEN
+			
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg1' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor1,      		init = 100 ,                     ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg1' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'Instance of Ltdc_handle' as LTDC.
+			VAR Ltdc_handle.Instance,              		init =NULL,					     ev =LTDC
+			
+			-- Expected 'IER value of Instance of LTDC to verify __HAL_LTDC_ENABLE_IT
+			VAR LTDC->IER,              				init =0x00,					     ev =0x01
+			
+			--Variable to verify Stub call "ConfigExtract"
+			VAR PTU_address,					   		init = NULL,					 ev = NONIL
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			VAR Display_size,							init = E_5_INCH,				ev = E_3_INCH
+		
+		-- Stub calls :
+		SIMUL
+		
+			-- To Initialize the LTDC
+			STUB HalLtdcInit(&Ltdc_handle)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg,ZERO)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg1,ONE)HAL_OK
+		
+			-- To extract configuration information
+			STUB ConfigExtract()
+			STUB ConfigSetConfig(E_LAND_SCAPE,480,272)
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#LCDConfig();
+			
+	END ELEMENT
+
+END TEST -- TEST 1
+
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function does the following
+	COMMENT 1.calls the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT 2.calls the function ConfigSetConfig with parameter (E_PORTRAIT, u16_y of du_resolution of Config_data structure 
+	COMMENT	and u16_x of du_resolution of Config_data structure)
+	COMMENT Equivalence class 18,19
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-001]
+	COMMENT The function does the following,
+	COMMENT 1.Sets HSPolarity of Init of Ltdc_handle to LTDC_HSPOLARITY_AL
+	COMMENT 2.Sets VSPolarity of Init of Ltdc_handle to LTDC_VSPOLARITY_AL
+	COMMENT 3.Sets DEPolarity of Init of Ltdc_handle to LTDC_DEPOLARITY_AL
+	COMMENT 4.Sets PCPolarity of Init of Ltdc_handle to LTDC_PCPOLARITY_IPC
+	COMMENT 5.Sets HorizontalSync of Init of Ltdc_handle to PANEL_HSYNC subtracted by ONE
+	COMMENT 6.Sets VerticalSync of Init of Ltdc_handle to PANEL_VSYNC subtracted by ONE
+	COMMENT 7.Sets AccumulatedHBP of Init of Ltdc_handle to sum of PANEL_HSYNC and PANEL_HBP subtracted by ONE
+	COMMENT 8.Sets AccumulatedVBP of Init of Ltdc_handle to sum of PANEL_VSYNC and PANEL_VBP subtracted by ONE
+	COMMENT 9.Sets AccumulatedActiveH of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  and PANEL_VBP  subtracted by ONE
+	COMMENT 10.Sets AccumulatedActiveW of Init of Ltdc_handle to sum of PANEL_WIDTH, PANEL_HSYNC  and PANEL_HBP  subtracted by ONE
+	COMMENT 11.Sets TotalHeigh of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  , PANEL_VBP and PANEL_VFP  subtracted by ONE
+	COMMENT 12.Sets TotalWidth of Init of Ltdc_handle to PANEL_WIDTH, PANEL_HSYNC  , PANEL_HBP and PANEL_HFP  subtracted by ONE
+	COMMENT 13.Sets Blue of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 14.Sets Green of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 15.Sets Red of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 16.Sets Instance of Ltdc_handle to LTDC
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-002]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg to BACKGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg to BG_FB_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg to ZERO
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg to ZERO
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg to ZERO
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-003]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg1 to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg1 to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg1 to FOREGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg1 to FG_FB_ONE_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg1 to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg1 to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg1 to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg1 to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-004]
+	COMMENT The function does nothing when return value of function HalLtdcInit with 
+	COMMENT reference to Ltdc_handle as parameter is set to HAL_OK.
+	COMMENT Equivalence class 1,2
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-005]
+	COMMENT The function calls macro __HAL_LTDC_ENABLE_IT to configure the LTDC.
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-006]
+	COMMENT The function does nothing when return value of function HalLtdcConfigLayer with reference to Ltdc_handle,
+	COMMENT reference to P_layer_cfg and ZERO as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-007]
+	COMMENT The function does when return value of function HalLtdcConfigLayer with reference
+	COMMENT to Ltdc_handle, reference to P_layer_cfg1 and ONE as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function shall do the following
+	COMMENT a)Call the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT b)Call the function DisplaySize
+	COMMENT c)Call the function ConfigSetConfig with parameter (E_LAND_SCAPE, u16_y of du_resolution of Config_data structure
+	COMMENT and u16_x of du_resolution of Config_data structure) if Display_size variable is equal to E_3_INCH 
+	COMMENT Equivalence class:
+	COMMENT	[hdudispfpanel-DisplaySize-DB-LLR-001]
+	COMMENT The function shall do the following:
+	COMMENT set Display_size variable to E_3_INCH if PANEL_WIDTH is equal to PIXELS_640 AND PANEL_HEIGHT is equal to PIXELS_480
+	COMMENT Equivalence calss:
+    COMMENT </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--variables to verify function ConfigSetConfig
+			VAR Config_data.du_resolution.u16_y,		init = 2,						ev = init 
+			VAR Config_data.du_resolution.u16_x,		init = 4,						ev = init
+			
+			VAR Appdata_appdata->panelWidth,				init = 640,			ev = init
+			
+			VAR Appdata_appdata->panelHeight,				init = 480,			ev = init
+
+			VAR Appdata_appdata->panelHSync,				init = 110,			ev = init	
+
+			VAR Appdata_appdata->panelVSync,				init =  50,			ev = init 
+			
+			VAR Appdata_appdata->panelHBP,				init = 120,			ev =  init 
+			
+			VAR Appdata_appdata->panelVbp,				init = 50,			ev =  init 
+			
+			VAR Appdata_appdata->panelVfp,				init = 80,			ev =  init 
+			
+			VAR Appdata_appdata->panelHFP,				init = 60,			ev =  init 
+			
+		
+		COMMENT OUTPUT SECTION:
+		
+			-- horizontal synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.HSPolarity,      		init = 10 ,                 	 ev = LTDC_HSPOLARITY_AL
+		
+			-- Vertical synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.VSPolarity,      		init = 10 ,                 	 ev = LTDC_VSPOLARITY_AL
+		
+			-- Data enable polarity updated as active low 
+			VAR Ltdc_handle.Init.DEPolarity,      		init= 10 ,                 		 ev = LTDC_DEPOLARITY_AL
+		
+			-- Pixel clock polarity updated as input pixel clock
+			VAR Ltdc_handle.Init.PCPolarity,          	init = 20 ,                 	 ev = LTDC_PCPOLARITY_IPC
+		
+			-- Expected 'HorizontalSync of Init of Ltdc_handle' as difference of PANEL_HSYNC and ONE.
+			VAR Ltdc_handle.Init.HorizontalSync,      	init = 130 ,                	 ev = 109
+		
+			-- Expected 'VerticalSync of Init of Ltdc_handle' as difference of PANEL_VSYNC and ONE.
+			VAR Ltdc_handle.Init.VerticalSync,        	init = 10 ,                 	 ev = 49
+			
+			-- Expected 'AccumulatedHBP of Init of Ltdc_handle' as sum of PANEL_HSYNC and PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedHBP,      	init = 160 ,                	 ev = 229
+			
+			-- Expected 'AccumulatedVBP of Init of Ltdc_handle' as sum of PANEL_VSYNC and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedVBP,      	init = 20 ,                 	 ev = 99
+			
+			-- Expected 'AccumulatedActiveH of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC
+			--    and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveH,  	init = 500 ,                	 ev = 579
+			
+			-- Expected 'AccumulatedActiveW of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC and 
+			--    PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveW,  	init  = 960 ,               	 ev = 869
+			
+			-- Expected 'TotalHeigh of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC, PANEL_VBP and
+			--    PANEL_VFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalHeigh,      		init = 520 ,                	 ev = 659
+			
+			-- Expected 'TotalWidth of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC, PANEL_HBP and
+			--    PANEL_HFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalWidth,      		init = 970 ,                	 ev = 929
+			
+			-- Expected 'Blue of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Blue,      	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Green,     	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Red,       	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg' as BG_FB_ADDR.
+			VAR P_layer_cfg.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)BG_FB_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Blue,       		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg' as ZERO
+			VAR P_layer_cfg.Backcolor.Green,      		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Red,        		init = 100 ,                	 ev = ZERO
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg.BlendingFactor1,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'WindowX0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg1' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg1.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg1' as FG_FB_ONE_ADDR.
+			VAR P_layer_cfg1.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)FG_FB_ONE_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Blue,       		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg1' as ZERO
+			VAR P_layer_cfg1.Backcolor.Green,      		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Red,        		init = 100 ,                     ev = HEX_TEN
+			
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg1' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor1,      		init = 100 ,                     ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg1' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'Instance of Ltdc_handle' as LTDC.
+			VAR Ltdc_handle.Instance,              		init =NULL,					     ev =LTDC
+			
+			-- Expected 'IER value of Instance of LTDC to verify __HAL_LTDC_ENABLE_IT
+			VAR LTDC->IER,              				init =0x00,					     ev =0x01
+			
+
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			VAR Display_size,							init = E_5_INCH,				ev = E_3_INCH
+		
+		-- Stub calls :
+		SIMUL
+		
+			-- To Initialize the LTDC
+			STUB HalLtdcInit(&Ltdc_handle)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg,ZERO)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg1,ONE)HAL_OK
+		
+			-- To extract configuration information
+			STUB ConfigExtract()
+			STUB ConfigSetConfig(E_LAND_SCAPE,640,480)
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#LCDConfig();
+			
+	END ELEMENT
+
+END TEST -- TEST 2
+
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function does the following
+	COMMENT 1.calls the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT 2.calls the function ConfigSetConfig with parameter (E_PORTRAIT, u16_y of du_resolution of Config_data structure 
+	COMMENT	and u16_x of du_resolution of Config_data structure)
+	COMMENT Equivalence class 18,19
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-001]
+	COMMENT The function does the following,
+	COMMENT 1.Sets HSPolarity of Init of Ltdc_handle to LTDC_HSPOLARITY_AL
+	COMMENT 2.Sets VSPolarity of Init of Ltdc_handle to LTDC_VSPOLARITY_AL
+	COMMENT 3.Sets DEPolarity of Init of Ltdc_handle to LTDC_DEPOLARITY_AL
+	COMMENT 4.Sets PCPolarity of Init of Ltdc_handle to LTDC_PCPOLARITY_IPC
+	COMMENT 5.Sets HorizontalSync of Init of Ltdc_handle to PANEL_HSYNC subtracted by ONE
+	COMMENT 6.Sets VerticalSync of Init of Ltdc_handle to PANEL_VSYNC subtracted by ONE
+	COMMENT 7.Sets AccumulatedHBP of Init of Ltdc_handle to sum of PANEL_HSYNC and PANEL_HBP subtracted by ONE
+	COMMENT 8.Sets AccumulatedVBP of Init of Ltdc_handle to sum of PANEL_VSYNC and PANEL_VBP subtracted by ONE
+	COMMENT 9.Sets AccumulatedActiveH of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  and PANEL_VBP  subtracted by ONE
+	COMMENT 10.Sets AccumulatedActiveW of Init of Ltdc_handle to sum of PANEL_WIDTH, PANEL_HSYNC  and PANEL_HBP  subtracted by ONE
+	COMMENT 11.Sets TotalHeigh of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  , PANEL_VBP and PANEL_VFP  subtracted by ONE
+	COMMENT 12.Sets TotalWidth of Init of Ltdc_handle to PANEL_WIDTH, PANEL_HSYNC  , PANEL_HBP and PANEL_HFP  subtracted by ONE
+	COMMENT 13.Sets Blue of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 14.Sets Green of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 15.Sets Red of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 16.Sets Instance of Ltdc_handle to LTDC
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-002]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg to BACKGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg to BG_FB_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg to ZERO
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg to ZERO
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg to ZERO
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-003]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg1 to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg1 to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg1 to FOREGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg1 to FG_FB_ONE_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg1 to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg1 to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg1 to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg1 to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-004]
+	COMMENT The function does nothing when return value of function HalLtdcInit with 
+	COMMENT reference to Ltdc_handle as parameter is set to HAL_OK.
+	COMMENT Equivalence class 1,2
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-005]
+	COMMENT The function calls macro __HAL_LTDC_ENABLE_IT to configure the LTDC.
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-006]
+	COMMENT The function does nothing when return value of function HalLtdcConfigLayer with reference to Ltdc_handle,
+	COMMENT reference to P_layer_cfg and ZERO as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-007]
+	COMMENT The function does when return value of function HalLtdcConfigLayer with reference
+	COMMENT to Ltdc_handle, reference to P_layer_cfg1 and ONE as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function shall do the following
+	COMMENT a)Call the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT b)Call the function DisplaySize
+	COMMENT c)•	Call the function ConfigSetConfig with parameter (E_PORTRAIT, u16_y of du_resolution of Config_data structure
+	COMMENT and u16_x of du_resolution of Config_data structure) if Display_size variable is equal to E_7_INCH and display size 
+	COMMENT variable is not equal to E_10_INCH and display size variable is not equal to E_3_INCH
+	COMMENT Equivalence class:
+	COMMENT	[hdudispfpanel-DisplaySize-DB-LLR-001]
+	COMMENT The function shall do the following:
+	COMMENT set Display_size variable to E_7_INCH if PANEL_WIDTH is equal to PIXELS_800 AND PANEL_HEIGHT is equal to PIXELS_480
+	COMMENT Equivalence calss:
+    COMMENT </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--variables to verify function ConfigSetConfig
+			VAR Config_data.du_resolution.u16_y,		init = 2,						ev = init 
+			VAR Config_data.du_resolution.u16_x,		init = 4,						ev = init
+			
+			VAR Appdata_appdata->panelWidth,				init = 800,			ev = init
+			
+			VAR Appdata_appdata->panelHeight,				init = 480,			ev = init
+			
+			VAR Appdata_appdata->panelHSync,				init = 10,			ev = init	
+
+			VAR Appdata_appdata->panelVSync,				init =  110,			ev = init 
+			
+			VAR Appdata_appdata->panelHBP,				init = 60,			ev =  init 
+			
+			VAR Appdata_appdata->panelVbp,				init = 120,			ev =  init 
+			
+			VAR Appdata_appdata->panelVfp,				init = 100,			ev =  init 
+			
+			VAR Appdata_appdata->panelHFP,				init = 40,			ev =  init 
+
+			
+		
+		COMMENT OUTPUT SECTION:
+		
+			-- horizontal synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.HSPolarity,      		init = 10 ,                 	 ev = LTDC_HSPOLARITY_AL
+		
+			-- Vertical synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.VSPolarity,      		init = 10 ,                 	 ev = LTDC_VSPOLARITY_AL
+		
+			-- Data enable polarity updated as active low 
+			VAR Ltdc_handle.Init.DEPolarity,      		init= 10 ,                 		 ev = LTDC_DEPOLARITY_AL
+		
+			-- Pixel clock polarity updated as input pixel clock
+			VAR Ltdc_handle.Init.PCPolarity,          	init = 20 ,                 	 ev = LTDC_PCPOLARITY_IPC
+		
+			-- Expected 'HorizontalSync of Init of Ltdc_handle' as difference of PANEL_HSYNC and ONE.
+			VAR Ltdc_handle.Init.HorizontalSync,      	init = 130 ,                	 ev = 9
+		
+			-- Expected 'VerticalSync of Init of Ltdc_handle' as difference of PANEL_VSYNC and ONE.
+			VAR Ltdc_handle.Init.VerticalSync,        	init = 10 ,                 	 ev = 109
+			
+			-- Expected 'AccumulatedHBP of Init of Ltdc_handle' as sum of PANEL_HSYNC and PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedHBP,      	init = 160 ,                	 ev = 69
+			
+			-- Expected 'AccumulatedVBP of Init of Ltdc_handle' as sum of PANEL_VSYNC and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedVBP,      	init = 20 ,                	 ev = 229
+			
+			-- Expected 'AccumulatedActiveH of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC
+			--    and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveH,  	init = 500 ,                	 ev = 709
+			
+			-- Expected 'AccumulatedActiveW of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC and 
+			--    PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveW,  	init  = 960 ,               	 ev = 869
+			
+			-- Expected 'TotalHeigh of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC, PANEL_VBP and
+			--    PANEL_VFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalHeigh,      		init = 520 ,                	 ev = 809
+			
+			-- Expected 'TotalWidth of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC, PANEL_HBP and
+			--    PANEL_HFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalWidth,      		init = 970 ,                	 ev = 909
+			
+			-- Expected 'Blue of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Blue,      	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Green,     	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Red,       	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg' as BG_FB_ADDR.
+			VAR P_layer_cfg.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)BG_FB_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Blue,       		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg' as ZERO
+			VAR P_layer_cfg.Backcolor.Green,      		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Red,        		init = 100 ,                	 ev = ZERO
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg.BlendingFactor1,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'WindowX0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg1' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg1.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg1' as FG_FB_ONE_ADDR.
+			VAR P_layer_cfg1.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)FG_FB_ONE_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Blue,       		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg1' as ZERO
+			VAR P_layer_cfg1.Backcolor.Green,      		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Red,        		init = 100 ,                     ev = HEX_TEN
+			
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg1' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor1,      		init = 100 ,                     ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg1' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'Instance of Ltdc_handle' as LTDC.
+			VAR Ltdc_handle.Instance,              		init =NULL,					     ev =LTDC
+			
+			-- Expected 'IER value of Instance of LTDC to verify __HAL_LTDC_ENABLE_IT
+			VAR LTDC->IER,              				init =0x00,					     ev =0x01
+			
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			VAR Display_size,							init = E_5_INCH,				ev = E_7_INCH
+		
+		-- Stub calls :
+		SIMUL
+		
+			-- To Initialize the LTDC
+			STUB HalLtdcInit(&Ltdc_handle)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg,ZERO)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg1,ONE)HAL_OK
+		
+			-- To extract configuration information
+			STUB ConfigExtract()
+			STUB ConfigSetConfig(E_PORTRAIT,800,480)
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#LCDConfig();
+			
+	END ELEMENT
+
+END TEST -- TEST 3
+
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function does the following
+	COMMENT 1.calls the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT 2.calls the function ConfigSetConfig with parameter (E_PORTRAIT, u16_y of du_resolution of Config_data structure 
+	COMMENT	and u16_x of du_resolution of Config_data structure)
+	COMMENT Equivalence class 18,19
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-001]
+	COMMENT The function does the following,
+	COMMENT 1.Sets HSPolarity of Init of Ltdc_handle to LTDC_HSPOLARITY_AL
+	COMMENT 2.Sets VSPolarity of Init of Ltdc_handle to LTDC_VSPOLARITY_AL
+	COMMENT 3.Sets DEPolarity of Init of Ltdc_handle to LTDC_DEPOLARITY_AL
+	COMMENT 4.Sets PCPolarity of Init of Ltdc_handle to LTDC_PCPOLARITY_IPC
+	COMMENT 5.Sets HorizontalSync of Init of Ltdc_handle to PANEL_HSYNC subtracted by ONE
+	COMMENT 6.Sets VerticalSync of Init of Ltdc_handle to PANEL_VSYNC subtracted by ONE
+	COMMENT 7.Sets AccumulatedHBP of Init of Ltdc_handle to sum of PANEL_HSYNC and PANEL_HBP subtracted by ONE
+	COMMENT 8.Sets AccumulatedVBP of Init of Ltdc_handle to sum of PANEL_VSYNC and PANEL_VBP subtracted by ONE
+	COMMENT 9.Sets AccumulatedActiveH of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  and PANEL_VBP  subtracted by ONE
+	COMMENT 10.Sets AccumulatedActiveW of Init of Ltdc_handle to sum of PANEL_WIDTH, PANEL_HSYNC  and PANEL_HBP  subtracted by ONE
+	COMMENT 11.Sets TotalHeigh of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  , PANEL_VBP and PANEL_VFP  subtracted by ONE
+	COMMENT 12.Sets TotalWidth of Init of Ltdc_handle to PANEL_WIDTH, PANEL_HSYNC  , PANEL_HBP and PANEL_HFP  subtracted by ONE
+	COMMENT 13.Sets Blue of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 14.Sets Green of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 15.Sets Red of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 16.Sets Instance of Ltdc_handle to LTDC
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-002]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg to BACKGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg to BG_FB_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg to ZERO
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg to ZERO
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg to ZERO
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-003]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg1 to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg1 to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg1 to FOREGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg1 to FG_FB_ONE_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg1 to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg1 to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg1 to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg1 to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-004]
+	COMMENT The function does nothing when return value of function HalLtdcInit with 
+	COMMENT reference to Ltdc_handle as parameter is set to HAL_OK.
+	COMMENT Equivalence class 1,2
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-005]
+	COMMENT The function calls macro __HAL_LTDC_ENABLE_IT to configure the LTDC.
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-006]
+	COMMENT The function does nothing when return value of function HalLtdcConfigLayer with reference to Ltdc_handle,
+	COMMENT reference to P_layer_cfg and ZERO as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-007]
+	COMMENT The function does when return value of function HalLtdcConfigLayer with reference
+	COMMENT to Ltdc_handle, reference to P_layer_cfg1 and ONE as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function shall do the following
+	COMMENT a)Call the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT b)Call the function DisplaySize
+	COMMENT c)Call the function ConfigSetConfig with parameter (E_LAND_SCAPE, u16_y of du_resolution of Config_data structure and u16_x of du_resolution of Config_data structure) if Display_size variable is equal to E_10_INCH OR Display_size variable is equal to E_3_INCH
+	COMMENT Equivalence class:
+	COMMENT	[hdudispfpanel-DisplaySize-DB-LLR-001]
+	COMMENT The function shall do the following:
+	COMMENT set Display_size variable to E_3_INCH if PANEL_WIDTH is equal to PIXELS_320 AND PANEL_HEIGHT is equal to PIXELS_480
+	COMMENT Equivalence calss:
+    COMMENT </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--variables to verify function ConfigSetConfig
+			VAR Config_data.du_resolution.u16_y,		init = 2,						ev = init 
+			VAR Config_data.du_resolution.u16_x,		init = 4,						ev = init
+			
+			VAR Appdata_appdata->panelWidth,				init = 320,			ev = init
+			
+			VAR Appdata_appdata->panelHeight,				init = 480,			ev = init
+			
+			VAR Appdata_appdata->panelHSync,				init = 180,			ev = init	
+
+			VAR Appdata_appdata->panelVSync,				init =  10,			ev = init 
+			
+			VAR Appdata_appdata->panelHBP,				init = 110,			ev =  init 
+			
+			VAR Appdata_appdata->panelVbp,				init = 90,			ev =  init 
+			
+			VAR Appdata_appdata->panelVfp,				init = 10,			ev =  init 
+			
+			VAR Appdata_appdata->panelHFP,				init = 30,			ev =  init 
+
+		
+		COMMENT OUTPUT SECTION:
+		
+			-- horizontal synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.HSPolarity,      		init = 10 ,                 	 ev = LTDC_HSPOLARITY_AL
+		
+			-- Vertical synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.VSPolarity,      		init = 10 ,                 	 ev = LTDC_VSPOLARITY_AL
+		
+			-- Data enable polarity updated as active low 
+			VAR Ltdc_handle.Init.DEPolarity,      		init= 10 ,                 		 ev = LTDC_DEPOLARITY_AL
+		
+			-- Pixel clock polarity updated as input pixel clock
+			VAR Ltdc_handle.Init.PCPolarity,          	init = 20 ,                 	 ev = LTDC_PCPOLARITY_IPC
+		
+			-- Expected 'HorizontalSync of Init of Ltdc_handle' as difference of PANEL_HSYNC and ONE.
+			VAR Ltdc_handle.Init.HorizontalSync,      	init = 130 ,                	 ev = 179
+		
+			-- Expected 'VerticalSync of Init of Ltdc_handle' as difference of PANEL_VSYNC and ONE.
+			VAR Ltdc_handle.Init.VerticalSync,        	init = 10 ,                 	 ev = 9
+			
+			-- Expected 'AccumulatedHBP of Init of Ltdc_handle' as sum of PANEL_HSYNC and PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedHBP,      	init = 160 ,                	 ev = 289
+			
+			-- Expected 'AccumulatedVBP of Init of Ltdc_handle' as sum of PANEL_VSYNC and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedVBP,      	init = 20 ,                 	 ev = 99
+			
+			-- Expected 'AccumulatedActiveH of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC
+			--    and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveH,  	init = 500 ,                	 ev = 579
+			
+			-- Expected 'AccumulatedActiveW of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC and 
+			--    PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveW,  	init  = 960 ,               	 ev = 609
+			
+			-- Expected 'TotalHeigh of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC, PANEL_VBP and
+			--    PANEL_VFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalHeigh,      		init = 520 ,                	 ev = 589
+			
+			-- Expected 'TotalWidth of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC, PANEL_HBP and
+			--    PANEL_HFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalWidth,      		init = 970 ,                	 ev = 639
+			
+			-- Expected 'Blue of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Blue,      	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Green,     	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Red,       	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg' as BG_FB_ADDR.
+			VAR P_layer_cfg.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)BG_FB_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Blue,       		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg' as ZERO
+			VAR P_layer_cfg.Backcolor.Green,      		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Red,        		init = 100 ,                	 ev = ZERO
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg.BlendingFactor1,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'WindowX0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg1' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg1.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg1' as FG_FB_ONE_ADDR.
+			VAR P_layer_cfg1.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)FG_FB_ONE_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Blue,       		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg1' as ZERO
+			VAR P_layer_cfg1.Backcolor.Green,      		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Red,        		init = 100 ,                     ev = HEX_TEN
+			
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg1' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor1,      		init = 100 ,                     ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg1' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'Instance of Ltdc_handle' as LTDC.
+			VAR Ltdc_handle.Instance,              		init =NULL,					     ev =LTDC
+			
+			-- Expected 'IER value of Instance of LTDC to verify __HAL_LTDC_ENABLE_IT
+			VAR LTDC->IER,              				init =0x00,					     ev =0x01
+			
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			VAR Display_size,							init = E_5_INCH,				ev = E_3_INCH
+		
+		-- Stub calls :
+		SIMUL
+		
+			-- To Initialize the LTDC
+			STUB HalLtdcInit(&Ltdc_handle)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg,ZERO)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg1,ONE)HAL_OK
+		
+			-- To extract configuration information
+			STUB ConfigExtract()
+			STUB ConfigSetConfig(E_LAND_SCAPE,320,480)
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#LCDConfig();
+			
+	END ELEMENT
+
+END TEST -- TEST 4
+
+
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function does the following
+	COMMENT 1.calls the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT 2.calls the function ConfigSetConfig with parameter (E_PORTRAIT, u16_y of du_resolution of Config_data structure 
+	COMMENT	and u16_x of du_resolution of Config_data structure)
+	COMMENT Equivalence class 18,19
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-001]
+	COMMENT The function does the following,
+	COMMENT 1.Sets HSPolarity of Init of Ltdc_handle to LTDC_HSPOLARITY_AL
+	COMMENT 2.Sets VSPolarity of Init of Ltdc_handle to LTDC_VSPOLARITY_AL
+	COMMENT 3.Sets DEPolarity of Init of Ltdc_handle to LTDC_DEPOLARITY_AL
+	COMMENT 4.Sets PCPolarity of Init of Ltdc_handle to LTDC_PCPOLARITY_IPC
+	COMMENT 5.Sets HorizontalSync of Init of Ltdc_handle to PANEL_HSYNC subtracted by ONE
+	COMMENT 6.Sets VerticalSync of Init of Ltdc_handle to PANEL_VSYNC subtracted by ONE
+	COMMENT 7.Sets AccumulatedHBP of Init of Ltdc_handle to sum of PANEL_HSYNC and PANEL_HBP subtracted by ONE
+	COMMENT 8.Sets AccumulatedVBP of Init of Ltdc_handle to sum of PANEL_VSYNC and PANEL_VBP subtracted by ONE
+	COMMENT 9.Sets AccumulatedActiveH of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  and PANEL_VBP  subtracted by ONE
+	COMMENT 10.Sets AccumulatedActiveW of Init of Ltdc_handle to sum of PANEL_WIDTH, PANEL_HSYNC  and PANEL_HBP  subtracted by ONE
+	COMMENT 11.Sets TotalHeigh of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  , PANEL_VBP and PANEL_VFP  subtracted by ONE
+	COMMENT 12.Sets TotalWidth of Init of Ltdc_handle to PANEL_WIDTH, PANEL_HSYNC  , PANEL_HBP and PANEL_HFP  subtracted by ONE
+	COMMENT 13.Sets Blue of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 14.Sets Green of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 15.Sets Red of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 16.Sets Instance of Ltdc_handle to LTDC
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-002]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg to BACKGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg to BG_FB_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg to ZERO
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg to ZERO
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg to ZERO
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-003]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg1 to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg1 to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg1 to FOREGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg1 to FG_FB_ONE_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg1 to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg1 to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg1 to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg1 to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-004]
+	COMMENT The function does nothing when return value of function HalLtdcInit with 
+	COMMENT reference to Ltdc_handle as parameter is set to HAL_OK.
+	COMMENT Equivalence class 1,2
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-005]
+	COMMENT The function calls macro __HAL_LTDC_ENABLE_IT to configure the LTDC.
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-006]
+	COMMENT The function does nothing when return value of function HalLtdcConfigLayer with reference to Ltdc_handle,
+	COMMENT reference to P_layer_cfg and ZERO as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-007]
+	COMMENT The function does when return value of function HalLtdcConfigLayer with reference
+	COMMENT to Ltdc_handle, reference to P_layer_cfg1 and ONE as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function shall do the following
+	COMMENT a)Call the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT b)Call the function DisplaySize
+	COMMENT c)Call the function ConfigSetConfig with parameter (E_LAND_SCAPE, u16_y of du_resolution of Config_data structure and u16_x of du_resolution of Config_data structure) if Display_size variable is equal to E_10_INCH OR Display_size variable is equal to E_3_INCH
+	COMMENT Equivalence class:
+	COMMENT	[hdudispfpanel-DisplaySize-DB-LLR-001]
+	COMMENT The function shall do the following:
+	COMMENT set Display_size variable to E_3_INCH if PANEL_WIDTH is equal to PIXELS_800 AND PANEL_HEIGHT is equal to PIXELS_600
+	COMMENT Equivalence calss:
+    COMMENT </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--variables to verify function ConfigSetConfig
+			VAR Config_data.du_resolution.u16_y,		init = 2,						ev = init 
+			VAR Config_data.du_resolution.u16_x,		init = 4,						ev = init
+			
+			VAR Appdata_appdata->panelWidth,				init = 800,			ev = init
+			
+			VAR Appdata_appdata->panelHeight,				init = 600,			ev = init
+			
+			VAR Appdata_appdata->panelHSync,				init = 10,			ev = init	
+
+			VAR Appdata_appdata->panelVSync,				init =  90,			ev = init 
+			
+			VAR Appdata_appdata->panelHBP,				init = 150,			ev =  init 
+			
+			VAR Appdata_appdata->panelVbp,				init = 20,			ev =  init 
+			
+			VAR Appdata_appdata->panelVfp,				init = 10,			ev =  init 
+			
+			VAR Appdata_appdata->panelHFP,				init = 38,			ev =  init 
+
+			
+		
+		COMMENT OUTPUT SECTION:
+		
+			-- horizontal synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.HSPolarity,      		init = 10 ,                 	 ev = LTDC_HSPOLARITY_AL
+		
+			-- Vertical synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.VSPolarity,      		init = 10 ,                 	 ev = LTDC_VSPOLARITY_AL
+		
+			-- Data enable polarity updated as active low 
+			VAR Ltdc_handle.Init.DEPolarity,      		init= 10 ,                 		 ev = LTDC_DEPOLARITY_AL
+		
+			-- Pixel clock polarity updated as input pixel clock
+			VAR Ltdc_handle.Init.PCPolarity,          	init = 20 ,                 	 ev = LTDC_PCPOLARITY_IPC
+		
+			-- Expected 'HorizontalSync of Init of Ltdc_handle' as difference of PANEL_HSYNC and ONE.
+			VAR Ltdc_handle.Init.HorizontalSync,      	init = 130 ,                	 ev = 9
+		
+			-- Expected 'VerticalSync of Init of Ltdc_handle' as difference of PANEL_VSYNC and ONE.
+			VAR Ltdc_handle.Init.VerticalSync,        	init = 10 ,                 	 ev = 89
+			
+			-- Expected 'AccumulatedHBP of Init of Ltdc_handle' as sum of PANEL_HSYNC and PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedHBP,      	init = 160 ,                	 ev = 159
+			
+			-- Expected 'AccumulatedVBP of Init of Ltdc_handle' as sum of PANEL_VSYNC and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedVBP,      	init = 20 ,                 	 ev = 109
+			
+			-- Expected 'AccumulatedActiveH of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC
+			--    and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveH,  	init = 500 ,                	 ev = 709
+			
+			-- Expected 'AccumulatedActiveW of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC and 
+			--    PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveW,  	init  = 960 ,               	 ev = 959
+			
+			-- Expected 'TotalHeigh of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC, PANEL_VBP and
+			--    PANEL_VFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalHeigh,      		init = 520 ,                	 ev = 719
+			
+			-- Expected 'TotalWidth of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC, PANEL_HBP and
+			--    PANEL_HFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalWidth,      		init = 970 ,                	 ev = 997
+			
+			-- Expected 'Blue of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Blue,      	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Green,     	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Red,       	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg' as BG_FB_ADDR.
+			VAR P_layer_cfg.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)BG_FB_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Blue,       		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg' as ZERO
+			VAR P_layer_cfg.Backcolor.Green,      		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Red,        		init = 100 ,                	 ev = ZERO
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg.BlendingFactor1,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'WindowX0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg1' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg1.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg1' as FG_FB_ONE_ADDR.
+			VAR P_layer_cfg1.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)FG_FB_ONE_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Blue,       		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg1' as ZERO
+			VAR P_layer_cfg1.Backcolor.Green,      		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Red,        		init = 100 ,                     ev = HEX_TEN
+			
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg1' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor1,      		init = 100 ,                     ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg1' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'Instance of Ltdc_handle' as LTDC.
+			VAR Ltdc_handle.Instance,              		init =NULL,					     ev =LTDC
+			
+			-- Expected 'IER value of Instance of LTDC to verify __HAL_LTDC_ENABLE_IT
+			VAR LTDC->IER,              				init =0x00,					     ev =0x01
+
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			VAR Display_size,							init = E_5_INCH,				ev = E_7_INCH
+		
+		-- Stub calls :
+		SIMUL
+		
+			-- To Initialize the LTDC
+			STUB HalLtdcInit(&Ltdc_handle)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg,ZERO)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg1,ONE)HAL_OK
+		
+			-- To extract configuration information
+			STUB ConfigExtract()
+			STUB ConfigSetConfig(E_PORTRAIT,800,600)
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#LCDConfig();
+			
+	END ELEMENT
+
+END TEST -- TEST 5
+
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description 
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function does the following
+	COMMENT 1.calls the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT 2.calls the function ConfigSetConfig with parameter (E_PORTRAIT, u16_y of du_resolution of Config_data structure 
+	COMMENT	and u16_x of du_resolution of Config_data structure)
+	COMMENT Equivalence class 18,19
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-001]
+	COMMENT The function does the following,
+	COMMENT 1.Sets HSPolarity of Init of Ltdc_handle to LTDC_HSPOLARITY_AL
+	COMMENT 2.Sets VSPolarity of Init of Ltdc_handle to LTDC_VSPOLARITY_AL
+	COMMENT 3.Sets DEPolarity of Init of Ltdc_handle to LTDC_DEPOLARITY_AL
+	COMMENT 4.Sets PCPolarity of Init of Ltdc_handle to LTDC_PCPOLARITY_IPC
+	COMMENT 5.Sets HorizontalSync of Init of Ltdc_handle to PANEL_HSYNC subtracted by ONE
+	COMMENT 6.Sets VerticalSync of Init of Ltdc_handle to PANEL_VSYNC subtracted by ONE
+	COMMENT 7.Sets AccumulatedHBP of Init of Ltdc_handle to sum of PANEL_HSYNC and PANEL_HBP subtracted by ONE
+	COMMENT 8.Sets AccumulatedVBP of Init of Ltdc_handle to sum of PANEL_VSYNC and PANEL_VBP subtracted by ONE
+	COMMENT 9.Sets AccumulatedActiveH of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  and PANEL_VBP  subtracted by ONE
+	COMMENT 10.Sets AccumulatedActiveW of Init of Ltdc_handle to sum of PANEL_WIDTH, PANEL_HSYNC  and PANEL_HBP  subtracted by ONE
+	COMMENT 11.Sets TotalHeigh of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC  , PANEL_VBP and PANEL_VFP  subtracted by ONE
+	COMMENT 12.Sets TotalWidth of Init of Ltdc_handle to PANEL_WIDTH, PANEL_HSYNC  , PANEL_HBP and PANEL_HFP  subtracted by ONE
+	COMMENT 13.Sets Blue of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 14.Sets Green of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 15.Sets Red of Backcolor of Init of Ltdc_handle to ZERO
+	COMMENT 16.Sets Instance of Ltdc_handle to LTDC
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-002]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg to BACKGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg to BG_FB_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg to ZERO
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg to ZERO
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg to ZERO
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-003]
+	COMMENT The function does the following,
+	COMMENT 1.Sets WindowX0 of P_layer_cfg1 to ZERO
+	COMMENT 2.Sets WindowX1 of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 3.Sets WindowY0 of P_layer_cfg1 to ZERO
+	COMMENT 4.Sets WindowY1 of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT 5.Sets PixelFormat of P_layer_cfg1 to FOREGROUND_PIXEL_FORMAT1
+	COMMENT 6.Sets FBStartAdress of P_layer_cfg1 to FG_FB_ONE_ADDR
+	COMMENT 7.Sets Alpha of P_layer_cfg1 to MAX_VAL
+	COMMENT 8.Sets Alpha0 of P_layer_cfg1 to MAX_VAL
+	COMMENT 9.Sets Blue of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 10.Sets Green of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 11.Sets Red of Backcolor of P_layer_cfg1 to HEX_TEN
+	COMMENT 12.Sets BlendingFactor1 of P_layer_cfg1 to LTDC_BLENDING_FACTOR1_PAXCA
+	COMMENT 13.Sets BlendingFactor2 of P_layer_cfg1 to LTDC_BLENDING_FACTOR2_PAXCA
+	COMMENT 14.Sets ImageWidth of P_layer_cfg1 to PANEL_WIDTH
+	COMMENT 15.Sets ImageHeight of P_layer_cfg1 to PANEL_HEIGHT
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-004]
+	COMMENT The function does nothing when return value of function HalLtdcInit with 
+	COMMENT reference to Ltdc_handle as parameter is set to HAL_OK.
+	COMMENT Equivalence class 1,2
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-005]
+	COMMENT The function calls macro __HAL_LTDC_ENABLE_IT to configure the LTDC.
+	COMMENT Equivalence class None
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-006]
+	COMMENT The function does nothing when return value of function HalLtdcConfigLayer with reference to Ltdc_handle,
+	COMMENT reference to P_layer_cfg and ZERO as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-007]
+	COMMENT The function does when return value of function HalLtdcConfigLayer with reference
+	COMMENT to Ltdc_handle, reference to P_layer_cfg1 and ONE as parameters is set to HAL_OK.
+	COMMENT Equivalence class 4,5
+	COMMENT
+	COMMENT [hdudispfpanel-LCDConfig-DB-LLR-008]
+	COMMENT The function shall do the following
+	COMMENT a)Call the function ConfigExtract with parameter CONFIG_DATA_ADDRESS to extract configuration information
+	COMMENT b)Call the function DisplaySize
+	COMMENT c)Call the function ConfigSetConfig with parameter (E_LAND_SCAPE, u16_y of du_resolution of Config_data structure and u16_x of du_resolution of Config_data structure) if Display_size variable is equal to E_10_INCH OR Display_size variable is equal to E_3_INCH
+	COMMENT Equivalence class:
+	COMMENT	[hdudispfpanel-DisplaySize-DB-LLR-001]
+	COMMENT The function shall do the following:
+	COMMENT set Display_size variable to E_10_INCH if PANEL_WIDTH is equal to PIXELS_1024 AND PANEL_HEIGHT is equal to PIXELS_768
+	COMMENT Equivalence calss:
+	COMMENT
+    COMMENT </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--variables to verify function ConfigSetConfig
+			VAR Config_data.du_resolution.u16_y,		init = 2,						ev = init 
+			VAR Config_data.du_resolution.u16_x,		init = 4,						ev = init
+			
+			VAR Appdata_appdata->panelWidth,				init = 1024,			ev = init
+			
+			VAR Appdata_appdata->panelHeight,				init = 768,			ev = init
+			
+			VAR Appdata_appdata->panelHSync,				init = 160,			ev = init	
+
+			VAR Appdata_appdata->panelVSync,				init =  90,			ev = init 
+			
+			VAR Appdata_appdata->panelHBP,				init = 10,			ev =  init 
+			
+			VAR Appdata_appdata->panelVbp,				init = 220,			ev =  init 
+			
+			VAR Appdata_appdata->panelVfp,				init = 70,			ev =  init 
+			
+			VAR Appdata_appdata->panelHFP,				init = 30,			ev =  init 
+
+			
+		
+		COMMENT OUTPUT SECTION:
+		
+			-- horizontal synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.HSPolarity,      		init = 10 ,                 	 ev = LTDC_HSPOLARITY_AL
+		
+			-- Vertical synchronization polarity updated as active low
+			VAR Ltdc_handle.Init.VSPolarity,      		init = 10 ,                 	 ev = LTDC_VSPOLARITY_AL
+		
+			-- Data enable polarity updated as active low 
+			VAR Ltdc_handle.Init.DEPolarity,      		init= 10 ,                 		 ev = LTDC_DEPOLARITY_AL
+		
+			-- Pixel clock polarity updated as input pixel clock
+			VAR Ltdc_handle.Init.PCPolarity,          	init = 20 ,                 	 ev = LTDC_PCPOLARITY_IPC
+		
+			-- Expected 'HorizontalSync of Init of Ltdc_handle' as difference of PANEL_HSYNC and ONE.
+			VAR Ltdc_handle.Init.HorizontalSync,      	init = 130 ,                	 ev = 159
+		
+			-- Expected 'VerticalSync of Init of Ltdc_handle' as difference of PANEL_VSYNC and ONE.
+			VAR Ltdc_handle.Init.VerticalSync,        	init = 10 ,                 	 ev = 89
+			
+			-- Expected 'AccumulatedHBP of Init of Ltdc_handle' as sum of PANEL_HSYNC and PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedHBP,      	init = 160 ,                	 ev = 169
+			
+			-- Expected 'AccumulatedVBP of Init of Ltdc_handle' as sum of PANEL_VSYNC and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedVBP,      	init = 20 ,                 	 ev = 309
+		
+			-- Expected 'AccumulatedActiveH of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC
+			--    and PANEL_VBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveH,  	init = 500 ,                	 ev = 1077
+			
+			-- Expected 'AccumulatedActiveW of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC and 
+			--    PANEL_HBP subtracted with ONE.
+			VAR Ltdc_handle.Init.AccumulatedActiveW,  	init  = 960 ,               	 ev = 1193
+			
+			-- Expected 'TotalHeigh of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC, PANEL_VBP and
+			--    PANEL_VFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalHeigh,      		init = 520 ,                	 ev = 1147
+			
+			-- Expected 'TotalWidth of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC, PANEL_HBP and
+			--    PANEL_HFP subtracted with ONE.
+			VAR Ltdc_handle.Init.TotalWidth,      		init = 970 ,                	 ev = 1223
+			
+			-- Expected 'Blue of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Blue,      	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Green,     	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of Init of Ltdc_handle' as ZERO.
+			VAR Ltdc_handle.Init.Backcolor.Red,       	init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg' as BG_FB_ADDR.
+			VAR P_layer_cfg.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)BG_FB_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg' as MAX_VAL.
+			VAR P_layer_cfg.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Blue,       		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg' as ZERO
+			VAR P_layer_cfg.Backcolor.Green,      		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg' as ZERO.
+			VAR P_layer_cfg.Backcolor.Red,        		init = 100 ,                	 ev = ZERO
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg.BlendingFactor1,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg' as PANEL_WIDTH.
+			VAR P_layer_cfg.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg' as PANEL_HEIGHT.
+			VAR P_layer_cfg.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'WindowX0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowX0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowX1 of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.WindowX1,             		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'WindowY0 of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.WindowY0,             		init = ONE ,                	 ev = ZERO 
+			
+			-- Expected 'WindowY1 of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.WindowY1,             		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			-- Expected 'PixelFormat of P_layer_cfg1' as BACKGROUND_PIXEL_FORMAT1.
+			VAR P_layer_cfg1.PixelFormat,          		init = PANEL_WIDTH ,             ev = BACKGROUND_PIXEL_FORMAT1
+			
+			-- Expected 'FBStartAdress of P_layer_cfg1' as FG_FB_ONE_ADDR.
+			VAR P_layer_cfg1.FBStartAdress,        		init = 10 ,                 	 ev = (T_UINT32)FG_FB_ONE_ADDR 
+			
+			-- Expected 'Alpha of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha,            			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Alpha0 of P_layer_cfg1' as MAX_VAL.
+			VAR P_layer_cfg1.Alpha0,           			init = 100 ,                	 ev = MAX_VAL
+			
+			-- Expected 'Blue of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Blue,       		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Green of Backcolor of P_layer_cfg1' as ZERO
+			VAR P_layer_cfg1.Backcolor.Green,      		init = ONE ,                	 ev = HEX_TEN 
+			
+			-- Expected 'Red of Backcolor of P_layer_cfg1' as ZERO.
+			VAR P_layer_cfg1.Backcolor.Red,        		init = 100 ,                     ev = HEX_TEN
+			
+			
+			-- Expected 'BlendingFactor1 of P_layer_cfg1' as LTDC_BLENDING_FACTOR1_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor1,      		init = 100 ,                     ev = LTDC_BLENDING_FACTOR1_PAXCA
+			
+			-- Expected 'BlendingFactor2 of P_layer_cfg1' as LTDC_BLENDING_FACTOR2_PAXCA.
+			VAR P_layer_cfg1.BlendingFactor2,      		init = 100 ,                	 ev = LTDC_BLENDING_FACTOR2_PAXCA
+			
+			-- Expected 'ImageWidth of P_layer_cfg1' as PANEL_WIDTH.
+			VAR P_layer_cfg1.ImageWidth,           		init = PANEL_HEIGHT ,            ev = PANEL_WIDTH
+			
+			-- Expected 'ImageHeight of P_layer_cfg1' as PANEL_HEIGHT.
+			VAR P_layer_cfg1.ImageHeight,          		init = PANEL_WIDTH ,             ev = PANEL_HEIGHT
+			
+			
+			-- Expected 'Instance of Ltdc_handle' as LTDC.
+			VAR Ltdc_handle.Instance,              		init =NULL,					     ev =LTDC
+			
+			-- Expected 'IER value of Instance of LTDC to verify __HAL_LTDC_ENABLE_IT
+			VAR LTDC->IER,              				init =0x00,					     ev =0x01
+			
+
+			
+			VAR Display_size,							init = E_5_INCH,				ev = E_10_INCH
+		
+		-- Stub calls :
+		SIMUL
+		
+			-- To Initialize the LTDC
+			STUB HalLtdcInit(&Ltdc_handle)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg,ZERO)HAL_OK
+		
+			-- To configure the LTDC Layer
+			STUB HalLtdcConfigLayer(&Ltdc_handle,&P_layer_cfg1,ONE)HAL_OK
+		
+			-- To extract configuration information
+			STUB ConfigExtract()
+			STUB ConfigSetConfig(E_LAND_SCAPE,1024,768)
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#LCDConfig();
+			
+	END ELEMENT
+
+END TEST -- TEST 6
+
+
+
+
+
+END SERVICE -- LCDConfig
+
+
+

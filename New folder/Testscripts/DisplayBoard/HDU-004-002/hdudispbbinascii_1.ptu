@@ -1,0 +1,826 @@
+HEADER hdudispbbinascii ,Source Code Ver : 1.7 ,TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+-- Author Name      	: Manju Kiran M
+--
+-- File Name        	: hdudispbbinascii_1.ptu
+--
+-- Test Creation Date  	: 30.10.2017
+--
+-- Tested Functions 	: BinAscii,
+--						  BinAsciiConv
+--
+-- Version History      :
+--
+-- TEST-VERSION      	TEST-DATE   		TESTER NAME			MODIFICATIONS
+--  ------------		---------			-----------			-------------
+--      1.1             30.10.2017          Manju Kiran M       Created the PTU file.
+--		1.2				10.11.2017			Manju Kiran M       Updated as per #PR100171
+--		1.3				14.11.2017			Manju Kiran M       Updated header for ptu version synchronization
+--		1.4				30.07.2020			Harshitha R 		Updated as per #PR100267
+--		1.5				19.10.2020			Harshitha R 		Updated as per #PR100295(self review)
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispbbinascii.h"
+##include "hdulibbasictypes.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+	--None
+	
+-- Declarations of the temporary variable
+
+	-- Temporary variable to convert demial to binary
+	#T_INT32 PTU_src;
+	
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      : Manju Kiran M
+    COMMENT
+    COMMENT File Name        : hdudispbbinascii_1.ptu
+    COMMENT
+    COMMENT Tested Functions : BinAscii,
+    COMMENT					   BinAsciiConv
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+	COMMENT
+    COMMENT	1. In function 'BinAsciiConv' while loop in LLR "hdudispbbinascii-BinAsciiConv-DB-LLR-005" cannot be 
+	COMMENT	   covered for 0 loop as NULL cannot be passed as input for the function.
+	COMMENT
+	COMMENT	2. In function 'BinAscii' while loop in LLR "hdudispbbinascii-BinAscii-DB-LLR-005" 
+	COMMENT	   cannot be covered for 0 loops.
+	COMMENT	   Code Snippet:
+	COMMENT		....
+	COMMENT		size  = (T_SHORT)(((format & S_M) >> S_P) + ONE);
+	COMMENT		....
+	COMMENT		Since the value of 'size' cann never be equal to zero.		
+	COMMENT
+	COMMENT	3. In function 'BinAscii' for loop in LLR "hdudispbbinascii-BinAscii-DB-LLR-010" 
+	COMMENT	   cannot be covered for 0 loop.
+	COMMENT	   Code Snippet:
+	COMMENT		....
+	COMMENT		if (decimals != ZERO)
+	COMMENT		{
+    COMMENT		 /*hdudispbbinascii-BinAscii-DB-LLR-008*/
+    COMMENT		  for (counter=decimals, byte_ptr=last_byte - ONE ; counter> (T_UINT8)ZERO; counter--)
+    COMMENT		  {
+	COMMENT		....
+	COMMENT		Since the control enters the loop only when 'decimals' is equal to zero.
+	COMMENT
+	COMMENT	4. In function 'BinAscii' while loop in LLR "hdudispbbinascii-BinAscii-DB-LLR-015" 
+	COMMENT	   cannot be covered for 0 loop as the control never enters the condition when fieldwidth is ZERO.
+	COMMENT	   Code Snippet:
+	COMMENT		....
+	COMMENT		/*hdudispbbinascii-BinAscii-DB-LLR-015*/
+	COMMENT		if (counter < (T_UINT8)ZERO)
+	COMMENT		{
+    COMMENT		  /* Trivial case of 0 field width.*/
+    COMMENT		  if (ZERO == field_width )
+    COMMENT		  {
+    COMMENT		     *dest = HEX_ZERO;
+    COMMENT		     return (dest);
+    COMMENT		  }
+	COMMENT			...
+	COMMENT			while (byte_ptr < last_byte)
+    COMMENT			{
+	COMMENT		....
+	COMMENT	
+	COMMENT	5.  In function 'BinAscii' while loop in LLR "hdudispbbinascii-BinAscii-DB-LLR-018" 
+	COMMENT	    cannot be covered while 0 loop as the control will return from the functon when 'field_width' is ZERO 
+	COMMENT		acording to LLR "hdudispbbinascii-BinAscii-DB-LLR-015" .
+	COMMENT	
+	COMMENT	6.  The PTU is split into 8 parts due to static dependancy.
+	COMMENT	
+    COMMENT </AC>
+    COMMENT
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+	COMMENT
+	COMMENT Class 1
+    COMMENT In function 'BinAscii', format is equal to NO_NUMBER.
+	COMMENT
+	COMMENT Class 2
+    COMMENT In function 'BinAscii', format is not equal to NO_NUMBER.
+	COMMENT
+	COMMENT Class 3
+	COMMENT The function 'BinAscii', returns address of dest.
+	COMMENT
+	COMMENT Class 4
+	COMMENT In function 'BinAscii', result of bitwise AND operation of content of (byte pointer  
+	COMMENT	plus size of the input in bytes minus ONE) and ONEHUNDRED_TWENTY_EIGHT is TRUE.
+	COMMENT
+	COMMENT Class 5
+	COMMENT In function 'BinAscii', result of bitwise AND operation of content of (byte pointer  
+	COMMENT	plus size of the input in bytes minus ONE) and ONEHUNDRED_TWENTY_EIGHT is FALSE.
+	COMMENT
+	COMMENT Class 6
+	COMMENT In function 'BinAscii', negation of result of bitwise AND operation of format parameter
+	COMMENT	value and UNSIGNED is TRUE.
+	COMMENT
+	COMMENT Class 7
+	COMMENT In function 'BinAscii', negation of result of bitwise AND operation of format parameter
+	COMMENT	value and UNSIGNED is FALSE.
+	COMMENT
+	COMMENT Class 8
+	COMMENT In function 'BinAscii', negative flag is equal to zero.
+	COMMENT
+	COMMENT Class 9
+	COMMENT In function 'BinAscii', negative flag is not equal to zero.
+	COMMENT
+	COMMENT Class 10
+	COMMENT In function 'BinAscii', decimal value is not equal to ZERO.
+	COMMENT
+	COMMENT Class 11
+	COMMENT In function 'BinAscii', decimal value is equal to ZERO.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In function 'BinAscii', byte pointer is less than temporary first char pointer.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function 'BinAscii', byte pointer is greater than temporary first char pointer.
+	COMMENT
+	COMMENT Class 14
+	COMMENT In function 'BinAscii', result of bitwise AND operation of format value and PUT_PLUS is 
+	COMMENT equal to zero.
+	COMMENT
+	COMMENT Class 15
+	COMMENT In function 'BinAscii', result of bitwise AND operation of format value and PUT_PLUS is 
+	COMMENT not equal to zero.
+	COMMENT
+	COMMENT Class 16
+	COMMENT In function 'BinAscii', counter value is less than zero.
+	COMMENT
+	COMMENT Class 17
+	COMMENT In function 'BinAscii', counter value is equal to zero.
+	COMMENT
+	COMMENT Class 18
+	COMMENT In function 'BinAscii', fieldwidth is equal to zero.
+	COMMENT
+	COMMENT Class 19
+	COMMENT In function 'BinAscii', fieldwidth is not equal to zero.
+	COMMENT
+	COMMENT Class 20
+	COMMENT In function 'BinAscii', sign value is not equal to ZERO.
+	COMMENT
+	COMMENT Class 21
+	COMMENT In function 'BinAscii', sign value is equal to ZERO.
+	COMMENT
+	COMMENT Class 22
+	COMMENT In function 'BinAscii', content of byte pointer is a digit.
+	COMMENT
+	COMMENT Class 23
+	COMMENT In function 'BinAscii', content of byte pointer is not a digit.
+	COMMENT
+	COMMENT Class 24
+	COMMENT In function 'BinAscii', result of bitwise operation of format and NOLZB is equal to ZERO.
+	COMMENT
+	COMMENT Class 25
+	COMMENT In function 'BinAscii', result of bitwise operation of format and NOLZB is not equal to ZERO.
+	COMMENT
+	COMMENT Class 26
+	COMMENT In function 'BinAscii', result of bitwise and operation of 'format' value and FLASHIT is 
+	COMMENT	equal to ZERO.
+	COMMENT
+	COMMENT Class 27
+	COMMENT In function 'BinAscii', result of bitwise and operation of 'format' value and FLASHIT is 
+	COMMENT not equal to ZERO.
+	COMMENT
+	COMMENT Class 28
+	COMMENT In function 'BinAscii', content of temporary first char pointer is a digit.
+	COMMENT
+	COMMENT Class 29
+	COMMENT In function 'BinAscii', content of temporary first char pointer is not a digit.
+	COMMENT
+	COMMENT Class 30
+	COMMENT The function 'BinAscii', returns address of dest minus ONE.
+	COMMENT
+	COMMENT Class 31
+	COMMENT The function 'BinAscii', calls the function 'BinAsciiConv'.
+	COMMENT
+	COMMENT Class 32
+	COMMENT The function 'BinAsciiConv', returns dest.
+	COMMENT
+	COMMENT Class 33
+	COMMENT In function 'BinAscii', flash value is equal to ZERO.
+	COMMENT
+	COMMENT Class 34
+	COMMENT In function 'BinAscii', flash value is not equal to ZERO.
+	COMMENT	
+	COMMENT	Class 37
+	COMMENT	In function 'BinAsciiConv',src is not equal to ZERO.
+	COMMENT	
+	COMMENT	Class 38
+	COMMENT	In function 'BinAsciiConv',src is equal to ZERO.
+	COMMENT
+	COMMENT Class 39
+	COMMENT In function 'BinAscii', byte pointer is equal to temporary first char pointer.
+	COMMENT
+	COMMENT	Class 40
+	COMMENT	In function 'BinAscii',fieldwidth is equal to ONE.
+	COMMENT
+	COMMENT	Class 41
+	COMMENT	In function 'BinAscii',fieldwidth is greater than ONE.
+	COMMENT	
+	COMMENT	Class 42
+	COMMENT	In function 'BinAscii',fieldwidth is less than ONE.
+	COMMENT	
+	COMMENT Class 43
+	COMMENT In function 'BinAscii', counter value is greater than zero.
+	COMMENT
+    COMMENT Invalid Class(es)
+	COMMENT	
+	COMMENT	Class 35 
+	COMMENT	In function 'BinAscii',NULL is passed as parameter for 'src'
+	COMMENT	
+	COMMENT	Class 36
+	COMMENT	In function 'BinAscii',NULL is passed as parameter for 'dest'
+	COMMENT
+    COMMENT </ECD>
+	
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+     DEFINE STUB hdudispbbinascii_c
+
+           --No Stub Calls
+
+     END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+--Environment of the file hdudispbbinascii.c
+
+--ENVIRONMENT ENV_hdudispbbinascii_c
+
+--      None
+        
+--END ENVIRONMENT ENV_hdudispbbinascii_c
+
+--USE ENV_hdudispbbinascii_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BinAscii
+--------------------------------------------------------------------------------
+SERVICE BinAscii
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#void *src = (void *) &PTU_src;
+
+#T_USHORT format;
+
+#T_UINT8  dest[200];
+
+-- By function returned type declaration
+#T_CHAR* ret_BinAscii = (T_CHAR*)&PTU_src;	
+		
+ENVIRONMENT ENV_BinAscii
+		
+	VAR src,				init = (void *) &PTU_src,				ev = init
+		
+	VAR format,				init = NO_NUMBER,						ev = init
+		
+	VAR dest,				init = 0,								ev = init
+		
+	VAR ret_BinAscii,		init = (T_CHAR*)&PTU_src,				ev = init
+    	
+END ENVIRONMENT --ENV_BinAscii
+    
+USE ENV_BinAscii
+
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-001]
+	COMMENT The function 'BinAscii' returns with dest value when the value of format parameter is 
+	COMMENT	equal to NO_NUMBER.
+    COMMENT Equivalence Class 1,3
+	COMMENT </TD>
+	
+		ELEMENT
+		
+			COMMENT INPUT SECTION:
+				
+				--holds the format used for conversion
+				VAR format,				init = NO_NUMBER,					ev = init
+					
+			COMMENT INPUT/OUTPUT SECTION:
+			
+				--None
+			
+			COMMENT OUTPUT SECTION:
+				
+				--holds the return value 
+				VAR ret_BinAscii,		init =  (T_CHAR*)&PTU_src,        	ev = (T_CHAR*) dest
+				
+		-- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+		
+		-- Calling the Unit Under Test :
+        #ret_BinAscii = BinAscii(src, format, (T_CHAR*)dest);
+        
+		END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT	<TD>
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-001]
+	COMMENT The function 'BinAscii' does nothing when the value of format parameter is 
+	COMMENT	not equal to NO_NUMBER.
+    COMMENT Equivalence Class 2
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-002]
+	COMMENT The function 'BinAscii' stores the input parameter value src as bytes in a byte pointer.
+    COMMENT Equivalence Class None	
+	COMMENT	
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-003]
+	COMMENT The function 'BinAscii' calculates the size of the input in bytes as follows:
+	COMMENT The result of bitwise AND operation of format parameter and S_M is right shifted by S_P plus
+	COMMENT ONE stored as size in bytes.
+    COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-004]
+	COMMENT The function 'BinAscii' sets negative flag to ONE and a temporary number to MINUS_ONE when
+	COMMENT 1.Result of bitwise AND operation of content of (byte pointer plus size of the input in bytes
+	COMMENT minus ONE) and ONEHUNDRED_TWENTY_EIGHT is TRUE and
+	COMMENT 2.Negation of result of bitwise AND operation of format parameter value and UNSIGNED is FALSE.
+	COMMENT	Test case tested for MCDC condition TF
+    COMMENT Equivalence Class 4,7
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-005]
+	COMMENT The function 'BinAscii' loops for 4 times and copies the number to be converted as below
+    COMMENT	1.Store the address of temporary number in a temporary pointer
+    COMMENT 2.Loop size of the input times and do the following
+    COMMENT   a.copy the content of byte pointer to temporary pointer.
+    COMMENT   b.Increment the byte pointer and  temporary pointer by ONE
+    COMMENT   c.Decrement the size of input in byes by ONE.
+    COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-006]
+	COMMENT The function 'BinAscii' sets the temporary number to temporary number multiplied by minus one
+	COMMENT	when negative flag is set.
+    COMMENT Equivalence Class 9
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-007]
+	COMMENT The function 'BinAscii' stores the addition of address of temporary buffer and FIFTEEN
+	COMMENT in temporary first char pointer.
+    COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-008]
+	COMMENT The function 'BinAscii' calls the function 'BinAsciiConv' with parameters temporary number 
+	COMMENT and temporary first char pointer and store the return value in delimiter pointer.
+    COMMENT Equivalence Class 31
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAsciiConv-DB-LLR-001]
+	COMMENT The function 'BinAsciiConv' sets temporary buffer with index DELIMITER_POS to DELIMITER.
+	COMMENT Equivalence None
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAsciiConv-DB-LLR-002]
+	COMMENT	The function 'BinAsciiConv'sets next character address to sum of temporary buffer and LAST_DIGIT_POS.
+	COMMENT Equivalence None
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAsciiConv-DB-LLR-003]
+	COMMENT	The function 'BinAsciiConv' loops for 3 times when src is not equal to ZERO and does the following
+	COMMENT	1. Stores next character to remainder of src with BASE.
+	COMMENT	2. Increments next character with AZERO.
+	COMMENT	3. Decrements next character address with ONE.
+	COMMENT	4. Sets src to quotient of src and BASE.
+	COMMENT	And does nothing when src is equal to ZERO.
+	COMMENT Equivalence 37,38
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAsciiConv-DB-LLR-004]
+	COMMENT	The function 'BinAsciiConv'increments next character address by ONE.
+	COMMENT Equivalence None
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAsciiConv-DB-LLR-005]
+	COMMENT	The function 'BinAsciiConv' loops for 3 times when next character is not equal to ZERO and sets dest to 
+	COMMENT	next charcater.
+	COMMENT	And does nothing when next character is equal to ZERO
+	COMMENT Equivalence None
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAsciiConv-DB-LLR-006]
+	COMMENT	The function 'BinAsciiConv' sets dest to DELIMITER and return dest from the function.
+	COMMENT Equivalence 32
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-009]
+	COMMENT The function 'BinAscii' stores the result of bitwise AND operation of format value
+	COMMENT and D_M which is right shifted by D_P as decimal value.
+    COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-010]
+	COMMENT The function 'BinAscii' does nothing when decimal value is equal to ZERO.
+    COMMENT Equivalence Class 11
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-011]
+	COMMENT The function 'BinAscii' does the following when negative flag is set
+	COMMENT	1.Decrements the temporary first char pointer by one.
+	COMMENT	2.Sets the sign character as minus('-')
+    COMMENT Equivalence Class 9
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-012]
+	COMMENT The function 'BinAscii' does nothing when negative flag is set
+    COMMENT Equivalence Class 9,14
+	COMMENT	
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-013]
+	COMMENT The function 'BinAscii' extracts the field width from the format as follows
+	COMMENT	Result of bitwise AND operation of format value and W_M which is right shifted 
+	COMMENT	by W_P storedas Fieldwith of output.
+    COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-014]
+	COMMENT The function 'BinAscii' sets counter to the result of substraction of field width and 
+	COMMENT	(delimiter pointer -temporary first char pointer)
+    COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-015]
+	COMMENT The function 'BinAscii' does nothing when counter is equal to ZERO.
+	COMMENT Equivalence Class 43
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-016]
+	COMMENT The function 'BinAscii' does the following when counter is equal ZERO
+    COMMENT 1.Sets sign pointer to value of temporary first char pointer	
+	COMMENT 2.Sets fill character as blank SPACE.
+	COMMENT	3.Sets temporary first char pointer to the result of subtraction of temporary first char
+	COMMENT	pointer and counter.
+	COMMENT	4.Does nothing when result of bitwise operation of format and NOLZB is equal to ZERO.
+	COMMENT	5.Set byte pointer to value of temporary first char pointer
+	COMMENT	6.Increment the counter by one when sign not equal to ZERO.
+	COMMENT	7.Loop till the counter is greater than ZERO and do the following
+    COMMENT  i.Set the content of byte pointer to fill character value and increment the byte pointer by one
+    COMMENT  ii.Decrement the counter by ONE.
+	COMMENT	8.Set sign pointer content to sign when sign not equal to ZERO.
+    COMMENT Equivalence Class 17,24,20
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-017]
+	COMMENT The function 'BinAscii' does nothing when result of bitwise and operation of
+	COMMENT	'format' value and FLASHIT is equal to ZERO.
+    COMMENT Equivalence Class 26
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-018]
+	COMMENT The function 'BinAscii' loops till field width is greater than or equal to ONE and does the following
+	COMMENT	1.Does nothing when flash value is not set.
+	COMMENT	2.Copies the content of temporary first char pointer to content of dest parameter and increment both the pointers
+	COMMENT	3.Decrement the field width value by one
+    COMMENT Equivalence Class 33,40,41,42
+	COMMENT	
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-019]
+	COMMENT The function 'BinAscii' return value of dest value minus ONE.
+    COMMENT Equivalence Class 30
+	COMMENT
+    COMMENT </TD>
+	
+		ELEMENT
+		
+			COMMENT INPUT SECTION:
+			
+				--holds the format used for conversion
+				VAR format,				init = 0x304,						ev = init
+				
+				--holds the value of input
+				VAR PTU_src,			init = -123,						ev = init	
+				
+				--holds the address of 'PTU_src'
+				VAR src, 				init= (void *)&PTU_src, 			ev = init
+							
+			COMMENT INPUT/OUTPUT SECTION:
+			
+				--None
+			
+			COMMENT OUTPUT SECTION:
+				
+				--holds the ASCII equvalent of input from 'src'
+				ARRAY dest,				init = {others=>0},        			ev = {0=>45,1=>49,2=>50,3=>51,others=>0}
+				
+				--holds the return value 
+				VAR ret_BinAscii,		init = (T_CHAR*)&PTU_src,        	ev =(T_CHAR*) &dest[3]
+		
+		-- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+		
+		-- Calling the Unit Under Test :
+        #ret_BinAscii = BinAscii(src, format, (T_CHAR*)dest);
+        
+		END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT	<TD>
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-004]
+	COMMENT The function 'BinAscii' sets negative flag to ZERO and a temporary number to ZERO when
+	COMMENT 1.Result of bitwise AND operation of content of (byte pointer plus size of the input in bytes
+	COMMENT minus ONE) and ONEHUNDRED_TWENTY_EIGHT is TRUE and
+	COMMENT 2.Negation of result of bitwise AND operation of format parameter value and UNSIGNED is TRUE.
+	COMMENT	Test case tested for MCDC condition TT
+    COMMENT Equivalence Class 4,6
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-006]
+	COMMENT The function 'BinAscii' does nothing when negative flag is not set.
+    COMMENT Equivalence Class 8
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-012]
+	COMMENT The function 'BinAscii' sets sign to DELIMITER when negative number equal to zero and result of
+	COMMENT	 bitwise AND of format PUT_PLUS is equal to ZERO.
+    COMMENT Equivalence Class 8,14
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-015]
+	COMMENT The function 'BinAscii' does the following when counter is less than ZERO,
+    COMMENT	Sets content of dest to HEX_ZERO and return dest value when field width is equal to ZERO
+	COMMENT Equivalence Class 16,18
+	COMMENT
+    COMMENT </TD>
+	
+		ELEMENT
+		
+			COMMENT INPUT SECTION:
+			
+				--holds the format used for conversion
+				VAR format,				init = 0x80,					ev = init
+				
+				--holds the value of input
+				VAR PTU_src,			init = -1,						ev = init	
+				
+				--holds the address of 'PTU_src'
+				VAR src, 				init= (void *)&PTU_src, 		ev = init			
+				
+			COMMENT INPUT/OUTPUT SECTION:
+			
+				--None
+			
+			COMMENT OUTPUT SECTION:
+				
+				--holds the return value 
+				VAR ret_BinAscii,		init = (T_CHAR*)&PTU_src,    	ev =(T_CHAR*) dest
+		
+		-- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+		
+		-- Calling the Unit Under Test :
+        #ret_BinAscii = BinAscii(src, format, (T_CHAR*)dest);
+        
+		END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT	<TD>
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-004]
+	COMMENT The function 'BinAscii' sets negative flag to ZERO and a temporary number to ZERO when
+	COMMENT 1.Result of bitwise AND operation of content of (byte pointer plus size of the input in bytes
+	COMMENT minus ONE) and ONEHUNDRED_TWENTY_EIGHT is FALSE and
+	COMMENT 2.Negation of result of bitwise AND operation of format parameter value and UNSIGNED is FALSE.
+	COMMENT	Test case tested for MCDC condition FF
+    COMMENT Equivalence Class 5,7
+	COMMENT
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-012]
+	COMMENT The function 'BinAscii' does the following when negative flag is not set and result of bitwise
+	COMMENT	AND operation of format value and PUT_PLUS is TRUE otherwise set sign character as DELIMITER
+	COMMENT	1.Decrement the temporary first char pointer by one.
+	COMMENT	2.Set the sign character as plus('+')
+    COMMENT Equivalence Class 8,15
+	COMMENT
+    COMMENT </TD>
+	
+		ELEMENT
+		
+			COMMENT INPUT SECTION:
+			
+				--holds the format used for conversion
+				VAR format,				init = 0xB09,					ev = init
+				
+				--holds the value of input
+				VAR PTU_src,			init = 12345678,				ev = init	
+				
+				--holds the address of 'PTU_src'
+				VAR src, 				init= (void *)&PTU_src, 		ev = init				
+				
+			COMMENT INPUT/OUTPUT SECTION:
+			
+				--None
+			
+			COMMENT OUTPUT SECTION:
+				
+				--holds the ASCII equvalent of input from 'src'
+				ARRAY dest,				init = {others=>0},        		ev = {0=>43,1=>49,2=>50,3=>51,4=>52,5=>53,
+				&															  6=>54,7=>55,8=>56,others=>0}
+				
+				--holds the return value 
+				VAR ret_BinAscii,		init = (T_CHAR*)&PTU_src,   	ev =(T_CHAR*) &dest[8]
+		
+		-- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+		
+		-- Calling the Unit Under Test :
+        #ret_BinAscii = BinAscii(src, format, (T_CHAR*)dest);
+        
+		END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT	<TD>
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-010]
+	COMMENT	The function 'BinasByteFormatInfo' does the following when number of decimals not equal to ZERO. 
+	COMMENT	1.loop for 4 times when the counter is greater than ZERO 
+	COMMENT		a.Store the content of byte pointer in byte pointer plus ONE location
+    COMMENT		b.Decrement the byte pointer by ONE
+    COMMENT		c.Set byte pointer to ZERO when byte pointer is less than temporary first char pointer
+	COMMENT	  And does nothing when counter becomes equal to ZERO.
+	COMMENT	2.Set temporary first char pointer to byte pointer when byte pointer is less than temporary 
+	COMMENT	first char pointer
+	COMMENT	3.Set content of byte pointer plus ONE to decimal point ('.')
+	COMMENT	4.Increment the delimiter pointer by ONE and content of delimiter pointer to DELIMITER
+	COMMENT	Equivalance Class 10,14,12,17,43
+	COMMENT  
+    COMMENT </TD>
+	
+		ELEMENT
+		
+			COMMENT INPUT SECTION:
+			
+				--holds the format used for conversion
+				VAR format,				init = 0x350,						ev = init
+				
+				--holds the value of input
+				VAR PTU_src,			init = 8888,						ev = init	
+				
+				--holds the address of 'PTU_src'
+				VAR src, 				init= (void *)&PTU_src, 			ev = init
+				
+			COMMENT INPUT/OUTPUT SECTION:
+			
+				--None
+			
+			COMMENT OUTPUT SECTION:
+				
+				--holds the return value 
+				VAR ret_BinAscii,		init = (T_CHAR*)&PTU_src,    		ev =(T_CHAR*) dest
+				
+		-- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+		
+		-- Calling the Unit Under Test :
+        #ret_BinAscii = BinAscii(src, format, (T_CHAR*)dest);
+        
+		END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 17
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-015]
+	COMMENT The function 'BinAscii' does nothing when counter is greater than ZERO.
+	COMMENT Equivalance Class 43
+	COMMENT 
+	COMMENT [hdudispbbinascii-BinAscii-DB-LLR-016]
+	COMMENT The function 'BinAscii' does the following when counter is greater than ZERO
+    COMMENT 1.Sets sign pointer to value of temporary first char pointer	
+	COMMENT 2.Sets fill character as blank SPACE.
+	COMMENT	3.Sets temporary first char pointer to the result of subtraction of temporary first char
+	COMMENT	pointer and counter.
+	COMMENT	4.Does nothing when result of bitwise operation of format and NOLZB is equal to ZERo.
+	COMMENT	5.Set byte pointer to value of temporary first char pointer
+	COMMENT	6.Increment the counter by one when sign not equal to ZERO.
+	COMMENT	7.Loop till the counter is greater than ZERO and do the following
+    COMMENT  i.Set the content of byte pointer to fill character value and increment the byte pointer by one
+    COMMENT  ii.Decrement the counter by ONE.
+	COMMENT	8.Set sign pointer content to sign when sign not equal to ZERO.
+    COMMENT Equivalence Class 43,24,20
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x302,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 1,						ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			ARRAY dest,							init = {others=>0},        		ev = {0=>32,1=>49,others=>0}
+			
+			
+			--holds the return address  
+        	VAR ret_BinAscii,					init = (T_CHAR*)&PTU_src,		ev =(T_CHAR*) &dest[1]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinAscii = BinAscii(src, format, (T_CHAR*)dest);
+        END ELEMENT
+
+END TEST -- TEST 17
+
+END SERVICE -- BinAscii

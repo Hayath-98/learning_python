@@ -1,0 +1,1534 @@
+HEADER hdulibstm32f7xxhaldma2d,Source Code Ver : 1.2,TestScript Ver : 1.2
+--------------------------------------------------------------------------------
+-- Author Name          : Pallavi V N
+--
+-- File Name            : hdulibstm32f7xxhaldma2d.ptu
+--
+-- Test Creation Date   : 10.10.2017
+--
+-- Tested Functions     : HalDma2dIrqHandler
+--                        HalDma2dLineEventCallback
+--                        HalDma2dClutLdingCpltCallback
+-- 
+-- Version History      :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------       ---------       -----------        -------------
+--     1.1             10.10.2017      Pallavi V N        Created the ptu file 
+--     1.2             10.11.2017      Pallavi V N        Updated as per #PR100171 
+-------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+##include "hdulibstm32f7xxhaldma2d.h" 
+##include "hdulibstm32f7xxhal.h" 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+-- Declaration of temporary variable
+    --This variable is created to verify the member Instance of the structure h_dma2d
+   #T_DMA2D PTU_Instance_1;
+   
+   -- Variable used to clear the empty environment block warning.
+    #T_INT32 PTU_Dummy;
+
+-- To verify the function pointers explicitly (nominal value execised)
+   #void PTU_XferCpltCallback_1(T_DMA2D_HANDLE_TYPE *dma_handle)
+   #{
+   #   dma_handle->LayerCfg[0].InputOffset = 11;
+   #   dma_handle->LayerCfg[0].InputColorMode = 11;
+   #   dma_handle->LayerCfg[0].AlphaMode = 11;
+   #   dma_handle->LayerCfg[0].InputAlpha = 11;
+   #}
+
+-- To verify the function pointers explicitly (minimum value execised)   
+   #void PTU_XferCpltCallback_2(T_DMA2D_HANDLE_TYPE *dma_handle)
+   #{
+   #   dma_handle->LayerCfg[0].InputOffset = 0;
+   #   dma_handle->LayerCfg[0].InputColorMode = 0;
+   #   dma_handle->LayerCfg[0].AlphaMode = 0;
+   #   dma_handle->LayerCfg[0].InputAlpha = 0;
+   #}
+
+-- To verify the function pointers explicitly (maximum value execised)   
+   #void PTU_XferCpltCallback_3(T_DMA2D_HANDLE_TYPE *dma_handle)
+   #{
+   #   dma_handle->LayerCfg[0].InputOffset = (T_UINT32)0xFFFFFFFF;
+   #   dma_handle->LayerCfg[0].InputColorMode = (T_UINT32)0xFFFFFFFF;
+   #   dma_handle->LayerCfg[0].AlphaMode = (T_UINT32)0xFFFFFFFF;
+   #   dma_handle->LayerCfg[0].InputAlpha = (T_UINT32)0xFFFFFFFF;
+   #}   
+   
+-- To verify the function pointers explicitly (nominal value execised)
+   #void PTU_XferErrorCallback_1(T_DMA2D_HANDLE_TYPE *dma_handle)
+   #{
+   #   dma_handle->LayerCfg[0].InputOffset = 10;
+   #   dma_handle->LayerCfg[0].InputColorMode = 10;
+   #   dma_handle->LayerCfg[0].AlphaMode = 10;
+   #   dma_handle->LayerCfg[0].InputAlpha = 10;
+   #}
+   
+-- To verify the function pointers explicitly (minimum value execised)   
+   #void PTU_XferErrorCallback_2(T_DMA2D_HANDLE_TYPE *dma_handle)
+   #{
+   #   dma_handle->LayerCfg[0].InputOffset = 0;
+   #   dma_handle->LayerCfg[0].InputColorMode = 0;
+   #   dma_handle->LayerCfg[0].AlphaMode = 0;
+   #   dma_handle->LayerCfg[0].InputAlpha = 0;
+   #}
+
+-- To verify the function pointers explicitly (maximum value execised)
+   #void PTU_XferErrorCallback_3(T_DMA2D_HANDLE_TYPE *dma_handle)
+   #{
+   #   dma_handle->LayerCfg[0].InputOffset = (T_UINT32)0xFFFFFFFF;
+   #   dma_handle->LayerCfg[0].InputColorMode = (T_UINT32)0xFFFFFFFF;
+   #   dma_handle->LayerCfg[0].AlphaMode = (T_UINT32)0xFFFFFFFF;
+   #   dma_handle->LayerCfg[0].InputAlpha = (T_UINT32)0xFFFFFFFF;
+   #}
+   
+--------------------------------------------------------------------------------
+
+BEGIN
+    COMMENT Author name      : Pallavi V N
+    COMMENT
+    COMMENT File name        : hdulibstm32f7xxhaldma2d.ptu
+    COMMENT
+    COMMENT Tested functions : HalDma2dIrqHandler
+    COMMENT                    HalDma2dLineEventCallback
+    COMMENT                    HalDma2dClutLdingCpltCallback
+    COMMENT 
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT 1) Following Test script related warnings are observed during Target 
+    COMMENT    Execution for volatile keyword member/variable:
+    COMMENT    warning #191-D: type qualifier is meaningless on cast type
+    COMMENT
+    COMMENT 2) ‘do while’ loop cannot be covered for '2 or more' times since 
+    COMMENT     it is controlled by value '0'  in function ‘HalDma2dIrqHandler’ for following macro:
+    COMMENT     __HAL_UNLOCK()
+    COMMENT
+    COMMENT</AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'HalDma2dIrqHandler', macro "READ_REG" is called.
+    COMMENT     
+    COMMENT Class 2
+    COMMENT In function 'HalDma2dIrqHandler',macro "__HAL_DMA2D_DISABLE_IT" is called.
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'HalDma2dIrqHandler',macro  "__HAL_DMA2D_CLEAR_FLAG" called.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'HalDma2dIrqHandler', macro "__HAL_UNLOCK" is called. 
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'HalDma2dIrqHandler', function 'XferErrorCallback' is called.   
+    COMMENT   
+    COMMENT Class 6
+    COMMENT In function 'HalDma2dIrqHandler', function poiner 'XferErrorCallback' has NULL address    
+    COMMENT      
+    COMMENT Class 7
+    COMMENT In function 'HalDma2dIrqHandler', function poiner 'XferErrorCallback' has Valid address     
+    COMMENT   
+    COMMENT Class 8
+    COMMENT In function 'HalDma2dIrqHandler', Transfer Error Interrupt Flag of ISR register and Transfer 
+    COMMENT Error Interrupt of control register are set. 
+    COMMENT   
+    COMMENT Class 9
+    COMMENT In function 'HalDma2dIrqHandler', Transfer Error Interrupt Flag of ISR register is Set and 
+    COMMENT Transfer Error Interrupt of control register is not set.     
+    COMMENT   
+    COMMENT Class 10
+    COMMENT In function 'HalDma2dIrqHandler', Transfer Error Interrupt Flag of ISR register is not set.
+    COMMENT   
+    COMMENT Class 11
+    COMMENT In function 'HalDma2dIrqHandler', Configuration Error Interrupt Flag of ISR register and 
+    COMMENT Configuration Error Interrupt of control register are set.    
+    COMMENT   
+    COMMENT Class 12
+    COMMENT In function 'HalDma2dIrqHandler', Configuration Error Interrupt Flag of ISR register is 
+    COMMENT set and Configuration Error Interrupt of control register is not set.     
+    COMMENT   
+    COMMENT Class 13
+    COMMENT In function 'HalDma2dIrqHandler', Configuration Error Interrupt Flag of ISR register 
+    COMMENT is not set.        
+    COMMENT   
+    COMMENT Class 14
+    COMMENT In function 'HalDma2dIrqHandler', CLUT Access Error Interrupt Flag of ISR register and 
+    COMMENT CLUT Access Error Interrupt of control register are set.     
+    COMMENT     
+    COMMENT Class 15
+    COMMENT In function 'HalDma2dIrqHandler', CLUT Access Error Interrupt Flag of ISR register is set and 
+    COMMENT CLUT Access Error Interrupt of control register is not set.     
+    COMMENT   
+    COMMENT Class 16
+    COMMENT In function 'HalDma2dIrqHandler', CLUT Access Error Interrupt Flag of ISR register is not set.     
+    COMMENT   
+    COMMENT Class 17
+    COMMENT In function 'HalDma2dIrqHandler', transfers watermark interrupt Flag of ISR register and 
+    COMMENT transfer watermark interrupt of control register are set.     
+    COMMENT   
+    COMMENT Class 18
+    COMMENT In function 'HalDma2dIrqHandler', function "HalDma2dLineEventCallback" is called to 
+    COMMENT transfer watermark Callback    
+    COMMENT   
+    COMMENT Class 19
+    COMMENT In function 'HalDma2dIrqHandler', function "HalDma2dLineEventCallback" is not called to 
+    COMMENT transfer watermark Callback    
+    COMMENT   
+    COMMENT Class 20
+    COMMENT In function 'HalDma2dIrqHandler', transfers watermark interrupt Flag of ISR register is set and 
+    COMMENT transfer watermark interrupt of control register is not set.    
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'HalDma2dIrqHandler', transfers watermark interrupt Flag of ISR register is not set and 
+    COMMENT transfer watermark interrupt of control register is set.    
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'HalDma2dIrqHandler', Transfers Complete Interrupt Flag of ISR register and 
+    COMMENT Transfer Complete Interrupt of control register are set    
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'HalDma2dIrqHandler', Transfers Complete Interrupt Flag of ISR register is set and 
+    COMMENT Transfer Complete Interrupt of control register is not set    
+    COMMENT    
+    COMMENT Class 24
+    COMMENT In function 'HalDma2dIrqHandler', Transfers Complete Interrupt Flag of ISR register is not set and 
+    COMMENT Transfer Complete Interrupt of control register is set    
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'HalDma2dIrqHandler', Transfers complete Call back with DMA2D handle   
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'HalDma2dIrqHandler', doesn't Transfers complete Call back with DMA2D handle   
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'HalDma2dIrqHandler', CLUT Transfers Complete Interrupt Flag of ISR register and 
+    COMMENT CLUT Transfer Complete Interrupt of control register are set.   
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'HalDma2dIrqHandler', CLUT Transfers Complete Interrupt Flag of ISR register is set and 
+    COMMENT CLUT Transfer Complete Interrupt of control register is not set.   
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'HalDma2dIrqHandler', CLUT Transfers Complete Interrupt Flag of ISR register is not set. 
+    COMMENT 
+    COMMENT Class 30
+    COMMENT In function 'HalDma2dIrqHandler', function "HalDma2dClutLdingCpltCallback" is called to 
+    COMMENT CLUT Transfer complete Callback.   
+    COMMENT   
+    COMMENT Class 31
+    COMMENT In function 'HalDma2dIrqHandler', function "HalDma2dClutLdingCpltCallback" is not called to 
+    COMMENT CLUT Transfer complete Callback. 
+    COMMENT   
+    COMMENT Class 32
+    COMMENT In function 'HalDma2dIrqHandler', ISR register is other than Transfer Error Interrupt Flag, 
+    COMMENT Configuration Error Interrupt flag, CLUT access Error Interrupt flag, Transfer watermark Interrupt flag, 
+    COMMENT Transfer Complete Interrupt flag,CLUT Transfer Complete Interrupt flag.
+    COMMENT   
+    COMMENT Invalid Class(es)
+    COMMENT  
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+DEFINE STUB hdulibstm32f7xxhaldma2d_c
+    -- Below functions are commented as these are function pointers
+    --#void XferCpltCallback(); 
+    --#void XferErrorCallback(); 
+      #volatile  T_INT32 Itm_rx_buffer; 
+END DEFINE
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--Environment of the hdulibstm32f7xxhaldma2d.c
+
+ENVIRONMENT ENV_hdulibstm32f7xxhaldma2d_c
+
+    VAR PTU_Dummy,      init = 0,       ev = init
+    
+END ENVIRONMENT -- ENV_hdulibstm32f7xxhaldma2d_c
+USE ENV_hdulibstm32f7xxhaldma2d_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalDma2dIrqHandler
+--------------------------------------------------------------------------------
+SERVICE HalDma2dIrqHandler
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_DMA2D_HANDLE_TYPE h_dma2d;
+
+    ENVIRONMENT ENV_HalDma2dIrqHandler
+    
+    STRUCTURE PTU_Instance_1,   init = {others => 0xFFF0000}, ev = init
+    STRUCTURE h_dma2d,          init = { Instance => &PTU_Instance_1, 
+                                     & Init => { Mode => 0, ColorMode => 0, OutputOffset => 0 }, 
+                                     & XferCpltCallback => PTU_XferCpltCallback_1, 
+                                     & XferErrorCallback => PTU_XferErrorCallback_1,
+                                     & LayerCfg => { others => { InputOffset => 0, InputColorMode => 0, AlphaMode => 0, 
+                                     & InputAlpha => 0 } },
+                                     & Lock => HAL_UNLOCKED, 
+                                     & State => HAL_DMA2D_STATE_RESET, 
+                                     & ErrorCode => 0 },  ev = init
+    END ENVIRONMENT -- ENV_HalDma2dIrqHandler
+    USE ENV_HalDma2dIrqHandler
+
+    TEST 1
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-001]
+    COMMENT The function 'HalDma2dIrqHandler' does the following when Transfer Error 
+    COMMENT Interrupt Flag of ISR register and Transfer Error Interrupt of control register are set
+    COMMENT a)  Disable the Transfer Error interrupt of control register.
+    COMMENT b)  Update error code by setting Transfer error bit.
+    COMMENT c)  Clear the transfer error flag of ISR register
+    COMMENT d)  Change DMA2D state as HAL_DMA2D_STATE_ERROR
+    COMMENT e)  Unlock the DMA2D handle
+    COMMENT Equivalence Class 1,2,3,4,5,8
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-002]
+    COMMENT The function 'HalDma2dIrqHandler' Transfers error Call back with DMA2D handle, 
+    COMMENT when XferErrorCallback is not NULL.
+    COMMENT Equivalence Class 7
+    COMMENT </TD>
+    
+        ELEMENT
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = 0x00000001U,    ev = init
+            VAR PTU_Instance_1.CR,      init = 0x00000100U,    ev = 0x0              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TE, ev = DMA2D_FLAG_TE
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = HAL_DMA2D_ERROR_TE
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = HAL_DMA2D_STATE_ERROR
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_1, 
+                                                             & ev = init 
+        COMMENT OUTPUT SECTION:                                                             
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = 10
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = 10                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = 10
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = 10                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-002]
+    COMMENT The function 'HalDma2dIrqHandler' does not Transfers error Call back with DMA2D handle, 
+    COMMENT when XferErrorCallback is NULL.
+    COMMENT Equivalence Class 6
+    COMMENT </TD>
+    
+        ELEMENT
+        
+        COMMENT INPUT/OUTPUT SECTION:        
+            VAR PTU_Instance_1.ISR,     init = 0x00000001U,    ev = init
+            VAR PTU_Instance_1.CR,      init = 0x00000100U,    ev = 0x0              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TE, ev = DMA2D_FLAG_TE
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init 
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = HAL_DMA2D_ERROR_TE
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = HAL_DMA2D_STATE_ERROR
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = NULL, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                     
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 2
+    
+    TEST 3
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-001]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the  following when Transfer Error 
+    COMMENT Interrupt Flag of ISR register is set and Transfer Error Interrupt of control register is not set
+    COMMENT a)  Disable the Transfer Error interrupt of control register.
+    COMMENT b)  Update error code by setting Transfer error bit.
+    COMMENT c)  Clear the transfer error flag of ISR register
+    COMMENT d)  Change DMA2D state as HAL_DMA2D_STATE_ERROR
+    COMMENT e)  Unlock the DMA2D handle
+    COMMENT Equivalence Class 9
+    COMMENT </TD>
+    
+        ELEMENT
+        
+        COMMENT INPUT/OUTPUT SECTION:        
+            VAR PTU_Instance_1.ISR,     init = 0x00000001U,    ev = init
+            VAR PTU_Instance_1.CR,      init = (T_UINT32)0xFFFFFEFFU,    ev = init  
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TE, ev = init
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init  
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = init
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = init
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = init
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                     
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 3
+    
+    TEST 4
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-001]
+    COMMENT The function 'HalDma2dIrqHandler' does the following when Transfer Error Interrupt Flag of ISR register and 
+    COMMENT Transfer Error Interrupt of control register are set
+    COMMENT a)  Disable the Transfer Error interrupt of control register.(verified nominal vlaue)
+    COMMENT b)  Update error code by setting Transfer error bit.(Except Transfer error bit all bits are set)
+    COMMENT c)  Clear the transfer error flag of ISR register
+    COMMENT d)  Change DMA2D state as HAL_DMA2D_STATE_ERROR
+    COMMENT f)  Unlock the DMA2D handle
+    COMMENT Equivalence Class 1,2,3,4,5,8
+    COMMENT </TD>
+    
+        ELEMENT
+        
+        COMMENT INPUT/OUTPUT SECTION:        
+            VAR PTU_Instance_1.ISR,     init = 0x00000001U,    ev = init
+            VAR PTU_Instance_1.CR,      init = 0x00000FFFU,    ev = 0x00000EFFU              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TE, ev = DMA2D_FLAG_TE
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = (T_UINT32)0xFFFFFFFE,     ev = (T_UINT32)0xFFFFFFFF
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = HAL_DMA2D_STATE_ERROR
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_2, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 10,    ev = 0
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 10,    ev = 0                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 10,    ev = 0
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 10,    ev = 0                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 4
+    
+    TEST 5
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-001]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the following 
+    COMMENT when Transfer Error Interrupt Flag of ISR register is not set 
+    COMMENT a)  Disable the Transfer Error interrupt of control register.
+    COMMENT b)  Update error code by setting Transfer error bit.
+    COMMENT c)  Clear the transfer error flag of ISR register
+    COMMENT d)  Change DMA2D state as HAL_DMA2D_STATE_ERROR
+    COMMENT e)  Unlock the DMA2D handle
+    COMMENT Equivalence Class 10
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-003]
+    COMMENT The function 'HalDma2dIrqHandler' does the following,
+    COMMENT when Configuration Error Interrupt Flag of ISR register 
+    COMMENT and Configuration Error Interrupt of control register are set
+    COMMENT a) Disable the Configuration Error interrupt of control register. 
+    COMMENT b) Clear the Configuration error flag of ISR register 
+    COMMENT c) Update error code by setting Configuration error bit. 
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_ERROR 
+    COMMENT e) Unlock the DMA2D handle.        
+    COMMENT Equivalence Class 11    
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-004]
+    COMMENT The function Transfers error Call back with DMA2D handle, 
+    COMMENT when XferErrorCallback is not NULL and 
+    COMMENT Configuration Error Interrupt Flag of ISR register and 
+    COMMENT Configuration Error Interrupt of control register are set.        
+    COMMENT Equivalence Class 7  
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = 0x00000020U,    ev = init
+            VAR PTU_Instance_1.CR,      init = 0x00002000U,    ev = 0x0              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TE, ev = DMA2D_FLAG_CE
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = HAL_DMA2D_ERROR_CE
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = HAL_DMA2D_STATE_ERROR
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_3, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = (T_UINT32)0xFFFFFFFF
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = (T_UINT32)0xFFFFFFFF                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = (T_UINT32)0xFFFFFFFF
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = (T_UINT32)0xFFFFFFFF                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 5
+    
+    TEST 6
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-004]
+    COMMENT The function doesn't Transfers error Call back with DMA2D handle, 
+    COMMENT when XferErrorCallback is NULL and 
+    COMMENT Configuration Error Interrupt Flag of ISR register and 
+    COMMENT Configuration Error Interrupt of control register are set.        
+    COMMENT Equivalence Class 6 
+    COMMENT </TD>
+    
+        ELEMENT
+
+        COMMENT INPUT/OUTPUT SECTION:        
+            VAR PTU_Instance_1.ISR,     init = 0x00000020U,    ev = init
+            VAR PTU_Instance_1.CR,      init = 0x00002000U,    ev = 0x0              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CE, ev = DMA2D_FLAG_CE
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = HAL_DMA2D_ERROR_CE
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = HAL_DMA2D_STATE_ERROR
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = NULL, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                     
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 6
+    
+    TEST 7
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-003]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the following,
+    COMMENT when Configuration Error Interrupt Flag of ISR register is set and 
+    COMMENT Configuration Error Interrupt of control register is not set
+    COMMENT a) Disable the Configuration Error interrupt of control register. 
+    COMMENT b) Clear the Configuration error flag of ISR register 
+    COMMENT c) Update error code by setting Configuration error bit. 
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_ERROR 
+    COMMENT e) Unlock the DMA2D handle. 
+    COMMENT Equivalence Class 12
+    COMMENT </TD>
+    
+        ELEMENT
+        
+
+        COMMENT INPUT/OUTPUT SECTION:        
+            VAR PTU_Instance_1.ISR,     init = 0x00000020U,    ev = init
+            VAR PTU_Instance_1.CR,      init = (T_UINT32)0xFFFFDFFFU,    ev = init  
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CE, ev = init
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init  
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = init
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = init
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = init
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_3, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                     
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 7
+    
+    TEST 8
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-003]
+    COMMENT The function 'HalDma2dIrqHandler' does the following,
+    COMMENT when Configuration Error Interrupt Flag of ISR register and 
+    COMMENT Configuration Error Interrupt of control register are set
+    COMMENT a) Disable the Configuration Error interrupt of control register.( CR is maximum)
+    COMMENT b) Clear the Configuration error flag of ISR register 
+    COMMENT c) Update error code by setting Configuration error bit.(Configuration error bit not set)
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_ERROR 
+    COMMENT e) Unlock the DMA2D handle.        
+    COMMENT Equivalence Class 11  
+    COMMENT </TD>
+    
+        ELEMENT
+        
+        COMMENT INPUT/OUTPUT SECTION:        
+            VAR PTU_Instance_1.ISR,     init = 0x00000020U,    ev = init
+            VAR PTU_Instance_1.CR,      init = (T_UINT32)0xFFFFFFFFU,    ev = 0xFFFFDFFFU              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CE, ev = DMA2D_FLAG_CE
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = (T_UINT32)0xFFFFFFFDU,    ev = (T_UINT32)0xFFFFFFFF
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = HAL_DMA2D_STATE_ERROR
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_2, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 10,    ev = 0
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 10,    ev = 0                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 10,    ev = 0
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 10,    ev = 0                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 8
+    
+    TEST 9
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-003]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the following,
+    COMMENT when Configuration Error Interrupt Flag of ISR register is not set
+    COMMENT a) Disable the Configuration Error interrupt of control register. 
+    COMMENT b) Clear the Configuration error flag of ISR register 
+    COMMENT c) Update error code by setting Configuration error bit. 
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_ERROR 
+    COMMENT e) Unlock the DMA2D handle.        
+    COMMENT Equivalence Class 13    
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-005]
+    COMMENT The function 'HalDma2dIrqHandler' does the following,
+    COMMENT when CLUT Access Error Interrupt Flag of ISR register and 
+    COMMENT CLUT Access Error Interrupt of control register are set.
+    COMMENT a) Disable the CLUT Access Error interrupt of control register. 
+    COMMENT b) Clear the CLUT Access Error flag of ISR register
+    COMMENT c) Update error code by setting CLUT Access Error bit.
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_ERROR
+    COMMENT e) Unlock the DMA2D handle. 
+    COMMENT Equivalence Class 14 
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-006]
+    COMMENT The function Transfers error Call back with DMA2D handle, 
+    COMMENT when XferErrorCallback is not NULL and 
+    COMMENT CLUT Access Error Interrupt Flag of ISR register and 
+    COMMENT CLUT Access Error Interrupt of control register are set.        
+    COMMENT Equivalence Class 7  
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_CAE, ev = init
+            VAR PTU_Instance_1.CR,      init = DMA2D_IT_CAE,   ev = 0x0              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CAE,ev = DMA2D_FLAG_CAE
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = HAL_DMA2D_ERROR_CAE
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = HAL_DMA2D_STATE_ERROR
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = 10
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = 10                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = 10
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = 10                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 9
+    
+    TEST 10
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-006]
+    COMMENT The function doesn't Transfers error Call back with DMA2D handle, 
+    COMMENT when XferErrorCallback is NULL and 
+    COMMENT CLUT Access Error Interrupt Flag of ISR register and 
+    COMMENT CLUT Access Error Interrupt of control register are set.        
+    COMMENT Equivalence Class 6
+    COMMENT </TD>
+    
+        ELEMENT
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_CAE, ev = init
+            VAR PTU_Instance_1.CR,      init = DMA2D_IT_CAE,   ev = 0x0              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CAE,ev = DMA2D_FLAG_CAE
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = HAL_DMA2D_ERROR_CAE
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = HAL_DMA2D_STATE_ERROR
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = NULL, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                     
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 10
+    
+    TEST 11
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-005]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the following,
+    COMMENT when CLUT Access Error Interrupt Flag of ISR register is set and 
+    COMMENT CLUT Access Error Interrupt of control register is not set.
+    COMMENT a) Disable the CLUT Access Error interrupt of control register. 
+    COMMENT b) Clear the CLUT Access Error flag of ISR register
+    COMMENT c) Update error code by setting CLUT Access Error bit.
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_ERROR
+    COMMENT e) Unlock the DMA2D handle. 
+    COMMENT Equivalence Class 15
+    COMMENT </TD>
+    
+        ELEMENT
+
+        COMMENT INPUT/OUTPUT SECTION:               
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_CAE, ev = init
+            VAR PTU_Instance_1.CR,      init = ~DMA2D_IT_CAE,   ev = init              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CAE,ev = init
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = init
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = init
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = init
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                     
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 11
+    
+    TEST 12
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-005]
+    COMMENT The function 'HalDma2dIrqHandler' does the following,
+    COMMENT when CLUT Access Error Interrupt Flag of ISR register and 
+    COMMENT CLUT Access Error Interrupt of control register are set.
+    COMMENT a) Disable the CLUT Access Error interrupt of control register. 
+    COMMENT b) Clear the CLUT Access Error flag of ISR register
+    COMMENT c) Update error code by setting CLUT Access Error bit.
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_ERROR
+    COMMENT e) Unlock the DMA2D handle. 
+    COMMENT Equivalence Class 14  
+    COMMENT </TD>
+    
+        ELEMENT
+        
+        COMMENT INPUT/OUTPUT SECTION:        
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_CAE, ev = init
+            VAR PTU_Instance_1.CR,      init = (T_UINT32)0xFFFFFFFFU,    ev = ~DMA2D_IT_CAE              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CAE,ev = DMA2D_FLAG_CAE
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = HAL_DMA2D_ERROR_CAE
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = HAL_DMA2D_STATE_ERROR
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = 10
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = 10                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = 10
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = 10                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 12 
+    
+    TEST 13
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-005]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the following,
+    COMMENT when CLUT Access Error Interrupt Flag of ISR register is not set
+    COMMENT a) Disable the CLUT Access Error interrupt of control register. 
+    COMMENT b) Clear the CLUT Access Error flag of ISR register
+    COMMENT c) Update error code by setting CLUT Access Error bit.
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_ERROR
+    COMMENT e) Unlock the DMA2D handle. 
+    COMMENT Equivalence Class 16 
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-007]
+    COMMENT The function 'HalDma2dIrqHandler' does the following,
+    COMMENT when transfer watermark interrupt Flag of ISR register and 
+    COMMENT transfer watermark interrupt of control register are set
+    COMMENT a) Disable the transfer watermark interrupt of control register.. 
+    COMMENT b) Clear the transfer watermark flag of ISR register
+    COMMENT c) Call HAL_DMA2D_LineEventCallback to transfer watermark Callback
+    COMMENT Equivalence Class 17, 18 
+    COMMENT
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_TW,  ev = init
+            VAR PTU_Instance_1.CR,      init = DMA2D_IT_TW,    ev = 0x0              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TW, ev = DMA2D_FLAG_TW
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = init
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = init
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = init
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 13
+    
+    TEST 14
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-007]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the following,
+    COMMENT when transfer watermark interrupt Flag of ISR register is set and 
+    COMMENT transfer watermark interrupt of control register is not set
+    COMMENT a) Disable the transfer watermark interrupt of control register.. 
+    COMMENT b) Clear the transfer watermark flag of ISR register
+    COMMENT c) Call HAL_DMA2D_LineEventCallback to transfer watermark Callback
+    COMMENT Equivalence Class 19, 20 
+    COMMENT
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_TW,  ev = init
+            VAR PTU_Instance_1.CR,      init = ~DMA2D_IT_TW,   ev = init              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TW, ev = init
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = init
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = init
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = init
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 14
+
+    TEST 15
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-007]
+    COMMENT The function 'HalDma2dIrqHandler' does the following,
+    COMMENT when transfer watermark interrupt Flag of ISR register is set and 
+    COMMENT transfer watermark interrupt of control register is set
+    COMMENT a) Disable the transfer watermark interrupt of control register.(CR all bits are set)
+    COMMENT b) Clear the transfer watermark flag of ISR register
+    COMMENT c) Call HAL_DMA2D_LineEventCallback to transfer watermark Callback
+    COMMENT Equivalence Class 17, 18 
+    COMMENT
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_TW,  ev = init
+            VAR PTU_Instance_1.CR,      init = (T_UINT32)0xFFFFFFFFU,    ev = ~DMA2D_IT_TW              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TW, ev = DMA2D_FLAG_TW
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = init
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_TIMEOUT,    ev = init
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = init
+            VAR h_dma2d.XferErrorCallback, 
+                                      & init = PTU_XferErrorCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 15
+    
+    TEST 16
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-007]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the the following,
+    COMMENT when transfer watermark interrupt Flag of ISR register is not set and 
+    COMMENT transfer watermark interrupt of control register is set
+    COMMENT a) Disable the transfer watermark interrupt of control register.. 
+    COMMENT b) Clear the transfer watermark flag of ISR register
+    COMMENT c) Call HAL_DMA2D_LineEventCallback to transfer watermark Callback
+    COMMENT Equivalence Class 21
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-008]
+    COMMENT The function 'HalDma2dIrqHandler' does the following,
+    COMMENT when Transfer Complete Interrupt Flag of ISR register and 
+    COMMENT Transfer Complete Interrupt of control register are set.
+    COMMENT a) Disable the Transfer Complete Interrupt of control register.
+    COMMENT b) Clear the Transfer Complete Interrupt flag of ISR register
+    COMMENT c) Update error code by resetting error bit with HAL_DMA2D_ERROR_NONE
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_READY
+    COMMENT e) Unlock the DMA2D handle. 
+    COMMENT Equivalence Class 22
+    COMMENT    
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-009]
+    COMMENT The function Transfers complete Call back with DMA2D handle, when XferCpltCallback is not NULL.
+    COMMENT Equivalence Class 5,7,25
+    COMMENT
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_TC,  ev = init
+            VAR PTU_Instance_1.CR,      init = DMA2D_IT_TC,    ev = 0x0              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TC, ev = DMA2D_FLAG_TC
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = HAL_DMA2D_ERROR_NONE
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_RESET,
+                                                             & ev = HAL_DMA2D_STATE_READY
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferCpltCallback, 
+                                      & init = PTU_XferCpltCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = 11
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = 11                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = 11
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = 11                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 16
+    
+    TEST 17
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT    
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-009]
+    COMMENT The function doesn't Transfer complete Call back with DMA2D handle, when XferCpltCallback is NULL.
+    COMMENT Equivalence Class 5,6,26
+    COMMENT
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_TC,  ev = init
+            VAR PTU_Instance_1.CR,      init = DMA2D_IT_TC,    ev = 0x0              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TC, ev = DMA2D_FLAG_TC
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = HAL_DMA2D_ERROR_NONE
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_RESET,
+                                                             & ev = HAL_DMA2D_STATE_READY
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferCpltCallback, 
+                                      & init = NULL, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 17
+    
+    TEST 18
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-008]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the following,
+    COMMENT when Transfer Complete Interrupt Flag of ISR register is set and 
+    COMMENT Transfer Complete Interrupt of control register is not set.
+    COMMENT a) Disable the Transfer Complete Interrupt of control register.
+    COMMENT b) Clear the Transfer Complete Interrupt flag of ISR register
+    COMMENT c) Update error code by resetting error bit with HAL_DMA2D_ERROR_NONE
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_READY
+    COMMENT e) Unlock the DMA2D handle. 
+    COMMENT Equivalence Class 23
+    COMMENT    
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-009]
+    COMMENT The function Transfers complete Call back with DMA2D handle, when XferCpltCallback is not NULL.
+    COMMENT Equivalence Class 25
+    COMMENT
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_TC,  ev = init
+            VAR PTU_Instance_1.CR,      init = ~DMA2D_IT_TC,   ev = init              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TC, ev = init
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = init
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_RESET,
+                                                             & ev = init
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = init
+            VAR h_dma2d.XferCpltCallback, 
+                                      & init = PTU_XferCpltCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 18
+    
+    TEST 19
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-008]
+    COMMENT The function 'HalDma2dIrqHandler' does the following,
+    COMMENT when Transfer Complete Interrupt Flag of ISR register and 
+    COMMENT Transfer Complete Interrupt of control register are set.
+    COMMENT a) Disable the Transfer Complete Interrupt of control register.( CR execised for Maximum)
+    COMMENT b) Clear the Transfer Complete Interrupt flag of ISR register.
+    COMMENT c) Update error code by resetting error bit with HAL_DMA2D_ERROR_NONE
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_READY
+    COMMENT e) Unlock the DMA2D handle. 
+    COMMENT Equivalence Class 22
+    COMMENT    
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-009]
+    COMMENT The function Transfers complete Call back with DMA2D handle, when XferCpltCallback is not NULL.
+    COMMENT Equivalence Class 25
+    COMMENT
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_TC,  ev = init
+            VAR PTU_Instance_1.CR,      init = (T_UINT32)0xFFFFFFFFU,    ev = ~DMA2D_IT_TC              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TC, ev = DMA2D_FLAG_TC
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = (T_UINT32)0xFFFFFFFFU,    ev = (T_UINT32)0xFFFFFFFFU
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_RESET,
+                                                             & ev = HAL_DMA2D_STATE_READY
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferCpltCallback, 
+                                      & init = PTU_XferCpltCallback_2, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 10,    ev = 0
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 10,    ev = 0                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 10,    ev = 0
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 10,    ev = 0                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 19
+    
+    TEST 20
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-009]
+    COMMENT The function Transfers complete Call back with DMA2D handle, 
+    COMMENT when XferCpltCallback is not NULL.(Maximum value)
+    COMMENT Equivalence Class 25
+    COMMENT
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_TC,  ev = init
+            VAR PTU_Instance_1.CR,      init = (T_UINT32)0xFFFFFFFFU,    ev = ~DMA2D_IT_TC              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_TC, ev = DMA2D_FLAG_TC
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = (T_UINT32)0xFFFFFFFFU,    ev = (T_UINT32)0xFFFFFFFFU
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_RESET,
+                                                             & ev = HAL_DMA2D_STATE_READY
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferCpltCallback, 
+                                      & init = PTU_XferCpltCallback_3, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 10,    ev = (T_UINT32)0xFFFFFFFF
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 10,    ev = (T_UINT32)0xFFFFFFFF                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 10,    ev = (T_UINT32)0xFFFFFFFF
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 10,    ev = (T_UINT32)0xFFFFFFFF                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 20
+    
+    TEST 21
+    FAMILY nominal    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-008]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the following,
+    COMMENT when Transfer Complete Interrupt Flag of ISR register is not set and 
+    COMMENT Transfer Complete Interrupt of control register is set.
+    COMMENT a) Disable the Transfer Complete Interrupt of control register.
+    COMMENT b) Clear the Transfer Complete Interrupt flag of ISR register
+    COMMENT c) Update error code by resetting error bit with HAL_DMA2D_ERROR_NONE
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_READY
+    COMMENT e) Unlock the DMA2D handle. 
+    COMMENT Equivalence Class 24
+    COMMENT    
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-010]
+    COMMENT The function 'HalDma2dIrqHandler' doesthe following,
+    COMMENT when CLUT Transfer Complete Interrupt Flag of ISR register and 
+    COMMENT CLUT Transfer Complete Interrupt of control register are set.
+    COMMENT a) Disable the CLUT Transfer Complete Interrupt of control register
+    COMMENT b) Clear the CLUT Transfer Complete Interrupt flag of ISR register
+    COMMENT c) Update error code by resetting error bit with HAL_DMA2D_ERROR_NONE
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_READY
+    COMMENT e) Unlock the DMA2D handle
+    COMMENT f) Call HalDma2dClutLoadingCpltCallback for CLUT Transfer complete Callback
+    COMMENT Equivalence Class 27,30
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_CTC, ev = init
+            VAR PTU_Instance_1.CR,      init = DMA2D_IT_CTC,   ev = 0x0              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CTC,ev = DMA2D_FLAG_CTC
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = HAL_DMA2D_ERROR_NONE
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_RESET,
+                                                             & ev = HAL_DMA2D_STATE_READY
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferCpltCallback, 
+                                      & init = PTU_XferCpltCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 21
+    
+    TEST 22
+    FAMILY nominal    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-010]
+    COMMENT The function 'HalDma2dIrqHandler' doesn't do the following,
+    COMMENT when CLUT Transfer Complete Interrupt Flag of ISR register is set and 
+    COMMENT CLUT Transfer Complete Interrupt of control register is not set.
+    COMMENT a) Disable the CLUT Transfer Complete Interrupt of control register
+    COMMENT b) Clear the CLUT Transfer Complete Interrupt flag of ISR register
+    COMMENT c) Update error code by resetting error bit with HAL_DMA2D_ERROR_NONE
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_READY
+    COMMENT e) Unlock the DMA2D handle
+    COMMENT f) Call HalDma2dClutLoadingCpltCallback for CLUT Transfer complete Callback
+    COMMENT Equivalence Class 28,31
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_CTC, ev = init
+            VAR PTU_Instance_1.CR,      init = ~DMA2D_IT_CTC,  ev = init              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CTC,ev = init
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = init
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_RESET,
+                                                             & ev = init
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = init
+            VAR h_dma2d.XferCpltCallback, 
+                                      & init = PTU_XferCpltCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 22
+    
+    TEST 23
+    FAMILY nominal    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-010]
+    COMMENT The function 'HalDma2dIrqHandler' doesthe following,
+    COMMENT when CLUT Transfer Complete Interrupt Flag of ISR register and 
+    COMMENT CLUT Transfer Complete Interrupt of control register are set.
+    COMMENT a) Disable the CLUT Transfer Complete Interrupt of control register
+    COMMENT b) Clear the CLUT Transfer Complete Interrupt flag of ISR register
+    COMMENT c) Update error code by resetting error bit with HAL_DMA2D_ERROR_NONE
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_READY
+    COMMENT e) Unlock the DMA2D handle
+    COMMENT f) Call HalDma2dClutLoadingCpltCallback for CLUT Transfer complete Callback
+    COMMENT Equivalence Class 27,30
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = DMA2D_FLAG_CTC, ev = init
+            VAR PTU_Instance_1.CR,      init = (T_UINT32)0xFFFFFFFF, ev = ~DMA2D_IT_CTC              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CTC,ev = DMA2D_FLAG_CTC
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = (T_UINT32)0xFFFFFFFF,     ev = (T_UINT32)0xFFFFFFFF
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_RESET,
+                                                             & ev = HAL_DMA2D_STATE_READY
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = HAL_UNLOCKED
+            VAR h_dma2d.XferCpltCallback, 
+                                      & init = PTU_XferCpltCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                      
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 23
+    
+    TEST 24
+    FAMILY nominal    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-010]
+    COMMENT The function 'HalDma2dIrqHandler' does the following,
+    COMMENT when CLUT Transfer Complete Interrupt Flag of ISR register is not set
+    COMMENT a) Disable the CLUT Transfer Complete Interrupt of control register
+    COMMENT b) Clear the CLUT Transfer Complete Interrupt flag of ISR register
+    COMMENT c) Update error code by resetting error bit with HAL_DMA2D_ERROR_NONE
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_READY
+    COMMENT e) Unlock the DMA2D handle
+    COMMENT f) Call HalDma2dClutLoadingCpltCallback for CLUT Transfer complete Callback
+    COMMENT Equivalence Class 29,31
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = ~DMA2D_FLAG_CTC,ev = init
+            VAR PTU_Instance_1.CR,      init = DMA2D_IT_CTC,   ev = init              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CTC,ev = init
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = init
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_RESET,
+                                                             & ev = init
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = init
+            VAR h_dma2d.XferCpltCallback, 
+                                      & init = PTU_XferCpltCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                       
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 24
+    
+    TEST 25
+    FAMILY nominal  
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dIrqHandler-DB-LLR-010]
+    COMMENT The function 'HalDma2dIrqHandler' doesthe following,
+    COMMENT when CLUT Transfer Complete Interrupt Flag of ISR register is not set 
+    COMMENT a) Disable the CLUT Transfer Complete Interrupt of control register
+    COMMENT b) Clear the CLUT Transfer Complete Interrupt flag of ISR register (Minimum value)
+    COMMENT c) Update error code by resetting error bit with HAL_DMA2D_ERROR_NONE
+    COMMENT d) Change DMA2D state as HAL_DMA2D_STATE_READY
+    COMMENT e) Unlock the DMA2D handle
+    COMMENT f) Call HalDma2dClutLoadingCpltCallback for CLUT Transfer complete Callback
+    COMMENT Equivalence Class 29,31,32
+    COMMENT </TD>      
+            
+        ELEMENT       
+            
+        COMMENT INPUT/OUTPUT SECTION: 
+            VAR PTU_Instance_1.ISR,     init = 0x0,            ev = init
+            VAR PTU_Instance_1.CR,      init = DMA2D_IT_CTC,   ev = init              
+            VAR PTU_Instance_1.IFCR,    init = ~DMA2D_FLAG_CTC,ev = init
+            VAR h_dma2d.Instance,       init = &PTU_Instance_1,ev = init             
+            VAR h_dma2d.ErrorCode,      init = 0x0,            ev = init
+            VAR h_dma2d.State,          init = HAL_DMA2D_STATE_RESET,
+                                                             & ev = init
+            VAR h_dma2d.Lock,           init = HAL_LOCKED,     ev = init
+            VAR h_dma2d.XferCpltCallback, 
+                                      & init = PTU_XferCpltCallback_1, 
+                                                             & ev = init 
+
+        COMMENT OUTPUT SECTION:                                                                    
+            VAR h_dma2d.LayerCfg[0].InputOffset,     init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputColorMode,  init = 0,    ev = init                                                     
+            VAR h_dma2d.LayerCfg[0].AlphaMode,       init = 0,    ev = init
+            VAR h_dma2d.LayerCfg[0].InputAlpha,      init = 0,    ev = init                                                                                       
+        
+        #HalDma2dIrqHandler(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 25
+END SERVICE -- HalDma2dIrqHandler
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalDma2dClutLdingCpltCallback
+--------------------------------------------------------------------------------
+SERVICE HalDma2dClutLdingCpltCallback
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_DMA2D_HANDLE_TYPE h_dma2d;
+
+    ENVIRONMENT ENV_HalDma2dClutLdingCpltCallback
+    STRUCTURE PTU_Instance_1,   init = {others => 0xFFF0000}, ev = init
+    STRUCTURE h_dma2d,          init = { Instance => &PTU_Instance_1, 
+                                     & Init => { Mode => 0, ColorMode => 0, OutputOffset => 0 }, 
+                                     & XferCpltCallback => PTU_XferCpltCallback_1, 
+                                     & XferErrorCallback => PTU_XferErrorCallback_1,
+                                     & LayerCfg => { others => { InputOffset => 0, InputColorMode => 0, AlphaMode => 0, InputAlpha => 0 } },
+                                     & Lock => HAL_UNLOCKED, 
+                                     & State => HAL_DMA2D_STATE_RESET, 
+                                     & ErrorCode => 0 },  ev = init
+    END ENVIRONMENT -- ENV_HalDma2dClutLdingCpltCallback
+    USE ENV_HalDma2dClutLdingCpltCallback
+
+    TEST 1
+    FAMILY nominal    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dLineEventCallback-DB-LLR-001]
+    COMMENT The function prevents unused arguments compilation warning.
+    COMMENT Equivalence Class None
+    COMMENT </TD> 
+
+        ELEMENT
+            STRUCTURE h_dma2d,          init = { Instance => &PTU_Instance_1, 
+                                             & Init => { Mode => 0, ColorMode => 0, OutputOffset => 0 }, 
+                                             & XferCpltCallback => PTU_XferCpltCallback_1, 
+                                             & XferErrorCallback => PTU_XferErrorCallback_1,
+                                             & LayerCfg => { others => { InputOffset => 0, InputColorMode => 0, AlphaMode => 0, InputAlpha => 0 } },
+                                             & Lock => HAL_UNLOCKED, 
+                                             & State => HAL_DMA2D_STATE_RESET, 
+                                     & ErrorCode => 0 },  ev = init
+ 
+        
+        #HalDma2dClutLdingCpltCallback(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+END SERVICE -- HalDma2dClutLdingCpltCallback
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalDma2dLineEventCallback
+--------------------------------------------------------------------------------
+SERVICE HalDma2dLineEventCallback
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_DMA2D_HANDLE_TYPE h_dma2d;
+
+    ENVIRONMENT ENV_HalDma2dLineEventCallback
+    STRUCTURE PTU_Instance_1,   init = {others => 0xFFF0000}, ev = init
+    STRUCTURE h_dma2d,          init = { Instance => &PTU_Instance_1, 
+                                     & Init => { Mode => 0, ColorMode => 0, OutputOffset => 0 }, 
+                                     & XferCpltCallback => PTU_XferCpltCallback_1, 
+                                     & XferErrorCallback => PTU_XferErrorCallback_1,
+                                     & LayerCfg => { others => { InputOffset => 0, InputColorMode => 0, AlphaMode => 0, InputAlpha => 0 } },
+                                     & Lock => HAL_UNLOCKED, 
+                                     & State => HAL_DMA2D_STATE_RESET, 
+                                     & ErrorCode => 0 },  ev = init
+    END ENVIRONMENT -- ENV_HalDma2dLineEventCallback
+    USE ENV_HalDma2dLineEventCallback
+
+    TEST 1
+    FAMILY nominal    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaldma2d-HalDma2dClutLdingCpltCallback-DB-LLR-001]
+    COMMENT The function prevents unused arguments compilation warning
+    COMMENT Equivalence Class None
+    COMMENT </TD> 
+        ELEMENT
+        
+            STRUCTURE h_dma2d,          init = { Instance => &PTU_Instance_1, 
+                                             & Init => { Mode => 0, ColorMode => 0, OutputOffset => 0 }, 
+                                             & XferCpltCallback => PTU_XferCpltCallback_1, 
+                                             & XferErrorCallback => PTU_XferErrorCallback_1,
+                                             & LayerCfg => { others => { InputOffset => 0, InputColorMode => 0, AlphaMode => 0, InputAlpha => 0 } },
+                                             & Lock => HAL_UNLOCKED, 
+                                             & State => HAL_DMA2D_STATE_RESET, 
+                                     & ErrorCode => 0 },  ev = init
+        #HalDma2dLineEventCallback(&h_dma2d);
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+END SERVICE -- HalDma2dLineEventCallback
+

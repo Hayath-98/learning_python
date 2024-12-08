@@ -1,0 +1,559 @@
+HEADER hdudispfcarrotgraph, Source Code Ver : 1.3 , TestScript Ver : 1.2
+--------------------------------------------------------------------------------
+-- Author Name          : Swaroopa N
+--
+-- File Name            : hdudispfcarrotgraph_4.ptu
+--
+-- Test Creation Date   : 27.07.2020
+--
+-- Tested Functions     : CarrotGraphClear
+--
+-- Version History      :
+--
+-- TEST-VERSION       TEST-DATE        TESTER NAME        MODIFICATIONS
+-- ------------       ---------        -----------        -------------
+-- 1.1                27.07.2020        Swaroopa N        Created the PTU file.
+-- 1.2                03.10.2020        Vignesh Sunil     updated as per #PR100281.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdudispffonts.h"        
+##include "hdudispfpolygon1.h"   
+##include "hdudispfrterror.h"    
+##include "hdudispftext.h"       
+##include "hdudispfcarrotgraph.h"
+##include "hdudispfbinascii.h"   
+##include "hdudispfpdidata.h"  
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+
+	#T_UINT8 Cg_cnt;
+
+-- Declarations of the temporary variable
+	#T_LOOKUP_TABLE PTU_psGeometry;   
+	#T_PARAM_READING PTU_psParam; 	
+	#T_SDISREGION PTU_psDisRegion;
+	#T_SPOLY PTU_psShape;
+	#T_PARAM_STAT PTU_stat;
+	#T_LOOKUP_TABLE PTU_table;
+	#T_INT32 PTU_x,PTU_y;
+	# T_SPOLY PTU_psPolyRedX;
+	# T_SWIDGETPARAM PTU_ps_widget_parm;
+	# T_PARAM_READING PTU_ps_param;
+	# T_CARROTGRAPHDEF carrot_graph_def;
+
+	# T_SRECTPOINT PTU_psRP;
+	# T_SPOLARPOINT PTU_psPP;
+	# struct sPoly PTU_psNext;
+
+	# T_SPOLY PTU_ps_poly_src;
+	# T_SPOLY PTU_PolygonsPsDuplicate_return;
+	# T_SPOLY PTU_PolygonsPsPolyInit_return,PTU_PolygonsPsPolyInit_return_1;
+	#T_INT8 PTU_i;
+
+
+    --created to verify the parameter pc_message of function RterrWidget
+    #char PTU_pc_message[200];
+	
+    --created to verify the parameter pc_file of function RterrWidget
+    #char PTU_pc_file[200],PTU_temp;   
+
+	--created to verify the parameter pps_handle_add of function TextAllocat
+    #T_TEXT *PTU_pps_handle_add_out;
+    #T_TEXT PTU_pps_handle_add_in;
+	
+	--created to verify the parameter pu8_string of function TextAllocat
+    #T_UINT8 PTU_pu8_string[13];
+    
+    --created to verify the parameter dest of function BinasByteFormatInfoBE
+    #T_INT8 PTU_dest[13],PTU_j;
+	
+	--created to verify return value of function BinasByteFormatInfoBE 
+    #T_INT8 PTU_BinasByteFormatInfoBE_return;
+	
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      : Swaroopa N
+    COMMENT
+    COMMENT File Name        : hdudispfcarrotgraph_4.ptu
+    COMMENT
+    COMMENT Tested Functions : CarrotGraphClear
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1.For the following code snippet
+    COMMENT     if(A_carrot_graph[u16_carrot_x_cntr].
+    COMMENT        carrot_graph_def->psParam->stat<PARAM_BAD)
+    COMMENT     {
+    COMMENT        draw_dial = FALSE;
+    COMMENT     }
+    COMMENT TRUE can't be covered since 
+    COMMENT if carrot_graph_def->psParam->stat be set value less than PARAM_BAD it will not
+    COMMENT enter the above if condition
+    COMMENT 
+    COMMENT 2.The for loop can't be covered for 0 and 1 loop since it's controlled by macro ASSC_LABEL_INDX
+    COMMENT 
+    COMMENT 3.The for loop can't be covered for 0 loop , when U16_carrot_graphs_installed is set to 0
+    COMMENT it doesn't eneter the above foor loop
+    COMMENT
+    COMMENT
+    COMMENT The folowing warning where observed during execution
+    COMMENT warning #120-D: 
+    COMMENT        return value type does not match the function type
+    COMMENT         return(Attol_ptr_out->ret);
+    COMMENT 		
+    COMMENT warning #188-D: 
+    COMMENT        enumerated type mixed with another type		
+    COMMENT
+    COMMENT 4.TRUE can't be covered for LLR hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-001
+    COMMENT 	since U16_carrot_graphs_installed can't be set equal to MAX_CARROT_GRAPH
+    COMMENT
+    COMMENT 5.For LLR hdudispfcarrotgraph-CarrotGraphDraw-DB-LLR-002 (TF) cant't be covered
+    COMMENT   since draw_dial can't be set to FALSE
+    COMMENT
+	COMMENT 6. Below statement is added in 'hdudispfcarrotgraph.c' file befor the include section to fetch the actual path of source file independent
+    COMMENT    to different target machines.
+    COMMENT    Code:
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT
+    COMMENT </AC>
+	
+	COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In Function 'CarrotGraphAllocat' U16_carrot_graphs_installed is equal to MAX_CARROT_GRAPH.
+	COMMENT
+	COMMENT Class 2
+    COMMENT In Function 'CarrotGraphAllocat' U16_carrot_graphs_installed is not equal to MAX_CARROT_GRAPH.
+	COMMENT
+	COMMENT Class 3
+	COMMENT In Function 'CarrotGraphAllocat' calls the function RterrWidget.
+	COMMENT
+	COMMENT Class 4
+	COMMENT In Function 'CarrotGraphAllocat' calls the function CalculatePower.
+	COMMENT
+	COMMENT Class 5
+	COMMENT In Function 'CarrotGraphAllocat' calls the function PolygonsPsPolyInit.
+	COMMENT
+	COMMENT Class 6
+	COMMENT In Function 'CarrotGraphAllocat' calls the function PolygonsPsDuplicate.
+	COMMENT
+	COMMENT Class 7
+	COMMENT In Function 'CarrotGraphAllocat' calls the function LookupTableLookup.
+	COMMENT
+	COMMENT Class 8
+	COMMENT In Function 'CarrotGraphAllocat' calls the function BinasGetWidth.
+	COMMENT
+    COMMENT Class 9
+    COMMENT In Function CarrotGraphAllocat, the resultant value of return
+	COMMENT value of function BinasGetWidth and eFont of carrot_graph_def is true.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In Function CarrotGraphAllocat, the resultant value of return
+	COMMENT value of function BinasGetWidth and eFont of carrot_graph_def is not true.
+    COMMENT 
+	COMMENT Class 11
+	COMMENT In Function 'CarrotGraphAllocat' calls the function BinasByteFormatInfoBE.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In Function 'CarrotGraphAllocat' calls the function TextAllocat.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In Function 'CarrotGraphUpdate' calls the function CalculatePower.
+	COMMENT
+	COMMENT Class 14
+	COMMENT In Function 'CarrotGraphUpdate' calls the function WidgetsUpdateRT.
+	COMMENT
+	COMMENT Class 15
+	COMMENT In Function 'CarrotGraphUpdate' calls the function LookupTableLookup.
+	COMMENT
+	COMMENT Class 16
+	COMMENT In Function CarrotGraphUpdate, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is greater than PARAM_BAD.
+	COMMENT
+	COMMENT Class 17
+	COMMENT In Function CarrotGraphUpdate, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is less than PARAM_BAD.
+	COMMENT
+	COMMENT Class 18
+	COMMENT In Function CarrotGraphUpdate, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is equal to PARAM_BAD.
+	COMMENT
+	COMMENT Class 19
+	COMMENT In Function CarrotGraphUpdate, pText of sWidgetParm of ps_carrot_graph is equal to ZERO.
+	COMMENT
+	COMMENT Class 20
+	COMMENT In Function CarrotGraphUpdate, pText of sWidgetParm of ps_carrot_graph is not equal to ZERO.
+	COMMENT
+	COMMENT Class 21
+	COMMENT In Function 'CarrotGraphUpdate' calls the function WidgetsNumUpdate.
+	COMMENT
+	COMMENT Class 22
+	COMMENT In Function CarrotGraphUpdate, eCGHV of carrot_graph_def of ps_carrot_graph is equal to CG_VERTICAL.
+	COMMENT
+	COMMENT Class 23
+	COMMENT In Function CarrotGraphUpdate, eCGHV of carrot_graph_def of ps_carrot_graph is not equal to CG_VERTICAL.
+	COMMENT
+	COMMENT Class 24
+	COMMENT In Function CarrotGraphUpdate, calls the function PolygonsvPolarToRect.
+	COMMENT
+	COMMENT Class 25
+	COMMENT In Function CarrotGraphUpdate, pText of sWidgetParm of ps_carrot_graph is equal to NULL.
+	COMMENT
+	COMMENT Class 26
+	COMMENT In Function CarrotGraphUpdate, pText of sWidgetParm of ps_carrot_graph is not equal to NULL.
+	COMMENT
+	COMMENT Class 27
+	COMMENT In Function CarrotGraphUpdate, calls the function BinasGetWidth.
+	COMMENT
+	COMMENT Class 28
+	COMMENT In Function CarrotGraphUpdate, calls the function TextUpdate.
+	COMMENT
+	COMMENT Class 29
+	COMMENT In Function CarrotGraphDraw, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is greater than PARAM_BAD.
+	COMMENT
+	COMMENT Class 30
+	COMMENT In Function CarrotGraphDraw, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is less than PARAM_BAD.
+	COMMENT
+	COMMENT Class 31
+	COMMENT In Function CarrotGraphDraw, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is equal to PARAM_BAD.
+	COMMENT
+	COMMENT Class 32
+	COMMENT In Function CarrotGraphDraw, associated_labels of carrot_graph_def of ps_carrot_graph is equal to ZERO.
+	COMMENT
+	COMMENT Class 33
+	COMMENT In Function CarrotGraphDraw, associated_labels of carrot_graph_def of ps_carrot_graph is not equal to ZERO.
+	COMMENT
+	COMMENT Class 34
+	COMMENT In Function CarrotGraphDraw, the (associated_labels of carrot_graph_def of ps_carrot_graph
+	COMMENT is not equal to label of carrot_graph_def of A_carrot_graph) and (not of carrot_graph_sw_x) is TRUE.
+	COMMENT
+	COMMENT Class 35
+	COMMENT In Function CarrotGraphDraw, (associated_labels of carrot_graph_def of ps_carrot_graph
+	COMMENT is equal to label of carrot_graph_def of A_carrot_graph) and (not of carrot_graph_sw_x) is not TRUE.
+	COMMENT
+	COMMENT Class 36
+	COMMENT In Function CarrotGraphDraw, stat of carrot_graph_def of A_carrot_graph is greater than PARAM_BAD.
+	COMMENT
+	COMMENT Class 37
+	COMMENT In Function CarrotGraphDraw, stat of carrot_graph_def of A_carrot_graph is less than PARAM_BAD.
+	COMMENT
+	COMMENT Class 38
+	COMMENT In Function CarrotGraphDraw, the (psDisRegion of carrot_graph_def of A_carrot_graph is equal to NULL)
+	COMMENT and (draw_dial is equal to true) is TRUE.
+	COMMENT
+	COMMENT Class 39
+	COMMENT In Function CarrotGraphDraw, the (psDisRegion of carrot_graph_def of A_carrot_graph is equal to NULL)
+	COMMENT and (draw_dial is equal to true) is not TRUE.
+	COMMENT
+	COMMENT Class 40
+	COMMENT In Function CarrotGraphDraw, psDisRegion of carrot_graph_def of A_carrot_graph is equal to NULL.
+	COMMENT
+	COMMENT Class 41
+	COMMENT In Function CarrotGraphDraw, calls the function WidgetsRedX.
+	COMMENT
+	COMMENT Class 42
+	COMMENT In Function CarrotGraphDraw, calls the function PolygonDrawPoly.
+	COMMENT	
+    COMMENT Class 43
+    COMMENT In Function CarrotGraphAllocat, the resultant value of return
+	COMMENT value of function BinasGetWidth is true and eFont of carrot_graph_def is not true.	
+	COMMENT
+	COMMENT Class 44
+	COMMENT In Function CarrotGraphDraw, the (associated_labels of carrot_graph_def of ps_carrot_graph
+	COMMENT is equal to label of carrot_graph_def of A_carrot_graph) and (not of carrot_graph_sw_x) is TRUE.	
+    COMMENT Invalid Class(es)
+    COMMENT
+    COMMENT
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+DEFINE STUB hdudispfcarrotgraph_c
+    #void PolygonDrawPoly(T_SPOLY  _inout ps_poly, T_EPENCOLOR  _in e_color); 
+    #void WidgetsRedX(T_SDISREGION  _inout ps_dis_region, T_SPOLY * _inout pps_poly_red_x); 
+    #void TextUpdate(struct Text   _inout p_text, T_EPENCOLOR  _in e_pen_color, T_ETXFLASH  _in e_tx_flash, T_ETXV  _in e_txv); 
+    #void PolygonsvPolarToRect(T_SPOLY  _inout ps_poly, T_INT32  _in s32_xoff, T_INT32  _in s32_yoff, T_UINT16  _in u16_len, T_INT32  _in u32_rot, T_INT32  _in u32_rot_rd, T_BOOL  _in moving_rd); 
+    #void WidgetsNumUpdate(T_PARAM_READING  _inout param, T_SWIDGETPARAM  _inout ps_widget_param, char  _inout ac_dig_text[200], T_UINT16  _in u16_format, T_EPENCOLOR _in e_pen_color); 
+    #void WidgetsUpdateRT(T_PARAM_READING  _no ps_param, T_SWIDGETPARAM  _no ps_widget_parm)
+	#{
+	# PTU_ps_param.r = ps_param->r;
+	# PTU_ps_param.stat = ps_param->stat;
+	# PTU_ps_widget_parm = *ps_widget_parm;
+	#}
+	
+	-- Parameters pps_handle_add and pu8_string are made as _no as it is verified explicitly
+    #void TextAllocat(T_PTEXT  _no *pps_handle_add, T_UINT8  _no *pu8_string, T_UINT16  _in u16_x0, T_UINT16  _in u16_y0, T_ETXALIGN  _in e_tx_align, T_ETXFONT  _in e_tx_font, T_EPENCOLOR  _in e_pen_color, T_ETXV  _in e_txv, T_ETXFLASH  _in e_tx_flash)
+    #{
+    #   for(PTU_i =0; PTU_i<13;PTU_i++)
+    #   {  
+    #   PTU_pu8_string[PTU_i] = pu8_string[PTU_i] ;
+    #   }
+    #   PTU_pps_handle_add_out = (T_TEXT*) pps_handle_add;
+    #   PTU_pps_handle_add_in =  *PTU_pps_handle_add_out;  
+	#}
+	#T_INT8* BinasByteFormatInfoBE(void * _no src, T_UINT16  _in format, char  _no dest[200])
+	#{
+	#	for(PTU_j =0; PTU_i<13;PTU_j++)
+	#	dest[PTU_j] = PTU_dest[PTU_j];
+	#}
+	
+    #T_UINT16 BinasGetWidth(T_UINT16  _in format); 
+    #T_INT32 LookupTableLookup( const T_LOOKUP_TABLE * _no table, T_INT32  _in ind_var, T_PARAM_STAT  _no *stat)
+    #{
+    # PTU_stat = *stat;
+    # PTU_table = *table;
+    #}
+    #T_SPOLY* PolygonsPsDuplicate(T_SPOLY  _no ps_poly_src)
+	#{
+	# PTU_ps_poly_src = *ps_poly_src;
+	#}
+    #T_SPOLY* PolygonsPsPolyInit(T_ESTOCKSHAPE  _in e_poly_shape, T_FLOAT  _in fx_scale, T_INT16  _in s16_xoff, T_FLOAT  _in fy_scale, T_INT16  _in s16_yoff, T_INT16  _in s16_rot);
+    #T_FLOAT CalculatePower(T_FLOAT  _in value, T_INT32  _in mul); 
+
+    -- Parameters pc_file and pc_message are made as _no as it is verified explicitly
+    #void RterrWidget(char  _no pc_file[200], T_INT32  _in s32_line_number, char  _no pc_message[200])
+    #{
+    #  PTU_temp = 0;
+    #  while(pc_file[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_file[PTU_temp]= pc_file[PTU_temp];   //Verify pc_file path 
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_file[PTU_temp]= ZERO;
+    #
+    #  PTU_temp = 0;
+    #  while(pc_message[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_message[PTU_temp]= pc_message[PTU_temp];  //Verify pc_message
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_message[PTU_temp]= ZERO;
+    #}
+END DEFINE
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CarrotGraphClear
+--------------------------------------------------------------------------------
+SERVICE CarrotGraphClear
+SERVICE_TYPE extern
+
+	ENVIRONMENT ENV_CarrotGraphAllocat
+	
+			VAR carrot_graph_def.sUpperLeft,		init = {u16X0=>0,u16Y0=>0},			ev = init
+			VAR carrot_graph_def.sDialCenterOffset, 		init = { u16X0 => 0, u16Y0 => 0 }, 					ev = init
+			VAR carrot_graph_def.psGeometry, 			init = &PTU_psGeometry,  			ev = init
+			VAR carrot_graph_def.psParam, 				init = &PTU_psParam, 				ev = init
+			VAR carrot_graph_def.asPtrSpec,				init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } }, ev = init
+			VAR carrot_graph_def.ptr_scale,				init = { others => { u16X0 => 0, u16Y0 => 0 } },	ev = init
+			VAR carrot_graph_def.ptr_scale_offset,		init = { others => { u16X0 => 0, u16Y0 => 0 } },	ev = init
+			VAR carrot_graph_def.rotAngle,				init = { others => 0 },								ev = init
+			VAR carrot_graph_def.u16Format,				init = 0,											ev = init
+			VAR carrot_graph_def.eFont,					init = E_NO_FONT,									ev = init	
+			VAR carrot_graph_def.eCGHV,					init = CG_VERTICAL,									ev = init	
+			VAR carrot_graph_def.limVal,					init = { others => 0 },								ev = init	
+			VAR carrot_graph_def.limValtype,				init = { others => 0 },								ev = init	
+			VAR carrot_graph_def.limColor,				init = { others => 0 },								ev = init	
+			VAR carrot_graph_def.label,					init = 0,											ev = init	
+			VAR carrot_graph_def.associated_labels,		init = { others => 0 },								ev = init	
+			VAR carrot_graph_def.sDigCenterOffset,		init = { u16X0 => 0, u16Y0 => 0 },					ev = init	
+			VAR carrot_graph_def.psDisRegion,				init = &PTU_psDisRegion,							ev = init	
+			--VAR carrot_graph_def.pCarrotGraph,			init = &PTU_pCarrotGraph,							ev = init	
+	
+	    END ENVIRONMENT -- ENV_CarrotGraphAllocat
+    USE ENV_CarrotGraphAllocat 
+
+	TEST 1
+    FAMILY nominal
+	
+        COMMENT Test Description
+        COMMENT <TD>
+		COMMENT [hdudispfcarrotgraph-CarrotGraphClear-DB-LLR-001]
+        COMMENT The Function CarrotGraphClear does nothing, when U16_carrot_graphs_installed of ps_bar_graph_def is ZERO
+		COMMENT and the while loop covered for 0th loop.
+        COMMENT Equivalence Class None
+		COMMENT
+        COMMENT </TD>
+		
+		ELEMENT
+
+		VAR carrot_graph_def.psGeometry, 			init = &PTU_psGeometry,  			ev = init
+			
+			--Stub Calls:
+			SIMUL
+			
+				--None
+			
+			END SIMUL
+
+		#CarrotGraphClear();
+        END ELEMENT
+
+    END TEST -- TEST 1
+	
+	TEST 2
+    FAMILY nominal
+	
+	    COMMENT Test Description
+        COMMENT <TD>
+		COMMENT [hdudispfcarrotgraph-CarrotGraphClear-DB-LLR-001]
+        COMMENT The Function CarrotGraphClear do the following when U16_carrot_graphs_installed is ONE
+		COMMENT 1.Sets psPolyRedX of A_carrot_graph woth index (U16_carrot_graphs_installed minus ONE) to ZERO
+		COMMENT 2.Sets U16_carrot_graphs_installed to (U16_carrot_graphs_installed minus ONE).
+		COMMENT the while loop covered for ONE time loop.
+        COMMENT Equivalence Class None
+		COMMENT
+        COMMENT </TD>
+
+        ELEMENT
+
+			VAR carrot_graph_def.psGeometry, 		init = &PTU_psGeometry,  							ev = init
+			
+			VAR PTU_psGeometry,                     init = { x => &PTU_x, y => &PTU_y},       			ev = init
+			
+			VAR carrot_graph_def.psParam, 			init = &PTU_psParam, 								ev = init
+			
+			VAR PTU_psParam,                            init = {r => 0, stat => PARAM_BAD, fread => 0.0},  ev = init                                                                                          
+			
+			VAR carrot_graph_def.asPtrSpec,				init = { others => 
+			&													{ s32PtrShape => 1, ePenColor => BLACK,
+			&													psShape => NIL } },
+            &                                    		ev = {others =>{s32PtrShape => 1,
+            &                                                   ePenColor => BLACK, 			
+			&													psShape => &PTU_PolygonsPsPolyInit_return} }
+
+			VAR PTU_psShape,							init = {s16Pts=>1,others=>NIL},	ev = init
+			
+			VAR carrot_graph_def.u16Format,				init = 0,											ev = init
+			
+			VAR carrot_graph_def.eFont,					init = E_NO_FONT,									ev = init
+			
+			VAR carrot_graph_def.pCarrotGraph->sWidgetParm.s32Scaler,      init = 0,                    ev = init				     
+
+			VAR PTU_stat,						init = RANGE_ERROR ,							ev = PARAM_OK
+			
+			VAR PTU_table,						init = NIL,										ev = { x => &PTU_x, y => &PTU_y}
+
+			--Stub Calls:
+			SIMUL
+			
+				STUB  BinasGetWidth (0)0
+				STUB  CalculatePower (10.0,0)0.0
+				STUB  LookupTableLookup (0)500 
+				STUB  PolygonsPsDuplicate 1..6 => ()&PTU_PolygonsPsDuplicate_return
+				STUB  PolygonsPsPolyInit 1..6 => (1,0.0,0,0.0,0,0)&PTU_PolygonsPsPolyInit_return
+			
+			END SIMUL
+
+		#CarrotGraphAllocat(&carrot_graph_def);
+
+		#CarrotGraphClear();
+        END ELEMENT
+
+    END TEST -- TEST 2
+	
+	TEST 3
+    FAMILY nominal
+	
+		COMMENT Test Description
+        COMMENT <TD>
+		COMMENT [hdudispfcarrotgraph-CarrotGraphClear-DB-LLR-001]
+        COMMENT The Function CarrotGraphClear do the following when U16_carrot_graphs_installed is more than TWO
+		COMMENT 1.Sets psPolyRedX of A_carrot_graph woth index (U16_carrot_graphs_installed minus ONE) to ZERO
+		COMMENT 2.Sets U16_carrot_graphs_installed to (U16_carrot_graphs_installed minus ONE).
+		COMMENT the while loop covered for TWO or more loops.
+        COMMENT Equivalence Class None
+		COMMENT
+        COMMENT </TD>
+
+        ELEMENT
+
+			VAR carrot_graph_def.psGeometry, 		init = &PTU_psGeometry,  							ev = init
+			
+			VAR PTU_psGeometry,                     init = { x => &PTU_x, y => &PTU_y},       			ev = init
+			
+			VAR carrot_graph_def.psParam, 			init = &PTU_psParam, 								ev = init
+			
+			VAR PTU_psParam,                            init = {r => 0, stat => PARAM_BAD, fread => 0.0},  ev = init                                                                                          
+			
+			VAR carrot_graph_def.asPtrSpec,				init = { others => 
+			&													{ s32PtrShape => 1, ePenColor => BLACK,
+			&													psShape => NIL } },
+            &                                    		ev = {others =>{s32PtrShape => 1,
+            &                                                   ePenColor => BLACK, 			
+			&													psShape => &PTU_PolygonsPsPolyInit_return} }
+
+			VAR carrot_graph_def.u16Format,				init = 0,						ev = init
+						
+			VAR carrot_graph_def.eFont,					init = E_NO_FONT,									ev = init
+			
+			VAR carrot_graph_def.pCarrotGraph->sWidgetParm.s32Scaler,      init = 0,    ev = init				     
+
+			VAR PTU_stat,						init = RANGE_ERROR ,					ev = PARAM_OK
+			
+			VAR PTU_table,						init = NIL,								ev = { x => &PTU_x, y => &PTU_y}
+
+			--Stub Calls:
+			SIMUL
+			
+				STUB  BinasGetWidth 1..3 => (0)0
+				STUB  CalculatePower 1..3 => (10.0,0)0.0
+				STUB  LookupTableLookup 1..3=> (0)500 
+				STUB  PolygonsPsDuplicate 1..18 => ()&PTU_PolygonsPsDuplicate_return
+				STUB  PolygonsPsPolyInit 2..18 => (1,0.0,0,0.0,0,0)&PTU_PolygonsPsPolyInit_return
+			
+			END SIMUL
+		
+		#for(PTU_i=0;PTU_i<3;PTU_i++)
+		#{
+		#CarrotGraphAllocat(&carrot_graph_def);
+		#}
+		
+		#CarrotGraphClear();
+        END ELEMENT
+
+    END TEST -- TEST 3
+	
+END SERVICE -- CarrotGraphClear
+
+
+
+
+
+

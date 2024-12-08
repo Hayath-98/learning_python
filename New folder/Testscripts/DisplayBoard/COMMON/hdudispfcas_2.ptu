@@ -1,0 +1,420 @@
+HEADER hdudispfcas, Source Code Ver : 1.10 , TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+-- Author Name         : Priyanka N
+--
+-- File Name           : hdudispfcas_2.ptu
+--
+-- Test Creation Date  : 11.11.2017 
+--
+-- Tested Functions    : CasDisplay
+--                       
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--  1.1                 23.10.2017      Priyanka N         Created the PTU file.
+--  1.2                 11.11.2017      Priyanka N         Updated as per #PR100171
+--  1.3                 14.11.2017      Priyanka N         Updated as per #PR100171
+--  1.4					29.07.2020		Harshitha R		   Updated as per #PR100267
+--  1.5					04.10.2020		Harshitha R		   Updated as per #PR100281
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdudispfcas.h"
+##include "hdudispffonts.h"
+##include "hdudispfpara.h"
+##include "hdulibbasictypes.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern T_UINT16 U16_cas_new_shadow[(64/8)];
+    #extern void SetCasStatus(void);
+    #extern T_UINT16 U16_cas_new_words[(64/8)];
+    #extern T_UINT16 U16_cas_old_shadow[(64/8)];
+    #T_CAS_MSG Cas_messages_setting;
+    #enum CAS_INDEX  Cas_app_array[64+1];
+    #T_CAS_MSG_DEF Cas_msg[64];
+    #T_UINT8 Cas_message_count;
+    #T_CAS_MESSAGE All_cas_messages[64];
+
+--  Temporary variable created to pass as an address to function parameters
+
+   -- Temporary variables created to verify the stub parameter in stub 'TimerReset'
+   #T_TIMER PTU_timer[64];
+   
+   -- Temporary variables created to verify the stub parameter in stub 'TimerInstall'
+   #T_TIMER PTU_timer_TimerInstall[64];
+   
+   -- Temporary variables created for loop usage
+   #T_UINT32 PTU_i;
+   
+   -- Temporary variable created to verify the stub parameter in stub 'TextDispString'
+   #T_INT8 PTU_pc_string_in[23];
+   
+   -- Temporary variables created to verify the stub parameter in stub 'TimerPreset'
+   #T_TIMER PTU_TimerPreset[64];
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hdudispfcas_2.ptu
+    COMMENT
+    COMMENT Tested Functions : CasDisplay 
+    COMMENT                   
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT 1. In function "CasInit", due to loop index(local variable 'u16_index') for loop is covered for 2 or more times.
+    COMMENT Hence for loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part
+    COMMENT
+    COMMENT 2. In function "FormulateNewCas", due to loop index(local variables 'u16_word_cntr' and 'u16_mask') for loops is covered for 2 or more times.
+    COMMENT Hence for loops cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part
+    COMMENT
+    COMMENT 3. In function "ResetNewTimers", due to loop index(local variables 'u16_word_cntr' and 'u16_mask') for loops are covered for 2 or more times.
+    COMMENT Hence for loops cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part
+    COMMENT
+    COMMENT 4. In function "SetCasStatus", due to loop index(local variables 'u16_word_cntr' and 'u16_mask') for loops are covered for 2 or more times.
+    COMMENT Hence for loops cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part
+    COMMENT
+    COMMENT 5. In function "CasUpdate", due to loop index(local variable 's16_cntr') for loops are covered for 2 or more times.
+    COMMENT Hence for loops cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part
+    COMMENT
+    COMMENT 6. In function "CasDisplay", due to loop index(local variables 'u16_index') below for loop is covered for 2 or more times.
+    COMMENT Code:
+    COMMENT    for(u16_index = 0; u16_index < MAX_CAS_MESSAGES ; u16_index++)
+    COMMENT {
+    COMMENT   All_cas_messages[u16_index].ePenColor = BLACK;
+    COMMENT }
+    COMMENT Hence for loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part
+    COMMENT
+    COMMENT 7. In function "CasDisplay", due to loop index(local variables 'u16_index' and 'indx1') looping statements in LLR 'hdudispfcas-CasDisplay-DB-LLR-003'
+    COMMENT  are covered for 2 or more times.
+    COMMENT Hence for loops cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part
+    COMMENT
+    COMMENT 8. In function "CasDisplay", due to local variable 'src_ptr' below while loop is covered for 0 and 2 or more times.
+    COMMENT Code:
+    COMMENT /* hdudispfcas-CasDisplay-DB-LLR-005 */
+    COMMENT while(*src_ptr)
+    COMMENT {
+    COMMENT   *(dest_ptr++) = *(src_ptr++);
+    COMMENT }
+    COMMENT Hence while loop cannot be covered 1 time since pointer variablis incrementing when it enters into the while loop.
+    COMMENT
+    COMMENT 9. Due to dependency PTU is split into two PTUs.
+    COMMENT
+    COMMENT 10. In function "CasDisplay",equivalence class 30 is not mapped to any test case since boundary value(greater than condition) cannot be checked for below condition
+    COMMENT  if ((u16_item_count) >= MAX_ITEMS )
+    COMMENT  {
+    COMMENT     return;
+    COMMENT  }
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function "CasSetCasWord" , used to set the CAS words.
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function "CasUpdate" , calls the static function "FormulateNewCas".
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function "FormulateNewCas" , CAS message is present in the new CAS list and CAS message is present in the old CAS list
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In function "FormulateNewCas" , CAS message is not present in the new CAS list
+    COMMENT 
+    COMMENT Class 5
+    COMMENT In function "FormulateNewCas" , CAS message is present in the new CAS list and CAS message is not present in the old CAS list
+    COMMENT 
+    COMMENT Class 6
+    COMMENT Function "CasUpdate" , calls the static function "ResetNewTimers".
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function "ResetNewTimers" ,result of U16_cas_new_words with index word count bitwise AND with mask value is not equal to ZERO
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function "ResetNewTimers" ,result of U16_cas_new_words with index word count bitwise AND with mask value is equal to ZERO
+    COMMENT
+    COMMENT Class 9
+    COMMENT Function "ResetNewTimers" , calls the function "TimerReset".
+    COMMENT 
+    COMMENT Class 10
+    COMMENT Function "CasUpdate" , calls the static function "SetCasStatus".
+    COMMENT 
+    COMMENT Class 11
+    COMMENT Function "SetCasStatus" , sets the CAS status.
+    COMMENT 
+    COMMENT Class 12
+    COMMENT Function "CasInit" , calls the function "TimerInstall"
+    COMMENT 
+    COMMENT Class 13
+    COMMENT Function "CasSort" , id field of one CAS message is greater than the adjacent CAS message
+    COMMENT 
+    COMMENT Class 14
+    COMMENT Function "CasSort" , id field of one CAS message is lesser than the adjacent CAS message
+    COMMENT 
+    COMMENT Class 15
+    COMMENT Function "CasSort" , u8Start field of one CAS message is greater than the adjacent CAS message
+    COMMENT 
+    COMMENT Class 16
+    COMMENT Function "CasSort" , u8Start field of one CAS message is lesser than or equal to adjacent CAS message
+    COMMENT 
+    COMMENT Class 17
+    COMMENT Function "CasSort" , priority field of one CAS message is greater than the adjacent CAS message
+    COMMENT 
+    COMMENT Class 18
+    COMMENT Function "CasSort" , priority field of one CAS message is lesser than or equal to adjacent CAS message
+    COMMENT 
+    COMMENT Class 19
+    COMMENT Function "CasSort" , u8Start field of local cas list is equal to ELEVEN
+    COMMENT 
+    COMMENT Class 20
+    COMMENT Function "CasSort" , u8Start field of local cas list is not equal to ELEVEN
+    COMMENT 
+    COMMENT Class 21
+    COMMENT Function "CasSort" , id field of two adjacent CAS messages are equal
+    COMMENT 
+    COMMENT Class 22
+    COMMENT Function "CasSort" , id field of two adjacent CAS messages are not equal
+    COMMENT 
+    COMMENT Class 23
+    COMMENT Function "CasDisplay" , calls the function "CasSort"
+    COMMENT 
+    COMMENT Class 24
+    COMMENT In function "CasDisplay" , type of Cas_msg is equal to CAS_ADVISORY
+    COMMENT 
+    COMMENT Class 25
+    COMMENT In function "CasDisplay" , type of Cas_msg is equal to CAS_CAUTION
+    COMMENT 
+    COMMENT Class 26
+    COMMENT In function "CasDisplay" , type of Cas_msg is equal to CAS_WARNING
+    COMMENT 
+    COMMENT Class 27
+    COMMENT In function "CasDisplay" , type of Cas_msg is not equal to CAS_ADVISORY , CAS_CAUTION and CAS_WARNING
+    COMMENT 
+    COMMENT Class 28
+    COMMENT In function "CasDisplay" , ePenColor of All_Cas_messages is equal to BLACK
+    COMMENT 
+    COMMENT Class 29
+    COMMENT In function "CasDisplay" , ePenColor of All_Cas_messages is not equal to BLACK
+    COMMENT 
+    COMMENT Class 30
+    COMMENT In function "CasDisplay" , local variable 'item count' is greater than MAX_ITEMS
+    COMMENT 
+    COMMENT Class 31
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is CAS_RED.
+    COMMENT 
+    COMMENT Class 32
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is CAS_AMBER.
+    COMMENT 
+    COMMENT Class 33
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is CAS_WHITE
+    COMMENT 
+    COMMENT Class 34
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is not CAS_RED , CAS_AMBER and CAS_WHITE
+    COMMENT 
+    COMMENT Class 35
+    COMMENT In function "CasDisplay" , flash timer is equal to 0
+    COMMENT 
+    COMMENT Class 36
+    COMMENT In function "CasDisplay" , flash timer is not equal to 0
+    COMMENT 
+    COMMENT Class 37
+    COMMENT In function "CasDisplay" , calls the function "TextDispString"
+    COMMENT 
+    COMMENT Class 38
+    COMMENT In function "CasDisplay" , u8Stat of CAS message is REV_VID
+    COMMENT 
+    COMMENT Class 39
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is CAS_RED.
+    COMMENT 
+    COMMENT Class 40
+    COMMENT In function "CasDisplay" , cas message status 'u8Stat' is not equal to ZERO
+    COMMENT 
+    COMMENT Class 41
+    COMMENT In function "CasDisplay" , cas message status 'u8Stat' is equal to ZERO
+    COMMENT 
+    COMMENT Class 42
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is not CAS_RED.
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is not CAS_AMBER.
+    COMMENT 
+    COMMENT Class 44
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is not CAS_WHITE.
+    COMMENT 
+    COMMENT Class 45
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is not CAS_AMBER and CAS_WHITE
+    COMMENT 
+    COMMENT Class 46
+    COMMENT In function "CasDisplay" , Flash_timer of CAS message is not less than flash timer
+    COMMENT 
+    COMMENT Class 47
+    COMMENT In function "CasDisplay" , u8Stat of CAS message is other than REV_VID
+    COMMENT 
+    COMMENT Class 48
+    COMMENT In function "CasDisplay" , calls the function "TimerPreset"
+    COMMENT 
+    COMMENT Class 49    
+    COMMENT In function "CasDisplay" , flash timer is FLASH_TIME1.
+    COMMENT 
+    COMMENT Class 50    
+    COMMENT In function "CasDisplay" , flash timer is FLASH_TIME2.
+    COMMENT 
+    COMMENT Class 51    
+    COMMENT In function "CasDisplay" , Flash_timer of CAS message is less than flash timer
+    COMMENT
+    COMMENT Class 52
+    COMMENT Function "CasSort" , Cas_message_count is equal to ZERO
+    COMMENT
+    COMMENT Class 53
+    COMMENT Function "CasSort" , Cas_message_count is greater than ZERO
+    COMMENT
+    COMMENT Class 54
+    COMMENT In function "CasDisplay" , local variable 'item count' is equal to MAX_ITEMS
+    COMMENT
+    COMMENT Class 55
+    COMMENT In function "CasDisplay" , local variable 'item count' is lesser than MAX_ITEMS
+    COMMENT 
+    COMMENT Class 57
+    COMMENT Function "SetCasStatus" , extracted CAS status  is lesser than THREE
+    COMMENT 
+    COMMENT Class 58
+    COMMENT Function "SetCasStatus" , extracted CAS status  is greater than or equal to THREE	
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT None
+    COMMENT </ECD>
+    
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hdudispfcas_c
+
+        #void TimerPreset( volatile  T_TIMER _no *timer, T_INT32 _in s32_set_val);
+
+        #void TextDispString(char _no *pc_string[200], T_UINT16 _in u16_x, T_UINT16 _in u16_y, T_ETXFONT _in e_tx_font, T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv, T_ETXALIGN _in e_tx_align);
+
+        #void TimerReset( volatile  T_TIMER _no *timer);
+        
+        #void TimerInstall( volatile  T_TIMER _no *timer);
+    
+		# void RterrWidget(T_CHAR _no *pc_file, T_INT32 s32_line_number, T_CHAR _no *pc_message);
+
+    END DEFINE
+
+ELSE_SIMUL
+
+        --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file
+
+ENVIRONMENT ENV_hdudispfcas_c
+
+    --Default array initialization
+    ARRAY U16_cas_new_shadow,       init = { others => 0 },     ev = init
+    ARRAY U16_cas_new_words,        init = { others => 0 },     ev = init
+    ARRAY U16_cas_words,            init = { others => 0 },     ev = init
+    ARRAY U16_cas_old_shadow,       init = { others => 0 },     ev = init
+
+END ENVIRONMENT -- ENV_hdudispfcas_c
+
+USE ENV_hdudispfcas_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CasDisplay
+--------------------------------------------------------------------------------
+SERVICE CasDisplay
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-001]
+    COMMENT 3. Does not sets color to be displayed of CAS messages(All_cas_messages) to CAS_WHITE when message index is zero
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Global variable is assgined with value one
+            VAR Cas_message_count,             init = 36 ,             ev = init
+    
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+    
+            --None
+    
+        --Stub Calls :
+        SIMUL
+        
+            STUB RterrWidget(447)
+            
+        END SIMUL
+           
+    --Calling the Unit Under Test :
+    #CasDisplay();
+
+    END ELEMENT
+    
+END TEST  -- TEST 1
+
+END SERVICE -- CasDisplay
+
+

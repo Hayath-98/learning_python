@@ -1,0 +1,1837 @@
+HEADER hdudispfcarrotgraph, Source Code Ver : 1.3 , TestScript Ver : 1.2
+--------------------------------------------------------------------------------
+-- Author Name          : Swaroopa N
+--
+-- File Name            : hdudispfcarrotgraph_1.ptu
+--
+-- Test Creation Date   : 27.07.2020
+--
+-- Tested Functions     : CarrotGraphAllocat
+--
+-- Version History      :
+--
+-- TEST-VERSION       TEST-DATE        TESTER NAME        MODIFICATIONS
+-- ------------       ---------        -----------        -------------
+-- 1.1                27.07.2020        Swaroopa N        Created the PTU file.
+-- 1.2                03.10.2020        Vignesh Sunil     updated as per #PR100281.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdudispffonts.h"        
+##include "hdudispfpolygon1.h"   
+##include "hdudispfrterror.h"    
+##include "hdudispftext.h"       
+##include "hdudispfcarrotgraph.h"
+##include "hdudispfbinascii.h"   
+##include "hdudispfpdidata.h"  
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+
+-- Declarations of the temporary variables
+
+	#extern T_CHAR glob_file_name[];
+	#T_LOOKUP_TABLE PTU_psGeometry;   
+	#T_PARAM_READING PTU_psParam; 	
+	#T_SDISREGION PTU_psDisRegion;
+	#T_SPOLY PTU_psShape;
+	#T_PARAM_STAT PTU_stat;
+	#T_LOOKUP_TABLE PTU_table;
+	#T_INT32 PTU_x,PTU_y;
+	# T_SPOLY PTU_psPolyRedX;
+	# T_SWIDGETPARAM PTU_ps_widget_parm;
+	# T_PARAM_READING PTU_ps_param;
+	# T_CARROTGRAPHDEF carrot_graph_def;
+	# T_SRECTPOINT PTU_psRP;
+	# T_SPOLARPOINT PTU_psPP;
+	# struct sPoly PTU_psNext;
+	# T_SPOLY PTU_ps_poly_src;
+	# T_SPOLY PTU_PolygonsPsDuplicate_return;
+	# T_SPOLY PTU_PolygonsPsPolyInit_return,PTU_PolygonsPsPolyInit_return_1;
+	#T_INT8 PTU_i;
+	#T_UINT32 Loop_index;
+
+    --created to verify the parameter pc_message of function RterrWidget
+    #char PTU_pc_message[200];
+	
+    --created to verify the parameter pc_file of function RterrWidget
+    #char PTU_pc_file[200],PTU_temp;   
+
+	#T_UINT16 index1;   
+	#T_UINT16 index2;   
+	
+    --Temporary variable used in "BinasByteFormatInfoBE" stub native code
+    #T_INT16            *  PTU_BinasByte_s16DisDig_src;
+    #T_INT8             *  PTU_BinasByte_s16DisDig_dest;	
+	
+    --Temporary variable used in "TextAllocat" stub native code
+    #T_PTEXT            *  PTU_pps_handle_add;
+    #T_UINT8            *  PTU_pu8_string;	
+	
+    --Temporary variable to hold rterr file name
+    #T_CHAR               PTU_rterr_file[200];	
+	
+    --Temporary variable to hold rterr message
+    #T_CHAR               PTU_rterr_message[200];	
+	
+	#T_UINT8 Cg_cnt;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      : Swaroopa N
+    COMMENT
+    COMMENT File Name        : hdudispfcarrotgraph_1.ptu
+    COMMENT
+    COMMENT Tested Functions : CarrotGraphAllocat
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT 1.For the following code snippet
+    COMMENT     if(A_carrot_graph[u16_carrot_x_cntr].
+    COMMENT        carrot_graph_def->psParam->stat<PARAM_BAD)
+    COMMENT     {
+    COMMENT        draw_dial = FALSE;
+    COMMENT     }
+    COMMENT TRUE can't be covered since 
+    COMMENT if carrot_graph_def->psParam->stat be set value less than PARAM_BAD it will not
+    COMMENT enter the above if condition
+    COMMENT 
+    COMMENT 2.The for loop can't be covered for 0 and 1 loop since it's controlled by macro ASSC_LABEL_INDX
+    COMMENT 
+    COMMENT 3.The for loop can't be covered for 0 loop , when U16_carrot_graphs_installed is set to 0
+    COMMENT it doesn't eneter the above foor loop
+    COMMENT
+    COMMENT
+    COMMENT The folowing warning where observed during execution
+    COMMENT warning #120-D: 
+    COMMENT        return value type does not match the function type
+    COMMENT         return(Attol_ptr_out->ret);
+    COMMENT 		
+    COMMENT warning #188-D: 
+    COMMENT        enumerated type mixed with another type		
+    COMMENT
+    COMMENT
+    COMMENT 4.TRUE can't be covered for LLR hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-001
+    COMMENT 	since U16_carrot_graphs_installed can't be set equal to MAX_CARROT_GRAPH
+    COMMENT
+    COMMENT 5.For LLR hdudispfcarrotgraph-CarrotGraphDraw-DB-LLR-002 (TF) cant't be covered
+    COMMENT   since draw_dial can't be set to FALSE	
+    COMMENT	
+    COMMENT
+	COMMENT 6. Below statement is added in 'hdudispfcarrotgraph.c' file befor the include section to fetch the actual path of source file independent
+    COMMENT    to different target machines.
+    COMMENT    Code:
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;	
+    COMMENT
+    COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In Function 'CarrotGraphAllocat' U16_carrot_graphs_installed is equal to MAX_CARROT_GRAPH.
+	COMMENT
+	COMMENT Class 2
+    COMMENT In Function 'CarrotGraphAllocat' U16_carrot_graphs_installed is not equal to MAX_CARROT_GRAPH.
+	COMMENT
+	COMMENT Class 3
+	COMMENT In Function 'CarrotGraphAllocat' calls the function RterrWidget.
+	COMMENT
+	COMMENT Class 4
+	COMMENT In Function 'CarrotGraphAllocat' calls the function CalculatePower.
+	COMMENT
+	COMMENT Class 5
+	COMMENT In Function 'CarrotGraphAllocat' calls the function PolygonsPsPolyInit.
+	COMMENT
+	COMMENT Class 6
+	COMMENT In Function 'CarrotGraphAllocat' calls the function PolygonsPsDuplicate.
+	COMMENT
+	COMMENT Class 7
+	COMMENT In Function 'CarrotGraphAllocat' calls the function LookupTableLookup.
+	COMMENT
+	COMMENT Class 8
+	COMMENT In Function 'CarrotGraphAllocat' calls the function BinasGetWidth.
+	COMMENT
+    COMMENT Class 9
+    COMMENT In Function CarrotGraphAllocat, the resultant value of return
+	COMMENT value of function BinasGetWidth and eFont of carrot_graph_def is true.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In Function CarrotGraphAllocat, the resultant value of return
+	COMMENT value of function BinasGetWidth and eFont of carrot_graph_def is not true.
+    COMMENT 
+	COMMENT Class 11
+	COMMENT In Function 'CarrotGraphAllocat' calls the function BinasByteFormatInfoBE.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In Function 'CarrotGraphAllocat' calls the function TextAllocat.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In Function 'CarrotGraphUpdate' calls the function CalculatePower.
+	COMMENT
+	COMMENT Class 14
+	COMMENT In Function 'CarrotGraphUpdate' calls the function WidgetsUpdateRT.
+	COMMENT
+	COMMENT Class 15
+	COMMENT In Function 'CarrotGraphUpdate' calls the function LookupTableLookup.
+	COMMENT
+	COMMENT Class 16
+	COMMENT In Function CarrotGraphUpdate, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is greater than PARAM_BAD.
+	COMMENT
+	COMMENT Class 17
+	COMMENT In Function CarrotGraphUpdate, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is less than PARAM_BAD.
+	COMMENT
+	COMMENT Class 18
+	COMMENT In Function CarrotGraphUpdate, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is equal to PARAM_BAD.
+	COMMENT
+	COMMENT Class 19
+	COMMENT In Function CarrotGraphUpdate, pText of sWidgetParm of ps_carrot_graph is equal to ZERO.
+	COMMENT
+	COMMENT Class 20
+	COMMENT In Function CarrotGraphUpdate, pText of sWidgetParm of ps_carrot_graph is not equal to ZERO.
+	COMMENT
+	COMMENT Class 21
+	COMMENT In Function 'CarrotGraphUpdate' calls the function WidgetsNumUpdate.
+	COMMENT
+	COMMENT Class 22
+	COMMENT In Function CarrotGraphUpdate, eCGHV of carrot_graph_def of ps_carrot_graph is equal to CG_VERTICAL.
+	COMMENT
+	COMMENT Class 23
+	COMMENT In Function CarrotGraphUpdate, eCGHV of carrot_graph_def of ps_carrot_graph is not equal to CG_VERTICAL.
+	COMMENT
+	COMMENT Class 24
+	COMMENT In Function CarrotGraphUpdate, calls the function PolygonsvPolarToRect.
+	COMMENT
+	COMMENT Class 25
+	COMMENT In Function CarrotGraphUpdate, pText of sWidgetParm of ps_carrot_graph is equal to NULL.
+	COMMENT
+	COMMENT Class 26
+	COMMENT In Function CarrotGraphUpdate, pText of sWidgetParm of ps_carrot_graph is not equal to NULL.
+	COMMENT
+	COMMENT Class 27
+	COMMENT In Function CarrotGraphUpdate, calls the function BinasGetWidth.
+	COMMENT
+	COMMENT Class 28
+	COMMENT In Function CarrotGraphUpdate, calls the function TextUpdate.
+	COMMENT
+	COMMENT Class 29
+	COMMENT In Function CarrotGraphDraw, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is greater than PARAM_BAD.
+	COMMENT
+	COMMENT Class 30
+	COMMENT In Function CarrotGraphDraw, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is less than PARAM_BAD.
+	COMMENT
+	COMMENT Class 31
+	COMMENT In Function CarrotGraphDraw, the value of stat of psParam of carrot_graph_def of ps_carrot_graph is equal to PARAM_BAD.
+	COMMENT
+	COMMENT Class 32
+	COMMENT In Function CarrotGraphDraw, associated_labels of carrot_graph_def of ps_carrot_graph is equal to ZERO.
+	COMMENT
+	COMMENT Class 33
+	COMMENT In Function CarrotGraphDraw, associated_labels of carrot_graph_def of ps_carrot_graph is not equal to ZERO.
+	COMMENT
+	COMMENT Class 34
+	COMMENT In Function CarrotGraphDraw, the (associated_labels of carrot_graph_def of ps_carrot_graph
+	COMMENT is not equal to label of carrot_graph_def of A_carrot_graph) and (not of carrot_graph_sw_x) is TRUE.
+	COMMENT
+	COMMENT Class 35
+	COMMENT In Function CarrotGraphDraw, (associated_labels of carrot_graph_def of ps_carrot_graph
+	COMMENT is equal to label of carrot_graph_def of A_carrot_graph) and (not of carrot_graph_sw_x) is not TRUE.
+	COMMENT
+	COMMENT Class 36
+	COMMENT In Function CarrotGraphDraw, stat of carrot_graph_def of A_carrot_graph is greater than PARAM_BAD.
+	COMMENT
+	COMMENT Class 37
+	COMMENT In Function CarrotGraphDraw, stat of carrot_graph_def of A_carrot_graph is less than PARAM_BAD.
+	COMMENT
+	COMMENT Class 38
+	COMMENT In Function CarrotGraphDraw, the (psDisRegion of carrot_graph_def of A_carrot_graph is equal to NULL)
+	COMMENT and (draw_dial is equal to true) is TRUE.
+	COMMENT
+	COMMENT Class 39
+	COMMENT In Function CarrotGraphDraw, the (psDisRegion of carrot_graph_def of A_carrot_graph is equal to NULL)
+	COMMENT and (draw_dial is equal to true) is not TRUE.
+	COMMENT
+	COMMENT Class 40
+	COMMENT In Function CarrotGraphDraw, psDisRegion of carrot_graph_def of A_carrot_graph is equal to NULL.
+	COMMENT
+	COMMENT Class 41
+	COMMENT In Function CarrotGraphDraw, calls the function WidgetsRedX.
+	COMMENT
+	COMMENT Class 42
+	COMMENT In Function CarrotGraphDraw, calls the function PolygonDrawPoly.
+	COMMENT	
+    COMMENT Class 43
+    COMMENT In Function CarrotGraphAllocat, the resultant value of return
+	COMMENT value of function BinasGetWidth is true and eFont of carrot_graph_def is not true.	
+	COMMENT
+	COMMENT Class 44
+	COMMENT In Function CarrotGraphDraw, the (associated_labels of carrot_graph_def of ps_carrot_graph
+	COMMENT is equal to label of carrot_graph_def of A_carrot_graph) and (not of carrot_graph_sw_x) is TRUE.	
+    COMMENT Invalid Class(es)
+    COMMENT
+    COMMENT
+    COMMENT </ECD>
+	
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+DEFINE STUB hdudispfcarrotgraph_c
+    #void PolygonDrawPoly(T_SPOLY  _inout ps_poly, T_EPENCOLOR  _in e_color); 
+    #void WidgetsRedX(T_SDISREGION  _inout ps_dis_region, T_SPOLY * _inout pps_poly_red_x); 
+    #void TextUpdate(struct Text   _inout p_text, T_EPENCOLOR  _in e_pen_color, T_ETXFLASH  _in e_tx_flash, T_ETXV  _in e_txv); 
+    #void PolygonsvPolarToRect(T_SPOLY  _inout ps_poly, T_INT32  _in s32_xoff, T_INT32  _in s32_yoff, T_UINT16  _in u16_len, T_INT32  _in u32_rot, T_INT32  _in u32_rot_rd, T_BOOL  _in moving_rd); 
+    #void WidgetsNumUpdate(T_PARAM_READING  _inout param, T_SWIDGETPARAM  _inout ps_widget_param, char  _inout ac_dig_text[200], T_UINT16  _in u16_format,T_EPENCOLOR _in e_pen_color); 
+    #void WidgetsUpdateRT(T_PARAM_READING  _no ps_param, T_SWIDGETPARAM  _no ps_widget_parm)
+	#{
+	# PTU_ps_param.r = ps_param->r;
+	# PTU_ps_param.stat = ps_param->stat;
+	# PTU_ps_widget_parm = *ps_widget_parm;
+	#}
+	
+	
+    --The input parameters *pps_handle_add and *pu8_string as made as _no since they are pointer variables and they are verified using temporary variables. 
+    #void TextAllocat(T_PTEXT _no *pps_handle_add, T_UINT8 _no *pu8_string, T_UINT16 _in u16_x0, T_UINT16 _in u16_y0, T_ETXALIGN _in e_tx_align, T_ETXFONT _in e_tx_font, T_EPENCOLOR _in e_pen_color, T_ETXV _in e_txv, T_ETXFLASH _in e_tx_flash)
+    #{
+    #     PTU_pps_handle_add = pps_handle_add;
+    #     PTU_pu8_string     = pu8_string;
+    #}
+    --The input parameters *src and *dest as made as _no since they are pointer variables and they are verified using temporary variables. 
+    #T_INT8* BinasByteFormatInfoBE(void _no *src, T_UINT16 _in format, T_INT8 _no *dest)
+    #{
+    #    PTU_BinasByte_s16DisDig_src  = src;
+    #    PTU_BinasByte_s16DisDig_dest = dest;
+    #}
+	
+    #T_UINT16 BinasGetWidth(T_UINT16  _in format); 
+    #T_INT32 LookupTableLookup( const T_LOOKUP_TABLE * _no table, T_INT32  _in ind_var, T_PARAM_STAT  _no *stat)
+    #{
+    # *stat = PTU_stat;
+    #}
+    #T_SPOLY* PolygonsPsDuplicate(T_SPOLY  _no ps_poly_src);
+
+    #T_SPOLY* PolygonsPsPolyInit(T_ESTOCKSHAPE  _in e_poly_shape, T_FLOAT  _no fx_scale, T_INT16  _no s16_xoff, T_FLOAT  _no fy_scale, T_INT16  _no s16_yoff, T_INT16  _no s16_rot);
+    #T_FLOAT CalculatePower(T_FLOAT  _in value, T_INT32  _in mul); 
+
+    #void RterrWidget(T_CHAR * _no pc_file, T_INT8 _in s32_line_number, T_CHAR * _no pc_message) 
+    #{
+    #   for(index1 = 0; index1<100;   index1++)
+    #   {
+    #       PTU_rterr_file[index1]=*(T_CHAR *)pc_file;
+    #       pc_file++;
+    #   }
+    #   for(index2 = 0; index2<100;   index2++)
+    #   {
+    #       PTU_rterr_message[index2]=*(T_CHAR *)pc_message;
+    #       pc_message++;
+    #   }
+    #}
+END DEFINE
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CarrotGraphAllocat
+--------------------------------------------------------------------------------
+SERVICE CarrotGraphAllocat
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CARROTGRAPHDEF carrot_graph_def;
+    #T_SDISREGION      PTU_psDisRegion;	
+    #T_PARAM_READING   PTU_psparam;
+	
+	ENVIRONMENT ENV_CarrotGraphUpdate
+	
+			VAR carrot_graph_def.sUpperLeft,		init = {u16X0=>0,u16Y0=>0},			ev = init
+			VAR carrot_graph_def.sDialCenterOffset, 		init = { u16X0 => 0, u16Y0 => 0 }, 					ev = init
+			VAR carrot_graph_def.psGeometry, 			init = &PTU_psGeometry,  			ev = init
+			VAR carrot_graph_def.psParam, 				init = &PTU_psParam, 				ev = init
+			VAR carrot_graph_def.asPtrSpec,				init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } }, ev = init
+			VAR carrot_graph_def.ptr_scale,				init = { others => { u16X0 => 0, u16Y0 => 0 } },	ev = init
+			VAR carrot_graph_def.ptr_scale_offset,		init = { others => { u16X0 => 0, u16Y0 => 0 } },	ev = init
+			VAR carrot_graph_def.rotAngle,				init = { others => 0 },								ev = init
+			VAR carrot_graph_def.u16Format,				init = 0,											ev = init
+			VAR carrot_graph_def.eFont,					init = E_NO_FONT,									ev = init	
+			VAR carrot_graph_def.eCGHV,					init = CG_VERTICAL,									ev = init	
+			VAR carrot_graph_def.limVal,					init = { others => 0 },								ev = init	
+			VAR carrot_graph_def.limValtype,				init = { others => 0 },								ev = init	
+			VAR carrot_graph_def.limColor,				init = { others => 0 },								ev = init	
+			VAR carrot_graph_def.label,					init = 0,											ev = init	
+			VAR carrot_graph_def.associated_labels,		init = { others => 0 },								ev = init	
+			VAR carrot_graph_def.sDigCenterOffset,		init = { u16X0 => 0, u16Y0 => 0 },					ev = init	
+			VAR carrot_graph_def.psDisRegion,				init = &PTU_psDisRegion,							ev = init	
+			--VAR carrot_graph_def.pCarrotGraph,			init = &PTU_pCarrotGraph,							ev = init	
+	
+	    END ENVIRONMENT -- ENV_CarrotGraphUpdate
+    USE ENV_CarrotGraphUpdate   	
+	
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-001]
+        COMMENT The Function CarrotGraphAllocat does nothing,when carrot graphs installed is not equal to MAX_CARROT_GRAPH
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+        COMMENT The function shall set pCarrotGraph of Carrot Graph Def to carrot graph if carrot graphs installed is not equal to MAX_CARROT_GRAPH.
+        COMMENT Equivalence Class 2
+        COMMENT
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-003]
+        COMMENT The function shall do following.
+        COMMENT 1.	Set Carrot Graph Def of carrot graph to Carrot Graph Def.
+        COMMENT 2.	Set psPolyRedX of carrot graph to Zero.
+        COMMENT 3.	Set number dec to Format of Carrot Graph Def of carrot graph right shift by four AND seven.
+        COMMENT 4.	Set reading to fread of psParam of Carrot Graph Def multiples with thousand and the return value of function of CalculatePower with parameters ((ten, number dec), plus five divide ten).
+        COMMENT 5.	Set s32DisDig of sWidgetParam of carrot graph to reading.
+        COMMENT 6.	Set s32Dig of sWidgetParam of carrot graph to reading.
+        COMMENT 7.	Set s32scaler of sWidgetParam of carrot graph to reading.
+        COMMENT        8.	Set s32ScalerStep of sWidgetParam of carrot graph to Zero.
+        COMMENT        9.   Set ps source pointer to asPtrSpec of Carrot Graph Def.
+        COMMENT        10. Set ps destination pointer to asPtrSpec of Carrot graph.
+        COMMENT Equivalence Class 4
+        COMMENT
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-005]
+        COMMENT The function shall do the following 
+        COMMENT 1.	Set sOffset of carrot graph to the return value of function LookupTableLookup with parameter psGeometry of carrot graph def, 
+        COMMENT s32Scaler of sWidgetparm of carrot graph, address of e temp stat.
+        COMMENT 2.	Set psShape of ps destination pointer to Zero.
+        COMMENT Equivalence Class 7
+        COMMENT
+        COMMENT
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-006]
+        COMMENT The function shall do the following if return value of BinasGetWidth with parameters as u16Format of Carrot Graph Def Logical AND eFont of Carrot Graph Def is equal to TRUE.
+        COMMENT 1.	Call the function BinasByteFormatInfoBE with parameters address of s32DisDig of sWidgetParm of carrot graph, u16Format of Carrot Graph Def and acDigText of carrot graph.
+        COMMENT 2.	Call the function TextAllocat with parameter address of pText of sWidgetParm of carrot graph, acDigText of carrot graph,COND1,COND2, ALIGN_CENTER, eFont of Carrot Graph Def, WHITE, V_NORMAL and TX_NO_FLASH.
+        COMMENT Where, 
+        COMMENT COND1 – (u16X0 of sDigCenterOffset of carrot graph def plus u16X0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+        COMMENT COND2 – (u16Y0 of sDigCenterOffset of carrot graph def plus u16Y0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+        COMMENT Equivalence Class 8,43
+        COMMENT
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-008]
+        COMMENT The function shall increment carrot graph installed by one.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:   
+
+				VAR Cg_cnt,						init = 0,				ev = init
+
+                --Holds the value of fread member of structure PTU_psparam
+                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init                
+                
+                --Holds the value of u16Width member of structure carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 578,                          ev = init
+                                
+                --Holds the value of u16Format member of structure carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+                
+                --Holds the value of u16X0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 1,                           ev = init
+                
+                --Holds the value of u16Y0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 0,                           ev = init
+                
+                --Holds the value of eFont member of structure carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of psParam member of structure carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].s32PtrShape,                                		init = 0,                 ev = init				
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+        
+            COMMENT OUTPUT SECTION:
+                
+                --Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+                
+                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 10,                           ev = 1200
+                
+                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32ScalerStep of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 10,                           ev = 0
+				
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet,                   init = 1,                           ev = 1
+				
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+                --STUB call to get the width of supplied format word
+                STUB BinasGetWidth(carrot_graph_def.u16Format)0
+				
+				STUB LookupTableLookup(1200)1		
+                
+				--STUB Call to calculate the power value.
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :            
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 1    
+    
+    TEST 2
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-001]
+        COMMENT The Function CarrotGraphAllocat does nothing,when carrot graphs installed is not equal to MAX_CARROT_GRAPH
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+        COMMENT The function shall set pCarrotGraph of Carrot Graph Def to carrot graph if carrot graphs installed is not equal to MAX_CARROT_GRAPH.
+        COMMENT Equivalence Class 2
+        COMMENT 
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-006]
+        COMMENT The function shall do the following if return value of BinasGetWidth with parameters as u16Format of Carrot Graph Def Logical AND eFont of Carrot Graph Def is equal to TRUE.
+        COMMENT 1.	Call the function BinasByteFormatInfoBE with parameters address of s32DisDig of sWidgetParm of carrot graph, u16Format of Carrot Graph Def and acDigText of carrot graph.
+        COMMENT 2.	Call the function TextAllocat with parameter address of pText of sWidgetParm of carrot graph, acDigText of carrot graph,COND1,COND2, ALIGN_CENTER, eFont of Carrot Graph Def, WHITE, V_NORMAL and TX_NO_FLASH.
+        COMMENT Where, 
+        COMMENT COND1 – (u16X0 of sDigCenterOffset of carrot graph def plus u16X0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+        COMMENT COND2 – (u16Y0 of sDigCenterOffset of carrot graph def plus u16Y0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+        COMMENT Equivalence Class 8,9,11,12
+        COMMENT 
+        COMMENT
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+			
+				VAR Cg_cnt,						init = 0,				ev = init
+                
+                --Holds the value of r of PTU_psparam				
+                VAR PTU_psparam.r,                                                            init = 12,                           ev = init
+
+                --Holds the value of fread of PTU_psparam
+                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+                
+                --Holds the value of stat of PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam of carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+                
+                --Holds the value of u16Width of carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 678,                          ev = init
+                                
+                --Holds the value of u16Format of carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)20,                 ev = init
+                
+				--Holds the value of u16X0 of sUpperLeft of carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 0,                           ev = 1
+                
+				--Holds the value of u16Y0 of sUpperLeft of carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 0,                           ev = init
+                
+                --Holds the eFont member value of structure member carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_LARGE_FONT,                 ev = init
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+				--Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+                
+                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def                
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 12000
+                
+                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 7,                            ev = 12000
+                
+                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 8,                            ev = 12000
+                
+                --Holds the value of s32DisDig of s32ScalerStep of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 9,                            ev = 0
+				
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet, 				  init = 1,                            ev = 1
+                
+                --Variable to verify the STUB native code
+                VAR PTU_BinasByte_s16DisDig_src,                                              init = NULL,                         ev = &(((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig)
+                
+                --Variable to verify the STUB native code
+                VAR PTU_BinasByte_s16DisDig_dest,                                             init = NULL,                         ev = (T_INT8* )(((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->acDigText)
+                
+                --Variable to verify the STUB native code
+                VAR PTU_pps_handle_add,                                                       init = NULL,                         ev = (T_PTEXT *)&(((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.pText)
+                
+                --Variable to verify the STUB native code
+                VAR PTU_pu8_string,                                                           init = NULL,                         ev = (T_UINT8 *)((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->acDigText
+                
+                --Variable to verify the STUB native code
+                --VAR PTU_rterr_file,                                                           init = "RTERR FILE",                 ev = glob_file_name
+                 
+                --Variable to verify the STUB native code                
+                --VAR PTU_rterr_message,                                                        init = "RTERR MESSAGE",              ev = "Bar Graph Too Wide."
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init				
+                                               
+            -- Stub Calls :
+            SIMUL
+        
+               --STUB call to get the width of supplied format word
+               STUB BinasGetWidth(carrot_graph_def.u16Format)100
+              
+               --STUB call to convert a binary number to ascii
+               STUB BinasByteFormatInfoBE(carrot_graph_def.u16Format)(T_INT8* )&carrot_graph_def.u16Format
+              
+               --STUB Call to initialize the digital display
+               STUB TextAllocat((T_UINT16)(0), (T_UINT16)(carrot_graph_def.sUpperLeft.u16Y0), ALIGN_CENTER, carrot_graph_def.eFont, WHITE, V_NORMAL, TX_NO_FLASH)
+        
+               --STUB Called to indicate the error occurrence
+               --STUB RterrWidget((T_INT32)87)
+               
+			   --STUB Call to calculate the power value.
+               STUB CalculatePower (10, 1)10
+			   
+				STUB LookupTableLookup(12000)1			   
+        
+            END SIMUL
+        
+            --Called to clear the previously installed bargraphs
+            #CarrotGraphClear();
+			
+			-- Calling the Unit Under Test :
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 2
+    
+    TEST 3
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-001]
+        COMMENT The Function CarrotGraphAllocat does nothing,when carrot graphs installed is not equal to MAX_CARROT_GRAPH
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+        COMMENT The function shall set pCarrotGraph of Carrot Graph Def to carrot graph if carrot graphs installed is not equal to MAX_CARROT_GRAPH.
+        COMMENT Equivalence Class 2
+        COMMENT 
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-004]
+        COMMENT The function shall do following till s32PtrShape of ps source pointer is not null.
+        COMMENT (0 loop)
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-006]
+        COMMENT The function shall do the following if return value of BinasGetWidth with parameters as u16Format of Carrot Graph Def Logical AND eFont of Carrot Graph Def is equal to TRUE.
+        COMMENT 1.	Call the function BinasByteFormatInfoBE with parameters address of s32DisDig of sWidgetParm of carrot graph, u16Format of Carrot Graph Def and acDigText of carrot graph.
+        COMMENT 2.	Call the function TextAllocat with parameter address of pText of sWidgetParm of carrot graph, acDigText of carrot graph,COND1,COND2, ALIGN_CENTER, eFont of Carrot Graph Def, WHITE, V_NORMAL and TX_NO_FLASH.
+        COMMENT Where, 
+        COMMENT COND1 – (u16X0 of sDigCenterOffset of carrot graph def plus u16X0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+        COMMENT COND2 – (u16Y0 of sDigCenterOffset of carrot graph def plus u16Y0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+        COMMENT Equivalence Class 8,10
+        COMMENT 
+        COMMENT 
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+			
+				VAR Cg_cnt,						init = 0,				ev = init
+                
+				--Holds the value of r of PTU_psparam
+                VAR PTU_psparam.r,                                                            init = 12,                           ev = init
+                
+				--Holds the value of stat of PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init
+                
+				--Holds the value of psParam of carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16Width structure member value of carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 600,                          ev = init
+                                
+                --Holds the u16Format structure member value of carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+                
+				--Holds the value of u16X0 of sUpperLeft of carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 10,                           ev = init
+                
+				--Holds the value of u16Y0 of sUpperLeft of carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 10,                           ev = init
+                
+                --Holds the eFont structure member value of carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_NO_FONT,                            ev = init
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init				
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                                    
+                --None
+                                               
+            -- Stub Calls :
+            SIMUL
+        
+               --STUB call to get the width of supplied format word
+              STUB BinasGetWidth (carrot_graph_def.u16Format)100
+              
+			  --Called to calculate the power value
+              STUB CalculatePower (10, 0)1
+			  
+			  STUB LookupTableLookup(1200)1
+                                  
+            END SIMUL
+        
+            -- Called to clear the installed bargraphs :
+            #CarrotGraphClear();
+            
+            -- Calling the Unit Under Test :
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 3
+	
+	
+    TEST 4
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-001]
+        COMMENT The Function CarrotGraphAllocat does nothing,when carrot graphs installed is not equal to MAX_CARROT_GRAPH
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+        COMMENT The function shall set pCarrotGraph of Carrot Graph Def to carrot graph if carrot graphs installed is not equal to MAX_CARROT_GRAPH.
+        COMMENT Equivalence Class 2
+        COMMENT 
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-004]
+        COMMENT The function shall do following till s32PtrShape of ps source pointer is not null.
+        COMMENT (1 loop)
+        COMMENT 1.	Set psShape of ps Source pointer to return value of function PolygonsPsPolyInit with parameters s32PtrShape of ps source pointer, 
+        COMMENT u16X0 of pointer scale of index u8_i of Carrot Graph Def, MAG of (u16X0 of pointer scale offset of index u8_i of Carrot Graph Def, 
+        COMMENT u16Y0 of pointer scale index of u8_i of Carrot Graph Def) , 
+        COMMENT MAG of (u16Y0 of pointer scale offset of index u8_i of Carrot Graph Def), rotation angel of index u8_i of Carrot Graph Def.    
+        COMMENT 2.	Set psShape of ps destination pointer to return value of function PolygonsPsDuplicate with parameter psShape of ps source pointer.
+        COMMENT 3.	Set ePenColor of ps destination pointer to ePenColor of ps source pointer.
+        COMMENT 4.	Increment ps source pointer.
+        COMMENT 5.	Increment ps destination pointer.
+        COMMENT 6.	Increment u8_i.
+        COMMENT Equivalence Class 5,6		
+        COMMENT 
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-006]
+        COMMENT The function shall do the following if return value of BinasGetWidth with parameters as u16Format of Carrot Graph Def Logical AND eFont of Carrot Graph Def is equal to TRUE.
+        COMMENT 1.	Call the function BinasByteFormatInfoBE with parameters address of s32DisDig of sWidgetParm of carrot graph, u16Format of Carrot Graph Def and acDigText of carrot graph.
+        COMMENT 2.	Call the function TextAllocat with parameter address of pText of sWidgetParm of carrot graph, acDigText of carrot graph,COND1,COND2, ALIGN_CENTER, eFont of Carrot Graph Def, WHITE, V_NORMAL and TX_NO_FLASH.
+        COMMENT Where, 
+        COMMENT COND1 – (u16X0 of sDigCenterOffset of carrot graph def plus u16X0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+        COMMENT COND2 – (u16Y0 of sDigCenterOffset of carrot graph def plus u16Y0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+        COMMENT Equivalence Class 8,10
+        COMMENT 
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:                
+
+				VAR Cg_cnt,						init = 0,				ev = init
+			
+                --Holds the value of fread member of structure PTU_psparam
+                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init                
+                
+                --Holds the value of u16Width member of structure carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 578,                          ev = init
+                                
+                --Holds the value of u16Format member of structure carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+                
+                --Holds the value of u16X0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 1,                           ev = init
+                
+                --Holds the value of u16Y0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 0,                           ev = init
+                
+                --Holds the value of eFont member of structure carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of psParam member of structure carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale[0].u16X0,                                init = 1,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale[0].u16Y0,                                init = 1,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale_offset[0].u16X0,                         init = 1,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale_offset[0].u16Y0,                         init = 1,                 ev = init
+				
+                VAR carrot_graph_def.rotAngle[0],                                		init = 1,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].s32PtrShape,                                		init = 1,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[1].s32PtrShape,                                		init = 0,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].psShape,                                			init = 1,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].ePenColor,                                			init = 1,                 ev = init
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+        
+            COMMENT OUTPUT SECTION:
+                
+                --Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+                
+                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 10,                           ev = 1200
+                
+                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32ScalerStep of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 10,                           ev = 0
+				
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet, 			init = 1,                           ev = 1
+				
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init				
+				
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+                --STUB call to get the width of supplied format word
+                STUB BinasGetWidth(carrot_graph_def.u16Format)0
+                
+				--STUB Call to calculate the power value.
+                STUB CalculatePower (10, 0)1
+				
+				STUB PolygonsPsPolyInit(carrot_graph_def.asPtrSpec[0].s32PtrShape)1
+				
+				--STUB PolygonsPsDuplicate(carrot_graph_def.asPtrSpec[0].psShape)1
+				STUB PolygonsPsDuplicate()1
+				
+				STUB LookupTableLookup(1200)1
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :            
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 4	
+	
+	
+    TEST 5
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-001]
+        COMMENT The Function CarrotGraphAllocat does nothing,when carrot graphs installed is not equal to MAX_CARROT_GRAPH
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+        COMMENT The function shall set pCarrotGraph of Carrot Graph Def to carrot graph if carrot graphs installed is not equal to MAX_CARROT_GRAPH.
+        COMMENT Equivalence Class 2
+        COMMENT 
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-004]
+        COMMENT The function shall do following till s32PtrShape of ps source pointer is not null.
+        COMMENT (2 loop)
+        COMMENT 1.	Set psShape of ps Source pointer to return value of function PolygonsPsPolyInit with parameters s32PtrShape of ps source pointer, 
+        COMMENT u16X0 of pointer scale of index u8_i of Carrot Graph Def, MAG of (u16X0 of pointer scale offset of index u8_i of Carrot Graph Def, 
+        COMMENT u16Y0 of pointer scale index of u8_i of Carrot Graph Def) , 
+        COMMENT MAG of (u16Y0 of pointer scale offset of index u8_i of Carrot Graph Def), rotation angel of index u8_i of Carrot Graph Def.    
+        COMMENT 2.	Set psShape of ps destination pointer to return value of function PolygonsPsDuplicate with parameter psShape of ps source pointer.
+        COMMENT 3.	Set ePenColor of ps destination pointer to ePenColor of ps source pointer.
+        COMMENT 4.	Increment ps source pointer.
+        COMMENT 5.	Increment ps destination pointer.
+        COMMENT 6.	Increment u8_i.
+        COMMENT Equivalence Class 5,6		
+        COMMENT 
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-006]
+        COMMENT The function shall do the following if return value of BinasGetWidth with parameters as u16Format of Carrot Graph Def Logical AND eFont of Carrot Graph Def is equal to TRUE.
+        COMMENT 1.	Call the function BinasByteFormatInfoBE with parameters address of s32DisDig of sWidgetParm of carrot graph, u16Format of Carrot Graph Def and acDigText of carrot graph.
+        COMMENT 2.	Call the function TextAllocat with parameter address of pText of sWidgetParm of carrot graph, acDigText of carrot graph,COND1,COND2, ALIGN_CENTER, eFont of Carrot Graph Def, WHITE, V_NORMAL and TX_NO_FLASH.
+        COMMENT Where, 
+        COMMENT COND1 – (u16X0 of sDigCenterOffset of carrot graph def plus u16X0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+        COMMENT COND2 – (u16Y0 of sDigCenterOffset of carrot graph def plus u16Y0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+        COMMENT Equivalence Class 8,10
+        COMMENT
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:       
+
+				VAR Cg_cnt,						init = 0,				ev = init
+
+                --Holds the value of fread member of structure PTU_psparam
+                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init                
+                
+                --Holds the value of u16Width member of structure carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 578,                          ev = init
+                                
+                --Holds the value of u16Format member of structure carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+                
+                --Holds the value of u16X0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 10,                           ev = 1
+                
+                --Holds the value of u16Y0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 10,                           ev = 0
+                
+                --Holds the value of eFont member of structure carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of psParam member of structure carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale[0].u16X0,                                init = 1,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale[1].u16X0,                                init = 1,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale[0].u16Y0,                                init = 1,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale[1].u16Y0,                                init = 1,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale_offset[0].u16X0,                         init = 1,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale_offset[1].u16X0,                         init = 1,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale_offset[0].u16Y0,                         init = 1,                 ev = init
+				
+                VAR carrot_graph_def.ptr_scale_offset[1].u16Y0,                         init = 1,                 ev = init
+				
+                VAR carrot_graph_def.rotAngle[0],                                		init = 1,                 ev = init
+				
+                VAR carrot_graph_def.rotAngle[1],                                		init = 1,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].s32PtrShape,                                		init = 1,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[1].s32PtrShape,                                		init = 1,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[2].s32PtrShape,                                		init = 0,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].psShape,                                			init = 1,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[1].psShape,                                			init = 1,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].ePenColor,                                			init = 1,                 ev = init		
+				
+                VAR carrot_graph_def.asPtrSpec[1].ePenColor,                                			init = 1,                 ev = init				
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+        
+            COMMENT OUTPUT SECTION:
+                
+                --Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+                
+                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 10,                           ev = 1200
+                
+                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32ScalerStep of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 10,                           ev = 0
+				
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet, 				init = 1,                           ev = 1
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init				
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+                --STUB call to get the width of supplied format word
+                STUB BinasGetWidth(carrot_graph_def.u16Format)0
+                
+				--STUB Call to calculate the power value.
+                STUB CalculatePower (10, 0)1
+				
+				STUB PolygonsPsPolyInit(carrot_graph_def.asPtrSpec[0].s32PtrShape)1
+				
+				--STUB PolygonsPsDuplicate(carrot_graph_def.asPtrSpec[0].psShape)	1	
+				STUB PolygonsPsDuplicate()	1	
+
+				STUB PolygonsPsPolyInit(carrot_graph_def.asPtrSpec[1].s32PtrShape)1
+				
+				--STUB PolygonsPsDuplicate(carrot_graph_def.asPtrSpec[1].psShape)	1			
+				STUB PolygonsPsDuplicate()	1			
+				
+				STUB LookupTableLookup(1200)1
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :            
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 5  	
+	
+	
+	
+    TEST 7
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+        COMMENT Set eFont of carrot_graph_def to E_NO_FONT if eFont of carrot_graph_def is not equal to E_TINY_FONT,E_SMALL_FONT,E_NORMAL_FONT,E_LARGE_FONT and E_BEZEL_FONT.
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:   
+
+				VAR Cg_cnt,						init = 0,				ev = init
+
+                --Holds the value of fread member of structure PTU_psparam
+                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init                
+                
+                --Holds the value of u16Width member of structure carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 578,                          ev = init
+                                
+                --Holds the value of u16Format member of structure carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+                
+                --Holds the value of u16X0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 1,                           ev = init
+                
+                --Holds the value of u16Y0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 0,                           ev = init
+                
+                --Holds the value of eFont member of structure carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_NO_FONT,                 ev = init
+                
+                --Holds the value of psParam member of structure carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].s32PtrShape,                                		init = 0,                 ev = init				
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+        
+            COMMENT OUTPUT SECTION:
+                
+                --Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+                
+                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 10,                           ev = 1200
+                
+                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32ScalerStep of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 10,                           ev = 0
+				
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet,                   init = 1,                           ev = 1
+				
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+                --STUB call to get the width of supplied format word
+                STUB BinasGetWidth(carrot_graph_def.u16Format)0
+				
+				STUB LookupTableLookup(1200)1		
+                
+				--STUB Call to calculate the power value.
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :            
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 7	
+	
+    TEST 8
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+		COMMENT does nothing when
+        COMMENT  if eFont of carrot_graph_def is equal to E_TINY_FONT,E_SMALL_FONT,E_NORMAL_FONT,E_LARGE_FONT and E_BEZEL_FONT.
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:  
+
+				VAR Cg_cnt,						init = 0,				ev = init
+
+                --Holds the value of fread member of structure PTU_psparam
+                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init                
+                
+                --Holds the value of u16Width member of structure carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 578,                          ev = init
+                                
+                --Holds the value of u16Format member of structure carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+                
+                --Holds the value of u16X0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 1,                           ev = init
+                
+                --Holds the value of u16Y0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 0,                           ev = init
+                
+                --Holds the value of eFont member of structure carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_TINY_FONT,                 ev = init
+                
+                --Holds the value of psParam member of structure carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].s32PtrShape,                                		init = 0,                 ev = init				
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+        
+            COMMENT OUTPUT SECTION:
+                
+                --Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+                
+                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 10,                           ev = 1200
+                
+                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32ScalerStep of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 10,                           ev = 0
+				
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet,                   init = 1,                           ev = 1
+				
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+                --STUB call to get the width of supplied format word
+                STUB BinasGetWidth(carrot_graph_def.u16Format)0
+				
+				STUB LookupTableLookup(1200)1		
+                
+				--STUB Call to calculate the power value.
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :            
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 8	
+	
+    TEST 9
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+		COMMENT does nothing when
+        COMMENT  if eFont of carrot_graph_def is equal to E_TINY_FONT,E_SMALL_FONT,E_NORMAL_FONT,E_LARGE_FONT and E_BEZEL_FONT.
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:     
+
+				VAR Cg_cnt,						init = 0,				ev = init
+
+                --Holds the value of fread member of structure PTU_psparam
+                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init                
+                
+                --Holds the value of u16Width member of structure carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 578,                          ev = init
+                                
+                --Holds the value of u16Format member of structure carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+                
+                --Holds the value of u16X0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 1,                           ev = init
+                
+                --Holds the value of u16Y0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 0,                           ev = init
+                
+                --Holds the value of eFont member of structure carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_SMALL_FONT,                 ev = init
+                
+                --Holds the value of psParam member of structure carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].s32PtrShape,                                		init = 0,                 ev = init				
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+        
+            COMMENT OUTPUT SECTION:
+                
+                --Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+                
+                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 10,                           ev = 1200
+                
+                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32ScalerStep of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 10,                           ev = 0
+				
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet,                   init = 1,                           ev = 1
+				
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+                --STUB call to get the width of supplied format word
+                STUB BinasGetWidth(carrot_graph_def.u16Format)0
+				
+				STUB LookupTableLookup(1200)1		
+                
+				--STUB Call to calculate the power value.
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :            
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 9	
+	
+	
+    TEST 10
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+		COMMENT does nothing when
+        COMMENT  if eFont of carrot_graph_def is equal to E_TINY_FONT,E_SMALL_FONT,E_NORMAL_FONT,E_LARGE_FONT and E_BEZEL_FONT.
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:    
+
+				VAR Cg_cnt,						init = 0,				ev = init
+
+                --Holds the value of fread member of structure PTU_psparam
+                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init                
+                
+                --Holds the value of u16Width member of structure carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 578,                          ev = init
+                                
+                --Holds the value of u16Format member of structure carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+                
+                --Holds the value of u16X0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 1,                           ev = init
+                
+                --Holds the value of u16Y0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 0,                           ev = init
+                
+                --Holds the value of eFont member of structure carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_NORMAL_FONT,                 ev = init
+                
+                --Holds the value of psParam member of structure carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].s32PtrShape,                                		init = 0,                 ev = init				
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+        
+            COMMENT OUTPUT SECTION:
+                
+                --Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+                
+                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 10,                           ev = 1200
+                
+                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32ScalerStep of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 10,                           ev = 0
+				
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet,                   init = 1,                           ev = 1
+				
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+                --STUB call to get the width of supplied format word
+                STUB BinasGetWidth(carrot_graph_def.u16Format)0
+				
+				STUB LookupTableLookup(1200)1		
+                
+				--STUB Call to calculate the power value.
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :            
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 10	
+	
+	
+    TEST 11
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+		COMMENT does nothing when
+        COMMENT  if eFont of carrot_graph_def is equal to E_TINY_FONT,E_SMALL_FONT,E_NORMAL_FONT,E_LARGE_FONT and E_BEZEL_FONT.
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:    
+
+				VAR Cg_cnt,						init = 0,				ev = init
+
+                --Holds the value of fread member of structure PTU_psparam
+                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init                
+                
+                --Holds the value of u16Width member of structure carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 578,                          ev = init
+                                
+                --Holds the value of u16Format member of structure carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+                
+                --Holds the value of u16X0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 1,                           ev = init
+                
+                --Holds the value of u16Y0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 0,                           ev = init
+                
+                --Holds the value of eFont member of structure carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of psParam member of structure carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].s32PtrShape,                                		init = 0,                 ev = init				
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+        
+            COMMENT OUTPUT SECTION:
+                
+                --Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+                
+                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 10,                           ev = 1200
+                
+                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32ScalerStep of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 10,                           ev = 0
+				
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet,                   init = 1,                           ev = 1
+				
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+                --STUB call to get the width of supplied format word
+                STUB BinasGetWidth(carrot_graph_def.u16Format)0
+				
+				STUB LookupTableLookup(1200)1		
+                
+				--STUB Call to calculate the power value.
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :            
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 11	
+	
+
+    TEST 12
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+		COMMENT does nothing when
+        COMMENT  if eFont of carrot_graph_def is equal to E_TINY_FONT,E_SMALL_FONT,E_NORMAL_FONT,E_LARGE_FONT and E_BEZEL_FONT.
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:        
+
+				VAR Cg_cnt,						init = 0,				ev = init
+
+                --Holds the value of fread member of structure PTU_psparam
+                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init                
+                
+                --Holds the value of u16Width member of structure carrot_graph_def
+                --VAR carrot_graph_def.u16Width,                                                init = 578,                          ev = init
+                                
+                --Holds the value of u16Format member of structure carrot_graph_def
+                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+                
+                --Holds the value of u16X0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 1,                           ev = init
+                
+                --Holds the value of u16Y0 of sUpperLeft member of structure carrot_graph_def
+                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 0,                           ev = init
+                
+                --Holds the value of eFont member of structure carrot_graph_def
+                VAR carrot_graph_def.eFont,                                                   init = E_BEZEL_FONT,                 ev = init
+                
+                --Holds the value of psParam member of structure carrot_graph_def
+                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+				
+                VAR carrot_graph_def.asPtrSpec[0].s32PtrShape,                                		init = 0,                 ev = init				
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+        
+            COMMENT OUTPUT SECTION:
+                
+                --Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+                
+                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 10,                           ev = 1200
+                
+                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 10,                           ev = 1200
+                
+                --Holds the value of s32ScalerStep of sWidgetParm of pCarrotGraph of carrot_graph_def
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 10,                           ev = 0
+				
+                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet,                   init = 1,                           ev = 1
+				
+				
+				VAR PTU_stat,					init = PARAM_OK,			ev = init
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+                --STUB call to get the width of supplied format word
+                STUB BinasGetWidth(carrot_graph_def.u16Format)0
+				
+				STUB LookupTableLookup(1200)1		
+                
+				--STUB Call to calculate the power value.
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :            
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 12	
+	
+    TEST 13
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+		COMMENT does nothing when
+        COMMENT  if eFont of carrot_graph_def is equal to E_TINY_FONT,E_SMALL_FONT,E_NORMAL_FONT,E_LARGE_FONT and E_BEZEL_FONT.
+        COMMENT Equivalence Class 2 
+        COMMENT
+        COMMENT </TD>
+
+		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:        
+
+				VAR Cg_cnt,						init = 32,				ev = init
+
+                VAR PTU_rterr_file,                                                           init = "RTERR FILE",                 ev = glob_file_name
+
+				--Variable to verify the STUB native code                                
+                VAR PTU_rterr_message,                                                        init = "RTERR MESSAGE",              ev = "Too many carrot graphs."				
+			
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+        
+            COMMENT OUTPUT SECTION:
+
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+			
+				STUB RterrWidget(80)
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :            
+            #CarrotGraphAllocat(&carrot_graph_def);
+            
+        END ELEMENT
+    
+    END TEST -- TEST 13	
+	
+	
+--    TEST 6
+--    FAMILY nominal
+--
+--        COMMENT Test Description
+--        COMMENT <TD>
+--        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-001]
+--        COMMENT The Function CarrotGraphAllocat does nothing,when carrot graphs installed is not equal to MAX_CARROT_GRAPH
+--        COMMENT Equivalence Class 2 
+--        COMMENT
+--        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-002]
+--        COMMENT The function shall set pCarrotGraph of Carrot Graph Def to carrot graph if carrot graphs installed is not equal to MAX_CARROT_GRAPH.
+--        COMMENT Equivalence Class 2
+--        COMMENT
+--        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-003]
+--        COMMENT The function shall do following.
+--        COMMENT 1.	Set Carrot Graph Def of carrot graph to Carrot Graph Def.
+--        COMMENT 2.	Set psPolyRedX of carrot graph to Zero.
+--        COMMENT 3.	Set number dec to Format of Carrot Graph Def of carrot graph right shift by four AND seven.
+--        COMMENT 4.	Set reading to fread of psParam of Carrot Graph Def multiples with thousand and the return value of function of CalculatePower with parameters ((ten, number dec), plus five divide ten).
+--        COMMENT 5.	Set s32DisDig of sWidgetParam of carrot graph to reading.
+--        COMMENT 6.	Set s32Dig of sWidgetParam of carrot graph to reading.
+--        COMMENT 7.	Set s32scaler of sWidgetParam of carrot graph to reading.
+--        COMMENT        8.	Set s32ScalerStep of sWidgetParam of carrot graph to Zero.
+--        COMMENT        9.   Set ps source pointer to asPtrSpec of Carrot Graph Def.
+--        COMMENT        10. Set ps destination pointer to asPtrSpec of Carrot graph.
+--        COMMENT Equivalence Class 4
+--        COMMENT
+--        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-005]
+--        COMMENT The function shall do the following 
+--        COMMENT 1.	Set sOffset of carrot graph to the return value of function LookupTableLookup with parameter psGeometry of carrot graph def, 
+--        COMMENT s32Scaler of sWidgetparm of carrot graph, address of e temp stat.
+--        COMMENT 2.	Set psShape of ps destination pointer to Zero.
+--        COMMENT Equivalence Class 7
+--        COMMENT
+--        COMMENT
+--        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-006]
+--        COMMENT The function shall do the following if return value of BinasGetWidth with parameters as u16Format of Carrot Graph Def Logical AND eFont of Carrot Graph Def is equal to TRUE.
+--        COMMENT 1.	Call the function BinasByteFormatInfoBE with parameters address of s32DisDig of sWidgetParm of carrot graph, u16Format of Carrot Graph Def and acDigText of carrot graph.
+--        COMMENT 2.	Call the function TextAllocat with parameter address of pText of sWidgetParm of carrot graph, acDigText of carrot graph,COND1,COND2, ALIGN_CENTER, eFont of Carrot Graph Def, WHITE, V_NORMAL and TX_NO_FLASH.
+--        COMMENT Where, 
+--        COMMENT COND1 – (u16X0 of sDigCenterOffset of carrot graph def plus u16X0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+--        COMMENT COND2 – (u16Y0 of sDigCenterOffset of carrot graph def plus u16Y0 of sUpperLeft of carrot graph def) divide by MAG_FACTOR.
+--        COMMENT Equivalence Class 8,43
+--        COMMENT
+--        COMMENT [hdudispfcarrotgraph-CarrotGraphAllocat-DB-LLR-008]
+--        COMMENT The function shall increment carrot graph installed by one.
+--        COMMENT Equivalence Class None
+--        COMMENT
+--        COMMENT </TD>
+--
+--		--To initialize pCarrotGraph of carrot_graph_def with temporary variable address
+--        #carrot_graph_def.pCarrotGraph  = (T_PCARROTGRAPH      )&PTU_psDisRegion;
+--
+--        ELEMENT
+--        
+--            COMMENT INPUT SECTION:                
+--
+--                --Holds the value of fread member of structure PTU_psparam
+--                VAR PTU_psparam.fread,                                                        init = 12.0,                         ev = init
+--                
+--                --Holds the value of stat member of structure PTU_psparam
+--                VAR PTU_psparam.stat,                                                         init = PARAM_OK,                     ev = init                
+--                
+--                --Holds the value of u16Width member of structure carrot_graph_def
+--                --VAR carrot_graph_def.u16Width,                                                init = 578,                          ev = init
+--                                
+--                --Holds the value of u16Format member of structure carrot_graph_def
+--                VAR carrot_graph_def.u16Format,                                               init = (T_UINT16)10,                 ev = init
+--                
+--                --Holds the value of u16X0 of sUpperLeft member of structure carrot_graph_def
+--                VAR carrot_graph_def.sUpperLeft.u16X0,                                        init = 1,                           ev = init
+--                
+--                --Holds the value of u16Y0 of sUpperLeft member of structure carrot_graph_def
+--                VAR carrot_graph_def.sUpperLeft.u16Y0,                                        init = 0,                           ev = init
+--                
+--                --Holds the value of eFont member of structure carrot_graph_def
+--                VAR carrot_graph_def.eFont,                                                   init = E_LARGE_FONT,                 ev = init
+--                
+--                --Holds the value of psParam member of structure carrot_graph_def
+--                VAR carrot_graph_def.psParam,                                                 init = &PTU_psparam,                 ev = init
+--				
+--                VAR carrot_graph_def.asPtrSpec[0].s32PtrShape,                                		init = 0,                 ev = init				
+--                                        
+--            COMMENT INPUT/OUTPUT SECTION:
+--        
+--                --None
+--        
+--            COMMENT OUTPUT SECTION:
+--                
+--                --Holds the value of carrot_graph_def of pCarrotGraph of carrot_graph_def
+--                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->carrot_graph_def,          init = NULL,                         ev = &carrot_graph_def
+--                
+--                --Holds the value of s32DisDig of sWidgetParm of pCarrotGraph of carrot_graph_def
+--                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32DisDig,     init = 10,                           ev = 1200
+--                
+--                --Holds the value of s32Dig of sWidgetParm of pCarrotGraph of carrot_graph_def
+--                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Dig,        init = 10,                           ev = 1200
+--                
+--                --Holds the value of s32Scaler of sWidgetParm of pCarrotGraph of carrot_graph_def
+--                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32Scaler,     init = 10,                           ev = 1200
+--                
+--                --Holds the value of s32ScalerStep of sWidgetParm of pCarrotGraph of carrot_graph_def
+--                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sWidgetParm.s32ScalerStep, init = 10,                           ev = 0
+--				
+--                VAR ((T_PCARROTGRAPH)(carrot_graph_def.pCarrotGraph))->sOffSet,                   init = 1,                           ev = 1
+--				
+--				
+--				VAR PTU_stat,					init = PARAM_OK,			ev = init
+--				
+--				--Variable to verify the STUB native code                                    
+--                VAR PTU_rterr_file,                                                           init = "RTERR FILE",                 ev = glob_file_name
+--
+--				--Variable to verify the STUB native code                                
+--                VAR PTU_rterr_message,                                                        init = "RTERR MESSAGE",              ev = "Too many carrot graphs."				
+--                                                                                              
+--            -- Stub Calls :
+--            SIMUL
+--        
+--                --STUB call to get the width of supplied format word
+--                STUB BinasGetWidth(carrot_graph_def.u16Format)0
+--				
+--				STUB LookupTableLookup(1200)1		
+--                
+--				--STUB Call to calculate the power value.
+--                STUB CalculatePower (10, 0)1
+--				
+--				STUB RterrWidget(95)
+--                      
+--            END SIMUL
+--        
+--            -- Calling the Unit Under Test :      
+--			
+--			#for(Loop_index=0;Loop_index<32;Loop_index++)
+--			#{
+--            #CarrotGraphAllocat(&carrot_graph_def);
+--			#}
+--            
+--        END ELEMENT
+--    
+--    END TEST -- TEST 6	
+
+	
+END SERVICE -- CarrotGraphAllocat
+
+
+
+
+
+
+
+
+
+
+
+
+
+

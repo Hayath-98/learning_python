@@ -1,0 +1,2842 @@
+HEADER hdulibstm32f4xxrcc,Source Code Ver : 1.2,TestScript Ver : 1.3
+--------------------------------------------------------------------
+-- Author Name          : Swathi G
+--
+-- File Name            : hdulibstm32f4xxrcc.ptu
+--
+-- Test Creation Date   : 11.08.2017 
+--
+-- Tested Functions     : RccSysClkConfig
+--                        RccAhb1PeriphClockCmd
+--                        RccGetFlagStatus
+--                        RccWaitForHseStartUp
+--                        RccApb1PeriphResetCmd
+--                        RccPclk1Config
+--                        RccAhb3PeriphClockCmd
+--                        RccPclk2Config
+--                        RccPllCmd
+--                        RccDeInit
+--                        RccPllConfig
+--                        RccHclkConfig
+--                        RccGetSysClkSource
+--                        RccHseConfig
+--                        RccApb1PeriphClockCmd
+--                        RccApb2PeriphClockCmd
+--
+-- Verison History     :
+--
+-- TEST-VERSION      	TEST-DATE   		TESTER NAME   		MODIFICATIONS
+-- ------------         ---------           -----------        -------------
+--    1.1               11.08.2017           Swathi G         Created the PTU file.
+--    1.2               10.11.2017           Swathi G         Updated as per #PR100171.
+--    1.3               14.11.2017           Swathi G         Updated as per #PR100171.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibbasicfunc.h"      /* standard types definitions */
+##include "hdulibstm32f4xx.h"   /* Peripheral register definitions,memory mapping for STM32F4xx */
+##include "hdulibstm32f4xxrcc.h" /* Function prototypes for the RCC firmware library */
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+  #T_VLT_UINT32 PTU_CR_PLLON_BB;
+  ##define CR_PLLON_BB        (T_VLT_UINT32 *)&PTU_CR_PLLON_BB
+  
+  #T_UINT32 PTU_CR_BYTE3_ADDRESS;
+  ##define CR_BYTE3_ADDRESS          ((T_UINT32) &PTU_CR_BYTE3_ADDRESS)
+-- Declarations of the temporary variable
+
+  --None
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Swathi G
+    COMMENT
+    COMMENT File Name        : hdulibstm32f4xxrcc.ptu
+    COMMENT
+    COMMENT Tested Functions : RccSysClkConfig
+    COMMENT                   RccAhb1PeriphClockCmd
+    COMMENT                   RccGetFlagStatus
+    COMMENT                   RccWaitForHseStartUp
+    COMMENT                   RccApb1PeriphResetCmd
+    COMMENT                   RccPclk1Config
+    COMMENT                   RccAhb3PeriphClockCmd
+    COMMENT                   RccPclk2Config
+    COMMENT                   RccPllCmd
+    COMMENT                   RccDeInit
+    COMMENT                   RccPllConfig
+    COMMENT                   RccHclkConfig
+    COMMENT                   RccGetSysClkSource
+    COMMENT                   RccHseConfig
+    COMMENT                   RccApb1PeriphClockCmd
+    COMMENT                   RccApb2PeriphClockCmd
+    COMMENT
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1. Header file "hdulibstm32f4xx.h" is modified for testing purpose. 
+    COMMENT   The macro 'RCC' is modified for stubbing hardware address.
+    COMMENT 
+    COMMENT   /*Commented for testing purpose*/
+    COMMENT   /* #define RCC                 ((T_RCC_TYPE *) RCC_BASE) */
+    COMMENT 
+    COMMENT   /* Modified for stubbing hardware address */    
+    COMMENT   T_RCC_TYPE PTU_RCC;  
+    COMMENT   #define RCC                 ((T_RCC_TYPE *) &PTU_RCC)
+    COMMENT
+    COMMENT
+    COMMENT 2. Source file "hdulibstm32f4xxrcc.c" is modified for testing purpose. 
+    COMMENT   The macro 'CR_PLLON_BB' is modified for stubbing hardware address.
+    COMMENT
+    COMMENT   /*Commented for testing purpose*/
+    COMMENT   /* #define CR_PLLON_BB               (PERIPH_BB_BASE + (CR_OFFSET * 32) + (PLLON_BIT_NUMBER * 4)) */
+    COMMENT
+    COMMENT   /* Modified for stubbing hardware address */    
+    COMMENT   T_UINT32 PTU_CR_PLLON_BB;  
+    COMMENT   #define CR_PLLON_BB        ((T_UINT32) &PTU_CR_PLLON_BB)
+    COMMENT
+    COMMENT 3. Source file "hdulibstm32f4xxrcc.c" is modified for testing purpose. 
+    COMMENT   The macro 'CR_BYTE3_ADDRESS' is modified for stubbing hardware address.
+    COMMENT
+    COMMENT   /*Commented for testing purpose*/
+    COMMENT   /* #define CR_BYTE3_ADDRESS          ((T_UINT32)0x40023802) */
+    COMMENT
+    COMMENT   /* Modified for stubbing hardware address */    
+    COMMENT   T_UINT32 PTU_CR_BYTE3_ADDRESS;  
+    COMMENT   #define CR_BYTE3_ADDRESS          ((T_UINT32) &PTU_CR_BYTE3_ADDRESS)
+    COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'RccWaitForHseStartUp', loop count is equal to HSE_STARTUP_TIMEOUT.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'RccWaitForHseStartUp', loop count is not equal to HSE_STARTUP_TIMEOUT.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'RccWaitForHseStartUp',return value of the function 
+    COMMENT 'RccGetFlagStatus' with parameter RCC_FLAG_HSERDY is SET.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'RccWaitForHseStartUp',return value of the function 
+    COMMENT 'RccGetFlagStatus' with parameter RCC_FLAG_HSERDY is RESET.
+    COMMENT
+    COMMENT Class 7
+    COMMENT The function 'RccWaitForHseStartUp', returns SUCCESS.
+    COMMENT
+    COMMENT Class 8
+    COMMENT The function 'RccWaitForHseStartUp', returns ERROR.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'RccPllCmd', parameter 'new_state' value is ENABLE.
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'RccPllCmd', parameter 'new_state' value is DISABLE.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'RccSysClkConfig', the system clock (SYSCLK)is configured.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'RccAhb1PeriphClockCmd',new state of the specified 
+    COMMENT peripheral clock is ENABLE.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'RccAhb1PeriphClockCmd',new state of the specified 
+    COMMENT peripheral clock is DISABLE.
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'RccAhb3PeriphClockCmd',new state of the specified 
+    COMMENT peripheral clock is ENABLE.
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'RccAhb3PeriphClockCmd',new state of the specified 
+    COMMENT peripheral clock is DISABLE.
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'RccApb1PeriphClockCmd',new state of the specified 
+    COMMENT peripheral clock is ENABLE.
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'RccApb1PeriphClockCmd',new state of the specified 
+    COMMENT peripheral clock is DISABLE.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'RccApb2PeriphClockCmd',new state of the specified 
+    COMMENT peripheral clock is ENABLE.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'RccApb2PeriphClockCmd',new state of the specified 
+    COMMENT peripheral clock is DISABLE.
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'RccApb1PeriphResetCmd',new state of the specified 
+    COMMENT peripheral reset is ENABLE.
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'RccApb1PeriphResetCmd',new state of the specified 
+    COMMENT peripheral reset is DISABLE.
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'RccGetFlagStatus',the RCC register index is DEC_ONE.
+    COMMENT 
+    COMMENT Class 28
+    COMMENT In function 'RccGetFlagStatus',the RCC register index is DEC_TWO.
+    COMMENT 
+    COMMENT Class 29
+    COMMENT In function 'RccGetFlagStatus',the RCC register index is other than DEC_ONE and DEC_TWO.
+    COMMENT 
+    COMMENT Class 30
+    COMMENT In function 'RccGetFlagStatus', bitwise AND of status register with the result of DEC_ONE left shifted by flag position is SET.
+    COMMENT 
+    COMMENT Class 31
+    COMMENT In function 'RccGetFlagStatus', bitwise AND of status register with the result of DEC_ONE left shifted by flag position is RESET.  
+    COMMENT 
+    COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+     DEFINE STUB hdulibstm32f4xxrcc_c
+
+           -- No stubs
+
+     END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdulibstm32f4xxrcc.c
+--ENVIRONMENT ENV_hdulibstm32f4xxrcc_c
+
+--  None
+
+--END ENVIRONMENT -- ENV_hdulibstm32f4xxrcc_c
+
+--USE ENV_hdulibstm32f4xxrcc_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccAhb1PeriphClockCmd
+--------------------------------------------------------------------------------
+SERVICE RccAhb1PeriphClockCmd
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 rcc_ahb1_periph;
+#T_FUNCTIONAL_STATE new_state;
+
+ENVIRONMENT ENV_RccAhb1PeriphClockCmd_c
+
+    --Holds the value of AHB1 peripheral
+    VAR rcc_ahb1_periph,        init = 0,           ev = init
+
+    --Holds the newstate of peripheral clock
+    VAR new_state,          init = DISABLE,         ev = init
+
+END ENVIRONMENT -- ENV_RccAhb1PeriphClockCmd_c
+
+USE ENV_RccAhb1PeriphClockCmd_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccAhb1PeriphClockCmd-CB-LLR-002]
+    COMMENT In function 'RccAhb1PeriphClockCmd' ,the RCC AHB1 peripheral clock enable
+    COMMENT register (AHB1ENR) is configured to reset the bit for received peripheral
+    COMMENT rcc_ahb1_periph(0x7EF417FF)
+    COMMENT i.e (GPIOAEN[0],GPIOBEN[1],GPIOCEN[2],GPIODEN[3]
+    COMMENT     GPIOEEN[4],GPIOFEN[5],GPIOGEN[6],GPIOHEN[7] 
+    COMMENT     GPIOIEN[8],GPIOJEN[9],GPIOKEN[10],CRCEN[12],BKPSRAMEN[18] 
+    COMMENT     DMA1EN[21],DMA2EN[22],DMA2DEN[23],ETHMACEN[25],ETHMACTXEN[26]
+    COMMENT     ETHMACRXEN[27],ETHMACPTPEN[28],OTGHSEN[29],OTGHSULPIEN[30] clock are 
+    COMMENT     set to 0)
+    COMMENT when new_state of the specified peripheral clock is DISABLE 
+    COMMENT Equivalence Class 18
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+      COMMENT INPUT SECTION:
+      
+          --Holds the newstate of peripheral clock
+          VAR new_state,            init = DISABLE,        ev = init
+
+          --Holds the value of AHB1 peripheral
+          VAR rcc_ahb1_periph,      init = 0x7EF417FF,     ev = init
+
+      COMMENT INPUT/OUTPUT SECTION:
+      
+          --Holds the value of RCC AHB1 peripheral clock enable register
+          VAR RCC->AHB1ENR,         init = 0x00100000,     ev = 0x00000000
+
+      COMMENT OUTPUT SECTION:
+      
+          --None
+      
+      -- Stub Calls :
+      SIMUL
+
+              --No Stubs
+
+      END SIMUL
+
+      -- Calling the Unit Under Test :
+      #RccAhb1PeriphClockCmd(rcc_ahb1_periph, new_state);
+      
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccAhb1PeriphClockCmd-CB-LLR-001]
+    COMMENT In function 'RccAhb1PeriphClockCmd' ,the RCC AHB1 peripheral clock enable
+    COMMENT register (AHB1ENR) is configured to set the bit for received peripheral
+    COMMENT rcc_ahb1_periph(0x7EF417FF)
+    COMMENT i.e (GPIOAEN[0],GPIOBEN[1],GPIOCEN[2],GPIODEN[3]
+    COMMENT     GPIOEEN[4],GPIOFEN[5],GPIOGEN[6],GPIOHEN[7] 
+    COMMENT     GPIOIEN[8],GPIOJEN[9],GPIOKEN[10],CRCEN[12],BKPSRAMEN[18] 
+    COMMENT     DMA1EN[21],DMA2EN[22],DMA2DEN[23],ETHMACEN[25],ETHMACTXEN[26]
+    COMMENT     ETHMACRXEN[27],ETHMACPTPEN[28],OTGHSEN[29],OTGHSULPIEN[30] clocks are 
+    COMMENT     set to 1)
+    COMMENT when new_state of the specified peripheral clock is ENABLE.
+    COMMENT Equivalence Class 17 
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+      COMMENT INPUT SECTION:
+      
+          --Holds the newstate of peripheral clock
+          VAR new_state,              init = ENABLE,          ev = init
+
+          --Holds the value of AHB1 peripheral
+          VAR rcc_ahb1_periph,      init = 0x7EF417FF,     ev = init
+
+      COMMENT INPUT/OUTPUT SECTION:
+      
+          --Holds the value of RCC AHB1 peripheral clock enable register
+          VAR RCC->AHB1ENR,         init = 0x00100000,     ev = 0x7EF417FF
+
+      COMMENT OUTPUT SECTION:
+      
+          --None
+      
+      -- Stub Calls :
+      SIMUL
+
+              --No Stubs
+
+      END SIMUL
+
+      -- Calling the Unit Under Test :
+      #RccAhb1PeriphClockCmd(rcc_ahb1_periph, new_state);
+      
+    END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- RccAhb1PeriphClockCmd
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccGetFlagStatus
+--------------------------------------------------------------------------------
+SERVICE RccGetFlagStatus
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT8 rcc_flag;
+
+-- By function returned type declaration
+#T_FLAG_STATUS ret_RccGetFlagStatus;
+
+ENVIRONMENT ENV_RccGetFlagStatus_c
+
+    --Holds the value of RCC flag
+    VAR rcc_flag,                   init = 0,           ev = init
+
+    --Holds the return value of 'RccGetFlagStatus'
+    VAR ret_RccGetFlagStatus,       init = RESET,       ev = init
+
+END ENVIRONMENT -- ENV_RccGetFlagStatus_c
+
+USE ENV_RccGetFlagStatus_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccGetFlagStatus-CB-LLR-001]
+    COMMENT The function 'RccGetFlagStatus' update the RCC register index by the value rcc_flag right shift by 
+    COMMENT SHIFT_FIVE and Set the status register to CR of RCC. when the RCC register index value is DEC_ONE.
+    COMMENT The return flag status is SET when bitwise AND of status register with the result of DEC_ONE left 
+    COMMENT shifted by flag position(rcc_flag bitwise AND FLAG_MASK ) is other than RESET.  
+    COMMENT (setting of status register to RCC->CR value is verified when flag status register is set)
+    COMMENT Equivalence Class 27, 30
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+      COMMENT INPUT SECTION:
+      
+          --Holds the value of RCC control register.        
+          VAR RCC->CR,              init = 0x050D00FB,   ev = init
+
+          --Holds the value of RCC flag
+          VAR rcc_flag,               init = 0x30 ,        ev = init 
+
+      COMMENT INPUT/OUTPUT SECTION:
+      
+          --Holds the return value of 'RccGetFlagStatus'
+          VAR ret_RccGetFlagStatus,   init = RESET ,       ev = SET 
+
+      COMMENT OUTPUT SECTION:
+      
+          --None
+      
+      -- Stub Calls :
+      SIMUL
+
+              --No Stubs
+
+      END SIMUL
+
+      -- Calling the Unit Under Test :
+      #ret_RccGetFlagStatus = RccGetFlagStatus(rcc_flag);
+      
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccGetFlagStatus-CB-LLR-001]
+    COMMENT The function 'RccGetFlagStatus' update the RCC register index by the value rcc_flag right shift by 
+    COMMENT SHIFT_FIVE and Set the status register to CR of RCC. when the RCC register index value is DEC_ONE. 
+    COMMENT The return flag status is RESET when bitwise AND of status register with the result of DEC_ONE left 
+    COMMENT shifted by flag position(rcc_flag bitwise AND FLAG_MASK ) is RESET.  
+    COMMENT (setting of status register to RCC->CR value is verified when flag status register is reset)
+    COMMENT Equivalence Class 27, 31
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --Holds the value of RCC control register.    
+            VAR RCC->CR,              init = 0x00000083,          ev = init
+
+            --Holds the value of RCC flag
+            VAR rcc_flag,               init = 0x30,                ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+
+        COMMENT OUTPUT SECTION:
+      
+            --Holds the return value of 'RccGetFlagStatus'
+            VAR ret_RccGetFlagStatus,   init = SET,                 ev = RESET 
+      
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_RccGetFlagStatus = RccGetFlagStatus(rcc_flag);
+      
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxrcc-RccGetFlagStatus-CB-LLR-001]
+    COMMENT The function 'RccGetFlagStatus' update the RCC register index by the value rcc_flag right shift by 
+    COMMENT SHIFT_FIVE and Set the status register to BDCR of RCC. when the RCC register index value is DEC_TWO. 
+    COMMENT The return flag status is SET when bitwise AND of status register with the result of DEC_ONE left 
+    COMMENT shifted by flag position(rcc_flag bitwise AND FLAG_MASK ) is other than RESET. 
+    COMMENT (setting of status register to RCC->BDCR value is verified when flag status register is set)
+    COMMENT Equivalence Class 28, 30
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --Holds the value of RCC BDCR register.
+            VAR RCC->BDCR,            init = 0x00018305,          ev = init
+
+            --Holds the value of RCC flag
+             VAR rcc_flag,               init = 0x40,                ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+
+        COMMENT OUTPUT SECTION:
+      
+            --Holds the return value of 'RccGetFlagStatus'
+            VAR ret_RccGetFlagStatus,   init = RESET,               ev = SET 
+      
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+         END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_RccGetFlagStatus = RccGetFlagStatus(rcc_flag);
+      
+    END ELEMENT
+
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccGetFlagStatus-CB-LLR-001]
+    COMMENT The function 'RccGetFlagStatus' update the RCC register index by the value rcc_flag right shift by 
+    COMMENT SHIFT_FIVE and Set the status register to BDCR of RCC. when the RCC register index value is DEC_TWO. 
+    COMMENT The return flag status is RESET when bitwise AND of status register with the result of DEC_ONE left 
+    COMMENT shifted by flag position(rcc_flag bitwise AND FLAG_MASK ) is RESET.  
+    COMMENT (setting of status register to RCC->BDCR value is verified when flag status register is reset)
+    COMMENT Equivalence Class 28, 31
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of RCC BDCR register.
+            VAR RCC->BDCR,            init = 0x00000000,     ev = init
+
+            --Holds the value of RCC flag
+            VAR rcc_flag,               init = 0x40,           ev = init 
+   
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of 'RccGetFlagStatus'
+            VAR ret_RccGetFlagStatus,   init = SET,            ev = RESET 
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #ret_RccGetFlagStatus = RccGetFlagStatus(rcc_flag);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccGetFlagStatus-CB-LLR-001]
+    COMMENT The function 'RccGetFlagStatus' update the RCC register index by the value rcc_flag right shift by 
+    COMMENT SHIFT_FIVE and Set the status register to CSR of RCC. when the RCC register index value other than DEC_ONE and DEC_TWO. 
+    COMMENT The return flag status is RESET when bitwise AND of status register with the result of DEC_ONE left 
+    COMMENT shifted by flag position(rcc_flag bitwise AND FLAG_MASK ) is RESET.  
+    COMMENT (setting of status register to RCC->CSR value is verified when flag status register is reset)
+    COMMENT Equivalence Class 29, 31
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of RCC CSR register.
+            VAR RCC->CSR,             init = (T_UINT32)0x0E000000,     	   ev = init
+
+            --Holds the value of RCC flag
+            VAR rcc_flag,               init = 0xFF,                         ev = init 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of 'RccGetFlagStatus'
+            VAR ret_RccGetFlagStatus,   init = SET,                          ev = RESET 
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #ret_RccGetFlagStatus = RccGetFlagStatus(rcc_flag);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccGetFlagStatus-CB-LLR-001]
+    COMMENT The function 'RccGetFlagStatus' update the RCC register index by the value rcc_flag right shift by 
+    COMMENT SHIFT_FIVE and Set the status register to CSR of RCC. when the RCC register index value other than DEC_ONE and DEC_TWO. 
+    COMMENT The return flag status is SET when bitwise AND of status register with the result of DEC_ONE left 
+    COMMENT shifted by flag position(rcc_flag bitwise AND FLAG_MASK ) is other than RESET.  
+    COMMENT (setting of status register to RCC->CSR value is verified when flag status register is set)
+    COMMENT Equivalence Class 29, 30
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of RCC CSR register.
+            VAR RCC->CSR,               init = (T_UINT32)0x8F000001,      ev = init
+
+            --Holds the value of RCC flag
+            VAR rcc_flag,               init = 0xFF,                      ev = init 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of 'RccGetFlagStatus'
+            VAR ret_RccGetFlagStatus,   init = RESET,                     ev = SET 
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #ret_RccGetFlagStatus = RccGetFlagStatus(rcc_flag);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 6
+
+END SERVICE   --RccGetFlagStatus
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccWaitForHseStartUp
+--------------------------------------------------------------------------------
+SERVICE RccWaitForHseStartUp
+SERVICE_TYPE extern
+
+-- By function returned type declaration
+#T_ERROR_STATUS ret_RccWaitForHseStartUp;
+
+ENVIRONMENT ENV_RccWaitForHseStartUp_c
+
+    --Holds the return value of 'RccWaitForHseStartUp'
+    VAR ret_RccWaitForHseStartUp,       init = ERROR,       ev = init
+    
+END ENVIRONMENT -- ENV_RccWaitForHseStartUp_c
+
+USE ENV_RccWaitForHseStartUp_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxrcc-RccWaitForHseStartUp-CB-LLR-001]
+    COMMENT The function waits till HSE is ready and Time out is reached as below: 
+    COMMENT a) Loops till the loop count is not equal to HSE_STARTUP_TIMEOUT (i.e till loop 0X500)
+    COMMENT    Does nothing when loop count is equal to HSE_STARTUP_TIMEOUT (i.e loop 0X501) and 
+    COMMENT    for each iteration increments the start up counter.
+    COMMENT b) Return value of the function RccGetFlagStatus called with the 
+    COMMENT    parameter RCC_FLAG_HSERDY is equal to RESET. (MCDC TT and FX is verified)
+    COMMENT Equivalence Class 3,4,6
+    COMMENT 
+    COMMENT [hdulibstm32f4xxrcc-RccWaitForHseStartUp-CB-LLR-003]
+    COMMENT The function 'RccWaitForHseStartUp' returns ERROR, when the return
+    COMMENT value of function RccGetFlagStatus with parameter RCC_FLAG_HSERDY is RESET.
+    COMMENT Equivalence Class 6,8
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of RCC control register
+            VAR RCC->CR,                  init = 0x00040082,         ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of 'RccWaitForHseStartUp'
+            VAR ret_RccWaitForHseStartUp,   init = SUCCESS ,            ev = ERROR 
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+      
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #ret_RccWaitForHseStartUp = RccWaitForHseStartUp( );
+      
+    END ELEMENT
+    
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxrcc-RccWaitForHseStartUp-CB-LLR-001]
+    COMMENT The function waits till HSE is ready and Time out is reached as below: 
+    COMMENT a) Loops till the loop count is not equal to HSE_STARTUP_TIMEOUT (i.e till loop 0X500)
+    COMMENT    Does nothing when loop count is equal to HSE_STARTUP_TIMEOUT (i.e loop 0X501) and 
+    COMMENT    for each iteration increments the start up counter.
+    COMMENT b) Return value of the function RccGetFlagStatus called with the 
+    COMMENT    parameter RCC_FLAG_HSERDY is equal to RESET. (MCDC TF is verified)
+    COMMENT Equivalence Class 3,4,6
+    COMMENT 
+    COMMENT [hdulibstm32f4xxrcc-RccWaitForHseStartUp-CB-LLR-002]
+    COMMENT In function 'RccWaitForHseStartUp' return SUCCESS, when the return value of 
+    COMMENT function RccGetFlagStatus with parameter RCC_FLAG_HSERDY is SET.
+    COMMENT Equivalence Class 5,7
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of RCC control register
+            VAR RCC->CR,                  init = 0x00020082,           ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of 'RccWaitForHseStartUp'
+            VAR ret_RccWaitForHseStartUp,   init = ERROR ,              ev = SUCCESS
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #ret_RccWaitForHseStartUp = RccWaitForHseStartUp( );
+      
+    END ELEMENT
+    
+END TEST  -- TEST 2
+
+END SERVICE -- RccWaitForHseStartUp
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccApb1PeriphResetCmd
+--------------------------------------------------------------------------------
+SERVICE RccApb1PeriphResetCmd
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 rcc_apb1_periph;
+#T_FUNCTIONAL_STATE new_state;
+
+ENVIRONMENT ENV_RccApb1PeriphResetCmd_c
+
+    --Holds the value of APB1 peripheral
+    VAR rcc_apb1_periph,        init = 0,           ev = init
+
+    --Holds the newstate of peripheral clock    
+    VAR new_state,              init = DISABLE,     ev = init
+
+END ENVIRONMENT -- ENV_RccApb1PeriphResetCmd_c
+
+USE ENV_RccApb1PeriphResetCmd_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccApb1PeriphResetCmd-CB-LLR-002]
+    COMMENT In function 'RccApb1PeriphResetCmd' ,RCC APB1 peripheral reset 
+    COMMENT register (APB1RSTR) is configured to reset the bit for received peripheral 
+    COMMENT rcc_apb1_periph(0xF6FEC9FF)
+    COMMENT i.e (TIM2RST[0],TIM3RST[1],TIM4RST[2],TIM5RST[3],TIM6RST[4]
+    COMMENT      TIM7RST[5],TIM12RST[6],TIM13RST[7],TIM14RST[8],WWDGRST[11],
+    COMMENT      SPI2RST[14],SPI3RST[15],UART2RST[17],UART3RST[18],UART4RST[19],
+    COMMENT      UART5RST[20],I2C1RST[21],I2C2RST[22],I2C3RST[23],CAN1RST[25],
+    COMMENT      CAN2RST[26],PWRRST[28],DACRST[29],UART7RST[30],UART8RST[31]
+    COMMENT      clock bits are set to 0)
+    COMMENT when new state of the specified peripheral reset new_state is DISABLE
+    COMMENT Equivalence Class 26
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --Holds the newstate of peripheral clock
+            VAR new_state,              init = DISABLE,         ev = init
+
+            --Holds the value of APB1 peripheral
+            VAR rcc_apb1_periph,        init = (T_UINT32)0xF6FEC9FF,      ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --Holds the value of RCC APB1 peripheral reset register
+            VAR RCC->APB1RSTR,        init = 0x00000001,     ev = 0x00000000
+          
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        --Calling the Unit Under Test:
+        #RccApb1PeriphResetCmd(rcc_apb1_periph, new_state);
+      
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccApb1PeriphResetCmd-CB-LLR-001]
+    COMMENT In function 'RccApb1PeriphResetCmd' ,RCC APB1 peripheral reset 
+    COMMENT register (APB1RSTR) is configured to set the bit for received peripheral 
+    COMMENT rcc_apb1_periph(0xF6FEC9FF)
+    COMMENT i.e (TIM2RST[0],TIM3RST[1],TIM4RST[2],TIM5RST[3],TIM6RST[4]
+    COMMENT      TIM7RST[5],TIM12RST[6],TIM13RST[7],TIM14RST[8],WWDGRST[11],
+    COMMENT      SPI2RST[14],SPI3RST[15],UART2RST[17],UART3RST[18],UART4RST[19],
+    COMMENT      UART5RST[20],I2C1RST[21],I2C2RST[22],I2C3RST[23],CAN1RST[25],
+    COMMENT      CAN2RST[26],PWRRST[28],DACRST[29],UART7RST[30],UART8RST[31]
+    COMMENT      clock bits are set to 1)
+    COMMENT when new state of the specified peripheral reset new_state is ENABLE
+    COMMENT Equivalence Class 25
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the newstate of peripheral clock
+            VAR new_state,              init = ENABLE,          ev = init
+
+            --Holds the value of APB1 peripheral
+            VAR rcc_apb1_periph,        init = (T_UINT32)0xF6FEC9FF,      ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the value of RCC APB1 peripheral reset register
+            VAR RCC->APB1RSTR,        init = 0x00000000,      ev = 0xF6FEC9FF
+          
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        --Calling the Unit Under Test:
+        #RccApb1PeriphResetCmd(rcc_apb1_periph, new_state);
+      
+    END ELEMENT
+
+END TEST -- TEST 2        
+
+END SERVICE -- RccApb1PeriphResetCmd
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccPclk1Config
+--------------------------------------------------------------------------------
+SERVICE RccPclk1Config
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 rcc_hclk;
+
+ENVIRONMENT ENV_RccPclk1Config_c
+
+    --Holds the value of APB1 clock divider
+    VAR rcc_hclk,       init = 0,       ev = init
+
+END ENVIRONMENT -- ENV_RccPclk1Config_c
+
+USE ENV_RccPclk1Config_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPclk1Config-CB-LLR-001]
+    COMMENT The function clears the APB Low speed prescaler bits (bit 10 to 12) 
+    COMMENT in RCC clock configuration register (CFGR) and configures
+    COMMENT APB1 clock divider 'rcc_hclk' into PPRE1[10:12 as 000].
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of APB1 clock divider
+            VAR rcc_hclk,          init = 0x00000000 ,         ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register (cfgr)
+            VAR RCC->CFGR,       init = 0x00001C00,          ev = 0x00000000
+
+        COMMENT OUTPUT SECTION:
+      
+            --None
+      
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPclk1Config(rcc_hclk);
+      
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPclk1Config-CB-LLR-001]
+    COMMENT The function clears the APB Low speed prescaler bits (bit 10 to 12) 
+    COMMENT in RCC clock configuration register (CFGR) and configures
+    COMMENT APB1 clock divider 'rcc_hclk' into PPRE1[10:12 as 111].
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of APB1 clock divider
+            VAR rcc_hclk,          init = 0x00001C00 ,              ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+      
+            --Holds the value of RCC clock configuration register (cfgr)
+            VAR RCC->CFGR,       init = 0x00000000,               ev = 0x00001C00
+
+        COMMENT OUTPUT SECTION:
+      
+            --None
+
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPclk1Config(rcc_hclk);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPclk1Config-CB-LLR-001]
+    COMMENT The function clears the APB Low speed prescaler bits (bit 10 to 12) 
+    COMMENT in RCC clock configuration register (CFGR) and configures
+    COMMENT APB1 clock divider 'rcc_hclk' into PPRE1[10:12 as 101].
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of APB1 clock divider
+            VAR rcc_hclk,                   init = 0x00001800 ,     ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+      
+            --Holds the value of RCC clock configuration register (cfgr)
+            VAR RCC->CFGR,                init = 0x00001C00,      ev = 0x00001800
+
+
+        COMMENT OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPclk1Config(rcc_hclk);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPclk1Config-CB-LLR-001]
+    COMMENT The function clears the APB Low speed prescaler bits (bit 10 to 12) 
+    COMMENT in RCC clock configuration register (CFGR) and configures
+    COMMENT APB1 clock divider 'rcc_hclk' into PPRE1[10:12 as 010].
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of APB1 clock divider
+            VAR rcc_hclk,                   init = 0x00000800 ,     ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+      
+            --Holds the value of RCC clock configuration register (cfgr)
+            VAR RCC->CFGR,                init = 0x00001C00,      ev = 0x00000800
+
+
+        COMMENT OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPclk1Config(rcc_hclk);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 4
+
+END SERVICE -- RccPclk1Config
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccAhb3PeriphClockCmd
+--------------------------------------------------------------------------------
+SERVICE RccAhb3PeriphClockCmd
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 rcc_ahb3_periph;
+#T_FUNCTIONAL_STATE new_state;
+
+ENVIRONMENT ENV_RccAhb3PeriphClockCmd_c
+
+    --Holds the value of AHB3 peripheral
+    VAR rcc_ahb3_periph,        init = 0,           ev = init
+
+    --Holds the newstate of peripheral clock
+    VAR new_state,              init = DISABLE,     ev = init
+
+END ENVIRONMENT -- ENV_RccAhb3PeriphClockCmd_c
+
+USE ENV_RccAhb3PeriphClockCmd_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccAhb3PeriphClockCmd-CB-LLR-001]
+    COMMENT In function 'RccAhb3PeriphClockCmd',the RCC AHB3 peripheral clock 
+    COMMENT  enable register (AHB3ENR) is configured to set the bit for received peripheral
+    COMMENT rcc_ahb3_periph(0x00000001) i.e (FMCEN[0] bit is set to 1).
+    COMMENT when new state of the specified peripheral clock new_state is ENABLE.
+    COMMENT Equivalence Class 19
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the newstate of peripheral clock
+            VAR new_state,              init = ENABLE,          ev = init
+
+            --Holds the value of AHB3 peripheral
+            VAR rcc_ahb3_periph,        init = 0x00000001,      ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the value of RCC AHB3 peripheral clock enable register
+            VAR RCC->AHB3ENR,         init = 0x0000000,       ev = 0x00000001
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+      --Calling the Unit Under Test:
+      #RccAhb3PeriphClockCmd(rcc_ahb3_periph, new_state);
+      
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccAhb3PeriphClockCmd-CB-LLR-002]
+    COMMENT In function 'RccAhb3PeriphClockCmd',the RCC AHB3 peripheral clock 
+    COMMENT  enable register (AHB3ENR) is configured to reset the bit for received peripheral
+    COMMENT rcc_ahb3_periph(0x00000001) i.e (FMCEN[0] bit is set to 0).
+    COMMENT when new state of the specified peripheral clock new_state is DISABLE.
+    COMMENT Equivalence Class 20
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the newstate of peripheral clock
+            VAR new_state,              init = DISABLE,         ev = init
+
+            --Holds the value of AHB3 peripheral
+            VAR rcc_ahb3_periph,        init = 0x00000001,       ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the value of RCC AHB3 peripheral clock enable register
+            VAR RCC->AHB3ENR,     init = 0x00000000,          ev = 0x00000000
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        --Calling the Unit Under Test:
+        #RccAhb3PeriphClockCmd(rcc_ahb3_periph, new_state);
+      
+    END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- RccAhb3PeriphClockCmd
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccPclk2Config
+--------------------------------------------------------------------------------
+SERVICE RccPclk2Config
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 rcc_hclk;
+
+ENVIRONMENT ENV_RccPclk2Config_c
+
+    --Holds the value of APB2 clock divider
+    VAR rcc_hclk,       init = 0,       ev = init
+    
+END ENVIRONMENT -- ENV_RccPclk2Config_c
+
+USE ENV_RccPclk2Config_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPclk2Config-CB-LLR-001]
+    COMMENT In function 'RccPclk2Config' the APB high-speed prescaler bits
+    COMMENT (bit 13 to 15) in RCC clock configuration register(CFGR) are cleared
+    COMMENT and is configured by writing APB2 clock divider 'rcc_hclk' value 
+    COMMENT into PPRE2[13:15](i.e. 13:15 set as 000)
+    COMMENT Equivalence Class None   
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of APB2 clock divider
+            VAR rcc_hclk,           init = 0x00000000 ,          ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register(CFGR)
+            VAR RCC->CFGR,        init = 0x0000E000,           ev = 0x00000000
+
+        COMMENT OUTPUT SECTION:
+      
+            --None
+      
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPclk2Config(rcc_hclk);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPclk2Config-CB-LLR-001]
+    COMMENT In function 'RccPclk2Config' the APB high-speed prescaler bits
+    COMMENT (bit 13 to 15) in RCC clock configuration register(CFGR) are cleared
+    COMMENT and is configured by writing APB2 clock divider 'rcc_hclk' value 
+    COMMENT into PPRE2[13:15](i.e. 13:15 set as 111)
+    COMMENT Equivalence Class None   
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --Holds the value of APB2 clock divider
+            VAR rcc_hclk,               init = 0x00001C00 ,                 ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register(CFGR)
+            VAR RCC->CFGR,            init = 0x0000E000,                  ev = 0x0000E000
+
+        COMMENT OUTPUT SECTION:
+      
+            --None                                                                                
+
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPclk2Config(rcc_hclk);
+      
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPclk2Config-CB-LLR-001]
+    COMMENT In function 'RccPclk2Config' the APB high-speed prescaler bits
+    COMMENT (bit 13 to 15) in RCC clock configuration register(CFGR) are cleared
+    COMMENT and is configured by writing APB2 clock divider 'rcc_hclk' value 
+    COMMENT into PPRE2[13:15](i.e. 13:15 set as 101)
+    COMMENT Equivalence Class None  
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --Holds the value of APB2 clock divider
+            VAR rcc_hclk,       init = 0x00001400 ,         ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register(CFGR)
+            VAR RCC->CFGR,    init = 0x0000E000,          ev = 0x0000A000
+
+
+        COMMENT OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPclk2Config(rcc_hclk);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPclk2Config-CB-LLR-001]
+    COMMENT In function 'RccPclk2Config' the APB high-speed prescaler bits
+    COMMENT (bit 13 to 15) in RCC clock configuration register(CFGR) are cleared
+    COMMENT and is configured by writing APB2 clock divider 'rcc_hclk' value 
+    COMMENT into PPRE2[13:15](i.e. 13:15 set as 010)
+    COMMENT Equivalence Class None  
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --Holds the value of APB2 clock divider
+            VAR rcc_hclk,       init = 0x00000800 ,         ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register(CFGR)
+            VAR RCC->CFGR,    init = 0x0000E000,          ev = 0x00004000
+
+
+        COMMENT OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+      -- Calling the Unit Under Test :
+      #RccPclk2Config(rcc_hclk);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 4
+
+END SERVICE -- RccPclk2Config
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccPllCmd
+--------------------------------------------------------------------------------
+SERVICE RccPllCmd
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_FUNCTIONAL_STATE new_state;
+
+ENVIRONMENT ENV_RccPllCmd_c
+
+    --Holds new state of the main PLL
+    VAR new_state,      init = DISABLE,     ev = init
+    
+END ENVIRONMENT -- ENV_RccPllCmd_c
+
+USE ENV_RccPllCmd_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPllCmd-CB-LLR-001]
+    COMMENT The function 'RccPllCmd' configures PLLON bit of RCC clock control register
+    COMMENT with new_state.
+    COMMENT new_state is set to ENABLE.
+    COMMENT Equivalence Class 10
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds new state of the main PLL
+            VAR new_state,                         init = ENABLE,     ev = init 
+    
+        COMMENT OUTPUT SECTION:
+
+            --Holds value of RCC clock control register            
+            VAR   *(T_VLT_UINT32 *)CR_PLLON_BB,   init = DISABLE,    ev = ENABLE
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None       
+      
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPllCmd(new_state);
+      
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPllCmd-CB-LLR-001]
+    COMMENT The function 'RccPllCmd' configures PLLON bit of RCC clock control register
+    COMMENT with new_state.
+    COMMENT new_state is set to DISABLE.    
+    COMMENT Equivalence Class 11
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds new state of the main PLL
+            VAR new_state,                         init = DISABLE,           ev = init 
+
+        COMMENT OUTPUT SECTION:
+          
+            --Holds value of RCC clock control register
+            VAR  *(T_VLT_UINT32 *)CR_PLLON_BB,   init = ENABLE,            ev = DISABLE
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPllCmd(new_state);
+      
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+END SERVICE -- RccPllCmd
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccDeInit
+--------------------------------------------------------------------------------
+SERVICE RccDeInit
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccDeInit-CB-LLR-001]
+    COMMENT The function 'RccDeInit' sets the HSION bit(bit 0) in RCC 
+    COMMENT clock control register (CR).
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxrcc-RccDeInit-CB-LLR-002]
+    COMMENT The function 'RccDeInit' resets the CFGR register of RCC.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxrcc-RccDeInit-CB-LLR-003]
+    COMMENT The function 'RccDeInit' resets HSEON[bit 16], CSSON[bit 19] 
+    COMMENT and PLLON[bit 24] bits of RCC clock control register (CR).
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxrcc-RccDeInit-CB-LLR-004]
+    COMMENT The function 'RccDeInit' resets PLLCFGR register of RCC.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxrcc-RccDeInit-CB-LLR-005]
+    COMMENT The function 'RccDeInit' resets HSEBYP[bit 18] of RCC clock control register (CR).
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxrcc-RccDeInit-CB-LLR-006]
+    COMMENT The function 'RccDeInit' disables all interrupts by resetting RCC clock 
+    COMMENT interrupt register (CIR) .
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --None
+          
+        COMMENT OUTPUT SECTION:
+
+            --Holds value of RCC PLLCFGR register        
+            VAR RCC->PLLCFGR,     init = 0x1,         ev = 0x24003010
+         
+            --Holds value of RCC cfgr register 
+            VAR RCC->CFGR,        init = 0x1,         ev = HEX_ZERO
+
+            --Holds value of RCC CIR register             
+            VAR RCC->CIR,         init = 0x1,         ev = HEX_ZERO
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds value of RCC clock control register (cr)            
+            VAR RCC->CR,          init = 0x010D0000,  ev = 0x00000001
+                      
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccDeInit( );
+      
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+END SERVICE -- RccDeInit
+--------------------------------------------------------------------------------
+-- Declaration of the service RccPllConfig
+--------------------------------------------------------------------------------
+SERVICE RccPllConfig
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 rcc_pll_source;
+#T_UINT32 pll_m;
+#T_UINT32 pll_n;
+#T_UINT32 pll_p;
+#T_UINT32 pll_q;
+
+ENVIRONMENT ENV_RccPllConfig_c
+
+    --Holds value for the PLL entry clock source 
+    VAR rcc_pll_source,     init = 0,       ev = init
+
+    --Holds value for the division factor for PLL VCO input clock
+    VAR pll_m,              init = 0,       ev = init
+
+    --Holds value for the multiplication factor for PLL VCO output clock
+    VAR pll_n,              init = 0,       ev = init
+
+    --Holds value for the division factor for main system clock (SYSCLK)
+    VAR pll_p,              init = 0,       ev = init
+
+    --Holds value for the division factor for OTG FS, SDIO and RNG clocks
+    VAR pll_q,              init = 0,       ev = init
+
+END ENVIRONMENT -- ENV_RccPllConfig_c
+
+USE ENV_RccPllConfig_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPllConfig-CB-LLR-001]
+    COMMENT The function 'RccPllConfig' configures RCC PLL configuration register 
+    COMMENT with pll_m, pll_n, pll_p, pll_q and rcc_pll_source.
+    COMMENT rcc_pll_source is initialized to 0x00000000
+    COMMENT pll_m is initialized to 0
+    COMMENT pll_n is initialized to 0xC0
+    COMMENT pll_p is initialized to 0x2
+    COMMENT pll_q is initialized to 0x4
+    COMMENT Equivalence Class None   
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --Holds value for the PLL entry clock source 
+            VAR rcc_pll_source,     init = 0x00000000 ,  ev = init 
+          
+            --Holds value for the division factor for PLL VCO input clock
+            VAR pll_m,              init = 0x00 ,       ev = init
+
+            --Holds value for the multiplication factor for PLL VCO output clock
+            VAR pll_n,              init = 0xC0 ,       ev = init 
+
+            --Holds value for the division factor for main system clock (SYSCLK)
+            VAR pll_p,              init = 0x2 ,        ev = init  
+
+            --Holds value for the division factor for OTG FS, SDIO and RNG clocks
+            VAR pll_q,              init = 0x4 ,        ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds value of PLL configuration register
+            VAR RCC->PLLCFGR,     init = 0x00000000,  ev = 0x04003000
+  
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPllConfig(rcc_pll_source,pll_m,pll_n,pll_p,pll_q);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPllConfig-CB-LLR-001]
+    COMMENT The function 'RccPllConfig' configures RCC PLL configuration register 
+    COMMENT with pll_m, pll_n, pll_p, pll_q and rcc_pll_source.
+    COMMENT rcc_pll_source is initialized to 0x2F437FFF
+    COMMENT pll_m is initialized to 0xA
+    COMMENT pll_n is initialized to 0x12C
+    COMMENT pll_p is initialized to 0x4
+    COMMENT pll_q is initialized to 0xD
+    COMMENT Equivalence Class None  
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds value for the PLL entry clock source 
+            VAR rcc_pll_source,     init = 0x2F437FFF ,     ev = init   
+
+            --Holds value for the division factor for PLL VCO input clock
+            VAR pll_m,              init = 0xA,              ev = init   
+
+            --Holds value for the multiplication factor for PLL VCO output clock
+            VAR pll_n,              init = 0x12C ,        ev = init   
+    
+            --Holds value for the division factor for main system clock (SYSCLK)    
+            VAR pll_p,              init = 0x4 ,          ev = init   
+
+            --Holds value for the division factor for OTG FS, SDIO and RNG clocks
+            VAR pll_q,              init = 0xD ,         ev = init
+
+        COMMENT OUTPUT SECTION:    
+
+            --Holds value of PLL configuration register
+            VAR RCC->PLLCFGR,     init = 0x00000000,   ev = 0x2F437FFF
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPllConfig(rcc_pll_source,pll_m,pll_n,pll_p,pll_q);
+      
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPllConfig-CB-LLR-001]
+    COMMENT The function 'RccPllConfig' configures RCC PLL configuration register 
+    COMMENT with pll_m, pll_n, pll_p, pll_q and rcc_pll_source.
+    COMMENT rcc_pll_source is initialized to 0x2F437FFF
+    COMMENT pll_m is initialized to 0xA
+    COMMENT pll_n is initialized to 0x12C
+    COMMENT pll_p is initialized to 0x8
+    COMMENT pll_q is initialized to 0xD
+    COMMENT Equivalence Class None   
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds value for the PLL entry clock source 
+            VAR rcc_pll_source,     init = 0x2F437FFF ,  ev = init   
+
+            --Holds value for the division factor for PLL VCO input clock
+            VAR pll_m,              init = 0xA ,        ev = init   
+
+            --Holds value for the multiplication factor for PLL VCO output clock
+            VAR pll_n,              init = 0x12C ,      ev = init   
+
+            --Holds value for the division factor for main system clock (SYSCLK)
+            VAR pll_p,              init = 0x8 ,        ev = init   
+
+            --Holds value for the division factor for OTG FS, SDIO and RNG clocks
+            VAR pll_q,              init = 0xD ,        ev = init
+
+        COMMENT OUTPUT SECTION:    
+
+            --Holds value of PLL configuration register
+            VAR RCC->PLLCFGR,     init = 0x00000000,   ev = 0x2F437FFF
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPllConfig(rcc_pll_source,pll_m,pll_n,pll_p,pll_q);
+      
+    END ELEMENT
+
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccPllConfig-CB-LLR-001]
+    COMMENT The function 'RccPllConfig' configures RCC PLL configuration register 
+    COMMENT with pll_m, pll_n, pll_p, pll_q and rcc_pll_source. 
+    COMMENT rcc_pll_source is initialized to 0x20000000
+    COMMENT pll_m is initialized to 0x3F
+    COMMENT pll_n is initialized to 0x1B0
+    COMMENT pll_p is initialized to 0x6
+    COMMENT pll_q is initialized to 0xD
+    COMMENT Equivalence Class None   
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds value for the PLL entry clock source 
+            VAR rcc_pll_source,     init = 0x20000000 , ev = init   
+
+            --Holds value for the division factor for PLL VCO input clock
+            VAR pll_m,              init = 0x3F ,       ev = init   
+
+            --Holds value for the multiplication factor for PLL VCO output clock        
+            VAR pll_n,              init = 0x1B0 ,      ev = init   
+
+            --Holds value for the division factor for main system clock (SYSCLK) 
+            VAR pll_p,              init = 0x6 ,        ev = init   
+
+            --Holds value for the division factor for OTG FS, SDIO and RNG clocks
+            VAR pll_q,              init = 0xD ,        ev = init
+
+        COMMENT OUTPUT SECTION:    
+
+            --Holds value of PLL configuration register
+            VAR RCC->PLLCFGR,     init = 0x00000000,  ev = 0x2D026C3F
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+          --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccPllConfig(rcc_pll_source,pll_m,pll_n,pll_p,pll_q);
+      
+    END ELEMENT
+
+END TEST  -- TEST 4
+
+END SERVICE -- RccPllConfig
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccHclkConfig
+--------------------------------------------------------------------------------
+SERVICE RccHclkConfig
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 rcc_sysclk;
+
+ENVIRONMENT ENV_RccHclkConfig_c
+
+    --Holds the value of AHB clock divider.
+    VAR rcc_sysclk,     init = 0,       ev = init
+
+END ENVIRONMENT -- ENV_RccHclkConfig_c
+
+USE ENV_RccHclkConfig_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccHclkConfig-CB-LLR-001]
+    COMMENT The function 'RccHclkConfig' clears the AHB prescaler bits(HPRE 4:7)
+    COMMENT in RCC clock configuration register (CFGR) and configures
+    COMMENT HPRE(bits [4:7] as 0000) with AHB clock divider rcc_sysclk.    
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+          
+            --Holds the value of AHB clock divider. 
+            VAR rcc_sysclk,               init = 0x00000000 ,                 ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+ 
+            --Holds the value of RCC clock configuration register (CFGR).
+            VAR RCC->CFGR,              init = (T_UINT32)0x000000F0,    ev = (T_UINT32)0x00000000
+
+        COMMENT INPUT/OUTPUT SECTION:  
+      
+            --None
+
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccHclkConfig(rcc_sysclk);
+      
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccHclkConfig-CB-LLR-001]
+    COMMENT The function 'RccHclkConfig' clears the AHB prescaler bits(HPRE 4:7)
+    COMMENT in RCC clock configuration register (CFGR) and configures
+    COMMENT HPRE(bits [4:7] as 1111) with AHB clock divider rcc_sysclk.           
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --Holds the value of AHB clock divider.
+            VAR rcc_sysclk,             init = 0x000000F0 ,                     ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register (CFGR).
+            VAR RCC->CFGR,            init = (T_UINT32)0x00000020,        ev = (T_UINT32)0x000000F0
+
+        COMMENT INPUT/OUTPUT SECTION:  
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccHclkConfig(rcc_sysclk);
+      
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccHclkConfig-CB-LLR-001]
+    COMMENT The function 'RccHclkConfig' clears the AHB prescaler bits(HPRE 4:7)
+    COMMENT in RCC clock configuration register (CFGR) and configures
+    COMMENT HPRE(bits [4:7] as 1010) with AHB clock divider rcc_sysclk.    
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+    
+            --Holds the value of AHB clock divider.
+            VAR rcc_sysclk,             init = (T_UINT32)0x000000A0 ,       ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register (CFGR).
+            VAR RCC->CFGR,            init = (T_UINT32)0x000000F0,    ev = (T_UINT32)0x000000A0
+
+        COMMENT INPUT/OUTPUT SECTION:  
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccHclkConfig(rcc_sysclk);
+      
+    END ELEMENT
+
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccHclkConfig-CB-LLR-001]
+    COMMENT The function 'RccHclkConfig' clears the AHB prescaler bits(HPRE 4:7)
+    COMMENT in RCC clock configuration register (CFGR) and configures
+    COMMENT HPRE(bits [4:7] as 0101) with AHB clock divider rcc_sysclk.    
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+    
+            --Holds the value of AHB clock divider.
+            VAR rcc_sysclk,             init = (T_UINT32)0x00000050 ,       ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register (CFGR).
+            VAR RCC->CFGR,            init = (T_UINT32)0x000000F0,    ev = (T_UINT32)0x00000050
+
+        COMMENT INPUT/OUTPUT SECTION:  
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccHclkConfig(rcc_sysclk);
+      
+    END ELEMENT
+
+END TEST  -- TEST 4
+
+END SERVICE -- RccHclkConfig
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccGetSysClkSource
+--------------------------------------------------------------------------------
+SERVICE RccGetSysClkSource
+SERVICE_TYPE extern
+
+-- By function returned type declaration
+#T_UINT8 ret_RccGetSysClkSource;
+
+ENVIRONMENT ENV_RccGetSysClkSource_c
+    
+    --Holds the return value of the 'RccGetSysClkSource'
+    VAR ret_RccGetSysClkSource,     init = 0,       ev = init
+
+END ENVIRONMENT -- ENV_RccGetSysClkSource_c
+
+USE ENV_RccGetSysClkSource_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description    
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccGetSysClkSource-CB-LLR-001]
+    COMMENT The function 'RccGetSysClkSource' returns the clock source 
+    COMMENT used as system clock by extracting the SWS0 and SWS1 bits
+    COMMENT i.e(bit 2 and 3 as 11) in RCC clock configuration register (CFGR). 
+    COMMENT RCC clock configuration register (CFGR) is set to 0x0000000C.
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of RCC clock configuration register (CFGR)
+            VAR RCC->CFGR,                init = (T_UINT32)0x0000000C,    ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of the 'RccGetSysClkSource'
+            VAR ret_RccGetSysClkSource,     init = 0x1 ,                        ev = 0x0C
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+      
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #ret_RccGetSysClkSource = RccGetSysClkSource( );
+      
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description    
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccGetSysClkSource-CB-LLR-001]
+    COMMENT The function 'RccGetSysClkSource' returns the clock source 
+    COMMENT used as system clock by extracting the SWS0 and SWS1 bits
+    COMMENT i.e(bit 2 and 3 as 10) in RCC clock configuration register (CFGR). 
+    COMMENT RCC clock configuration register (CFGR) is set to 0x00000008.  
+    COMMENT Equivalence Class none
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --Holds the value of RCC clock configuration register (CFGR)
+            VAR RCC->CFGR,                init = (T_UINT32)0x00000008,      ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of the 'RccGetSysClkSource'
+            VAR ret_RccGetSysClkSource,     init = 0x0 ,                          ev = 0x08 
+         
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #ret_RccGetSysClkSource = RccGetSysClkSource( );
+      
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description    
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccGetSysClkSource-CB-LLR-001]
+    COMMENT The function 'RccGetSysClkSource' returns the clock source 
+    COMMENT used as system clock by extracting the SWS0 and SWS1 bits
+    COMMENT i.e(bit 2 and 3 as 01) in RCC clock configuration register (CFGR). 
+    COMMENT RCC clock configuration register (CFGR) is set to 0x00000008.    
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of RCC clock configuration register (CFGR)
+            VAR RCC->CFGR,                init = (T_UINT32)0x00000007,      ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of the 'RccGetSysClkSource'
+            VAR ret_RccGetSysClkSource,     init = 0x0 ,                          ev = 0x04 
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #ret_RccGetSysClkSource = RccGetSysClkSource( );
+      
+    END ELEMENT
+
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description    
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccGetSysClkSource-CB-LLR-001]
+    COMMENT The function 'RccGetSysClkSource' returns the clock source 
+    COMMENT used as system clock by extracting the SWS0 and SWS1 bits
+    COMMENT i.e(bit 2 and 3 as 00) in RCC clock configuration register (CFGR). 
+    COMMENT RCC clock configuration register (CFGR) is set to 0x00000008.    
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of RCC clock configuration register (CFGR)
+            VAR RCC->CFGR,                init = (T_UINT32)0x00000003,      ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of the 'RccGetSysClkSource'
+            VAR ret_RccGetSysClkSource,     init = 0x01 ,                          ev = 0x0
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+            --None
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #ret_RccGetSysClkSource = RccGetSysClkSource( );
+      
+    END ELEMENT
+
+END TEST  -- TEST 4
+
+END SERVICE -- RccGetSysClkSource
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccHseConfig
+--------------------------------------------------------------------------------
+SERVICE RccHseConfig
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT8 rcc_hse;
+
+ENVIRONMENT ENV_RccHseConfig_c
+
+    --Holds new state of the HSE
+    VAR rcc_hse,        init = 0,       ev = init
+
+END ENVIRONMENT -- ENV_RccHseConfig_c
+
+USE ENV_RccHseConfig_c
+    
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description   
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccHseConfig-CB-LLR-001]
+    COMMENT The function 'RccHseConfig' resets HSEON and HSEBYP bits in 3rd byte of RCC clock
+    COMMENT control register (cr) and configure with new configuration rcc_hse .
+    COMMENT RCC clock control register (CR) is set to 0x00.
+    COMMENT rcc_hse is set to 0x01.
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+      
+            --Holds new state of the HSE
+            VAR rcc_hse,                                  init = 0x01 ,           ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds value of RCC clock control register
+            VAR *(T_VLT_UINT8 *)CR_BYTE3_ADDRESS,      init = 0x00,            ev = 0x01
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None        
+
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccHseConfig(rcc_hse);
+      
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description   
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccHseConfig-CB-LLR-001]
+    COMMENT The function 'RccHseConfig' resets HSEON and HSEBYP bits in 3rd byte of RCC clock
+    COMMENT control register (cr) and configure with new configuration rcc_hse .
+    COMMENT RCC clock control register (CR) is set to 0x01.
+    COMMENT rcc_hse is set to 0x00.
+    COMMENT Equivalence Class  None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds new state of the HSE
+            VAR rcc_hse,                                    init = 0x00 ,            ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds value of RCC clock control register
+            VAR *(T_VLT_UINT8 *)CR_BYTE3_ADDRESS,        init = 0x01,             ev = 0x00
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccHseConfig(rcc_hse);
+      
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+
+END SERVICE -- RccHseConfig
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccApb1PeriphClockCmd
+--------------------------------------------------------------------------------
+SERVICE RccApb1PeriphClockCmd
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 rcc_apb1_periph;
+#T_FUNCTIONAL_STATE new_state;
+
+ENVIRONMENT ENV_RccApb1PeriphClockCmd_c
+
+    --Holds the value of APB1 peripheral
+    VAR rcc_apb1_periph,        init = 0,       ev = init
+
+    --Holds the newstate of peripheral clock
+    VAR new_state,      init = DISABLE,     ev = init
+
+END ENVIRONMENT -- ENV_RccApb1PeriphClockCmd_c
+
+USE ENV_RccApb1PeriphClockCmd_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccApb1PeriphClockCmd-CB-LLR-002]
+    COMMENT In function 'RccApb1PeriphClockCmd',the RCC APB1 peripheral clock 
+    COMMENT enable register (APB1ENR) is congigured to reset the bit for received 
+    COMMENT peripheral rcc_apb1_periph(0x36FEC9FF).
+    COMMENT i.e (TIM2EN[0],TIM3EN[1],TIM4EN[2],TIM5EN[3],TIM5EN[4]
+    COMMENT      TIM7EN[5],TIM12EN[6],TIM13EN[7],TIM14EN[8],WWDGEN[11],
+    COMMENT      SPI2EN[14],SPI3EN[15],UART2EN[17],UART3EN[18],UART4EN[19],
+    COMMENT      UART5EN[20],I2C1EN[21],I2C2EN[22],I2C3EN[23],CAN1EN[25],
+    COMMENT      CAN2EN[26],PWREN[28],DACEN[29] clock bits are set to 0)  
+    COMMENT when new state of the specified peripheral clock new_state is DISABLE.
+    COMMENT Equivalence Class 22
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the newstate of peripheral clock
+            VAR new_state,              init = DISABLE,         ev = init
+
+            --Holds the value of APB1 peripheral
+            VAR rcc_apb1_periph,        init = (T_UINT32)0x36FEC9FF,      ev = init
+
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the value of RCC APB1 peripheral clock enable register
+            VAR RCC->APB1ENR,         init = 0x00000000,     ev = 0x00000000
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL 
+      
+        -- Calling the Unit Under Test :
+        #RccApb1PeriphClockCmd(rcc_apb1_periph, new_state);
+      
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccApb1PeriphClockCmd-CB-LLR-001]
+    COMMENT In function 'RccApb1PeriphClockCmd',the RCC APB1 peripheral clock 
+    COMMENT enable register (APB1ENR) is congigured to set the bit for received 
+    COMMENT peripheral rcc_apb1_periph(0x36FEC9FF).
+    COMMENT i.e (TIM2EN[0],TIM3EN[1],TIM4EN[2],TIM5EN[3],TIM5EN[4]
+    COMMENT      TIM7EN[5],TIM12EN[6],TIM13EN[7],TIM14EN[8],WWDGEN[11],
+    COMMENT      SPI2EN[14],SPI3EN[15],UART2EN[17],UART3EN[18],UART4EN[19],
+    COMMENT      UART5EN[20],I2C1EN[21],I2C2EN[22],I2C3EN[23],CAN1EN[25],
+    COMMENT      CAN2EN[26],PWREN[28],DACEN[29] clock bits are set to 1)  
+    COMMENT when new state of the specified peripheral clock new_state is ENABLE.
+    COMMENT Equivalence Class 21
+    COMMENT </TD>
+
+    ELEMENT  
+    
+        COMMENT INPUT SECTION:
+
+            --Holds the newstate of peripheral clock
+            VAR new_state,              init = ENABLE,          ev = init
+
+            --Holds the value of APB1 peripheral
+            VAR rcc_apb1_periph,        init = (T_UINT32)0x36FEC9FF,      ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the value of RCC APB1 peripheral clock enable register
+            VAR RCC->APB1ENR,         init = 0x00000000,      ev = 0x36FEC9FF
+
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccApb1PeriphClockCmd(rcc_apb1_periph, new_state);
+      
+    END ELEMENT
+
+END TEST -- TEST 2   
+
+END SERVICE -- RccApb1PeriphClockCmd
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccApb2PeriphClockCmd
+--------------------------------------------------------------------------------
+SERVICE RccApb2PeriphClockCmd
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 rcc_apb2_periph;
+#T_FUNCTIONAL_STATE new_state;
+
+ENVIRONMENT ENV_RccApb2PeriphClockCmd_c
+
+    --Holds the value of APB2 peripheral
+    VAR rcc_apb2_periph,        init = 0,           ev = init
+
+    --Holds the newstate of peripheral clock
+    VAR new_state,              init = DISABLE,     ev = init
+
+END ENVIRONMENT -- ENV_RccApb2PeriphClockCmd_c
+
+USE ENV_RccApb2PeriphClockCmd_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxrcc-RccApb2PeriphClockCmd-CB-LLR-002]
+    COMMENT In function 'RccApb2PeriphClockCmd' RCC APB2 peripheral clock enable
+    COMMENT register (APB2ENR) is configured to reset the bit for received peripheral
+    COMMENT rcc_apb2_periph(0x00075F33)
+    COMMENT i.e (TIM1EN[0],TIM8EN[1],USART1EN[4],USART6EN[5],ADC1EN[8],
+    COMMENT     ADC2EN[9],ADC3EN[10],SDIOEN[11],SPI1EN[12],SPI2EN[13]
+    COMMENT     SYSCFGEN[14],TIM9EN[16],TIM10EN[17],TIM11EN[18],
+    COMMENT     SPI5EN[20],SPI6EN[21],SAI1EN[22],LTDCEN[26] is set as 0)
+    COMMENT when new state of the specified peripheral clock new_state is DISABLE
+    COMMENT Equivalence Class 24
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+         
+            --Holds the newstate of peripheral clock
+            VAR new_state,              init = DISABLE,         ev = init
+
+            --Holds the value of APB2 peripheral
+            VAR rcc_apb2_periph,        init = 0x00075F33,      ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the value of APB2 peripheral clock enable register
+            VAR RCC->APB2ENR,         init = 0x00000000,          ev = 0x00000000
+
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :        
+        #RccApb2PeriphClockCmd(rcc_apb2_periph, new_state);
+      
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxrcc-RccApb2PeriphClockCmd-CB-LLR-001]
+    COMMENT In function 'RccApb2PeriphClockCmd' RCC APB2 peripheral clock enable
+    COMMENT register (APB2ENR) is configured to set the bit for received peripheral
+    COMMENT rcc_apb2_periph(0x00075F33)
+    COMMENT i.e (TIM1EN[0],TIM8EN[1],USART1EN[4],USART6EN[5],ADC1EN[8],
+    COMMENT     ADC2EN[9],ADC3EN[10],SDIOEN[11],SPI1EN[12],SPI2EN[13]
+    COMMENT     SYSCFGEN[14],TIM9EN[16],TIM10EN[17],TIM11EN[18],
+    COMMENT     SPI5EN[20],SPI6EN[21],SAI1EN[22],LTDCEN[26] is set as 1)
+    COMMENT when new state of the specified peripheral clock new_state is ENABLE
+    COMMENT Equivalence Class 23
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the newstate of peripheral clock
+            VAR new_state,              init = ENABLE,          ev = init
+
+            --Holds the value of APB2 peripheral
+            VAR rcc_apb2_periph,        init = 0x00075F33,      ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the value of APB2 peripheral clock enable register
+            VAR RCC->APB2ENR,         init = 0x00000000,      ev = 0x00075F33
+
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :        
+        #RccApb2PeriphClockCmd(rcc_apb2_periph, new_state);
+      
+    END ELEMENT
+
+END TEST -- TEST 2   
+
+END SERVICE -- RccApb2PeriphClockCmd
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RccSysClkConfig
+--------------------------------------------------------------------------------
+SERVICE RccSysClkConfig
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 rcc_sysclk_source;
+
+ENVIRONMENT ENV_RccSysClkConfig_c
+
+    --Holds the value of clock source
+    VAR rcc_sysclk_source,      init = 0,       ev = init
+
+END ENVIRONMENT -- ENV_RccSysClkConfig_c
+
+USE ENV_RccSysClkConfig_c
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxrcc-RccSysClkConfig-CB-LLR-001]
+    COMMENT The function 'RccSysClkConfig' clears the System clock switch bits 
+    COMMENT (bit 0 and 1) in RCC clock configuration register (CFGR) and configures
+    COMMENT with clock source used as system clock (rcc_sysclk_source).
+    COMMENT system clock (rcc_sysclk_source) is set to 0x00000000(switch bits 0:1 as 00)
+    COMMENT Equivalence Class 12
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of clock source
+            VAR rcc_sysclk_source,      init = 0x00000000 ,     ev = init 
+
+          COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register (cfgr)
+            VAR RCC->CFGR,            init = 0x00000003,      ev = 0x00000000
+
+        COMMENT OUTPUT SECTION:
+
+            --None  
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccSysClkConfig(rcc_sysclk_source);
+      
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxrcc-RccSysClkConfig-CB-LLR-001]
+    COMMENT The function 'RccSysClkConfig' clears the System clock switch bits 
+    COMMENT (bit 0 and 1) in RCC clock configuration register (CFGR) and configures
+    COMMENT with clock source used as system clock (rcc_sysclk_source).
+    COMMENT system clock (rcc_sysclk_source) is set to 0x00000003(switch bits 0:1 as 11)  
+    COMMENT Equivalence Class 12
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of clock source
+            VAR rcc_sysclk_source,      init = 0x00000003 ,    ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register (cfgr)
+            VAR RCC->CFGR,            init = 0x00000001,     ev = 0x00000003
+
+        COMMENT OUTPUT SECTION:
+          
+            --None    
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccSysClkConfig(rcc_sysclk_source);
+      
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxrcc-RccSysClkConfig-CB-LLR-001]
+    COMMENT The function 'RccSysClkConfig' clears the System clock switch bits 
+    COMMENT (bit 0 and 1) in RCC clock configuration register (CFGR) and configures
+    COMMENT with clock source used as system clock (rcc_sysclk_source).
+    COMMENT system clock (rcc_sysclk_source) is set to 0x00000002(switch bits 0:1 as 10)    
+    COMMENT Equivalence Class 12
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of clock source
+            VAR rcc_sysclk_source,  init = 0x00000002 ,               ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register (cfgr)        
+            VAR RCC->CFGR,        init = 0x00000003,                ev = 0x00000002
+
+        COMMENT OUTPUT SECTION:
+
+            --None    
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccSysClkConfig(rcc_sysclk_source);
+      
+    END ELEMENT
+    
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxrcc-RccSysClkConfig-CB-LLR-001]
+    COMMENT The function 'RccSysClkConfig' clears the System clock switch bits 
+    COMMENT (bit 0 and 1) in RCC clock configuration register (CFGR) and configures
+    COMMENT with clock source used as system clock (rcc_sysclk_source).
+    COMMENT system clock (rcc_sysclk_source) is set to 0x00000002(switch bits 0:1 as 01)    
+    COMMENT Equivalence Class 12
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the value of clock source
+            VAR rcc_sysclk_source,  init = 0x00000001 ,               ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:  
+
+            --Holds the value of RCC clock configuration register (cfgr)        
+            VAR RCC->CFGR,        init = 0x00000003,                ev = 0x00000001
+
+        COMMENT OUTPUT SECTION:
+
+            --None    
+          
+        -- Stub Calls :
+        SIMUL
+       
+            --No Stubs
+      
+        END SIMUL
+      
+        -- Calling the Unit Under Test :
+        #RccSysClkConfig(rcc_sysclk_source);
+      
+    END ELEMENT
+
+END TEST  -- TEST 4
+
+END SERVICE -- RccSysClkConfig

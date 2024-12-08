@@ -1,0 +1,208 @@
+HEADER hducommfcrt0,Source Code Ver : 1.2,TestScript Ver : 1.2
+--------------------------------------------------------------------------------
+-- Author Name         : Soumya Patil
+--
+-- File Name           : hducommfcrt0.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : Crt0TransferData
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE        TESTER NAME        MODIFICATIONS
+-- ------------        ---------        -----------        -------------
+--    1.1              30.10.2017       Soumya Patil       Created the ptu file.
+--    1.2              10.11.2017       Soumya Patil       Updated as per #PR1000171 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommfcrt0.h"                 
+##include "hducommfmain.h"                 
+##include "hdulibbasicfunc.h"              
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+#extern T_UINT32 Testing_addr[20];
+#extern T_UINT32 Testing_bss[10];
+#extern T_UINT32 Testing_rom[10];
+
+-- Declarations of the temporary variable
+#T_UINT16 PTU_i;
+--------------------------------------------------------------------------------
+
+BEGIN
+
+   COMMENT Author Name      : Soumya Patil 
+   COMMENT
+   COMMENT File Name        : hducommfcrt0.ptu
+   COMMENT
+   COMMENT Tested Functions : Crt0TransferData
+   COMMENT
+   COMMENT Assumptions and Constraints
+   COMMENT <AC>
+   COMMENT Assumption(s):
+   COMMENT None
+   COMMENT 
+   COMMENT Constraint(s):
+   COMMENT The source file 'hducommfcrt0.c' is modified for the hard coded address to achieve
+   COMMENT LLR coverage of "hducommfcrt0-Crt0TransferData-CB-LLR-001", "hducommfcrt0-Crt0TransferData-CB-LLR-002" 
+   COMMENT and "hducommfcrt0-Crt0TransferData-CB-LLR-003".
+   COMMENT The following changes are made in the source file for the testing purpose.
+   COMMENT An array Testing_addr[20] is created as
+   COMMENT Testing_addr[0] to Testing_addr[9] is considered as Bit Band Memory Segment of Data Section,
+   COMMENT from Testing_addr[10] till Testing_addr[19] is considered as RAM.
+   COMMENT Testing_bss[10] is created as bss Memory Section.
+   COMMENT Testing_rom[10] is considered as ROM section.
+   COMMENT Hence "0" and "1" loop coverage for "for" loop is not obtained.
+   COMMENT </AC>
+
+   COMMENT Equivalence Class Description
+   COMMENT <ECD>
+   COMMENT 
+   COMMENT Valid Class(es)
+   COMMENT Class 1
+   COMMENT In function 'Crt0TransferData', calls the function 'MainFunc'
+   COMMENT 
+   COMMENT Class 2
+   COMMENT The function 'Crt0TransferData', fills the Bit Band Memory Segment of Data Section with zero.
+   COMMENT 
+   COMMENT Class 3
+   COMMENT The function 'Crt0TransferData', moves Data Memory Section from ROM to RAM.
+   COMMENT 
+   COMMENT Class 4 
+   COMMENT The function 'Ct0TransferData', fills the bss Memory Section with zero.
+   COMMENT 
+   COMMENT Invalid Class(es)
+   COMMENT None
+   COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+   DEFINE STUB hducommfcrt0_c
+   
+   #T_UINT16 MainFunc(void); 
+   
+   END DEFINE
+   
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+-- Environment of the file hducommfcrt0.c
+-- ENVIRONMENT ENV_hducommfcrt0_c
+
+   --None
+
+-- END ENVIRONMENT -- ENV_hducommfcrt0_c
+
+-- USE ENV_hducommfcrt0_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service Crt0TransferData
+--------------------------------------------------------------------------------
+SERVICE Crt0TransferData
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+   COMMENT Test Description 
+   COMMENT <TD>
+   COMMENT [hducommfcrt0-Crt0TransferData-CB-LLR-001]
+   COMMENT The function fills the Bit Band Memory Segment of Data Section with DEC_ZERO.
+   COMMENT Equivalence Class 2
+   COMMENT 
+   COMMENT [hducommfcrt0-Crt0TransferData-CB-LLR-002]
+   COMMENT The function moves Data Memory Section from ROM to RAM.
+   COMMENT Equivalence Class 3
+   COMMENT 
+   COMMENT [hducommfcrt0-Crt0TransferData-CB-LLR-003]
+   COMMENT The function fills the bss Memory Section with DEC_ZERO.
+   COMMENT Equivalence Class 4
+   COMMENT 
+   COMMENT [hducommfcrt0-Crt0TransferData-CB-LLR-004]
+   COMMENT The function calls 'MainFunc' to branch to main function.
+   COMMENT Equivalence Class 1
+   COMMENT </TD>
+   
+   ELEMENT 
+   
+      COMMENT INPUT SECTION:
+      --None
+                  
+      COMMENT INPUT/OUTPUT SECTION:
+      --None
+               
+      COMMENT OUTPUT SECTION:          
+         -- Array for verifying Bit Band Memory Segment of Data Section
+         ARRAY Testing_addr[0..8],           init = 1,        ev = DEC_ZERO
+
+         -- Array for verifying the data from ROM to RAM
+         ARRAY Testing_addr[10..18],         init = 1,        ev = 0xFFFFFFFF
+
+         -- Array for verifying to the bss Memory Section
+         ARRAY Testing_bss[0..8],            init = 1,        ev = DEC_ZERO
+            
+      -- Stub calls :
+      SIMUL
+
+        --Branch to main function
+        STUB MainFunc()0
+
+      END SIMUL
+
+      -- Loop to fill the data in the  ROM 
+      #for(PTU_i=0;PTU_i<9;PTU_i++)
+      #Testing_rom[PTU_i]=0xFFFFFFFF;
+         
+      -- Calling the Unit Under Test :
+      #Crt0TransferData();
+
+   END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- Crt0TransferData
+

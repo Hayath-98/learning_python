@@ -1,0 +1,1739 @@
+HEADER hdudispfrtd,Source Code Ver : 1.7 , TestScript Ver :1.5
+--------------------------------------------------------------------------------
+-- Author Name         : Samhitha Prasad L C
+--
+-- File Name           : hdudispfrtd.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : RTDGetParam
+--						 RTDGetParamDdw
+--						 RTDWatchdog
+--						 RTDSetParam
+--						 RTDInit
+
+-- Version History     :
+--
+-- TEST-VERSION         TEST-DATE         TESTER NAME           MODIFICATIONS
+-- ------------        -----------        -----------           -------------
+--    1.1              30.10.2017         Samhitha Prasad L C   Created the PTU file.
+--    1.2 			   11.11.2017		  Samhitha Prasad L C	Updated as per #PR100171
+--    1.3 			   14.11.2017	      Samhitha Prasad L C   Updated as per #PR100171
+--	  1.4			   30.07.2020		  Harshitha R 	        Updated as per #PR100267
+--	  1.5			   20.04.2022		  Harshitha R 	        Updated as per #PR1000371
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+
+##include "hdudispfpdidata.h" 
+##include "hdudispfucos.h"  
+##include "hdudispfparams.h"  
+##include "hdudispfrtd.h"  
+##include "hdulibbasictypes.h" 
+##include "hdudispfoscpu.h"   
+
+##include "hdudispfa429.h"  
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+		
+	#T_UINT32 U32_critical_sr; 
+	
+	#T_UINT32 Dau_timer;
+	
+	#T_A429_DATA_STRUCT A429_data[2][256];
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name         : 	Samhitha Prasad L C 
+	COMMENT
+	COMMENT File Name           : 	hdudispfrtd.ptu
+	COMMENT 
+	COMMENT Tested Functions    :   RTDGetParam
+	COMMENT							RTDGetParamDdw
+	COMMENT							RTDWatchdog
+	COMMENT							RTDSetParam
+	COMMENT							RTDInit
+	COMMENT
+	COMMENT Assumptions and Constraints
+	COMMENT
+	COMMENT <AC>
+	COMMENT
+	COMMENT Assumption(s):														   
+	COMMENT
+	COMMENT None
+	COMMENT
+	COMMENT Constraint(s):
+	COMMENT
+	COMMENT	1. In function 'RTDInit' and 'RTDWatchdog' for loop cannot be covered for 0 and 1 time
+	COMMENT since it is Controlled by MACRO's A429TAG_LASTPARAM
+	COMMENT 
+	COMMENT 2. Equivalence Class 26 cannot be mapped to any of the testcases since condition 
+	COMMENT usRTimer of Storage for Real Time Data with loop index as its index is greater 
+	COMMENT than RTD_MAX_INTERVAL cannot be achieved
+	COMMENT
+	COMMENT 3. Warning 'enumerated type mixed with another type' is obtained
+	COMMENT when RTD_RANGE_ERR is executed for enum+one value exercised
+	COMMENT	warning #188-D:   enumerated type mixed with another type
+ 	COMMENT	
+	COMMENT	</AC>
+	
+	COMMENT Equivalence Class Description
+	COMMENT	<ECD>
+	COMMENT
+	COMMENT	Valid Class(es)	
+	COMMENT Class 1
+	COMMENT In function 'RTDGetParam',a429 tag is less than RTDMAX_PARAM.
+	COMMENT
+	COMMENT Class 2
+	COMMENT In function 'RTDGetParam',a429 tag is equal RTDMAX_PARAM.
+	COMMENT
+	COMMENT Class 3
+	COMMENT In function 'RTDGetParam',a429 tag is greater than RTDMAX_PARAM.
+	COMMENT
+	COMMENT Class 4
+	COMMENT The function 'RTDGetParam' calls OS_ENTER_CRITICAL
+	COMMENT
+	COMMENT	Class 5
+	COMMENT The function 'RTDGetParam' calls OS_EXIT_CRITICAL
+	COMMENT
+	COMMENT Class 6
+	COMMENT	In function 'RTDGetParam',a429 tag is not equal to A429TAG_HEARTBEAT.	 
+	COMMENT
+	COMMENT Class 7
+	COMMENT In function 'RTDGetParam',a429 tag is equal to A429TAG_HEARTBEAT.	 
+	COMMENT
+	COMMENT Class 8
+	COMMENT In function 'RTDGetParam',a429 tag is not equal to A429TAG_EXCEEDANCES.	 
+	COMMENT
+	COMMENT Class 9
+	COMMENT In function 'RTDGetParam',a429 tag is equal to A429TAG_EXCEEDANCES.	 
+	COMMENT
+	COMMENT Class 10
+	COMMENT In function 'RTDGetParam', eRTDStat of RTD reading is RTD_STAT_FAIL
+	COMMENT
+	COMMENT Class 11
+	COMMENT In function 'RTDGetParam', eRTDStat of RTD reading is RTD_NCD
+	COMMENT
+	COMMENT Class 12
+	COMMENT In function 'RTDGetParam', eRTDStat of RTD reading is RTD_MISSING
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function 'RTDGetParam', eRTDStat of RTD reading is RTD_NORMAL
+	COMMENT
+	COMMENT Class 14
+	COMMENT In function 'RTDGetParam', eRTDStat of RTD reading is  other than RTD_STAT_FAIL, RTD_NCD,
+	COMMENT RTD_MISSING, RTD_NORMAL and  RTD_RANGE_ERR.
+	COMMENT
+	COMMENT Class 15
+	COMMENT The function 'RTDGetParamDdw' calls OS_ENTER_CRITICAL.
+	COMMENT
+	COMMENT Class 16
+	COMMENT The function 'RTDGetParamDdw' calls OS_EXIT_CRITICAL.
+	COMMENT
+	COMMENT Class 17
+	COMMENT In function 'RTDGetParamDdw', eRTDStat of RTD reading is RTD_STAT_FAIL
+	COMMENT
+	COMMENT Class 18
+	COMMENT In function 'RTDGetParamDdw', eRTDStat of RTD reading is RTD_NCD
+	COMMENT
+	COMMENT Class 19
+	COMMENT In function 'RTDGetParamDdw', eRTDStat of RTD reading is RTD_MISSING
+	COMMENT
+	COMMENT Class 20
+	COMMENT In function 'RTDGetParamDdw', eRTDStat of RTD reading is RTD_NORMAL
+	COMMENT
+	COMMENT Class 21
+	COMMENT In function 'RTDGetParamDdw', eRTDStat of RTD reading is  other than RTD_STAT_FAIL, RTD_NCD, 
+	COMMENT RTD_MISSING, RTD_NORMAL and RTD_RANGE_ERR
+    COMMENT
+	COMMENT	Class 22
+	COMMENT The function 'RTDWatchdog' calls OS_ENTER_CRITICAL.
+	COMMENT
+	COMMENT	Class 23
+	COMMENT The function 'RTDWatchdog' calls OS_EXIT_CRITICAL.
+	COMMENT
+	COMMENT Class 24
+	COMMENT In function 'RTDWatchdog',usRTimer of Storage for Real Time Data with loop index as its index
+	COMMENT is less than RTD_MAX_INTERVAL.
+	COMMENT
+	COMMENT Class 25
+	COMMENT In function 'RTDWatchdog',usRTimer of Storage for Real Time Data with loop index as its index
+	COMMENT is equal RTD_MAX_INTERVAL.
+	COMMENT
+	COMMENT Class 26
+	COMMENT In function 'RTDWatchdog', usRTimer of Storage for Real Time Data with loop index as its index
+	COMMENT is greater than RTD_MAX_INTERVAL.
+	COMMENT
+	COMMENT Class 27
+	COMMENT In function 'RTDWatchdog',Dau_timer is less than RTD_MAX_INTERVAL 
+	COMMENT
+	COMMENT Class 28
+	COMMENT In function 'RTDWatchdog',Dau_timer is greater than RTD_MAX_INTERVAL 
+	COMMENT
+	COMMENT Class 43
+	COMMENT In function 'RTDWatchdog',Dau_timer is equal RTD_MAX_INTERVAL 
+	COMMENT
+	COMMENT	Class 29
+	COMMENT The function 'RTDSetParam' calls OS_ENTER_CRITICAL.
+	COMMENT
+	COMMENT	Class 30
+	COMMENT The function 'RTDSetParam' calls OS_EXIT_CRITICAL.
+	COMMENT
+	COMMENT Class 31
+	COMMENT In function 'RTDSetParam', a428 tag is equal to zero
+	COMMENT
+	COMMENT Class 32
+	COMMENT In function 'RTDSetParam', a428 tag is not equal to zero
+	COMMENT
+	COMMENT Class 33
+	COMMENT In function 'RTDSetParam', type of A429_data with index values channel and a429_tag minus 
+	COMMENT one is equal to BNR
+	COMMENT
+	COMMENT Class 34
+	COMMENT In function 'RTDSetParam', type of A429_data with index values channel and a429_tag minus 
+	COMMENT one is not equal to BNR
+	COMMENT
+	COMMENT Class 35
+	COMMENT In function 'RTDSetParam', minimum value of A429_data with index values channel and a429_tag is less than s32_data 
+	COMMENT
+	COMMENT Class 36
+	COMMENT In function 'RTDSetParam', minimum value of A429_data with index values channel and a429_tag is greater than s32_data 
+	COMMENT
+	COMMENT Class 37
+	COMMENT In function 'RTDSetParam', minimum  value of A429_data with index values channel and a429_tag is equal s32_data 
+	COMMENT
+	COMMENT Class 38
+	COMMENT In function 'RTDSetParam', maximum  value of A429_data with index values channel and a429_tag is less than s32_data 
+	COMMENT
+	COMMENT Class 39
+	COMMENT In function 'RTDSetParam', maximum value of A429_data with index values channel and a429_tag is greater than s32_data 
+	COMMENT
+	COMMENT Class 40
+	COMMENT In function 'RTDSetParam', maximum value of A429_data with index values channel and a429_tag is equal s32_data 
+	COMMENT
+	COMMENT	Class 41
+	COMMENT The function 'RTDInit' calls OS_ENTER_CRITICAL.
+	COMMENT
+	COMMENT	Class 42
+	COMMENT The function 'RTDInit' calls OS_EXIT_CRITICAL.
+	COMMENT
+	COMMENT Class 43
+	COMMENT In function 'RTDGetParamDdw', eRTDStat of RTD reading is RTD_RANGE_ERR	
+	COMMENT
+	COMMENT Class 44
+	COMMENT In function 'RTDGetParam', eRTDStat of RTD reading is RTD_NORMAL	
+	COMMENT 
+	COMMENT Invalid class(es)
+	COMMENT  None
+	COMMENT </ECD>
+	
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+	DEFINE STUB hdudispfrtd_c
+    	
+    	-- Calling function to disable the interrupts
+   		#void RestoreStatusReg(T_UINT32 _in U32_critical_sr); 
+    
+    	-- Calling function to  enable the interrupts.
+    	#T_UINT32 SaveStatusReg(void);
+ 
+	END DEFINE
+	
+ELSE_SIMUL
+
+	--No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file 
+ENVIRONMENT ENV_hdudispfrtd_c
+
+  VAR Both_dau_fail,		init = FALSE,		ev = init
+  
+END ENVIRONMENT -- ENV_hdudispfrtd_c
+
+USE ENV_hdudispfrtd_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RTDSetParam
+--------------------------------------------------------------------------------
+SERVICE RTDSetParam
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT8 channel;
+#T_UINT16 a429_tag;
+#T_FLOAT s32_data;
+#T_RTD_STATUS ertd_stat;
+#T_PARAM_READING PTU_ps_dest;
+
+ENVIRONMENT ENV_RTDSetParam
+
+VAR channel,		init = 0,		ev = init
+VAR a429_tag,		init = 0,		ev = init
+VAR s32_data,		init = 0.0,		ev = init
+
+END ENVIRONMENT -- ENV_RTDSetParam
+USE ENV_RTDSetParam
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDSetParam-DB-LLR-002]
+    COMMENT The function calls the macro OS_ENTER_CRITICAL.
+    COMMENT Equivalence Class 29
+	COMMENT
+    COMMENT [hdudispfrtd-RTDSetParam-DB-LLR-004]
+    COMMENT The function does nothing whem a429 tag is ZERO
+    COMMENT Equivalence Class 31
+    COMMENT </TD>
+    
+    ELEMENT
+    
+		COMMENT INPUT SECTION:
+		
+			-- Tested service parameter
+			VAR channel,									init = 0,				ev = init
+			
+			-- Tested service parameter
+			VAR a429_tag,									init = 0,				ev = init
+			
+			-- Tested service parameter
+			VAR s32_data,									init = 9.0,				ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			-- Tested service parameter
+			VAR ertd_stat,									init = RTD_STAT_FAIL,	ev = init
+		
+		
+		COMMENT OUTPUT SECTION:
+		
+			-- None
+
+		-- Stub Calls
+		SIMUL
+			
+			-- Calling function to  enable the interrupts.
+			STUB SaveStatusReg() U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+		
+		END SIMUL
+    
+	  -- Calling the Unit Under Test :
+    #RTDSetParam(channel, a429_tag, s32_data, ertd_stat);
+     
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDSetParam-DB-LLR-002]
+	COMMENT The function  calls the macro OS_ENTER_CRITICAL.
+	COMMENT Equivalence Class 29
+	COMMENT
+	COMMENT [hdudispfrtd-RTDSetParam-DB-LLR-003]
+	COMMENT The function sets usRTimer of Storage for Real Time Data with index as a429_tag to ZERO.
+	COMMENT Equivalence Class None 
+	COMMENT
+    COMMENT [hdudispfrtd-RTDSetParam-DB-LLR-004]
+    COMMENT The function does nothing when
+	COMMENT	1.  type of A429_data with index values channel and a429_tag minus one is not BNR
+	COMMENT Equivalence Class 32,34
+	COMMENT
+	COMMENT [hdudispfrtd-RTDSetParam-DB-LLR-005]
+	COMMENT The function does the following:
+	COMMENT 1. Set s32reading of Storage for Real Time Data with index as a429_tag to s32_data.
+	COMMENT 2. Set eRTDStat of Storage for Real Time Data with index as a429_tag to ertd_stat.
+	COMMENT 3. Call the function OS_EXIT_CRITICAL.
+	COMMENT Equivalence Class 30
+	COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+    
+		COMMENT INPUT SECTION:
+		
+			-- Tested service parameter
+			VAR channel,									init = 0,								ev = init
+
+			-- Tested service parameter
+			VAR a429_tag,									init = 10,								ev = init
+
+			-- Tested service parameter
+			VAR s32_data,									init = 9.0,								ev = init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].type,		init= DDW, 								ev=init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].min_val,		init=10,								ev=init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].max_val,		init=20,								ev=init
+		
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			-- Tested service parameter
+			VAR ertd_stat,									init = RTD_STAT_FAIL,					ev = init
+		
+		
+		COMMENT OUTPUT SECTION:
+		
+			--None		
+		
+		-- Stub Calls
+		SIMUL
+			
+			-- Calling function to  enable the interrupts.
+			STUB SaveStatusReg() U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+						
+		END SIMUL
+    
+    -- Calling the Unit Under Test :
+    #RTDSetParam(channel, a429_tag, s32_data, ertd_stat);
+    
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+    COMMENT [hdudispfrtd-RTDSetParam-DB-LLR-004]	
+    COMMENT The function does nothing 
+	COMMENT 1.  min_val of A429_data with index values channel and a429_tag is not less than s32_data and  max_val 
+	COMMENT of A429_data with index values channel and a429_tag is not greater than s32_data.    
+    COMMENT Equivalence Class 32,33,37,40
+    COMMENT </TD>
+    
+    ELEMENT
+    
+		COMMENT INPUT SECTION:
+		
+			-- Tested service parameter
+			VAR channel,										init = 1,					ev = init
+
+			-- Tested service parameter
+			VAR a429_tag,										init = 10,					ev = init
+
+			-- Tested service parameter
+			VAR s32_data,										init = 15.0,				ev = init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].type,			init= BNR, 					ev=init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].min_val,			init=15,					ev=init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].max_val,			init=15,					ev=init
+
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			-- Tested service parameter
+			VAR ertd_stat,										init = RTD_MISSING,		ev = init
+		
+		
+		COMMENT OUTPUT SECTION:
+		
+			--None
+				
+		-- Stub Calls
+		SIMUL
+			
+			-- Calling function to  enable the interrupts.
+			STUB SaveStatusReg() U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+						
+		END SIMUL
+    
+    -- Calling the Unit Under Test :
+    #RTDSetParam(channel, a429_tag, s32_data, ertd_stat);
+    
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+    COMMENT [hdudispfrtd-RTDSetParam-DB-LLR-004]
+    COMMENT The function sets ertd_stat to RTD_RANGE_ERR when
+	COMMENT 1. a429_tag ia other than ZERO and 
+	COMMENT 2. type of A429_data with index values channel and a429_tag minus one is BNR
+	COMMENT 3. min_val of A429_data with index values channel and a429_tag is not less than s32_data OR
+	COMMENT max_val of A429_data with index values channel and a429_tag is greater than s32_data.
+    COMMENT Equivalence Class 32,33,36,39
+    COMMENT </TD>   
+    
+    ELEMENT
+    
+		COMMENT INPUT SECTION:
+		
+			-- Tested service parameter
+			VAR channel,										init = 1,					ev = init
+
+			-- Tested service parameter
+			VAR a429_tag,										init = 10,					ev = init
+
+			-- Tested service parameter
+			VAR s32_data,										init = 9.0,					ev = init
+			
+			-- global array
+			VAR A429_data[channel][a429_tag-1].type,			init = BNR, 				ev=init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].min_val,			init = 10,					ev=init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].max_val,			init = 20,					ev=init
+		
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			-- Tested service parameter
+			VAR ertd_stat,										init = RTD_NCD,				ev = init
+		
+		
+		COMMENT OUTPUT SECTION:
+		
+			--None
+				
+		-- Stub Calls
+		SIMUL
+			
+			-- Calling function to  enable the interrupts.
+			STUB SaveStatusReg() U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+				
+		END SIMUL
+    
+    -- Calling the Unit Under Test :
+    #RTDSetParam(channel, a429_tag, s32_data, ertd_stat);
+        
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+    COMMENT [hdudispfrtd-RTDSetParam-DB-LLR-004]
+    COMMENT The function sets ertd_stat to RTD_RANGE_ERR when
+	COMMENT 1. a429_tag ia other than ZERO and 
+	COMMENT 2. type of A429_data with index values channel and a429_tag minus one is BNR
+	COMMENT 3. min_val of A429_data with index values channel and a429_tag is less than s32_data OR
+	COMMENT max_val of A429_data with index values channel and a429_tag is greater than s32_data.
+    COMMENT Equivalence Class 32,33,35,38
+    COMMENT </TD>
+    
+    ELEMENT
+    
+		COMMENT INPUT SECTION:
+
+			-- Tested service parameter
+			VAR channel,										init = 0,				ev = init
+			
+			-- Tested service parameter
+			VAR a429_tag,										init = 10,				ev = init
+
+			-- Tested service parameter
+			VAR s32_data,										init = 35.0,			ev = init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].type,			init= BNR, 				ev=init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].min_val,			init=10,				ev=init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].max_val,			init=20,				ev=init
+		
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			-- Tested service parameter
+			VAR ertd_stat,										init = RTD_NCD,			ev = init
+		
+		
+		COMMENT OUTPUT SECTION:
+		
+			--None
+		
+		-- Stub Calls
+		SIMUL
+			
+			-- Calling function to  enable the interrupts.
+			STUB SaveStatusReg() U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+		
+		END SIMUL
+    
+    -- Calling the Unit Under Test :
+    #RTDSetParam(channel, a429_tag, s32_data, ertd_stat);
+     
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+    COMMENT [hdudispfrtd-RTDSetParam-DB-LLR-004]
+    COMMENT The function does nothing 
+	COMMENT 1.  min_val of A429_data with index values channel and a429_tag is less than s32_data and  max_val 
+	COMMENT of A429_data with index values channel and a429_tag is greater than s32_data. 
+    COMMENT Equivalence Class 32,33,35,39
+    COMMENT </TD>
+    
+    ELEMENT
+    
+		COMMENT INPUT SECTION:
+		
+			-- Tested service parameter
+			VAR channel,									init = 0,					ev = init
+
+			-- Tested service parameter
+			VAR a429_tag,									init = 10,					ev = init
+
+			-- Tested service parameter
+			VAR s32_data,									init = 15.0,				ev = init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].type,		init= BNR, 					ev=init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].min_val,		init=10,					ev=init
+
+			-- global array
+			VAR A429_data[channel][a429_tag-1].max_val,		init=20,					ev=init
+		
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			-- Tested service parameter
+			VAR ertd_stat,									init = RTD_STAT_FAIL,		ev = init
+		
+		
+		COMMENT OUTPUT SECTION:
+		
+			--None
+	
+		-- Stub Calls
+		SIMUL
+			
+			-- Calling function to  enable the interrupts.
+			STUB SaveStatusReg() U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+
+		END SIMUL
+    
+    -- Calling the Unit Under Test :
+    #RTDSetParam(channel, a429_tag, s32_data, ertd_stat);
+    
+    END ELEMENT
+
+END TEST -- TEST 6
+
+END SERVICE -- RTDSetParam
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RTDWatchdog
+--------------------------------------------------------------------------------
+SERVICE RTDWatchdog
+SERVICE_TYPE extern
+
+--Tested service parameters declarations
+#T_RTD_STATUS ertd_stat;
+
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD>                           
+    COMMENT [hdudispfrtd-RTDWatchdog-DB-LLR-001] 
+    COMMENT The function loopS from index ONE till index is less than A429TAG_LASTPARAM and does the following:
+	COMMENT 1.Call the macro OS_ENTER_CRITICAL.
+	COMMENT 3.Set eRTDStat of Storage for Real Time Data with loop index as its index to RTD_MISSING when usRTimer of Storage for Real Time Data with loop index as its index is greater than or equal to RTD_MAX_INTERVAL.
+	COMMENT 3.Call the macro OS_EXIT_CRITICAL.
+	COMMENT 4. Increment loop index by ONE.
+    COMMENT Equivalence Class 22,23,25
+    COMMENT
+	COMMENT [hdudispfrtd-RTDWatchdog-DB-LLR-002] 
+	COMMENT The function does the following 
+	COMMENT 1.	Enter the critical condition by calling the macro OS_ENTER_CRITICAL
+	COMMENT 2.	set Both_dau_fail to TRUE when Dau_timer is not less than RTD_MAX_INTERVAL 
+	COMMENT 3.	Exit the critical section by calling the macro OS_EXIT_CRITICAL.
+	COMMENT Equivalence Class 22,23,28
+	COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			-- global variable
+			VAR U32_critical_sr,						init = 0x50,			ev = init
+			
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+			-- global variable
+			VAR Dau_timer,								init=2500,				ev=init
+
+			-- global variable
+			VAR Both_dau_fail,							init=FALSE,				ev=TRUE
+
+        COMMENT OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+            -- Calling function to  enable the interrupts.
+            STUB SaveStatusReg 1..59 =>() U32_critical_sr
+			STUB SaveStatusReg 60..120 =>() U32_critical_sr
+            
+            -- Calling function to disable the interrupts
+			STUB RestoreStatusReg 1..59=> (U32_critical_sr)
+			STUB RestoreStatusReg 60..120=> (U32_critical_sr)
+   
+        END SIMUL
+    
+    -- calling to set the user timer value of storage for Real time Data
+    #RTDInit();
+        
+    -- Calling the Unit Under Test :
+    #RTDWatchdog();
+
+    END ELEMENT
+
+END TEST -- TEST 1  
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrtd-RTDWatchdog-DB-LLR-001] 
+    COMMENT The function loops from index ONE till index is less than A429TAG_LASTPARAM and does the following:
+	COMMENT 1.Call the macro OS_ENTER_CRITICAL.
+	COMMENT 2.Increment member usRTimer of Storage for Real Time Data with loop index as its index by ONE when 
+	COMMENT usRTimer of Storage for Real Time Data with loop index as its index is less than RTD_MAX_INTERVAL.
+	COMMENT 3.Call the macro OS_EXIT_CRITICAL.
+	COMMENT 4.Increment loop index by ONE.
+    COMMENT Equivalence Class 22,23,24
+    COMMENT
+    COMMENT [hdudispfrtd-RTDWatchdog-DB-LLR-002] 
+    COMMENT The function shall does the following 
+	COMMENT 1.	Enter the critical condition by calling the macro OS_ENTER_CRITICAL
+	COMMENT 2.	Increment the Dau_timer by one and set Both_dau_fail to FALSE when Dau_timer is less than RTD_MAX_INTERVAL 
+	COMMENT 3.	Exit the critical section by calling the macro OS_EXIT_CRITICAL.
+	COMMENT Equivalence Class 22,23,27
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			-- global variable
+			VAR U32_critical_sr,						init = 0x100,			ev = init
+
+			-- global variable
+			VAR ertd_stat,								init=RTD_NCD, 			ev=init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+			-- Tested service parameter
+			VAR Dau_timer,								init=500,				ev=501
+
+			-- global variable
+			VAR Both_dau_fail,							init=TRUE,				ev=FALSE
+
+        COMMENT OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+           
+            -- Calling function to  enable the interrupts.
+            STUB SaveStatusReg 1..62 =>() U32_critical_sr
+            
+            -- Calling function to disable the interrupts
+			STUB RestoreStatusReg 1..62 => (U32_critical_sr)
+    
+        END SIMUL
+        
+    -- Calling to set the ertd status
+    #RTDSetParam(2, 0x0, 2.0, ertd_stat);
+    
+    -- Calling the Unit Under Test :
+    #RTDWatchdog();
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+	
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrtd-RTDWatchdog-DB-LLR-002] 
+    COMMENT The function shall does the following 
+	COMMENT 1.	Enter the critical condition by calling the macro OS_ENTER_CRITICAL
+	COMMENT 2.	Increment the Dau_timer by one and set Both_dau_fail to FALSE when Dau_timer is less than RTD_MAX_INTERVAL 
+	COMMENT 3.	Exit the critical section by calling the macro OS_EXIT_CRITICAL.
+	COMMENT Equivalence Class 43
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			-- global variable
+			VAR U32_critical_sr,							init = 0x100,			ev = init
+
+			-- Tested service parameter
+			VAR ertd_stat,									init=RTD_NCD, 			ev=init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+			-- global variable
+			VAR Dau_timer,									init=2000,				ev=init 
+			
+		   	-- global variable
+			VAR Both_dau_fail,								init=FALSE,				ev=TRUE
+
+        COMMENT OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+            -- Calling function to  enable the interrupts.
+            STUB SaveStatusReg 1..62 =>() U32_critical_sr
+            
+            -- Calling function to disable the interrupts
+			STUB RestoreStatusReg 1..62 => (U32_critical_sr)
+   
+        END SIMUL
+    
+    -- Calling to set the ertd status
+    #RTDSetParam(2, 0x0, 2.0, ertd_stat);
+    
+    -- Calling the Unit Under Test :
+    #RTDWatchdog(); 	
+
+    END ELEMENT
+
+END TEST -- TEST 3  
+
+END SERVICE -- RTDWatchdog
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RTDGetParamDdw
+--------------------------------------------------------------------------------
+SERVICE RTDGetParamDdw
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT16 a429_tag;
+#T_PARAM_READING ps_dest;
+#T_RTD_STATUS ertd_stat;
+
+ENVIRONMENT ENV_RTDGetParamDdw
+VAR a429_tag,		init = 0,		ev = init
+STRUCTURE ps_dest,		init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = init
+END ENVIRONMENT -- ENV_RTDGetParamDdw
+USE ENV_RTDGetParamDdw
+
+TEST 1
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParamDdw-DB-LLR-001]
+	COMMENT The function does the following
+	COMMENT 1.	Enter to critical section by calling the macro OS_ENTER_CRITICAL  
+	COMMENT 2.	Set the RTD reading structure to the obtained RTD reading with index value a429_tag 
+	COMMENT 3.	Exit the critical section by calling the macro OS_EXIT_CRITICAL
+	COMMENT 4.	Set r of param reading structure with s32reading of RTD reading 
+	COMMENT Equivalence Class 15,16
+	COMMENT 
+	COMMENT [hdudispfrtd-RTDGetParamDdw-DB-LLR-002]
+	COMMENT The function setS the stat of param reading structure to PARAM_OK when eRTDStat of RTD 
+	COMMENT reading is RTD_STAT_FAIL.
+	COMMENT Equivalence Class 17
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+		    
+		    -- Tested service parameter
+    		VAR a429_tag,							init = 0,					ev = init
+
+			-- global variable
+			VAR U32_critical_sr,					init =0x100,				ev=init
+
+			-- Tested service parameter
+    		VAR ertd_stat,							init=RTD_STAT_FAIL, 		ev=init			
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+	    	-- Tested service parameter
+    		STRUCTURE ps_dest,						init = { r => 0, stat => NCD, fread => 0.0 },		ev = { r => 10,
+    		&												stat => PARAM_OK, fread => 0.0 }
+    	
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+    	
+        -- Stub Calls:
+        SIMUL
+            
+            -- Calling function to  enable the interrupts.
+            STUB SaveStatusReg 1..2 =>() U32_critical_sr
+            
+            -- Calling function to disable the interrupts
+			STUB RestoreStatusReg 1..2 => (U32_critical_sr)
+    
+        END SIMUL    	
+    	
+    -- Calling to set the value of ertd status	
+    #RTDSetParam(0, 0, 10, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParamDdw(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParamDdw-DB-LLR-003]
+	COMMENT The function setS the stat of param reading structure to NCD when eRTDStat of RTD reading is RTD_NCD.
+	COMMENT Equivalence Class 18
+	COMMENT
+	COMMENT [hdudispfrtd-RTDGetParamDdw-DB-LLR-007]
+	COMMENT The function shall set content of ps_dest with param reading structure. 
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+		    
+		    -- Tested service parameter
+    		VAR a429_tag,						init = 0,				     ev = init
+
+			-- global variable
+			VAR U32_critical_sr,				init =0x100,				 ev=init
+			
+			-- Tested service parameter
+			VAR ertd_stat,						init=RTD_NCD,				 ev=init
+			
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    	-- Tested service parameter
+    		STRUCTURE ps_dest,					init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = { r => 10,
+    		&								stat => NCD, fread => 0.0 }
+    	
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+    	
+        -- Stub Calls:
+        SIMUL
+            
+            -- Calling function to  enable the interrupts.
+            STUB SaveStatusReg 1..2 =>() U32_critical_sr
+            
+            -- Calling function to disable the interrupts
+			STUB RestoreStatusReg 1..2 => (U32_critical_sr)
+    
+        END SIMUL    	
+    
+    -- Calling to set the value of ertd status
+    #RTDSetParam(0, 0, 10, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParamDdw(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParamDdw-DB-LLR-004]
+	COMMENT The function sets the stat of param reading structure to MISSING when eRTDStat of RTD 
+	COMMENT reading is RTD_MISSING.
+	COMMENT Equivalence Class 19
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+		    
+		    -- Tested service parameter
+    		VAR a429_tag,						init = 0,						ev = init
+
+			-- global variable
+			VAR U32_critical_sr,				init =0x100,					ev=init
+			
+			-- Tested service parameter
+			VAR ertd_stat,						init=RTD_MISSING, 				ev=init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+ 		   	-- Tested service parameter
+    		STRUCTURE ps_dest,					init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = { r => 10,
+    		&											stat => MISSING, fread => 0.0 }
+    	
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+    	
+        -- Stub Calls:
+        SIMUL
+            
+            -- Calling function to  enable the interrupts.
+            STUB SaveStatusReg 1..2 =>() U32_critical_sr
+            
+            -- Calling function to disable the interrupts
+			STUB RestoreStatusReg 1..2 => (U32_critical_sr)
+    
+        END SIMUL    	
+        
+    -- Calling to set the value of ertd status	
+    #RTDSetParam(0, 0, 10, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParamDdw(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParamDdw-DB-LLR-005]
+	COMMENT The function sets the stat of param reading structure to PARAM_BAD when eRTDStat
+	COMMENT of RTD reading is RTD_NORMAL.
+	COMMENT Equivalence Class 20
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+		    
+		    -- Tested service parameter
+    		VAR a429_tag,						init = 0,						ev = init
+
+			-- global variable
+			VAR U32_critical_sr,				init =0x100,					ev=init
+			
+			-- Tested service parameter
+			VAR ertd_stat,						init=RTD_NORMAL, 				ev=init
+			
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    	-- Tested service parameter
+    		STRUCTURE ps_dest,					init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = { r => 10,
+    		&											stat => PARAM_BAD, fread => 0.0 }
+
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+    	
+        -- Stub Calls:
+        SIMUL
+            
+            -- Calling function to  enable the interrupts.
+            STUB SaveStatusReg 1..2 =>() U32_critical_sr
+            
+            -- Calling function to disable the interrupts
+			STUB RestoreStatusReg 1..2 => (U32_critical_sr)
+
+        END SIMUL    	
+    
+    -- Calling to set the value of ertd status
+    #RTDSetParam(0, 0, 10, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParamDdw(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParamDdw-DB-LLR-008]
+	COMMENT The function shall set the stat of param reading structure to RANGE_ERROR 
+	COMMENT when eRTDStat of RTD reading is RTD_RANGE_ERR.
+	COMMENT Equivalence Class 43
+	COMMENT </TD>
+	
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+		    
+		    -- Tested service parameter
+    		VAR a429_tag,							init = 0,				ev = init
+    		
+    		-- global variable
+			VAR U32_critical_sr,					init =0x100,			ev=init  	
+			
+			-- Tested service parameter
+    		VAR ertd_stat,							init=RTD_RANGE_ERR,		ev=init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+  		  	-- Tested service parameter
+    		STRUCTURE ps_dest,						init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = { r => 10,
+    		&												stat => RANGE_ERROR, fread => 0.0 }
+    	
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+    	
+        -- Stub Calls:
+        SIMUL
+            
+            -- Calling function to  enable the interrupts.
+            STUB SaveStatusReg 1..2 =>() U32_critical_sr
+            
+            -- Calling function to disable the interrupts
+			STUB RestoreStatusReg 1..2 => (U32_critical_sr)
+    
+        END SIMUL    	
+    	
+    -- Calling to set the value of ertd status	
+    #RTDSetParam(0, 0, 10, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParamDdw(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParamDdw-DB-LLR-006]
+	COMMENT The function sets the stat of param reading structure to PARAM_BAD when eRTDStat of
+	COMMENT RTD reading is other than RTD_STAT_FAIL, RTD_NCD, RTD_MISSING, RTD_NORMAL and RTD_RANGE_ERR.
+	COMMENT Equivalence Class 21
+	COMMENT </TD>
+	
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+		    
+		    -- Tested service parameter
+    		VAR a429_tag,							init = 0,					ev = init
+    		
+    		-- global variable
+			VAR U32_critical_sr,					init =0x100,				ev=init  	
+			
+			-- Tested service parameter
+    		VAR ertd_stat,							init=RTD_RANGE_ERR+1,		ev=init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+  		  	-- Tested service parameter
+    		STRUCTURE ps_dest,						init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = { r => 10,
+    		&												stat => PARAM_BAD, fread => 0.0 }
+    	
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+    	
+        -- Stub Calls:
+        SIMUL
+            
+            -- Calling function to  enable the interrupts.
+            STUB SaveStatusReg 1..2 =>() U32_critical_sr
+            
+            -- Calling function to disable the interrupts
+			STUB RestoreStatusReg 1..2 => (U32_critical_sr)
+    
+        END SIMUL    	
+    	
+    -- Calling to set the value of ertd status	
+    #RTDSetParam(0, 0, 10, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParamDdw(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 6
+
+END SERVICE -- RTDGetParamDdw
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RTDInit
+--------------------------------------------------------------------------------
+SERVICE RTDInit
+SERVICE_TYPE extern
+ 
+        
+TEST 1
+FAMILY nominal
+	
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrtd-RTDInit-DB-LLR-001]
+    COMMENT The function loops from index ONE till index is less than A429TAG_LASTPARAM and does the following
+	COMMENT 1. Call the macro OS_ENTER_CRITICAL.
+	COMMENT 2. Set usRTimer of Storage for Real Time Data with index as loop index to RTD_MAX_INTERVAL.
+	COMMENT 3. Call the macro OS_EXIT_CRITICAL.
+    COMMENT Equivalence Class 41,42
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			-- global variable
+			VAR U32_critical_sr,					init =0x100,			ev=init
+
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            -- Calling function to  enable the interrupts.
+            STUB SaveStatusReg 1..59 =>() U32_critical_sr
+            
+            -- Calling function to disable the interrupts
+			STUB RestoreStatusReg 1..59 => (U32_critical_sr)
+    
+        END SIMUL
+
+    -- Calling the Unit Under Test :
+    #RTDInit();
+     
+    END ELEMENT
+
+END TEST -- TEST 1  
+	
+END SERVICE -- RTDInit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RTDGetParam
+--------------------------------------------------------------------------------
+SERVICE RTDGetParam
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT16 a429_tag;
+#T_PARAM_READING ps_dest;
+#T_RTD_STATUS ertd_stat;
+
+ENVIRONMENT ENV_RTDGetParam
+VAR a429_tag,		init = 0,		ev = init
+STRUCTURE ps_dest,		init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = init
+END ENVIRONMENT -- ENV_RTDGetParam
+USE ENV_RTDGetParam
+
+TEST 1
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-001]
+	COMMENT The function sets a429_tag to ZERO when a429_tag is greater than or equal to RTDMAX_PARAM.
+	COMMENT Equivalence Class 3
+	COMMENT
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-002]
+	COMMENT The function calls the macro OS_ENTER_CRITICAL.
+	COMMENT Equivalence Class 4
+	COMMENT
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-003]
+	COMMENT The function sets RTD reading of structure type T_SRTD_READING to Storage for Real Time Data with index a429_tag.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-004]
+	COMMENT The function calls the macro OS_EXIT_CRITICAL.
+	COMMENT Equivalence Class 5
+	COMMENT
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-005]
+	COMMENT The function does the following
+	COMMENT 1. Set the fread of param reading structure to s32reading of RTD reading structure 
+	COMMENT 2. Set member r of param reading structure to sum of FIVE and s32reading of RTD reading multiplied by
+	COMMENT ONE_HUNDRED , divided by TEN when a429_tag is not equal to A429TAG_HEARTBEAT and A429TAG_EXCEEDANCES.
+	COMMENT Equivalence Class 6,8
+	COMMENT
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-006]
+	COMMENT The function sets the member stat of ps_dest to PARAM_BAD when member eRTDStat of RTD reading is RTD_STAT_FAIL.
+	COMMENT Equivalence Class 10
+	COMMENT </TD>
+	
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    
+  			-- Tested service parameter
+    		VAR a429_tag,						init =61,				ev = init
+
+			-- global variable
+    		VAR U32_critical_sr,				init=30,				ev=init
+    		
+    		-- Tested service parameter
+    		VAR ertd_stat,						init=RTD_STAT_FAIL,		ev=init
+    
+    	COMMENT INPUT/OUTPUT SECTION:
+
+			-- Tested service parameter
+    		STRUCTURE ps_dest,					init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = { r => 100, 
+    		&											stat => PARAM_BAD, fread => 10.0 }
+    		    
+    
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+    		
+		-- Stub Calls
+    	SIMUL
+    		
+    		-- Calling function to  enable the interrupts.
+    		STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+    		
+    		-- Calling function to  enable the interrupts.
+    		STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+    	
+    	
+    	END SIMUL
+    
+    -- Calling to set the ertd status
+    #RTDSetParam(0, 0, 10.0, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParam(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-001]
+	COMMENT The function sets a429_tag to ZERO when a429_tag is greater than or equal to RTDMAX_PARAM.
+	COMMENT Equivalence Class 2
+	COMMENT
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-007]
+	COMMENT The function sets the member stat of ps_dest to NCD when member eRTDStat of RTD reading is RTD_NCD.
+	COMMENT Equivalence Class 11
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    
+ 			-- Tested service parameter
+    		VAR a429_tag,						init =70,				ev = init
+
+			-- global variable
+    		VAR U32_critical_sr,				init=30,				ev=init    		
+
+			-- Tested service parameter
+    		VAR ertd_stat,						init=RTD_NCD,			ev=init
+    
+    	COMMENT INPUT/OUTPUT SECTION:
+  		  	-- Tested service parameter
+    		STRUCTURE ps_dest,					init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = { r => 50, 
+    		&											stat => NCD, fread => 5.0 }
+    		    
+    
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+    		
+		-- Stub Calls
+    	SIMUL
+    		
+    		-- Calling function to  enable the interrupts.
+    		STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+		    
+		    -- Calling function to  enable the interrupts.
+		   	STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr) 	
+    	
+    	END SIMUL
+    
+    -- Calling to set the ertd status
+    #RTDSetParam(1, 0, 5.0, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParam(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-001]
+	COMMENT The function does nothing when  a429 tag is less than RTDMAX_PARAM.
+	COMMENT Equivalence Class 1
+	COMMENT
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-005]
+	COMMENT The function shall does the following
+	COMMENT 1. Set the fread of param reading structure to s32reading of RTD reading structure 
+	COMMENT 2. set the member r of ps_dest to s32reading of RTD reading when a429_tag is equal 
+	COMMENT to A429TAG_HEARTBEAT and  not equal A429TAG_EXCEEDANCES 
+	COMMENT Equivalence Class 7,8
+	COMMENT
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-008]
+	COMMENT The function sets the member stat of ps_dest to MISSING when member eRTDStat of RTD reading is RTD_MISSING.
+	COMMENT Equivalence Class 12
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    
+    		-- Tested service parameter
+    		VAR a429_tag,						init =23,				ev = init
+
+			-- global variable
+    		VAR U32_critical_sr,				init=30,				ev=init 
+    		
+    		-- Tested service parameter
+    		VAR ertd_stat,						init=RTD_MISSING, 		ev=init
+
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- Tested service parameter
+    		STRUCTURE ps_dest,					init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = { r => 80, 
+    		&											stat => MISSING, fread => 8.0 }
+    
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+
+    	-- Stub Calls	
+    	SIMUL
+    		
+    		-- Calling function to  enable the interrupts.
+    		STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+		    
+		    -- Calling function to  enable the interrupts.
+		    STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+			
+    	END SIMUL
+    
+    -- Calling to set the ertd status
+    #RTDSetParam(1, 23, 8.0, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParam(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-005]
+	COMMENT The function shall does the following
+	COMMENT 1. Set the fread of param reading structure to s32reading of RTD reading structure 
+	COMMENT 2. set the member r of ps_dest to s32reading of RTD reading when a429_tag is not equal 
+	COMMENT to A429TAG_HEARTBEAT and  equal A429TAG_EXCEEDANCES 
+	COMMENT Equivalence Class 6,9
+	COMMENT
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-009]
+	COMMENT The function sets the member stat of ps_dest to PARAM_OK when member eRTDStat of RTD reading is RTD_NORMAL.
+	COMMENT Equivalence Class 13
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    
+    		-- Tested service parameter
+    		VAR a429_tag,							init =22,				ev = init
+
+			-- global variable
+    		VAR U32_critical_sr,					init=30,				ev=init    		
+    		
+    		-- Tested service parameter
+    		VAR ertd_stat,							init=RTD_NORMAL, 		ev=init
+    
+    	COMMENT INPUT/OUTPUT SECTION:
+    		-- Tested service parameter
+    		STRUCTURE ps_dest,						init = { r => 0, stat => MISSING, fread => 0.0 },		ev = { r => 60, 
+    		&												stat => PARAM_OK, fread => 6.0 }
+    		    
+    		        		
+    
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+    		
+    	-- Stub Calls
+    	SIMUL
+    		
+    		-- Calling function to  enable the interrupts.
+    		STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+	    	
+	    	-- Calling function to  enable the interrupts.
+	    	STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+    	
+    	END SIMUL
+    
+    -- Calling to set the ertd status
+    #RTDSetParam(1, 22, 6.0, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParam(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-011]
+	COMMENT The function shall set the member stat of ps_dest to RANGE_ERROR when
+	COMMENT  member eRTDStat of RTD reading is RTD_RANGE_ERR.
+	COMMENT Equivalence Class 44
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    	    -- Tested service parameter
+    		VAR a429_tag,							init =10,				ev = init
+
+			-- global variable
+    		VAR U32_critical_sr,					init=30,	 			ev=init   
+
+			-- Tested service parameter
+    		VAR ertd_stat,							init=RTD_RANGE_ERR, 			ev=init
+    
+    	COMMENT INPUT/OUTPUT SECTION:
+    		-- Tested service parameter
+    		STRUCTURE ps_dest,						init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = { r => 90, 
+    		&												stat => RANGE_ERROR, fread => 9.0 }    		        		
+    
+    	COMMENT OUTPUT SECTION:
+    		
+    		--None
+    	
+    	-- Stub Calls	
+    	SIMUL
+    		
+    		-- Calling function to  enable the interrupts.
+    		STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)
+		    
+		    -- Calling function to  enable the interrupts.
+		    STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr) 	
+    	
+    	
+    	END SIMUL
+    
+    -- Calling to set the ertd status
+    #RTDSetParam(1, 10, 9.0, ertd_stat);
+    
+    -- Calling The Unit under test
+    #RTDGetParam(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfrtd-RTDGetParam-DB-LLR-010]
+	COMMENT The function sets the member stat of ps_dest to PARAM_BAD when member eRTDStat
+	COMMENT of RTD reading is other than RTD_STAT_FAIL, RTD_NCD, RTD_MISSING, RTD_NORMAL and RTD_RANGE_ERR
+	COMMENT Equivalence Class 14
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    	    -- Tested service parameter
+    		VAR a429_tag,							init =0,				ev = init
+
+			-- global variable
+    		VAR U32_critical_sr,					init=30,	 			ev=init   
+   
+    	COMMENT INPUT/OUTPUT SECTION:
+    		-- Tested service parameter
+    		STRUCTURE ps_dest,						init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = { r => 90, 
+    		&												stat => PARAM_BAD, fread => 9.0 }    		        		
+    
+    	COMMENT OUTPUT SECTION:
+    		
+    		--None
+    	
+    	-- Stub Calls	
+    	SIMUL
+    		
+    		-- Calling function to  enable the interrupts.
+    		STUB SaveStatusReg () U32_critical_sr
+    		
+			-- Calling function to disable the interrupts				            
+			STUB RestoreStatusReg(U32_critical_sr)
+		    
+		    -- Calling function to  enable the interrupts.
+		    STUB SaveStatusReg () U32_critical_sr
+			
+			-- Calling function to disable the interrupts
+			STUB RestoreStatusReg(U32_critical_sr)  	
+    	
+    	END SIMUL
+    	
+    -- Calling to set the ertd status
+    #RTDSetParam(0, 0, 9.0, 0x6);
+    
+    -- Calling The Unit under test
+    #RTDGetParam(a429_tag, &ps_dest);
+    END ELEMENT
+
+END TEST -- TEST 6
+
+END SERVICE -- RTDGetParam
+
+
+
+
+

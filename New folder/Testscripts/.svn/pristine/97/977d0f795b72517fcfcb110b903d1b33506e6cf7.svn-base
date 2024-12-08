@@ -1,0 +1,1581 @@
+HEADER hdudispfpolygon1,Source Code Ver : 1.7,TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+-- Author Name          : Meena P
+--
+-- File Name            : hdudispfpolygon1_2.ptu
+--
+-- Test Creation Date   : 09.10.2017
+--
+-- Tested Functions     : PolygonDrawFrame
+--                        PolygonFillRectNT
+--                        PolygonFillRectTranslate
+--                        PolygonFillRect
+-- 
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------       ---------       -----------        -------------
+--     1.1             09.10.2017      Meena P          Created the ptu file  
+--     1.2             10.11.2017      Meena P          Updated as per #PR100171 
+--     1.3             14.11.2017      Meena P          Updated as per #PR100171 
+--     1.4             27.07.2020      Swaroopa N       Updated as per #PR100267
+--     1.5             03.10.2020      Vignesh Sunil    Updated as per #PR100281
+-------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+##include "hdudispfdma2d.h"  
+##include "hdudispfpolygon1.h" 
+##include "hdudispfrterror.h"  
+##include "hdudispftext.h"     
+##include "hdudispfconfig.h"   
+##include "hdudispfwidgets.h"  
+##include "hdulibbasictypes.h" 
+##include "hdudispfpanel.h" 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern T_CHAR glob_file_name[];
+
+    -- Variable Chooses the active edge list
+    #extern T_UINT8 U8_which_mag_line;
+    
+    -- Variable Scans min value
+    #extern T_INT32 S16_scan_xmin;
+    
+    -- Variable holds Active Edge list line1
+    #extern T_UINT8 U8_mag_line1[(   1024U +1)];
+    
+    -- Variable Scans max value
+    #extern T_INT32 S16_scan_xmax;
+    
+    -- Variable holds Active Edge list line2
+    #extern T_UINT8 U8_mag_line2[(   1024U +1)];
+    
+    -- Variable holds the panel width value
+    #T_INT16 S16_panel_width; 
+    
+    -- Variable holds Foreground frame buffer
+    #void *Vp_fgfb2;
+    
+    -- Variable holds the panel height value
+    #T_INT16 S16_panel_height; 
+    
+    -- Variable holds the orientation value
+    #T_ELANDSCAPEORPORTRIAT E_orientation;
+    
+
+-- Declarations of the temporary variables 
+
+-- Created to verify the 1st parameter of RterrWidget
+   # char PTU_pc_file_in[200],PTU_pc_file_out[200];
+   # T_UINT8 PTU_temp;
+   
+-- Created to verify the 3rd parameter of RterrWidget
+   # char PTU_pc_message_in[200],PTU_pc_message_out[200];
+   
+--------------------------------------------------------------------------------
+
+BEGIN
+
+
+    COMMENT Author name      : Meena P
+    COMMENT
+    COMMENT File name        : hdudispfpolygon1_2.ptu
+    COMMENT
+    COMMENT Tested functions : PolygonDrawFrame
+    COMMENT                    PolygonFillRectNT
+    COMMENT                    PolygonFillRectTranslate
+    COMMENT                    PolygonFillRect
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1. Test scripts are splitted into 1 to 7 due to static dependencies.
+    COMMENT
+    COMMENT 2. In function 'PolygonDrawPoly' the structure member 'ps_poly->s16Pts' cannot be exercised for minimum, maximum values 
+    COMMENT    due to memory constraints.
+    COMMENT
+    COMMENT 3. In function 'VAddEdges' while loop cannot be covered for 0th loop. Since it is controlled by a local variable 'ps_lw'
+    COMMENT    in the function 'VScanLines' which is acting as parameter 'ps_vert' in the function 'VAddEdges'. 
+    COMMENT
+    COMMENT 4. In function 'VProcessPairsHR' while loop cannot be covered for 0th loop. Since it is controlled by a local variable 'ps_this'.
+    COMMENT
+    COMMENT 5. In function 'VRemoveEdges' while loop cannot be covered for 1st loop. Since 'VRemoveEdges' is called twice. 
+    COMMENT
+    COMMENT 6. In function 'VScanLines' do-while loop cannot be covered for 1st loop. Since the value of 'S16_active_edges' is greater than 1.
+    COMMENT
+	COMMENT 7. Source file "hdudispfpolygon1.c" is modified for testing purpose to verify the file name
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+	COMMENT
+    COMMENT</AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'PolygonDrawPoly', the function 'VFreeVertList' is called.
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In function 'PolygonDrawPoly', the function 'VFreeEdgeList' is called.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function 'PolygonDrawPoly', the function 'VBuildVertList' is called.
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In function 'PolygonDrawPoly', the ps_poly is not equal to null.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'PolygonDrawPoly', the ps_poly is equal to null.
+    COMMENT 
+    COMMENT Class 6
+    COMMENT In function 'PolygonDrawPoly', the function 'VScanLines' is called.
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In function 'VBuildVertList', the function 'VInsertVert' is called.
+    COMMENT 
+    COMMENT Class 8
+    COMMENT In function 'VBuildVertList', the point_count is not equal to zero.
+    COMMENT 
+    COMMENT Class 9
+    COMMENT In function 'VBuildVertList', the point_count is equal to zero.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'VInsertVert', the function 'SpFindLine' is called.
+    COMMENT
+    COMMENT Class 11
+    COMMENT  In function 'VInsertVert', s32Y of ps_prev_p is greater than s32Y of ps_vert_p. 
+    COMMENT
+    COMMENT Class 12
+    COMMENT  In function 'VInsertVert', s32Y of ps_prev_p is less than s32Y of ps_vert_p. 
+    COMMENT
+    COMMENT Class 13
+    COMMENT  In function 'VInsertVert', s32Y of ps_prev_p is equal to s32Y of ps_vert_p.
+    COMMENT
+    COMMENT Class 14
+    COMMENT  In function 'VInsertVert', s32Y of ps_next_p is greater than s32Y of ps_vert_p.
+    COMMENT
+    COMMENT Class 15
+    COMMENT  In function 'VInsertVert', s32Y of ps_next_p is less than s32Y of ps_vert_p.
+    COMMENT
+    COMMENT Class 16
+    COMMENT  In function 'VInsertVert', s32Y of ps_next_p is equal to s32Y of ps_vert_p.
+    COMMENT
+    COMMENT Class 17
+    COMMENT  In function 'VInsertVert', the function 'PsAllocVert' is called.
+    COMMENT
+    COMMENT Class 18
+    COMMENT  In function 'VInsertVert', psNextV of ps lw is not equal to null.
+    COMMENT
+    COMMENT Class 19
+    COMMENT  In function 'VInsertVert', psNextV of ps lw is equal to null.
+    COMMENT
+    COMMENT Class 20
+    COMMENT  In function 'VInsertVert', s32X of sVertP of ps new vertical is less than s32X of sVertP of ps lw.
+    COMMENT
+    COMMENT Class 21
+    COMMENT  In function 'VInsertVert', s32X of sVertP of ps new vertical is greater than s32X of sVertP of ps lw.
+    COMMENT
+    COMMENT Class 22
+    COMMENT  In function 'VInsertVert', s32X of sVertP of ps new vertical is equal to s32X of sVertP of ps lw.
+    COMMENT
+    COMMENT Class 23
+    COMMENT  In function 'VInsertVert', psNextV of ps lw is not equal to ZERO.
+    COMMENT
+    COMMENT Class 24
+    COMMENT  In function 'VInsertVert', psNextV of ps lw is equal to ZERO.
+    COMMENT
+    COMMENT Class 26
+    COMMENT  In function 'SpFindLine', the function 'RterrWidget' is called.
+    COMMENT
+    COMMENT Class 27
+    COMMENT  In function 'SpFindLine', s16_scan_line is less than ZERO.
+    COMMENT
+    COMMENT Class 28
+    COMMENT  In function 'SpFindLine', s16_scan_line is greater than ZERO.
+    COMMENT
+    COMMENT Class 29
+    COMMENT  In function 'SpFindLine', s16_scan_line is equal to ZERO.
+    COMMENT
+    COMMENT Class 30
+    COMMENT  In function 'SpFindLine', s16_scan_line is greater than (S16_panel_height multiplied with MAG_FACTOR).
+    COMMENT
+    COMMENT Class 31
+    COMMENT  In function 'SpFindLine', s16_scan_line is less than (S16_panel_height multiplied with MAG_FACTOR).
+    COMMENT
+    COMMENT Class 32
+    COMMENT  In function 'SpFindLine', s16_scan_line is equal to (S16_panel_height multiplied with MAG_FACTOR).
+    COMMENT
+    COMMENT Class 34
+    COMMENT  In function 'SpFindLine', psNextL of ps lw is not equal to null.
+    COMMENT
+    COMMENT Class 35
+    COMMENT  In function 'SpFindLine', psNextL of ps lw is equal to null.
+    COMMENT
+    COMMENT Class 36
+    COMMENT  In function 'SpFindLine', s16SlineNum of ps lw is equal to s16_scan_line.
+    COMMENT
+    COMMENT Class 37
+    COMMENT  In function 'SpFindLine', s16SlineNum of ps lw is not equal to s16_scan_line.
+    COMMENT
+    COMMENT Class 38
+    COMMENT  In function 'SpFindLine', s16SlineNum of ps lw is greater than s16_scan_line.
+    COMMENT
+    COMMENT Class 39
+    COMMENT  In function 'SpFindLine', s16SlineNum of ps lw is less than s16_scan_line.
+    COMMENT
+    COMMENT Class 41
+    COMMENT  In function 'SpFindLine', the function 'PsAllocVert' is called.
+    COMMENT
+    COMMENT Class 42
+    COMMENT  In function 'SpFindLine', psNextL of ps lw is not eqaul to zero.
+    COMMENT
+    COMMENT Class 43
+    COMMENT  In function 'SpFindLine', psNextL of ps lw is eqaul to zero.
+    COMMENT
+    COMMENT Class 44
+    COMMENT  In function 'PsAllocVert', the function 'RterrWidget' is called.
+    COMMENT
+    COMMENT Class 45
+    COMMENT  In function 'PsAllocVert', next vertical equal to MAX_VERTICES multiplied with TWO.
+    COMMENT
+    COMMENT Class 46
+    COMMENT  In function 'PsAllocVert', next vertical not equal to MAX_VERTICES multiplied with TWO.
+    COMMENT
+    COMMENT Class 47
+    COMMENT  In function 'VScanLines', next scan line is equal to ZERO.
+    COMMENT
+    COMMENT Class 48
+    COMMENT  In function 'VScanLines', next scan line is not equal to ZERO.
+    COMMENT
+    COMMENT Class 49
+    COMMENT  In function 'VScanLines', active edges is not equal to ZERO.
+    COMMENT
+    COMMENT Class 50
+    COMMENT  In function 'VScanLines', active edges is equal to ZERO.
+    COMMENT
+    COMMENT Class 51
+    COMMENT  In function 'VScanLines', the function 'VCalculateIntersections' is called.
+    COMMENT
+    COMMENT Class 52
+    COMMENT  In function 'VScanLines', the function 'VAddEdges' is called.
+    COMMENT
+    COMMENT Class 53
+    COMMENT  In function 'VScanLines', Y Scan line is equal to s16SlineNum of next scan line.
+    COMMENT
+    COMMENT Class 54
+    COMMENT  In function 'VScanLines', Y Scan line is not equal to s16SlineNum of next scan line.
+    COMMENT
+    COMMENT Class 55
+    COMMENT  In function 'VScanLines', psNextL of next scan line is not equal to NULL.
+    COMMENT
+    COMMENT Class 56
+    COMMENT  In function 'VScanLines', psNextL of next scan line is equal to NULL.
+    COMMENT
+    COMMENT Class 57
+    COMMENT  In function 'VScanLines', the function 'VProcessPairsHR' is called.
+    COMMENT
+    COMMENT Class 58
+    COMMENT  In function 'VScanLines', the function 'VProcessMagLine' is called.
+    COMMENT
+    COMMENT Class 59
+    COMMENT  In function 'VRemoveEdges', ps this is not equal to null.
+    COMMENT
+    COMMENT Class 60
+    COMMENT  In function 'VRemoveEdges', ps this is equal to null.
+    COMMENT
+    COMMENT Class 61
+    COMMENT  In function 'VRemoveEdges', decremented s32Ylength of ps this is equal to ZERO.
+    COMMENT
+    COMMENT Class 62
+    COMMENT  In function 'VRemoveEdges', decremented s32Ylength of ps this is not equal to ZERO.
+    COMMENT
+    COMMENT Class 63
+    COMMENT  In function 'VRemoveEdges', psNextE of ps this is not equal to ZERO.
+    COMMENT
+    COMMENT Class 64
+    COMMENT  In function 'VRemoveEdges', psNextE of ps this is equal to ZERO.
+    COMMENT
+    COMMENT Class 65
+    COMMENT  In function 'VCalculateIntersections', psNextE of active edge list not equal to null. 
+    COMMENT
+    COMMENT Class 66
+    COMMENT  In function 'VCalculateIntersections', psNextE of active edge list is equal to null. 
+    COMMENT
+    COMMENT Class 67
+    COMMENT  In function 'VAddEdges', psNextV of ps_vert is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 68
+    COMMENT  In function 'VAddEdges', psNextV of ps_vert is equal to ZERO. 
+    COMMENT
+    COMMENT Class 69
+    COMMENT  In function 'VAddEdges', s32Y of sNextP of ps_vert is greater than s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 70
+    COMMENT  In function 'VAddEdges', s32Y of sNextP of ps_vert is less than s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 71
+    COMMENT  In function 'VAddEdges', s32Y of sNextP of ps_vert is equal to s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 72
+    COMMENT  In function 'VAddEdges', the function 'PsAllocEdge' is called. 
+    COMMENT
+    COMMENT Class 73
+    COMMENT  In function 'VAddEdges', the function 'VEdgeInit' is called. 
+    COMMENT
+    COMMENT Class 74
+    COMMENT  In function 'VAddEdges', the function 'VEdgeInsert' is called. 
+    COMMENT
+    COMMENT Class 75
+    COMMENT  In function 'VAddEdges', s32Y of sPrevP of ps_vert is greater than s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 76
+    COMMENT  In function 'VAddEdges', s32Y of sPrevP of ps_vert is less than s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 77
+    COMMENT  In function 'VAddEdges', s32Y of sPrevP of ps_vert is equal to s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 78
+    COMMENT  In function 'VProcessPairsHR', active edges is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 79
+    COMMENT  In function 'VProcessPairsHR', active edges is equal to ZERO. 
+    COMMENT
+    COMMENT Class 80
+    COMMENT  In function 'VProcessPairsHR', the function 'RterrWidget' is called. 
+    COMMENT
+    COMMENT Class 81
+    COMMENT  In function 'VProcessPairsHR', active edges MOD TWO is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 82
+    COMMENT  In function 'VProcessPairsHR', active edges MOD TWO is equal to ZERO. 
+    COMMENT
+    COMMENT Class 83
+    COMMENT  In function 'VProcessPairsHR', U8_which_mag_line is equal to ZERO. 
+    COMMENT
+    COMMENT Class 84
+    COMMENT  In function 'VProcessPairsHR', U8_which_mag_line is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 85
+    COMMENT  In function 'VProcessPairsHR', ps this is not equal to ZERO.  
+    COMMENT
+    COMMENT Class 86
+    COMMENT  In function 'VProcessPairsHR', ps this is equal to ZERO. 
+    COMMENT
+    COMMENT Class 87
+    COMMENT  In function 'VProcessPairsHR', start scan X0 is less than end scan X1. 
+    COMMENT
+    COMMENT Class 88
+    COMMENT  In function 'VProcessPairsHR', start scan X0 is greater than end scan X1. 
+    COMMENT
+    COMMENT Class 89
+    COMMENT  In function 'VProcessPairsHR', start scan X0 is equal to end scan X1. 
+    COMMENT
+    COMMENT Class 90
+    COMMENT  In function 'VProcessPairsHR', start scan X0 MOD FOUR is equal to TRUE. 
+    COMMENT
+    COMMENT Class 91
+    COMMENT  In function 'VProcessPairsHR', start scan X0 MOD FOUR is not equal to TRUE. 
+    COMMENT
+    COMMENT Class 92
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is greater than SIXTEEN. 
+    COMMENT
+    COMMENT Class 93
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is less than SIXTEEN. 
+    COMMENT
+    COMMENT Class 94
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is equal to SIXTEEN. 
+    COMMENT
+    COMMENT Class 95
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is greater than EIGHT. 
+    COMMENT
+    COMMENT Class 96
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is less than EIGHT. 
+    COMMENT
+    COMMENT Class 97
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is equal to EIGHT. 
+    COMMENT
+    COMMENT Class 98
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is greater than FOUR. 
+    COMMENT
+    COMMENT Class 99
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is less than FOUR. 
+    COMMENT
+    COMMENT Class 100
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is equal to FOUR. 
+    COMMENT
+    COMMENT Class 101
+    COMMENT  In function 'VProcessPairsHR', s16_scan_y MOD FOUR is equal to THREE. 
+    COMMENT
+    COMMENT Class 102
+    COMMENT  In function 'VProcessPairsHR', s16_scan_y MOD FOUR is not equal to THREE. 
+    COMMENT
+    COMMENT Class 103
+    COMMENT  In function 'VProcessPairsHR', the function 'VProcessMagLine' is called. 
+    COMMENT
+    COMMENT Class 104
+    COMMENT  In function 'VProcessMagLine', S16_scan_xmin is greater than S16_scan_xmax. 
+    COMMENT
+    COMMENT Class 105
+    COMMENT  In function 'VProcessMagLine', S16_scan_xmin is less than S16_scan_xmax. 
+    COMMENT
+    COMMENT Class 106
+    COMMENT  In function 'VProcessMagLine', S16_scan_xmin is equal to S16_scan_xmax. 
+    COMMENT
+    COMMENT Class 107
+    COMMENT  In function 'VProcessMagLine', U8_which_mag_line is equal to ZERO. 
+    COMMENT
+    COMMENT Class 108
+    COMMENT  In function 'VProcessMagLine', U8_which_mag_line is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 109
+    COMMENT  In function 'VProcessMagLine', the function 'Dma2dScanLineBlend' is called. 
+    COMMENT
+    COMMENT Class 110
+    COMMENT  In function 'PsAllocEdge', the function 'RterrWidget' is called. 
+    COMMENT
+    COMMENT Class 111
+    COMMENT  In function 'PsAllocEdge', next edge is equal to MAX_EDGES. 
+    COMMENT
+    COMMENT Class 112
+    COMMENT  In function 'PsAllocEdge', next edge is not equal to MAX_EDGES. 
+    COMMENT
+    COMMENT Class 113
+    COMMENT  In function 'VEdgeInit', s32YLength  of ps_edge not equal to zero. 
+    COMMENT
+    COMMENT Class 114
+    COMMENT  In function 'VEdgeInit', s32YLength  of ps_edge is equal to zero. 
+    COMMENT
+    COMMENT Class 115
+    COMMENT  In function 'VEdgeInit', s32Slope of ps_edge is less than ZERO. 
+    COMMENT
+    COMMENT Class 116
+    COMMENT  In function 'VEdgeInit', s32Slope of ps_edge is greater than ZERO. 
+    COMMENT
+    COMMENT Class 117
+    COMMENT  In function 'VEdgeInit', s32Slope of ps_edge is equal to ZERO. 
+    COMMENT
+    COMMENT Class 118
+    COMMENT  In function 'VEdgeInsert', the psNextE of ps lw is not equal to null. 
+    COMMENT
+    COMMENT Class 119
+    COMMENT  In function 'VEdgeInsert', the psNextE of ps lw is equal to null. 
+    COMMENT
+    COMMENT Class 120
+    COMMENT  In function 'VEdgeInsert', s32X of sFirstP of ps_this is equal to s32_x1 of ps lw. 
+    COMMENT
+    COMMENT Class 121
+    COMMENT  In function 'VEdgeInsert', s32X of sFirstP of ps_this is not equal to s32_x1 of ps lw. 
+    COMMENT
+    COMMENT Class 122
+    COMMENT  In function 'VEdgeInsert', s32Slope of ps_this is less than s32Slope of ps lw. 
+    COMMENT
+    COMMENT Class 123
+    COMMENT  In function 'VEdgeInsert', s32Slope of ps_this is greater than s32Slope of ps lw. 
+    COMMENT
+    COMMENT Class 124
+    COMMENT  In function 'VEdgeInsert', s32Slope of ps_this is equal to s32Slope of ps lw. 
+    COMMENT
+    COMMENT Class 125
+    COMMENT  In function 'VEdgeInsert', s32X of sFirstP of ps_this is less than s32_x1 of ps lw. 
+    COMMENT
+    COMMENT Class 126
+    COMMENT  In function 'VEdgeInsert', s32X of sFirstP of ps_this is greater than s32_x1 of ps lw. 
+    COMMENT
+    COMMENT Class 127
+    COMMENT  In function 'VEdgeInsert', s32X of sFirstP of ps_this is equal to s32_x1 of ps lw. 
+    COMMENT
+    COMMENT Class 128
+    COMMENT  In function 'VEdgeInsert', psNextE of ps lw is not equal to ZERO.  
+    COMMENT
+    COMMENT Class 129
+    COMMENT  In function 'VEdgeInsert', psNextE of ps lw is equal to ZERO. 
+    COMMENT
+    COMMENT Class 130
+    COMMENT  In function 'PolygonFillRect', the function 'PolygonFillRectTranslate' is called. 
+    COMMENT
+    COMMENT Class 131
+    COMMENT  In function 'PolygonFillRectTranslate', E_orientation is equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 132
+    COMMENT  In function 'PolygonFillRectTranslate', E_orientation is not equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 133
+    COMMENT  In function 'PolygonFillRectTranslate', u8_translate is equal to ZERO.
+    COMMENT
+    COMMENT Class 134
+    COMMENT  In function 'PolygonFillRectTranslate', u8_translate is not equal to ZERO.
+    COMMENT
+    COMMENT Class 135
+    COMMENT  In function 'PolygonFillRectTranslate', s16_ulx plus s16_width is greater than S16_panel_width .
+    COMMENT
+    COMMENT Class 136
+    COMMENT  In function 'PolygonFillRectTranslate', s16_ulx plus s16_width is less than S16_panel_width .
+    COMMENT
+    COMMENT Class 137
+    COMMENT  In function 'PolygonFillRectTranslate', s16_ulx plus s16_width is equal S16_panel_width .
+    COMMENT
+    COMMENT Class 138
+    COMMENT  In function 'PolygonFillRectTranslate', s16_uly plus s16_height is greater than S16_panel_height.
+    COMMENT
+    COMMENT Class 139
+    COMMENT  In function 'PolygonFillRectTranslate', s16_uly plus s16_height is less than S16_panel_height.
+    COMMENT
+    COMMENT Class 140
+    COMMENT  In function 'PolygonFillRectTranslate', s16_uly plus s16_height is equal to S16_panel_height.
+    COMMENT
+    COMMENT Class 141
+    COMMENT  In function 'PolygonFillRectTranslate', s16_width is equal to ZERO.
+    COMMENT
+    COMMENT Class 142
+    COMMENT  In function 'PolygonFillRectTranslate', s16_width is not equal to ZERO.
+    COMMENT
+    COMMENT Class 143
+    COMMENT  In function 'PolygonFillRectTranslate', s16_height is equal to ZERO. 
+    COMMENT
+    COMMENT Class 144
+    COMMENT  In function 'PolygonFillRectTranslate', s16_height is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 145
+    COMMENT  In function 'PolygonFillRectTranslate', the function 'Dma2dFillBox' is called. 
+    COMMENT
+    COMMENT Class 146
+    COMMENT  In function 'PolygonFillRectNT', the function 'PolygonFillRectTranslate' is called. 
+    COMMENT
+    COMMENT Class 147
+    COMMENT  In function 'PolygonDrawFrame', E_orientation is equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 148
+    COMMENT  In function 'PolygonDrawFrame', E_orientation is not equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 149
+    COMMENT  In function 'PolygonDrawFrame', the function 'WidgetsRGB444ToRGB888' is called
+    COMMENT
+    COMMENT Class 150
+    COMMENT  In function 'PolygonDrawFrame', the function 'Dma2dFillBox' is called
+    COMMENT
+    COMMENT Class 153
+    COMMENT  In function 'VScanLines', the function 'VRemoveEdges' is called.
+    COMMENT 
+    COMMENT Invalid Class(es)
+    COMMENT
+    COMMENT Class 151
+    COMMENT In function 'VProcessMagLine', the Array size leads beyond the limit 
+    COMMENT   
+    COMMENT Class 152
+    COMMENT  In function 'PsAllocEdge',  the Array size leads beyond the limit 
+    COMMENT   
+    COMMENT Class 154
+    COMMENT  In function 'PsAllocVert',  the Array size leads beyond the limit 
+    COMMENT     
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+DEFINE STUB hdudispfpolygon1_c
+    #T_UINT32 WidgetsRGB444ToRGB888(T_EPENCOLOR _in e_pen_color); 
+    #void Dma2dFillBox(T_UINT16 _in u16_x_loc, T_UINT16 _in u16_y_loc, T_UINT16 _in width, T_UINT16 _in height, T_UINT32 _in u32_color); 
+    #T_ELANDSCAPEORPORTRIAT E_orientation; 
+    #void Dma2dScanLineBlend(void _in *scan_line, void _in *frame_data, T_UINT32 _in u32_width, T_UINT16 _in e_color); 
+    
+    -- The stub parameters are made as _no since the stub is not verified in this script 
+    #void RterrWidget(char _no pc_file[200], T_INT32 _in s32_line_number, char _no pc_message[200]);
+
+END DEFINE
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+    
+END SIMUL      
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfpolygon1.c
+ENVIRONMENT ENV_hdudispfpolygon1_c
+  VAR U8_which_mag_line,    init = 0,       ev = init
+  VAR S16_scan_xmin,        init = 0,       ev = init
+  ARRAY U8_mag_line1,       init = { others => 0 },     ev = init
+  VAR S16_scan_xmax,        init = 0,       ev = init
+  ARRAY U8_mag_line2,       init = { others => 0 },     ev = init
+  VAR E_orientation,        init = 0,       ev = init
+  VAR S16_panel_width,      init = 0,       ev = init
+  VAR S16_panel_height,     init = 0,       ev = init
+END ENVIRONMENT -- ENV_hdudispfpolygon1_c
+USE ENV_hdudispfpolygon1_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PolygonFillRect
+--------------------------------------------------------------------------------
+SERVICE PolygonFillRect
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_INT16 s16_ulx;
+    #T_INT16 s16_uly;
+    #T_INT16 s16_width;
+    #T_INT16 s16_height;
+    #T_EPENCOLOR e_color;
+
+    ENVIRONMENT ENV_PolygonFillRect
+    VAR s16_ulx,        init = 0,       ev = init
+    VAR s16_uly,        init = 0,       ev = init
+    VAR s16_width,      init = 0,       ev = init
+    VAR s16_height,     init = 0,       ev = init
+    VAR e_color,        init = BLACK,       ev = init
+    END ENVIRONMENT -- ENV_PolygonFillRect
+    USE ENV_PolygonFillRect
+
+    TEST 1
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRect-DB-LLR-001]
+    COMMENT The function 'PolygonFillRect' call the function 'PolygonFillRectTranslate' with parameter s16_ulx, s16_uly, 
+    COMMENT s16_width, s16_height, e_color and ZERO
+    COMMENT Equivalence Class 130
+    COMMENT  
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-001]
+    COMMENT The function 'PolygonFillRectTranslate' does the following if E_orientation is equal to E_PORTRAIT and 
+    COMMENT u8_translate is not equal to ZERO.
+    COMMENT 1.Set temporary variable to s16_ulx
+    COMMENT 2.Set s16_ulx to s16_uly
+    COMMENT 3.Set s16_uly to S16_panel_height minus temporary variable minus s16_width.
+    COMMENT 4.Set temporary variable to s16_height
+    COMMENT 5.Set s16_height to s16_width
+    COMMENT 6.Set s16_width to temporary variable.
+    COMMENT Equivalence Class 131,134
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-003]
+    COMMENT The function 'PolygonFillRectTranslate' returns when s16_ulx plus s16_width is less than S16_panel_width and
+    COMMENT s16_uly plus s16_height is less than S16_panel_height and s16_width is not equal to ZERO and s16_height is not equal to ZERO. 
+    COMMENT Equivalence Class 136,139,142,144
+    COMMENT
+    COMMENT </TD> 
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        VAR E_orientation,   init = E_PORTRAIT,       ev = init
+        
+        VAR s16_ulx,         init = 150,              ev = init
+        
+        VAR s16_uly,         init = 300,              ev = init
+        
+        VAR s16_width,       init = 250,              ev = init
+        
+        VAR s16_height,      init = 200,              ev = init
+        
+        VAR S16_panel_width, init = 2000,             ev = init
+        
+        VAR S16_panel_height,init = 1000 ,            ev = init
+        
+        VAR e_color,         init = BLACK,            ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+        
+        --Stub Calls:
+        SIMUL
+            
+        STUB Dma2dFillBox(300,600,200,250,BIT_25_TO_32)          
+                        
+        END SIMUL
+    
+        #PolygonFillRect(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+        END ELEMENT
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD>  
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-001]
+    COMMENT The function 'PolygonFillRectTranslate' does nothing if E_orientation is not equal to E_PORTRAIT.
+    COMMENT Equivalence Class 132
+    COMMENT 
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-002]
+    COMMENT The function 'PolygonFillRectTranslate' does the following 
+    COMMENT 1.Set s16_ulx to result of macro MAX with parameters s16_ulx and ZERO.
+    COMMENT 2.Set s16_uly to result of macro MAX with parameters s16_uly and ZERO.
+    COMMENT 3.Set s16_width to result of macro MAX with parameters s16_width and ZERO.
+    COMMENT 4.Set s16_height to result of macro MAX with parameters s16_height and ZERO.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-003]
+    COMMENT The function 'PolygonFillRectTranslate' returns when s16_ulx plus s16_width is less than S16_panel_width 
+    COMMENT  and s16_uly plus s16_height is less than S16_panel_height and s16_width is equal to ZERO
+    COMMENT Equivalence Class 136,139,141
+    COMMENT
+    COMMENT 
+    COMMENT </TD> 
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR E_orientation,   init = E_LAND_SCAPE, ev = init
+        
+        VAR s16_ulx,         init = -32768,       ev = init
+        
+        VAR s16_uly,         init = -32768,       ev = init
+        
+        VAR s16_width,       init = -32768,       ev = init
+        
+        VAR s16_height,      init = -32768,       ev = init
+        
+        VAR S16_panel_width, init = 32767,        ev = init
+        
+        VAR S16_panel_height,init = 32767,        ev = init
+        
+        VAR e_color,         init = RED,          ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+        
+        --Stub Calls:
+        SIMUL
+
+        --None        
+
+        END SIMUL
+    
+        #PolygonFillRect(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+        END ELEMENT
+    END TEST -- TEST 2
+    
+    TEST 3
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-003]
+    COMMENT The function 'PolygonFillRectTranslate' returns if s16_ulx plus s16_width is greater than S16_panel_width
+    COMMENT Equivalence Class 135
+    COMMENT </TD> 
+    
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR E_orientation,   init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,       ev = init
+        
+        VAR s16_ulx,         init = 32767,                               ev = init
+        
+        VAR s16_uly,         init = 32767,                               ev = init
+        
+        VAR s16_width,       init = 32767,                               ev = init
+        
+        VAR s16_height,      init = 32767,                               ev = init
+        
+        VAR S16_panel_width, init = -32768,                              ev = init
+        
+        VAR S16_panel_height,init = 3000,                                ev = init
+        
+        VAR e_color,         init = BLACK,                               ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+
+        --Stub Calls:
+        SIMUL
+
+        --none         
+
+        END SIMUL
+        
+        #PolygonFillRect(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+        END ELEMENT
+    END TEST -- TEST 3
+    
+    TEST 4
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-003]
+    COMMENT The function 'PolygonFillRectTranslate' returns if s16_ulx plus s16_width is equal to S16_panel_width
+    COMMENT Equivalence Class 137
+    COMMENT </TD> 
+        
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+    
+        VAR E_orientation,   init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,       ev = init
+
+        VAR s16_ulx,         init = 500,                                 ev = init
+
+        VAR s16_uly,         init = 600,                                 ev = init
+
+        VAR s16_width,       init = 700,                                 ev = init
+
+        VAR s16_height,      init = 800,                                 ev = init
+
+        VAR S16_panel_width, init = 1200,                                ev = init
+
+        VAR S16_panel_height,init = -32768,                              ev = init
+        
+        VAR e_color,         init = CAS_WHITE,                           ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+
+        --Stub Calls:
+        SIMUL
+
+        --none         
+
+        END SIMUL
+        
+        #PolygonFillRect(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+        END ELEMENT
+    END TEST -- TEST 4
+    
+    TEST 5
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-003]
+    COMMENT The function 'PolygonFillRectTranslate' returns if  s16_uly plus s16_height is greater than S16_panel_height.
+    COMMENT Equivalence Class 138
+    COMMENT </TD> 
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR E_orientation,   init = E_LAND_SCAPE,       ev = init
+        
+        VAR s16_ulx,         init = 100,              ev = init
+        
+        VAR s16_uly,         init = 200,              ev = init
+        
+        VAR s16_width,       init = 300,              ev = init
+        
+        VAR s16_height,      init = 600,              ev = init
+        
+        VAR S16_panel_width, init = 1200,             ev = init
+        
+        VAR S16_panel_height,init = 100,             ev = init
+        
+        VAR e_color,         init = TURQUOISE,        ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+        
+        --Stub Calls:
+        SIMUL
+
+        --none         
+
+        END SIMUL
+
+        #PolygonFillRect(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+        END ELEMENT
+    END TEST -- TEST 5
+    
+    TEST 6
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-003]
+    COMMENT The function 'PolygonFillRectTranslate' does not return when s16_uly plus s16_height is equal to S16_panel_height.
+    COMMENT Equivalence Class 140
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-004]
+    COMMENT The function 'PolygonFillRectTranslate' initializes the following to Convert RGB444 to RGB888
+    COMMENT 1.Set red colour to result of bitwise AND e_color and BIT_9_TO_12 is right shifted by EIGHT.
+    COMMENT 2.Set red colour to bitwise OR of red colour and result of red colour left shift by FOUR.
+    COMMENT 3.Set green colour to result of bitwise AND e_color and BIT_5_TO_8 is right shifted by FOUR.
+    COMMENT 4.Set green colour to bitwise OR of green colour and result of green colour left shift by FOUR.
+    COMMENT 5.Set blue colour to result of bitwise AND e_color and BIT_1_TO_4.
+    COMMENT 6.Set blue colour to blue colour and result of blue colour left shift by FOUR.
+    COMMENT 7.Set colour to BIT_25_TO_32.
+    COMMENT 8.Set colour to bitwise OR of colour and red colour left shift by SIXTEEN.
+    COMMENT 9.Set colour to bitwise OR of colour and green colour left shift by EIGHT.
+    COMMENT 10 Set colour to bitwise OR of colour and blue colour.
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-005]
+    COMMENT The function 'PolygonFillRectTranslate' calls the function Dma2dFillBox with parameter s16_ulx, s16_uly, 
+    COMMENT s16_width, s16_height and colour to fill the region with color.
+    COMMENT Equivalence Class 145
+    COMMENT </TD> 
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+        VAR E_orientation,   init = E_PORTRAIT,       ev = init
+
+        VAR s16_ulx,         init = 0,                ev = init
+
+        VAR s16_uly,         init = 150,                ev = init
+
+        VAR s16_width,       init = 200,                ev = init
+
+        VAR s16_height,      init = 350,                ev = init
+
+        VAR S16_panel_width, init = 1200,               ev = init
+
+        VAR S16_panel_height,init = 1000,                ev = init
+
+        VAR e_color,         init = DARK_BLUE,          ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+
+        --Stub Calls:
+        SIMUL
+
+           STUB Dma2dFillBox(150,800,350,200,(T_UINT32)-0x00ffff60)           
+
+        END SIMUL
+        
+    #PolygonFillRect(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+    END ELEMENT
+    END TEST -- TEST 6
+    
+    TEST 7
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-003]
+    COMMENT The function 'PolygonFillRectTranslate' returns if s16_width is equal to ZERO.
+    COMMENT Equivalence Class 141
+    COMMENT </TD> 
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+        VAR E_orientation,   init = E_LAND_SCAPE,      ev = init
+
+        VAR s16_ulx,         init = -300,              ev = init
+
+        VAR s16_uly,         init = -150,              ev = init
+
+        VAR s16_width,       init = ZERO,              ev = init
+
+        VAR s16_height,      init = 350,               ev = init
+
+        VAR S16_panel_width, init = 1200,              ev = init
+
+        VAR S16_panel_height,init = 1500,              ev = init
+
+        VAR e_color,         init = LIGHT_GRAY,        ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+
+        --Stub Calls:
+        SIMUL
+
+        --none         
+
+        END SIMUL
+        
+    #PolygonFillRect(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+    END ELEMENT    
+    END TEST -- TEST 7
+    
+    TEST 8
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-003]
+    COMMENT The function 'PolygonFillRectTranslate' returns if s16_height is equal to ZERO. 
+    COMMENT Equivalence Class 143
+    COMMENT </TD> 
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+        VAR E_orientation,   init = E_LAND_SCAPE,      ev = init
+
+        VAR s16_ulx,         init = -300,              ev = init
+
+        VAR s16_uly,         init = -150,              ev = init
+
+        VAR s16_width,       init = 1000,              ev = init
+
+        VAR s16_height,      init = ZERO,              ev = init
+
+        VAR S16_panel_width, init = 11200,             ev = init
+
+        VAR S16_panel_height,init = 11500,             ev = init
+
+        VAR e_color,         init = LIGHT_GRAY,        ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+
+        --Stub Calls:
+        SIMUL
+
+        --none         
+
+        END SIMUL
+        
+    #PolygonFillRect(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+    END ELEMENT    
+    END TEST -- TEST 8
+    
+    TEST 9
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-004]
+    COMMENT The function 'PolygonFillRectTranslate' initializes the following to Convert RGB444 to RGB888
+    COMMENT 1.Set red colour to result of bitwise AND e_color and BIT_9_TO_12 is right shifted by EIGHT.
+    COMMENT 2.Set red colour to bitwise OR of red colour and result of red colour left shift by FOUR.
+    COMMENT 3.Set green colour to result of bitwise AND e_color and BIT_5_TO_8 is right shifted by FOUR.
+    COMMENT 4.Set green colour to bitwise OR of green colour and result of green colour left shift by FOUR.
+    COMMENT 5.Set blue colour to result of bitwise AND e_color and BIT_1_TO_4.
+    COMMENT 6.Set blue colour to blue colour and result of blue colour left shift by FOUR.
+    COMMENT 7.Set colour to BIT_25_TO_32.
+    COMMENT 8.Set colour to bitwise OR of colour and red colour left shift by SIXTEEN.
+    COMMENT 9.Set colour to bitwise OR of colour and green colour left shift by EIGHT.
+    COMMENT 10 Set colour to bitwise OR of colour and blue colour.
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-005]
+    COMMENT The function 'PolygonFillRectTranslate' calls the function Dma2dFillBox with parameter s16_ulx, s16_uly, 
+    COMMENT s16_width, s16_height and colour to fill the region with color.
+    COMMENT Equivalence Class 145
+    COMMENT 
+    COMMENT </TD> 
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+        VAR E_orientation,   init = E_LAND_SCAPE,      ev = init
+
+        VAR s16_ulx,         init = 100,               ev = init
+
+        VAR s16_uly,         init = 200,               ev = init
+
+        VAR s16_width,       init = 300,               ev = init
+
+        VAR s16_height,      init = 400,               ev = init
+
+        VAR S16_panel_width, init = 11200,             ev = init
+
+        VAR S16_panel_height,init = 11500,             ev = init
+
+        VAR e_color,         init = LIGHT_GRAY,        ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+
+        --Stub Calls:
+    
+        SIMUL
+
+        STUB Dma2dFillBox(100,200,300,400,(T_UINT32)-0x333340)          
+
+        END SIMUL
+
+    #PolygonFillRect(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+    END ELEMENT
+    END TEST -- TEST 9
+
+END SERVICE -- PolygonFillRect
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PolygonFillRectNT
+--------------------------------------------------------------------------------
+SERVICE PolygonFillRectNT
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_INT16 s16_ulx;
+    #T_INT16 s16_uly;
+    #T_INT16 s16_width;
+    #T_INT16 s16_height;
+    #T_EPENCOLOR e_color;
+
+    ENVIRONMENT ENV_PolygonFillRectNT
+    VAR s16_ulx,        init = 0,       ev = init
+    VAR s16_uly,        init = 0,       ev = init
+    VAR s16_width,      init = 0,       ev = init
+    VAR s16_height,     init = 0,       ev = init
+    VAR e_color,        init = BLACK,       ev = init
+    END ENVIRONMENT -- ENV_PolygonFillRectNT
+    USE ENV_PolygonFillRectNT
+
+    TEST 1
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRectNT-DB-LLR-001]
+    COMMENT The function 'PolygonFillRectNT' calls the function PolygonFillRectTranslate with parameter s16_ulx, s16_uly, s16_width, s16_height, e_color and ZERO.
+    COMMENT Equivalence Class 146
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-001]
+    COMMENT The function 'PolygonFillRectTranslate' does nothing if E_orientation is equal to E_PORTRAIT and u8_translate is equal to ZERO
+    COMMENT Equivalence Class 131,133
+    COMMENT </TD> 
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR E_orientation,   init = E_PORTRAIT,       ev = init
+        
+        VAR s16_ulx,         init = 150,              ev = init
+        
+        VAR s16_uly,         init = 300,              ev = init
+        
+        VAR s16_width,       init = 250,              ev = init
+        
+        VAR s16_height,      init = 200,              ev = init
+        
+        VAR S16_panel_width, init = 2000,             ev = init
+        
+        VAR S16_panel_height,init = 1000 ,            ev = init
+        
+        VAR e_color,         init = BLACK,            ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+        
+        --Stub Calls:
+        SIMUL
+            
+        STUB Dma2dFillBox(150,300,250,200,BIT_25_TO_32)          
+                        
+        END SIMUL
+    
+    #PolygonFillRectNT(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+    END ELEMENT
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRectNT-DB-LLR-001]
+    COMMENT The function 'PolygonFillRectNT' calls the function PolygonFillRectTranslate with parameter s16_ulx, s16_uly, s16_width, s16_height, e_color and ZERO.
+    COMMENT Equivalence Class 146
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-001]
+    COMMENT The function 'PolygonFillRectTranslate' does nothing if E_orientation is not equal to E_PORTRAIT and u8_translate is equal to ZERO
+    COMMENT Equivalence Class 132,133
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-003]
+    COMMENT The function 'PolygonFillRectTranslate' returns if s16_ulx plus s16_width is greater than S16_panel_width 
+    COMMENT Equivalence Class 135
+    COMMENT </TD> 
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR E_orientation,   init = E_LAND_SCAPE,       ev = init
+        
+        VAR s16_ulx,         init = 32767,              ev = init
+        
+        VAR s16_uly,         init = 32767,              ev = init
+        
+        VAR s16_width,       init = 32767,              ev = init
+        
+        VAR s16_height,      init = 32767,              ev = init
+        
+        VAR S16_panel_width, init = -32768,             ev = init
+        
+        VAR S16_panel_height,init = -32768 ,            ev = init
+        
+        VAR e_color,         init = CAS_WHITE,          ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+        
+        --Stub Calls:
+        --none
+    
+    #PolygonFillRectNT(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+    END ELEMENT
+    END TEST -- TEST 2
+    
+    TEST 3
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonFillRectNT-DB-LLR-001]
+    COMMENT The function 'PolygonFillRectNT' calls the function PolygonFillRectTranslate with parameter s16_ulx, s16_uly, s16_width, s16_height, e_color and ZERO.
+    COMMENT Equivalence Class 146
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-001]
+    COMMENT The function 'PolygonFillRectTranslate' does nothing if E_orientation is not equal to E_PORTRAIT and u8_translate is equal to ZERO
+    COMMENT Equivalence Class 132,133
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonFillRectTranslate-DB-LLR-003]
+    COMMENT The function 'PolygonFillRectTranslate' returns when s16_ulx plus s16_width is less than S16_panel_width 
+    COMMENT  and s16_uly plus s16_height is less than S16_panel_height and s16_width is equal to ZERO.
+    COMMENT Equivalence Class 136,139,141
+    COMMENT </TD> 
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR E_orientation,   init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,       ev = init
+        
+        VAR s16_ulx,         init = -32768,                              ev = init
+        
+        VAR s16_uly,         init = -32768,                              ev = init
+        
+        VAR s16_width,       init = -32768,                              ev = init
+        
+        VAR s16_height,      init = -32768,                              ev = init
+        
+        VAR S16_panel_width, init = 32767,                               ev = init
+        
+        VAR S16_panel_height,init = 32767 ,                              ev = init
+        
+        VAR e_color,         init = TURQUOISE,                           ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None
+        
+        COMMENT OUTPUT SECTION:
+        --None
+        
+        --Stub Calls:
+        --none
+    
+    #PolygonFillRectNT(s16_ulx, s16_uly, s16_width, s16_height, e_color);
+    END ELEMENT
+    END TEST -- TEST 3
+
+END SERVICE -- PolygonFillRectNT
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PolygonDrawFrame
+--------------------------------------------------------------------------------
+SERVICE PolygonDrawFrame
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_INT16 s16_ulx;
+    #T_INT16 s16_uly;
+    #T_INT16 s16_width;
+    #T_INT16 s16_height;
+    #T_INT16 s16_thickness;
+    #T_EPENCOLOR e_color;
+
+    ENVIRONMENT ENV_PolygonDrawFrame
+    VAR s16_ulx,        init = 0,       ev = init
+    VAR s16_uly,        init = 0,       ev = init
+    VAR s16_width,      init = 0,       ev = init
+    VAR s16_height,     init = 0,       ev = init
+    VAR s16_thickness,  init = 0,       ev = init
+    VAR e_color,        init = BLACK,   ev = init
+    END ENVIRONMENT -- ENV_PolygonDrawFrame
+    USE ENV_PolygonDrawFrame
+
+    TEST 1
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-001]
+    COMMENT The function 'PolygonDrawFrame' does the following if E_orientation is equal to E_PORTRAIT.
+    COMMENT 1.Set temporary variable to s16_uly
+    COMMENT 2.Set s16_uly to S16_panel_height minus s16_ulx minus s16_width.
+    COMMENT 3.Set s16_ulx to temporary variable
+    COMMENT 4.Set temporary variable to s16_height
+    COMMENT 5.Set s16_height to s16_width
+    COMMENT 6.Set s16_width to temporary variable
+    COMMENT Equivalence Class 147
+    COMMENT  
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-002]
+    COMMENT The function 'PolygonDrawFrame' sets colour to return value of function WidgetsRGB444ToRGB888 with parameter e_color.
+    COMMENT Equivalence Class 149
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-003]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx minus s16_thickness,
+    COMMENT s16_uly minus s16_thickness, s16_width plus (TWO multiplied with s16_thickness), s16_thickness and colour.  
+    COMMENT Equivalence Class 150
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-004]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx minus s16_thickness,
+    COMMENT s16_uly minus s16_thickness, s16_thickness, s16_height plus (TWO multiplied with s16_thickness) and colour. 
+    COMMENT Equivalence Class 150
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-005]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx plus s16_width,
+    COMMENT s16_uly minus s16_thickness, s16_thickness, s16_height plus (TWO multiplied with s16_thickness) and colour.
+    COMMENT Equivalence Class 150
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-006]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx minus s16_thickness,
+    COMMENT s16_uly plus s16_height, s16_width plus (TWO* s16_thickness), s16_thickness and colour.
+    COMMENT Equivalence Class 150
+    COMMENT </TD> 
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR E_orientation,   init = E_PORTRAIT,        ev = init
+        
+        VAR S16_panel_height,init = 1000 ,             ev = init
+        
+        VAR s16_thickness,   init = 500,               ev = init
+        
+        VAR e_color,         init = BLACK,             ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        
+        VAR s16_ulx,         init = 1000,              ev = init
+            
+        VAR s16_uly,         init = 2000,              ev = init
+            
+        VAR s16_width,       init = 3000,              ev = init
+            
+        VAR s16_height,      init = 4000,              ev = init
+        
+        COMMENT OUTPUT SECTION:
+        --none
+        
+        
+        --Stub Calls:
+        SIMUL
+           
+        STUB WidgetsRGB444ToRGB888(BLACK)CAS_WHITE
+        STUB Dma2dFillBox(1500,62036,5000,500,CAS_WHITE)  
+        STUB Dma2dFillBox(1500,62036,500,4000,CAS_WHITE)          
+        STUB Dma2dFillBox(6000,62036,500,4000,CAS_WHITE)          
+        STUB Dma2dFillBox(1500,0,5000,500,CAS_WHITE)          
+                        
+        END SIMUL
+    
+        #PolygonDrawFrame(s16_ulx, s16_uly, s16_width, s16_height,s16_thickness, e_color);
+        END ELEMENT
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-001]
+    COMMENT The function 'PolygonDrawFrame' does nothing if E_orientation is equal to E_LAND_SCAPE_PORTRAIT_UNKNOWN.
+    COMMENT Equivalence Class 148
+    COMMENT  
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-002]
+    COMMENT The function 'PolygonDrawFrame' sets colour to return value of function WidgetsRGB444ToRGB888 with parameter e_color.
+    COMMENT Equivalence Class 149
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-003]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx minus s16_thickness,
+    COMMENT s16_uly minus s16_thickness, s16_width plus (TWO multiplied with s16_thickness), s16_thickness and colour.  
+    COMMENT Equivalence Class 150
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-004]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx minus s16_thickness,
+    COMMENT s16_uly minus s16_thickness, s16_thickness, s16_height plus (TWO multiplied with s16_thickness) and colour.   
+    COMMENT Equivalence Class 150
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-005]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx plus s16_width,
+    COMMENT s16_uly minus s16_thickness, s16_thickness, s16_height plus (TWO multiplied with s16_thickness) and colour.  
+    COMMENT Equivalence Class 150
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-006]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx minus s16_thickness,
+    COMMENT s16_uly plus s16_height, s16_width plus (TWO* s16_thickness), s16_thickness and colour.
+    COMMENT Equivalence Class 150
+    COMMENT </TD> 
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR E_orientation,   init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,         ev = init
+        
+        VAR S16_panel_height,init = 32767 ,                                ev = init
+        
+        VAR s16_thickness,   init = 32767,                                 ev = init
+        
+        VAR e_color,         init = CAS_WHITE,                             ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        
+        VAR s16_ulx,         init = 32767,                                 ev = init
+            
+        VAR s16_uly,         init = 32767,                                 ev = init
+            
+        VAR s16_width,       init = 32767,                                 ev = init
+            
+        VAR s16_height,      init = 32767,                                 ev = init
+        
+        COMMENT OUTPUT SECTION:
+        --none
+        
+        
+        --Stub Calls:
+        SIMUL
+           
+        STUB WidgetsRGB444ToRGB888(CAS_WHITE)TURQUOISE
+        STUB Dma2dFillBox(0,0,32765,32767,TURQUOISE)  
+        STUB Dma2dFillBox(0,0,32767,32765,TURQUOISE)          
+        STUB Dma2dFillBox(65534,0,32767,32765,TURQUOISE)          
+        STUB Dma2dFillBox(0,65534,32765,32767,TURQUOISE)          
+                        
+        END SIMUL
+    
+        #PolygonDrawFrame(s16_ulx, s16_uly, s16_width, s16_height,s16_thickness, e_color);
+        END ELEMENT
+    END TEST -- TEST 2
+    
+    TEST 3
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-001]
+    COMMENT The function 'PolygonDrawFrame' does nothing if E_orientation is equal to E_LAND_SCAPE.
+    COMMENT Equivalence Class 148
+    COMMENT  
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-002]
+    COMMENT The function 'PolygonDrawFrame' sets colour to return value of function WidgetsRGB444ToRGB888 with parameter e_color.
+    COMMENT Equivalence Class 149
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-003]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx minus s16_thickness,
+    COMMENT s16_uly minus s16_thickness, s16_width plus (TWO multiplied with s16_thickness), s16_thickness and colour.    
+    COMMENT Equivalence Class 150
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-004]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx minus s16_thickness,
+    COMMENT s16_uly minus s16_thickness, s16_thickness, s16_height plus (TWO multiplied with s16_thickness) and colour.   
+    COMMENT Equivalence Class 150
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-005]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx plus s16_width,
+    COMMENT s16_uly minus s16_thickness, s16_thickness, s16_height plus (TWO multiplied with s16_thickness) and colour.  
+    COMMENT Equivalence Class 150
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawFrame-DB-LLR-006]
+    COMMENT The function 'PolygonDrawFrame' calls the function Dma2dFillBox with paramenter s16_ulx minus s16_thickness,
+    COMMENT s16_uly plus s16_height, s16_width plus (TWO* s16_thickness), s16_thickness and colour.
+    COMMENT Equivalence Class 150
+    COMMENT </TD> 
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR E_orientation,   init = E_LAND_SCAPE,                           ev = init
+        
+        VAR S16_panel_height,init = -32768 ,                                ev = init
+        
+        VAR s16_thickness,   init = -32768,                                 ev = init
+        
+        VAR e_color,         init = DARK_BLUE,                              ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        
+        VAR s16_ulx,         init = -32768,                                 ev = init
+            
+        VAR s16_uly,         init = -32768,                                 ev = init
+            
+        VAR s16_width,       init = -32768,                                 ev = init
+            
+        VAR s16_height,      init = -32768,                                 ev = init
+        
+        COMMENT OUTPUT SECTION:
+        --none
+        
+        
+        --Stub Calls:
+        SIMUL
+           
+        STUB WidgetsRGB444ToRGB888(DARK_BLUE)CAS_REV_RED
+        STUB Dma2dFillBox(0,0,32768,32768,CAS_REV_RED)  
+        STUB Dma2dFillBox(0,0,32768,32768,CAS_REV_RED)          
+        STUB Dma2dFillBox(0,0,32768,32768,CAS_REV_RED)          
+        STUB Dma2dFillBox(0,0,32768,32768,CAS_REV_RED)          
+                        
+        END SIMUL
+    
+        #PolygonDrawFrame(s16_ulx, s16_uly, s16_width, s16_height,s16_thickness, e_color);
+        END ELEMENT
+    END TEST -- TEST 3
+
+END SERVICE -- PolygonDrawFrame

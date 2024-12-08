@@ -1,0 +1,1318 @@
+HEADER hdudispfgrapp,Source Code Ver : 1.17 ,TestScript Ver :1.7
+--------------------------------------------------------------------------------
+-- Author Name         : Anusha V
+--
+-- File Name           : hdudispfgrapp_4.ptu
+--                       
+-- Test Creation Date  : 11.10.2017
+--
+-- Tested Functions    : CoolxBoxText
+--                       
+--
+-- Version History     :
+--
+-- TEST-VERSION     TEST-DATE       TESTER NAME        MODIFICATIONS
+-- ------------     ---------       -----------        -------------
+--		1.1			30.10.2017		Anusha V 		   Created the PTU file by enabling internal service
+--      1.2         11.11.2017      Anusha V           Updated as per #PR100171
+--		1.3         14.11.2017      Anusha V           Updated as per #PR100171
+--		1.4			10.04.2018		Akshay R K		   Updated as per #PR100201
+--		1.5			28.07.2020		Vignesh Sunil	   Updated as per #PR100267
+--		1.6			03.10.2020		Vignesh Sunil	   Updated as per #PR100281
+--		1.7			28.04.2021		Vignesh Sunil	   Updated as per #PR100338
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/  
+
+##include "hdudispfgrapp.c"
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #T_UINT16 Cas_label_start_idx; 
+    #T_BOOL Cas_data_recieved; 
+    #T_BOOL Cas_wog_data_recieved; 
+    #T_UINT8 Page_cas; 
+    #T_TIMER Manual_timer; 
+    #T_INT32 S32_data_exceed[4];
+    #T_EXCEED_STRUCT Exceed_data[66]; 
+    #T_UINT8 Exceed_cnt;
+    #T_UINT32 U32_critical_sr; 
+    #T_BOOL Bitmap_crc_check_bit[20]; 
+    #T_EIU Active_eiu; 
+    #T_BOOL Cool_down_select; 
+    #T_UINT8 Du_position; 
+    #T_BOOL Nv_crc_fail;
+    #T_BOOL Demo_mode_activate; 
+    #T_BOOL Demo_active; 
+    #T_PBS Switches; 
+    #T_BOOL Acdt_flag; 
+    #T_UINT8 Tb_cnt; 
+    #T_UINT8 Text_cnt; 
+    #T_UINT8 Cg_cnt; 
+    #T_UINT8 Rd_cnt; 
+    #T_PAGE Page_settings;
+    #T_TIMER Cool_timer; 
+    #T_UINT8 Nb_cnt;
+    #T_UINT8 Bg_cnt;
+    #T_UINT16 Port1_label_count;
+    #extern void CarrotGraphInit(T_CARROTGRAPHDEF * cg_list);
+    #extern T_CHAR U8_circle[2];
+    #extern T_INT8 U8_time_string[15];
+    #extern void TextInit(T_TEXT * text_list);
+    #extern void AppExDraw(void);
+    #extern void ExmonCheck(void);
+    #extern void RoundDialsInit(T_ROUNDDIALDEF * rd_list);
+    #extern void TextBoxPdiInit(T_STEXTBOXPDIDATA * tb_list);
+    #extern void NumberBoxInit(T_SNUMBOXDEF * nb_list);
+    #extern void CoolDownTimer(void);
+    #extern void ScaleRead(void);
+    #extern void FlightTimer(void);
+    #extern void BarGraphInit(T_SBARGRAPHDEF * bg_list);
+    #extern void AppExTimerDraw(void);	
+	#extern T_PARAM_TABLE Parameters_reading[256];
+	#T_UINT32 Cas_error;
+	#T_UINT32 Timer_axis_error;
+	#T_UINT32 Acdt_axis_error;
+	#T_UINT32 Exceed_error;
+    #T_UINT8 Pg_cnt;
+    #T_BOOL Timer_flag;	
+    #T_BOOL Page_parameter_error[20];	
+    #T_CHAR  *dummyfunc(); 
+    #T_UINT8 Timer_cnt;		
+    #T_CONFIG_STRUCT Config_data;	
+    #T_BOOL Fuel_flow_select;
+    #T_DISPLAYSIZE Display_size;	
+    #T_UINT32 Ex_timer_error;		
+
+--  Declarations of the temporary variables of the tested file
+        
+    --Temporary variable created to be used in CompareLimit
+    #T_UINT8 PTU_temp1;
+
+    --Temporary variable created to be used in CompareLimit
+    #T_UINT8 PTU_temp2;
+
+    --Temporary variable created to be used in CompareLimit
+    #T_INT8 PTU_temp3;
+
+    --Temporary variable created to be used in CoolxBoxText
+    #T_INT8 PTU_pc_string;
+
+    --Temporary variable created to be used in CoolxBoxText and FlightTimer
+    #T_UINT8 PTU_index=0;
+
+    --Temporary variable created to be used in CoolxBoxText and FlightTimer 
+    #T_UINT8 PTU_index1=0;
+
+    --Temporary variable created to be used in CoolxBoxText and FlightTimer
+    #T_UINT32 PTU_src[10];
+
+    --Temporary variable created to be used in CoolxBoxText and FlightTimer
+    #T_INT8 PTU_dest[10];
+
+    --Temporary variable created to be used in GrappInit
+    #T_TIMER PTU_Splash_timer;
+
+    --Temporary variable created to be used in GrappInit
+    #T_TIMER PTU_cool_timer;
+
+    --Temporary variable created to be used in GrappInit
+    #T_UINT32 PTU_count=0;
+
+    --Temporary variable created to be used in GrappApp
+    #T_EPAGE_NUM PTU_e_page_temp;
+        
+    --Temporary variable created to be used in GrappApp
+    #T_PARAM_READING PTU_parameters_numbox[50];
+    
+    #T_PARAM_READING PTU_parameters[50];
+    
+    --Temporary variable
+    #T_UINT16 PTU_pu16Src;
+    
+    --Temporary variable
+    #T_CHAR *PTU_char[20];
+    
+    --Temporary variable
+    #T_CHAR PTU_temp11[10];
+	
+    --Temporary variable created to verify the parameters of function "RterrWidget"
+    #T_CHAR  PTU_rterr_file[100];
+    #T_CHAR  PTU_rterr_message[100];	
+	
+    #T_UINT32 index1;		
+
+--------------------------------------------------------------------------------
+BEGIN
+
+    COMMENT  Author Name         : Anusha V
+    COMMENT 
+    COMMENT  File Name           : hdudispfgrapp_4.ptu
+    COMMENT 
+    COMMENT  Tested Functions    : CoolxBoxText                           
+    COMMENT
+    COMMENT  Assumptions and Constraints
+    COMMENT  <AC>
+    COMMENT
+    COMMENT  Assumption(s):
+    COMMENT
+    COMMENT  None
+    COMMENT 
+    COMMENT  Constraint(s):
+    COMMENT 1. The PTU is been split into 6 due to static dependency.
+    COMMENT
+    COMMENT 2. Internal service is enabled in hdudispfgrapp_4.ptu in order to test the 
+    COMMENT    following LLR's
+    COMMENT  "hdudispfgrapp-CoolxBoxText-DB-LLR-001"
+    COMMENT  "hdudispfgrapp-CoolxBoxText-DB-LLR-002"
+    COMMENT  "hdudispfgrapp-CoolxBoxText-DB-LLR-003"
+    COMMENT  "hdudispfgrapp-CoolxBoxText-DB-LLR-004"
+    COMMENT
+    COMMENT 3.Following Test script related warning is observed during Target Execution for stub function return value:
+	COMMENT warning #120-D: 
+	COMMENT return value type does not match the function type
+	COMMENT return(Attol_ptr_out->ret);
+	COMMENT
+	COMMENT line 314: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT                  Ap_page1_bar_graphs[u8_i].ePenColor=Ap_page1_bar_graphs[u8_i].limColor[u8_j];                                                    ^
+	COMMENT line 358: warning #188-D: 
+	COMMENT       enumerated type mixed with another type
+	COMMENT                  Page_num_boxes[u8_i].ePenColor=Page_num_boxes[u8_i].limColor[u8_j];
+	COMMENT                                               ^
+	COMMENT line 922: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT                                Exceed_data[loop_cntr].exceed_font, YELLOW,                                 ^
+	COMMENT line 1002: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT                     Page_settings.timer_font, WHITE, TX_NO_FLASH, V_NORMAL, ALIGN_CENTER);		
+	COMMENT
+    COMMENT  </AC>
+    
+    COMMENT  <ECD>
+    COMMENT 
+    COMMENT  Valid Class(es)
+    COMMENT  Class 1
+    COMMENT  In Function'GrappInit','TimerInstall' is called.
+    COMMENT
+    COMMENT  Class 2
+    COMMENT  In Function'GrappInit','ForegroundLoadBackground'is called.
+    COMMENT
+    COMMENT  Class 3
+    COMMENT  In Function'GrappInit',page_num of Page_settings is equal to ZERO.
+    COMMENT
+    COMMENT  Class 4
+    COMMENT  In Function'GrappInit',page_num of Page_settings is not equal to ZERO.
+    COMMENT
+    COMMENT  Class 5
+    COMMENT In function 'GrappSwithcScreens',Page_num is equal to e_new_page_num.
+    COMMENT
+    COMMENT  Class 6
+    COMMENT In function 'GrappSwithcScreens',Page_num is not equal to e_new_page_num.
+    COMMENT
+    COMMENT  Class 7
+    COMMENT In function 'GrappSwithcScreens','PwmBlink' is called.
+    COMMENT
+    COMMENT  Class 8
+    COMMENT In function 'GrappSwithcScreens','LCDBackgroundOff'is called.
+    COMMENT
+    COMMENT  Class 9
+    COMMENT In function 'GrappSwithcScreens','ForegroundClear' is called.
+    COMMENT
+    COMMENT  Class 10
+    COMMENT In function 'GrappSwithcScreens','ForegroundLoadBackground' is called.
+    COMMENT
+    COMMENT  Class 11
+    COMMENT In function 'GrappSwithcScreens','PdiPageDataInit' is called.
+    COMMENT
+    COMMENT  Class 12
+    COMMENT In function 'GrappSwithcScreens','ExceedExtract' is called.
+    COMMENT
+    COMMENT  Class 13
+    COMMENT In function 'GrappSwithcScreens','RoundDialsInit' is called.
+    COMMENT
+    COMMENT  Class 14
+    COMMENT In function 'GrappSwithcScreens','NumberBoxInit' is called.
+    COMMENT
+    COMMENT  Class 15
+    COMMENT In function 'GrappSwithcScreens','BarGraphInit' is called.
+    COMMENT
+    COMMENT  Class 16
+    COMMENT In function 'GrappSwithcScreens','TextBoxOff' is called.
+    COMMENT
+    COMMENT  Class 17
+    COMMENT In function 'GrappSwithcScreens',Acdt_flag is TRUE.
+    COMMENT
+    COMMENT  Class 18
+    COMMENT In function 'GrappSwithcScreens','Acdt_flag is FALSE.
+    COMMENT
+    COMMENT  Class 19
+    COMMENT  In Function'ScaleRead',type of Parameters is equal to BNR.
+    COMMENT
+    COMMENT  Class 20
+    COMMENT  In Function'ScaleRead',type of Parameters is other than  BNR.
+    COMMENT
+    COMMENT  Class 21
+    COMMENT  In Function'ScaleRead','RTDGetParam'is called.
+    COMMENT
+    COMMENT  Class 22
+    COMMENT  In Function'ScaleRead','RTDGetParamDdw'is called.
+    COMMENT
+    COMMENT  Class 23
+    COMMENT  In Function'CompareLimit',val is less than range.
+    COMMENT
+    COMMENT  Class 24
+    COMMENT  In Function'CompareLimit',val is equal to the range.
+    COMMENT
+    COMMENT  Class 25
+    COMMENT  In Function'CompareLimit',val is greater than range.
+    COMMENT
+    COMMENT  Class 26
+    COMMENT  In Function'CompareLimit',val is not equal range.
+    COMMENT
+    COMMENT  Class 27
+    COMMENT  In Function'CompareLimit',operator is equal to LESS_THAN.
+    COMMENT
+    COMMENT  Class 28
+    COMMENT  In Function'CompareLimit',operator is equal to LESS_THAN_EQUAL.
+    COMMENT
+    COMMENT  Class 29
+    COMMENT In Function'CompareLimit',operator is equal to EQUAL
+    COMMENT
+    COMMENT  Class 30
+    COMMENT In Function'CompareLimit',operator is equal to GREATER_THAN_EQUAL.
+    COMMENT
+    COMMENT  Class 31
+    COMMENT In Function'CompareLimit',operator is equal to GREATER_THAN.
+    COMMENT
+    COMMENT  Class 32
+    COMMENT In Function'CompareLimit',operator is equal to NOT_EQUAL.
+    COMMENT
+    COMMENT  Class 33
+    COMMENT  In Function'CompareLimit',operator is other than LESS_THAN,LESS_THAN_EQUAL,EQUAL,
+    COMMENT  GREATER_THAN_EQUAL,GREATER_THAN,NOT_EQUAL.
+    COMMENT
+    COMMENT  Class 34
+    COMMENT In Function'CoolxBoxText',cool_timer is greater than cool down variable.
+    COMMENT
+    COMMENT  Class 35
+    COMMENT  In Function'RoundDialsInit','RoundDialAllocat' is called.
+    COMMENT
+    COMMENT  Class 36
+    COMMENT  In Function'NumberBoxInit','NumboxAllocat' is called.
+    COMMENT
+    COMMENT  Class 37
+    COMMENT  In Function'BarGraphInit','BargraphAllocat' is called.
+    COMMENT
+    COMMENT  Class 38
+    COMMENT  In Function'FlightTimer',Manual_timer is greater than MAX_TIME.
+    COMMENT
+    COMMENT  Class 39
+    COMMENT  In Function'FlightTimer',Manual_timer is less than MAX_TIME.
+    COMMENT
+    COMMENT  Class 40
+    COMMENT  In Function'FlightTimer',Manual_timer is equal to MAX_TIME.
+    COMMENT
+    COMMENT  Class 41
+    COMMENT  In Function'FlightTimer','BinasByteFormatInfo' is called.
+    COMMENT
+    COMMENT  Class 42
+    COMMENT  In Function'FlightTimer','TextDispString' is called.
+    COMMENT 
+    COMMENT  Class 43
+    COMMENT  In Function'GrappSetPage','OS_ENTER_CRITICAL' is called.
+    COMMENT
+    COMMENT  Class 200
+    COMMENT  In Function'GrappSetPage','OS_EXIT_CRITICAL' is called.
+    COMMENT
+    COMMENT  Class 44
+    COMMENT  In Function'ExmonCheck',stat of psParam of Ap_page1_bar_graphs is less than  PARAM_BAD
+    COMMENT
+    COMMENT  Class 45
+    COMMENT  In Function'ExmonCheck',stat of psParam of Ap_page1_bar_graphs is greater than  PARAM_BAD
+    COMMENT
+    COMMENT  Class 46
+    COMMENT  In Function'ExmonCheck',stat of psParam of Ap_page1_bar_graphs is equal to  PARAM_BAD
+    COMMENT
+    COMMENT  Class 47
+    COMMENT  In Function'ExmonCheck',compare is equal to ONE 
+    COMMENT
+    COMMENT  Class 48
+    COMMENT  In Function'ExmonCheck',compare is not equal to ONE 
+    COMMENT
+    COMMENT  Class 49
+    COMMENT  In Function'ExmonCheck',ePenColor of Ap_page1_bar_graphs is equal to YELLOW
+    COMMENT
+    COMMENT  Class 50
+    COMMENT  In Function'ExmonCheck',ePenColor of Ap_page1_bar_graphs is equal to RED
+    COMMENT
+    COMMENT  Class 51
+    COMMENT  In Function'ExmonCheck',ePenColor of Ap_page1_bar_graphs is equal to GREEN
+    COMMENT
+    COMMENT  Class 52
+    COMMENT  In Function'ExmonCheck',stat of psParam of Page_num_boxes is less than  PARAM_BAD
+    COMMENT
+    COMMENT  Class 53
+    COMMENT  In Function'ExmonCheck',stat of psParam of Page_num_boxes is greater than  PARAM_BAD
+    COMMENT
+    COMMENT  Class 54
+    COMMENT  In Function'ExmonCheck',stat of psParam of Page_num_boxes is equal to  PARAM_BAD
+    COMMENT
+    COMMENT  Class 55
+    COMMENT  In Function'ExmonCheck',ePenColor of Page_num_boxes is equal to YELLOW
+    COMMENT
+    COMMENT  Class 56
+    COMMENT  In Function'ExmonCheck',ePenColor of Page_num_boxes is equal to RED
+    COMMENT
+    COMMENT  Class 57
+    COMMENT  In Function'ExmonCheck',ePenColor of Page_num_boxes is equal to GREEN
+    COMMENT
+    COMMENT  Class 58
+    COMMENT  In Function'ExmonCheck',ePenColor of Ap_page1_bar_graphs is other than RED,GREEN and YELLOW.
+    COMMENT
+    COMMENT  Class 59
+    COMMENT  In Function'ExmonCheck',ePenColor of Page_num_boxes is other than RED,GREEN and YELLOW.
+    COMMENT
+    COMMENT  Class 60
+    COMMENT  In Function'GrappApp','ScaleRead' is called.
+    COMMENT
+    COMMENT  Class 61
+    COMMENT  In Function'GrappApp','ExmonCheck' is called.
+    COMMENT
+    COMMENT  Class 62
+    COMMENT  In Function'GrappApp','ForegroundLoadBackground' is called.
+    COMMENT
+    COMMENT  Class 63
+    COMMENT  In Function'GrappApp','PdiPageDataInit ' is called.
+    COMMENT
+    COMMENT  Class 64
+    COMMENT  In Function'GrappApp','RoundDialsInit  ' is called.
+    COMMENT
+    COMMENT  Class 65
+    COMMENT  In Function'GrappApp','NumberBoxInit   ' is called.
+    COMMENT
+    COMMENT  Class 66
+    COMMENT  In Function'GrappApp','BarGraphInit    ' is called.
+    COMMENT
+    COMMENT  Class 67
+    COMMENT  In Function'GrappApp','MenuInit    ' is called.
+    COMMENT
+    COMMENT  Class 68
+    COMMENT  In Function'GrappApp','TextBoxOff  ' is called.
+    COMMENT
+    COMMENT  Class 69
+    COMMENT  In Function'GrappApp',acdt_flag is equal to TRUE.
+    COMMENT
+    COMMENT  Class 70
+    COMMENT  In Function'GrappApp',acdt_flag is not equal to TRUE.
+    COMMENT
+    COMMENT  Class 71
+    COMMENT  In Function'GrappApp',Nv_crc_fail is TRUE.
+    COMMENT
+    COMMENT  Class 72   
+    COMMENT  In Function'GrappApp',Nv_crc_fail is not TRUE.
+    COMMENT
+    COMMENT  Class 73
+    COMMENT  In Function'GrappApp','PageMenu' is called.
+    COMMENT 
+    COMMENT  Class 74
+    COMMENT  In Function'GrappApp',Button b1 is true.
+    COMMENT
+    COMMENT  Class 75
+    COMMENT  In Function'GrappApp',Button b2 is true.
+    COMMENT
+    COMMENT  Class 76
+    COMMENT  In Function'GrappApp',Button b3 is true.
+    COMMENT
+    COMMENT  Class 77
+    COMMENT  In Function'GrappApp',Button b4 is true.
+    COMMENT
+    COMMENT  Class 78
+    COMMENT  In Function'GrappApp',Button b5 is true.
+    COMMENT
+    COMMENT  Class 79
+    COMMENT  In Function'GrappApp',Button b6 is true.
+    COMMENT
+    COMMENT  Class 80
+    COMMENT  In Function'GrappApp',Button b7 is true.
+    COMMENT
+    COMMENT  Class 81
+    COMMENT  In Function'GrappApp',Button b8 is true.
+    COMMENT
+    COMMENT  Class 82
+    COMMENT  In Function'GrappApp',Button c1 is true.
+    COMMENT
+    COMMENT  Class 83
+    COMMENT  In Function'GrappApp',Button c2 is true.
+    COMMENT
+    COMMENT  Class 84
+    COMMENT  In Function'GrappApp',Button c3 is true.
+    COMMENT
+    COMMENT  Class 85
+    COMMENT  In Function'GrappApp',Button sLE.pressed is true.
+    COMMENT
+    COMMENT  Class 86
+    COMMENT  In Function'GrappApp',Button sRE.pressed is true.
+    COMMENT
+    COMMENT  Class 87
+    COMMENT  In Function'GrappApp',Button b1 is false.
+    COMMENT
+    COMMENT  Class 88
+    COMMENT  In Function'GrappApp',Button b2 is false.
+    COMMENT
+    COMMENT  Class 89
+    COMMENT  In Function'GrappApp',Button b3 is false.
+    COMMENT
+    COMMENT  Class 111
+    COMMENT  In Function'GrappApp',Button b4 is false.
+    COMMENT
+    COMMENT  Class 90
+    COMMENT  In Function'GrappApp',Button b5 is false.
+    COMMENT
+    COMMENT  Class 91
+    COMMENT  In Function'GrappApp',Button b6 is false.
+    COMMENT
+    COMMENT  Class 92
+    COMMENT  In Function'GrappApp',Button b7 is false.
+    COMMENT
+    COMMENT  Class 93
+    COMMENT  In Function'GrappApp',Button b8 is false.
+    COMMENT
+    COMMENT  Class 94
+    COMMENT  In Function'GrappApp',Button c1 is false.
+    COMMENT
+    COMMENT  Class 95
+    COMMENT  In Function'GrappApp',Button c2 is false.
+    COMMENT
+    COMMENT  Class 96
+    COMMENT  In Function'GrappApp',Button c3 is false.
+    COMMENT
+    COMMENT  Class 97
+    COMMENT  In Function'GrappApp',Button sLE.pressed is false.
+    COMMENT
+    COMMENT  Class 98
+    COMMENT  In Function'GrappApp',Button sRE.pressed is false.
+    COMMENT
+    COMMENT  Class 100
+    COMMENT  In Function'GrappApp',Splash_timer is less than SPLASH_TIME.
+    COMMENT
+    COMMENT  Class 101
+    COMMENT  In Function'GrappApp',Splash_timer is equal to SPLASH_TIME.
+    COMMENT
+    COMMENT  Class 102
+    COMMENT  In Function'GrappApp',Splash_done is ZERO
+    COMMENT
+    COMMENT  Class 103
+    COMMENT  In Function'GrappApp',Splash_done is not equal to ZERO
+    COMMENT 
+    COMMENT  Class 106
+    COMMENT  In Function'GrappApp','OS_ENTER_CRITICAL' is called.
+    COMMENT
+    COMMENT  Class 107
+    COMMENT  In Function'GrappApp','OS_EXIT_CRITICAL' is called.
+    COMMENT
+    COMMENT  Class 108
+    COMMENT  In Function'GrappApp','OsTimeDly' is called.
+    COMMENT
+    COMMENT  Class 109
+    COMMENT  In Function'GrappApp',Acdt_flag is true 
+    COMMENT
+    COMMENT  Class 110
+    COMMENT  In Function'GrappApp','Acdt_flag is false. 
+    COMMENT
+    COMMENT  Class 112
+    COMMENT  In Function'GrappApp',' PageMenu'is called.
+    COMMENT
+    COMMENT  Class 113
+    COMMENT  In Function'GrappApp',' OffsideSwitchScreen'is called.
+    COMMENT
+    COMMENT  Class 114
+    COMMENT  In Function'GrappApp',Du_position is equal to one.
+    COMMENT
+    COMMENT  Class 115
+    COMMENT  In Function'GrappApp',Du_position is not equal to one.
+    COMMENT
+    COMMENT  Class 116
+    COMMENT  In Function'CoolxBoxText',cool_timer is greater than cool down variable.
+    COMMENT
+    COMMENT  Class 117
+    COMMENT  In Function'CoolxBoxText',cool_timer is less than cool down variable.
+    COMMENT
+    COMMENT  Class 118
+    COMMENT  In Function'CoolxBoxText',cool_timer is equal to  cool down variable.
+    COMMENT
+    COMMENT  Class 119
+    COMMENT  In Function'CoolxBoxText','BinasByteFormatInfo' is called.
+    COMMENT
+    COMMENT  Class 120
+    COMMENT  In Function'CoolxBoxText','TextDispString' is called.
+    COMMENT
+    COMMENT  Class 121
+    COMMENT  In Function'AppExDraw',stat of Exceedances is equal to PARAM_OK
+    COMMENT
+    COMMENT  Class 122
+    COMMENT  In Function'AppExDraw',stat of Exceedances is not equal to PARAM_OK
+    COMMENT
+    COMMENT  Class 123
+    COMMENT  In Function'AppExDraw',exceed_bit is set
+    COMMENT
+    COMMENT  Class 124
+    COMMENT  In Function'AppExDraw',exceed_bit is reset
+    COMMENT
+    COMMENT  Class 125
+    COMMENT  In Function'AppExDraw',r of exceed_reading bitwise And with result of ONE left shift by 
+    COMMENT  exceed_bit of index loop_cntr of Exceed_data minus ONE is true.
+    COMMENT
+    COMMENT  Class 126
+    COMMENT  In Function'AppExDraw',r of exceed_reading bitwise And with result of ONE left shift by 
+    COMMENT  exceed_bit of index loop_cntr of Exceed_data minus ONE is false.
+    COMMENT
+    COMMENT  Class 127
+    COMMENT  In Function'AppExDraw',S32_data_exceed bitwise And with result of ONE left shift by exceed_bit
+    COMMENT  of index loop_cntr of Exceed_data minus ONE is true.
+    COMMENT
+    COMMENT  Class 128
+    COMMENT  In Function'AppExDraw',S32_data_exceed bitwise And with result of ONE left shift by exceed_bit
+    COMMENT  of index loop_cntr of Exceed_data minus ONE is false.
+    COMMENT
+    COMMENT  Class 129
+    COMMENT  In Function'AppExDraw','TextDispString' is called.
+    COMMENT 
+    COMMENT  Class 130
+    COMMENT  In Function'CoolDownTimer',return value of 'CompareLimit' is 0.
+    COMMENT
+    COMMENT  Class 131
+    COMMENT  In Function'CoolDownTimer',return value of 'CompareLimit' is 1.
+    COMMENT
+    COMMENT  Class 132
+    COMMENT  In Function'CoolDownTimer',result of logical AND of NOT of Inside_n1 and  value of 'CompareLimit' is TRUE.
+    COMMENT
+    COMMENT  Class 133
+    COMMENT  In Function'CoolDownTimer',result of logical AND of NOT of Inside_n1 and  value of 'CompareLimit' is FALSE.
+    COMMENT
+    COMMENT  Class 134
+    COMMENT  In Function'CoolDownTimer',Cool_down_select is equal to TRUE.
+    COMMENT
+    COMMENT  Class 135
+    COMMENT  In Function'CoolDownTimer',Cool_down_select is equal to FALSE.
+    COMMENT
+    COMMENT  Class 136
+    COMMENT  In Function'CoolDownTimer',Inside_n1 is equal to TRUE.
+    COMMENT
+    COMMENT  Class 137
+    COMMENT  In Function'CoolDownTimer',Inside_n1 is equal to FALSE.
+    COMMENT
+    COMMENT  Class 138
+    COMMENT  In Function'CoolDownTimer','CoolTimerStart'is called.
+    COMMENT
+    COMMENT  Class 139
+    COMMENT  In Function'CoolDownTimer','TextBoxOn'is called.
+    COMMENT
+    COMMENT  Class 140
+    COMMENT  In Function'CoolDownTimer','TextBoxOff'is called.
+    COMMENT
+    COMMENT  Class 141
+    COMMENT  In Function'CoolDownTimer','CoolTimerStop'is called.
+    COMMENT
+    COMMENT  Class 142
+    COMMENT  In Function'CoolDownTimer','CoolTimerReset'is called.
+    COMMENT
+    COMMENT  Class 143
+    COMMENT  In Function'CoolDownTimer',r of wdog_data of Auto_cool_down_tmr is equal to ONE. 
+    COMMENT
+    COMMENT  Class 144
+    COMMENT  In Function'CoolDownTimer',r of wdog_data of Auto_cool_down_tmr is not equal to ONE. 
+    COMMENT
+    COMMENT  Class 145
+    COMMENT  In Function'CoolDownTimer',stat of acdt_reading of Auto_cool_down_tmr is less than PARAM_BAD.
+    COMMENT     
+    COMMENT  Class 146
+    COMMENT  In Function'CoolDownTimer',stat of acdt_reading of Auto_cool_down_tmr is greater than PARAM_BAD.
+    COMMENT 
+    COMMENT  Class 147
+    COMMENT  In Function'CoolDownTimer',stat of acdt_reading of Auto_cool_down_tmr is equal than PARAM_BAD.
+    COMMENT 
+    COMMENT  Class 148
+    COMMENT  In Function'CoolDownTimer',Acdt_flag is TRUE
+    COMMENT 
+    COMMENT  Class 149
+    COMMENT  In Function'CoolDownTimer',Acdt_flag is FALSE
+    COMMENT 
+    COMMENT  Class 150
+    COMMENT  In Function'CoolDownTimer',stat of wdog_data of Auto_cool_down_tmr is less than PARAM_BAD.
+    COMMENT
+    COMMENT  Class 151
+    COMMENT  In Function'CoolDownTimer',stat of wdog_data of Auto_cool_down_tmr is greater than PARAM_BAD.
+    COMMENT
+    COMMENT  Class 152
+    COMMENT  In Function'CoolDownTimer',stat of wdog_data of Auto_cool_down_tmr is equal than PARAM_BAD.
+    COMMENT
+    COMMENT  Class 153
+    COMMENT  In Function'AppDraw1',splash done is equal to zero
+    COMMENT
+    COMMENT  Class 154
+    COMMENT  In Function'AppDraw1',splash done is not equal to zero
+    COMMENT
+    COMMENT  Class 155
+    COMMENT  In Function'AppDraw1','TextBoxOff' is called.
+    COMMENT
+    COMMENT  Class 156
+    COMMENT  In Function'AppDraw1',Page_cas is equal to one
+    COMMENT
+    COMMENT  Class 157
+    COMMENT  In Function'AppDraw1',Page_cas is not equal to one
+    COMMENT
+    COMMENT  Class 158
+    COMMENT  In Function'AppDraw1',Cas_wog_data_recieved is TRUE
+    COMMENT
+    COMMENT  Class 159
+    COMMENT  In Function'AppDraw1',Cas_wog_data_recieved is FALSE
+    COMMENT
+    COMMENT  Class 160
+    COMMENT  In Function'AppDraw1',Cas_data_recieved is TRUE
+    COMMENT
+    COMMENT  Class 161
+    COMMENT  In Function'AppDraw1',Cas_data_recieved is FALSE
+    COMMENT
+    COMMENT  Class 162
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 163
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 164
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx is equal to PARAM_BAD
+    COMMENT
+    COMMENT  Class 165
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+1 is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 166
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+1 is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 167
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+1 is equal to PARAM_BAD
+    COMMENT
+    COMMENT  Class 168
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+2 is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 169
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+2 is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 170
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+2 is equal to PARAM_BAD
+    COMMENT 
+    COMMENT  Class 171
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+3 is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 172
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+3 is greater to PARAM_BAD
+    COMMENT
+    COMMENT  Class 173
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+3 is equal to PARAM_BAD
+    COMMENT     
+    COMMENT  Class 174
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+4 is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 175
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+4 is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 176
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+4 is equal to PARAM_BAD
+    COMMENT 
+    COMMENT  Class 177
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+5 is less than PARAM_BAD
+    COMMENT
+    COMMENT  Class 178
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+5 is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 179
+    COMMENT  In Function'AppDraw1',stat of reading of Parameters with index Cas_label_start_idx+5 is equal to PARAM_BAD
+    COMMENT
+    COMMENT  Class 180
+    COMMENT  In Function'AppDraw1',stat of wog_data of Auto_cool_down_tmr is less than PARAM_BAD
+    COMMENT 
+    COMMENT  Class 181
+    COMMENT  In Function'AppDraw1',stat of wog_data of Auto_cool_down_tmr is greater than PARAM_BAD
+    COMMENT
+    COMMENT  Class 182
+    COMMENT  In Function'AppDraw1',stat of wog_data of Auto_cool_down_tmr is equal to PARAM_BAD
+    COMMENT
+    COMMENT  Class 183
+    COMMENT  In Function'AppDraw1','CasDisplay' is called ,
+    COMMENT
+    COMMENT  Class 184
+    COMMENT  In Function'AppDraw1',7th bit of page_menu of page_settings is equal to one.
+    COMMENT
+    COMMENT  Class 185
+    COMMENT  In Function'AppDraw1',7th bit of page_menu of page_settings is not equal to one.
+    COMMENT
+    COMMENT  Class 186
+    COMMENT  In Function'AppDraw1','FlightTimer' is called.
+    COMMENT
+    COMMENT  Class 187
+    COMMENT  In Function'AppDraw1','CoolDownTimer' is called.
+    COMMENT
+    COMMENT  Class 188
+    COMMENT  In Function'AppDraw1',Acdt_flag is TRUE    
+    COMMENT
+    COMMENT  Class 189
+    COMMENT  In Function'AppDraw1',Acdt_flag is FALSE   
+    COMMENT
+    COMMENT  Class 190
+    COMMENT  In Function'AppDraw1','AppExDraw' is called.
+    COMMENT 
+    COMMENT  Class 191
+	COMMENT  In Function'GrappApp',Button sRE.twist is true.
+    COMMENT
+    COMMENT  Class 192
+	COMMENT  In Function'GrappApp',Button sRE.twist is false.
+	COMMENT
+    COMMENT  Class 193
+	COMMENT  In Function'GrappApp',Button sLE.twist is true.
+    COMMENT
+    COMMENT  Class 194
+	COMMENT  In Function'GrappApp',Button sLE.twist is false.	
+	COMMENT 
+    COMMENT  Class 195
+	COMMENT  In Function'GrappApp',Button Splash_b1_press is true.
+    COMMENT
+    COMMENT  Class 196
+	COMMENT  In Function'GrappApp',Button Splash_b1_press is false.
+    COMMENT
+    COMMENT  Class 197
+    COMMENT  In Function'GrappApp', Set_new_page is TRUE.
+    COMMENT
+	COMMENT  Class 198
+    COMMENT  In Function'GrappApp', Set_new_page is FALSE.
+    COMMENT
+    COMMENT  Class 199
+	COMMENT  In function'GrappApp', counter_airframe value is greater than AIFRAME_CHECK_SEC
+    COMMENT
+    COMMENT  Class 207
+	COMMENT  In function 'GrappApp' counter_airframe value is equall to AIFRAME_CHECK_SEC
+	COMMENT 
+    COMMENT  Class 201
+	COMMENT  In function 'GrappApp' counter_airframe value is less than AIFRAME_CHECK_SEC
+    COMMENT
+	COMMENT  Class 204
+    COMMENT  The function 'GrappApp' calls the function 'ProcessAirframeInfoWords'
+	COMMENT
+	COMMENT  Class 205
+    COMMENT  In function 'GrappApp' Demo_mode_activate is true
+	COMMENT
+	COMMENT  Class 206
+    COMMENT  In function 'GrappApp' Demo_mode_activate is false
+	COMMENT
+    COMMENT  Class 208
+    COMMENT  In Function'GrappApp',Splash_timer is greater than SPLASH_TIME.
+	COMMENT
+	COMMENT  Class 209
+    COMMENT  In Function'GrappApp',Button b10 is true.
+	COMMENT
+    COMMENT  Class 210
+    COMMENT  In Function'GrappApp',Button b11 is true.
+	COMMENT
+    COMMENT  Class 211
+    COMMENT  In Function'GrappApp',Button b12 is true.
+	COMMENT
+    COMMENT  Class 212
+    COMMENT  In Function'GrappApp',Button b13 is true.	
+	COMMENT
+    COMMENT  Class 213
+    COMMENT  In Function'GrappApp',Button b10 is false.
+	COMMENT
+    COMMENT  Class 214
+    COMMENT  In Function'GrappApp',Button b11 is false.
+	COMMENT
+    COMMENT  Class 215
+    COMMENT  In Function'GrappApp',Button b12 is false.
+	COMMENT
+    COMMENT  Class 216
+    COMMENT  In Function'GrappApp',Button b13 is false.		
+	COMMENT
+    COMMENT  Class 217
+    COMMENT  In Function'GrappApp',The function CrcPages is called
+	COMMENT
+    COMMENT  Class 218
+    COMMENT  In Function'GrappInit',The function GlobalExtract is called	
+	COMMENT
+    COMMENT  Class 219
+    COMMENT  In Function'GrappApp',Bitmap_crc_check_bit with index Page_num is equal to FALSE	
+	COMMENT
+    COMMENT  Class 220
+    COMMENT  In Function'GrappApp',Bitmap_crc_check_bit with index Page_num is equal to TRUE	
+	COMMENT
+    COMMENT  Class 221
+    COMMENT  In Function'CarrotGraphInit',Call the function CarrotGraphAllocat with cg_list as its function parameter,
+	COMMENT
+    COMMENT  Class 222
+    COMMENT  In Function'TextInit',Call the function TextAllocatPdi
+	COMMENT
+    COMMENT  Class 223
+    COMMENT  In Function'TextBoxPdiInit',Call the function TextBoxPdiAllocate with cg_list as its function parameter,		
+	COMMENT
+    COMMENT  Class 224
+    COMMENT  In Function'ScaleRead',Call the function ScuRTDGetParam 
+	COMMENT
+    COMMENT  Class 225
+    COMMENT  In Function'ScaleRead',scu_enable of Config_data is TRUE
+	COMMENT
+    COMMENT  Class 226
+    COMMENT  In Function'ScaleRead',scu_enable of Config_data is FALSE  
+	COMMENT
+    COMMENT  Class 227
+    COMMENT  In Function'ScaleRead',Call the function AppExTimerDraw  
+	COMMENT
+    COMMENT  Class 228
+    COMMENT  In Function'ScaleRead',scu_enable of Ex_timer_error is ZERO
+	COMMENT
+    COMMENT  Class 229
+    COMMENT  In Function'ScaleRead',scu_enable of Ex_timer_error is not ZERO   
+	COMMENT
+    COMMENT  Class 230
+    COMMENT  In Function'ScaleRead',Call the function OffsideFuelFlow 
+	COMMENT
+    COMMENT Invalid Class(es)   
+    COMMENT
+    COMMENT None
+    COMMENT
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+DEFINE STUB hdudispfgrapp_c
+
+        #void CasDisplay(); 
+
+        #void CoolTimerReset(void); 
+
+        #void CoolTimerStop(void); 
+
+        #void TextBoxOn(T_STEXTBOXDATA _in *ps_this_box); 
+
+        #void CoolTimerStart(void); 
+
+        #void PageMenu(T_EPAGE_NUM _no back_grnd_page_num)
+        #{
+        #PTU_e_page_temp=back_grnd_page_num;
+        #}
+
+        #T_UINT32 SaveStatusReg(void); 
+
+        #void RestoreStatusReg(T_UINT32 _in U32_critical_sr);
+
+        #void MenuInit(); 
+
+        #void OsTimeDly(T_UWORD _in ticks); 
+
+        #void OffsideSwitchScreen(T_UINT8 _in u8_page_num); 
+
+        #void PageExtract(T_UINT8 _in *address);
+
+        #void TimerInstall( volatile T_TIMER _no *timer)
+        #{
+        #PTU_count++;
+        #if(PTU_count==1)
+        #{
+        #timer=&PTU_Splash_timer;
+        #}
+        #else if(PTU_count==2)
+        #{
+        #timer=&PTU_cool_timer;
+        #}
+        #} 
+
+        #void TextBoxOff(T_STEXTBOXDATA _in *ps_this_box); 
+
+        #void ExceedExtract(T_UINT8 _in *address);
+
+        #void PdiPageDataInit(T_UINT8 _in page_num);
+
+        #void ForegroundLoadBackground(const T_UINT16 _in *pu16Src);
+
+
+        #void ForegroundClear(void); 
+
+        #void LCDBackgroundOff(); 
+
+        #void PwmBlink();
+
+        #void NumboxAllocat(T_SNUMBOXDEF _in *psNumBoxDef); 
+
+        #void BargraphAllocat(T_SBARGRAPHDEF _in *psBarGraphDef); 
+
+        #void RoundDialAllocat(T_ROUNDDIALDEF _in *round_dial_def); 
+
+		#void CarrotGraphAllocat(T_CARROTGRAPHDEF  _in *carrot_graph_def);
+				
+		#void TextBoxPdiAllocate(T_STEXTBOXPDIDATA  _in *ps_this_box);		
+		
+		#void TextAllocatPdi(T_PTEXT  _in *pps_handle_add, T_UINT8  _no *pu8_string, T_UINT16  _in u16_x0, T_UINT16  _in u16_y0, T_ETXALIGN  _in e_tx_align, T_ETXFONT  _in e_tx_font, T_EPENCOLOR  _in e_pen_color, T_ETXV  _in e_txv, T_ETXFLASH  _in e_tx_flash);
+		
+        #void TextDispString(char _no *pc_string[200], T_UINT16 _in u16_x, T_UINT16 _in u16_y, T_ETXFONT _in e_tx_font,
+        #  T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv, T_ETXALIGN _in e_tx_align)
+        #{
+        #pc_string=&PTU_pc_string;
+        #}
+
+        #T_INT8* BinasByteFormatInfo(void _no *src, T_UINT16 _in format, T_INT8 _no *dest)
+        #{
+        #PTU_src[PTU_index]=*((T_UINT32 *)src);
+        #*dest=PTU_dest[PTU_index];
+        #PTU_index++;
+        #}
+
+        #void RTDGetParamDdw(T_UINT16 _in a429_tag, T_PARAM_READING _no *ps_dest)
+        #{
+        #ps_dest = (T_PARAM_READING *)&PTU_parameters[PTU_index1];
+        #}
+
+        #void RTDGetParam(T_UINT16 _in a429_tag, T_PARAM_READING _no *ps_dest)
+        #{
+        #PTU_index1++;
+        #if(PTU_index1==1)
+        #{
+        #ps_dest = &PTU_parameters[PTU_index1];
+        #}
+        #else 
+        #ps_dest = &PTU_parameters_numbox[PTU_index1];
+        #}
+
+        #T_CHAR *dummyfunc()
+        #{
+        --# return (T_CHAR *)&PTU_char[0];
+        #}
+        
+        #void OffsideCoolTimer(T_UINT8 _in cool_timer_state);
+        
+        #void GlobalSettingsSetEIU(T_EIU eiu);
+
+		#void ProcessAirframeInfoWords(void);
+		
+		#void CrcPages(T_EPAGE_NUM  _in page_count);
+		
+		#void GlobalExtract(T_UINT8  _in *address);		
+		
+        #void RterrWidget(T_CHAR _no *pc_file, T_INT32 _in s32_line_number, T_CHAR _no *pc_message)
+        #{
+        #   for(index1 = 0; index1<50;   index1++)
+        #   {
+        #    PTU_rterr_file[index1]=*(T_CHAR *)pc_file;
+        #    pc_file++;
+        #    PTU_rterr_message[index1]=*(T_CHAR *)pc_message;
+        #    pc_message++;
+        #   }
+        #}		
+
+		#void ScuRTDGetParam(T_UINT16  _in a429_tag, T_PARAM_READING  _inout ps_dest, T_A429_DATA_TYPE  _in a429_type);			
+
+		#void OffsideFuelFlow(T_UINT8  _in Fuel_flow_state); 	
+		
+		#void MemCpy(void * _in p_dest,  const void * _in p_src, T_UINT16  _in count);			
+		
+        #void AppExTimerDraw(void);		
+		
+END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+    
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfgrapp.c
+-- ENVIRONMENT ENV_hdudispfgrapp_c
+
+--		None
+
+-- END ENVIRONMENT -- ENV_hdudispfgrapp_c
+
+-- USE ENV_hdudispfgrapp_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service CoolxBoxText
+--------------------------------------------------------------------------------
+SERVICE CoolxBoxText
+SERVICE_TYPE extern
+
+-- By function returned type declaration
+#T_CHAR *ret_CoolxBoxText;
+#T_PARAM_READING PTU_acdt_reading;
+
+
+
+TEST 1
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT  [hdudispfgrapp-CoolxBoxText-DB-LLR-001]
+    COMMENT  The function 'CoolxBoxText'does the following,
+    COMMENT  a) Set cool down variable to Auto_cool_down_tmr.acdt_time multiplied with DEC_1000.
+    COMMENT  b) If Cool_timer is greater than cool down variable then set Cool_timer to cool down variable.
+    COMMENT  Equivalence Class 34,116
+    COMMENT
+    COMMENT  [hdudispfgrapp-CoolxBoxText-DB-LLR-002]
+    COMMENT  The function 'CoolxBoxText' does the following,
+    COMMENT  a) Set seconds with ((subtracted value of cool down variable and Cool_timer) divided by DEC_1000)
+    COMMENT  b) Set minutes with seconds divided by DEC_60.
+    COMMENT  c) Set seconds with seconds modulo by DEC_60.
+    COMMENT  d) Set minutes with minutes modulo by DEC_60.
+    COMMENT  Equivalence Class None
+    COMMENT  
+    COMMENT  [hdudispfgrapp-CoolxBoxText-DB-LLR-003]
+    COMMENT  The function 'CoolxBoxText'does the following and build the string,
+    COMMENT  a) Set the string with return value of BinasByteFormatInfo with minutes,
+    COMMENT  FOURB+TWOW+UNSIGNED+NOLZB and time string as parameters.
+    COMMENT  b) Add the string with colon to get the timer look.
+    COMMENT  c) Add the string with return value of BinasByteFormatInfo with seconds, 
+    COMMENT  FOURB+TWOW+UNSIGNED+NOLZB and the string itself as parameters.
+    COMMENT  Equivalence Class 119
+    COMMENT
+    COMMENT  [hdudispfgrapp-CoolxBoxText-DB-LLR-004]
+    COMMENT  The function 'CoolxBoxText'calls 'TextDispString' with time string, 
+    COMMENT  Page_settings.acdt_axis.u16_x, Page_settings.acdt_axis.u16_y, E_SMALL_FONT, WHITE, TX_NO_FLASH,
+    COMMENT  V_NORMAL, ALIGN_CENTER as parameters and returns from the function ..
+    COMMENT  Equivalence Class 120
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+                    
+          --Set cool down variable
+            STRUCTURE Auto_cool_down_tmr.acdt_time,         init = 1,           ev = init
+                
+        
+        COMMENT INPUT/OUTPUT SECTION:
+                    
+             --Operator value
+            VAR Cool_timer,                                 init = 1001,        ev = 1000
+            
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[0],                                 init = 1,           ev = 0
+
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[0],                                init = 'A',         ev = init
+
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[1],                                 init = 1,           ev = 0
+
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[1],                                init = 'A',         ev = init
+            
+            --String to be displayed
+            VAR PTU_pc_string,                              init = 'A',         ev = init   
+            
+            --x axis of the element 
+            VAR Page_settings.acdt_axis.u16_x,              init = 1,           ev = init
+            
+            --y axis of the element
+            VAR Page_settings.acdt_axis.u16_y,              init = 1,           ev = init
+            
+        COMMENT OUTPUT SECTION:
+            
+            --Return value of the function under test  
+            VAR ret_CoolxBoxText,                           init = NULL,        ev = &Empty_str[0]
+            
+        -- Stub Calls:
+                                            
+        SIMUL
+           
+            --Converts a binary number to ascii
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[0]
+            
+            --Converts a binary number to ascii
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[1]
+            
+            --displays the string at specified location 
+            STUB TextDispString(Page_settings.acdt_axis.u16_x, Page_settings.acdt_axis.u16_y,
+            &                       E_SMALL_FONT, WHITE, TX_NO_FLASH, V_NORMAL, ALIGN_CENTER)
+        
+        END SIMUL       
+        -- Calling the Unit Under Test 
+        #ret_CoolxBoxText = CoolxBoxText();
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT  [hdudispfgrapp-CoolxBoxText-DB-LLR-001]
+    COMMENT  The function 'CoolxBoxText'does the following,
+    COMMENT  a) Set cool down variable to Auto_cool_down_tmr.acdt_time multiplied with DEC_1000.
+    COMMENT  b) If Cool_timer is less than cool down variable the function does nothing.
+    COMMENT  Equivalence Class 117
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+                    
+            --Set cool down variable
+            STRUCTURE Auto_cool_down_tmr.acdt_time,         init = 1,           ev = init
+                
+        
+        COMMENT INPUT/OUTPUT SECTION:
+                    
+             --Operator value
+            VAR Cool_timer,                                 init = 999,         ev = init
+            
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[0],                                 init = 1,           ev = init
+
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[0],                                init = 'A',         ev = init
+
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[1],                                 init = 59,          ev = init
+
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[1],                                init = ';',         ev = init
+            
+            --String to be displayed
+            VAR PTU_pc_string,                              init = 'A',         ev = init   
+            
+            --x axis of the element 
+            VAR Page_settings.acdt_axis.u16_x,              init = 1,           ev = init
+
+            --y axis of the element
+            VAR Page_settings.acdt_axis.u16_y,              init = 1,           ev = init
+            
+        COMMENT OUTPUT SECTION:
+            
+            --Return value of the function under test  
+            VAR ret_CoolxBoxText,                         init = NULL,         ev = &Empty_str[0]
+            
+        -- Stub Calls:
+                                            
+        SIMUL
+           
+            --Converts a binary number to ascii
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[0]
+            
+            --Converts a binary number to ascii
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[1]
+            
+            --displays the string at specified location 
+            STUB TextDispString(Page_settings.acdt_axis.u16_x, Page_settings.acdt_axis.u16_y,E_SMALL_FONT,
+            &                   WHITE, TX_NO_FLASH, V_NORMAL, ALIGN_CENTER)
+        
+        END SIMUL       
+        -- Calling the Unit Under Test 
+        #ret_CoolxBoxText = CoolxBoxText();
+        
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT  [hdudispfgrapp-CoolxBoxText-DB-LLR-001]
+    COMMENT  The function 'CoolxBoxText'does the following,
+    COMMENT  a) Set cool down variable to Auto_cool_down_tmr.acdt_time multiplied with DEC_1000.
+    COMMENT  b) If Cool_timer is equal to  cool down variable the function does nothing.
+    COMMENT  Equivalence Class 118
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Operator value
+            VAR Cool_timer,                                 init = 1000,        ev = init
+            
+            --Set cool down variable
+            STRUCTURE Auto_cool_down_tmr.acdt_time,         init = 1,           ev = init
+                
+        
+        COMMENT INPUT/OUTPUT SECTION:
+                    
+           --x axis of the element 
+            VAR Page_settings.acdt_axis.u16_x,              init = 1,           ev = init
+
+            --y axis of the element
+            VAR Page_settings.acdt_axis.u16_y,              init = 1,           ev = init
+            
+        COMMENT OUTPUT SECTION:
+            
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[0],                                 init = 1,           ev = init
+            
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[0],                                init = 'A',         ev = init
+            
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[1],                                 init = 1,           ev = init
+                        
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[1],                                init = ';',         ev = init
+            
+            --Return value of the function under test  
+            VAR ret_CoolxBoxText,                         init = NULL,         ev = &Empty_str[0]
+            
+            --String to be displayed
+            VAR PTU_pc_string,                              init = 'A',         ev = init   
+            
+        -- Stub Calls:
+                                            
+        SIMUL
+           
+            --Converts a binary number to ascii
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[0]
+            
+            --Converts a binary number to ascii
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[1]
+            
+            --displays the string at specified location 
+            STUB TextDispString(Page_settings.acdt_axis.u16_x, Page_settings.acdt_axis.u16_y,E_SMALL_FONT,
+            &                       WHITE, TX_NO_FLASH, V_NORMAL, ALIGN_CENTER)
+        
+        END SIMUL       
+        -- Calling the Unit Under Test 
+        #ret_CoolxBoxText = CoolxBoxText();
+        
+    END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- CoolxBoxText
+

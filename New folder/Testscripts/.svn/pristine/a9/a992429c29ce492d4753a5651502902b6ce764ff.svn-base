@@ -1,0 +1,284 @@
+HEADER hdudispftimer,Source Code Ver : 1.2  , TestScript Ver :1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Santosh Mithari
+--
+-- File Name           : hdudispftimer_3.ptu
+--
+-- Test Creation Date  : 30.10.2017  
+--
+-- Tested Functions    : TimerPreset
+-- 						 TimerInstall
+--						 TimerDriver
+--						 TimerReset
+--
+-- Version History     :
+--
+-- TEST-VERSION         TEST-DATE         TESTER NAME           MODIFICATIONS
+-- ------------        -----------        -----------           -------------
+--    1.1              30.10.2017         Santosh Mithari       Created the PTU file.
+--    1.2              10.11.2017         Santosh Mithari       Updated as per #PR100171
+--    1.3              14.11.2017         Santosh Mithari       Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+
+##include "hdudispfrterror.h" 
+##include "hdudispftimer.h"   
+##include "hdudispfucos.h"    
+##include "hdulibbasictypes.h"
+
+##define NUMBER_OF_TIMERS 200U 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	#volatile  T_TIMER *Timers[200U + 1];
+	#T_UINT32 U32_critical_sr;
+	#extern T_CHAR glob_file_name[];
+
+-- Declarations of the temporary variable
+	
+	 --Temporary array to pass address to Timers.
+	 #T_UINT8 PTU_temp[201];
+
+	--Temporary variable used in stub 'RterrWidget'
+	#T_UINT8 PTU_temp_1;
+	#char PTU_pc_file_in_1[200],PTU_pc_message_in_1[200];
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name         : 	Santosh Mithari 
+	COMMENT
+	COMMENT File Name           : 	hdudispftimer_3.ptu
+	COMMENT 
+	COMMENT Tested Functions    :  	TimerPreset	
+	COMMENT							TimerInstall
+	COMMENT 						TimerDriver
+	COMMENT 						TimerReset
+	COMMENT
+	COMMENT 
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT 
+	COMMENT Assumption(s): 
+	COMMENT None
+	COMMENT
+	COMMENT Constraint(s):
+	COMMENT 1.PTU has been split in to 3,due to static dependency. 
+	COMMENT
+	COMMENT 2.For loop in function 'TimerInstall'  can not be covered for 0 times since
+	COMMENT   it is controlled by macro NUMBER_OF_TIMERS.
+	COMMENT 
+	COMMENT 3.Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+	COMMENT warning #191-D: type qualifier is meaningless on cast type
+	COMMENT
+	COMMENT 4.Source file "hdudispftimer.c" is modified for testing purpose.  
+	COMMENT	  The global array 'glob_file_name' is declared to expect file path.
+	COMMENT
+	COMMENT Code Snippet-
+	COMMENT		/* Global array declared for testing purpose*/
+	COMMENT 	T_CHAR glob_file_name[] = __FILE__;
+	COMMENT
+	COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT
+	COMMENT Valid Class(es)
+	COMMENT Class 1
+	COMMENT In function 'TimerInstall','OS_ENTER_CRITICAL' is called.
+	COMMENT
+	COMMENT Class 2
+	COMMENT In function 'TimerInstall','OS_EXIT_CRITICAL' is called.
+	COMMENT 
+	COMMENT Class 3
+	COMMENT In function 'TimerInstall',First_call is not equal to ZERO
+	COMMENT
+	COMMENT Class 4
+	COMMENT In function 'TimerInstall',First_call is equal to ZERO
+	COMMENT
+	COMMENT Class 5
+	COMMENT In function 'TimerInstall',timer pointer is equal to ZERO
+	COMMENT
+	COMMENT Class 6
+	COMMENT In function 'TimerInstall',timer pointer is not equal to ZERO
+	COMMENT
+	COMMENT Class 7
+	COMMENT In function 'TimerInstall','RterrWidget' is called
+	COMMENT
+	COMMENT Class 8
+	COMMENT In function 'TimerDriver',First_call is not equal to ZERO
+	COMMENT
+	COMMENT Class 9
+	COMMENT In function 'TimerDriver',First_call is equal to ZERO
+	COMMENT
+	COMMENT Class 10
+	COMMENT In function 'TimerReset','OS_ENTER_CRITICAL' is called.
+	COMMENT
+	COMMENT Class 11
+	COMMENT In function 'TimerReset','OS_EXIT_CRITICAL' is called.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In function 'TimerPreset','OS_ENTER_CRITICAL' is called.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function 'TimerPreset','OS_EXIT_CRITICAL' is called.
+	COMMENT
+	COMMENT Invalid class(es)
+	COMMENT Class 14
+	COMMENT	In function 'TimerPreset', invalid reference is passed to timer.
+	COMMENT
+	COMMENT Class 15
+	COMMENT	In function 'TimerReset', invalid reference is passed to timer.
+	COMMENT
+	COMMENT Class 16
+	COMMENT	In function 'TimerInstall', invalid reference is passed to timer.
+	COMMENT
+	COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdudispftimer_c
+    
+    	--To verify the parameters pc_file, pc_message made as _no
+    	#void RterrWidget(T_CHAR _no *pc_file, T_INT32 s32_line_number, T_CHAR _no *pc_message)
+    	#{ 
+    	#  PTU_temp_1 = 0;
+    	#  while(pc_file[PTU_temp_1]!= ZERO)
+    	#  {
+    	#    PTU_pc_file_in_1[PTU_temp_1]= pc_file[PTU_temp_1];   //Verify pc_file path  
+    	#    PTU_temp_1 = PTU_temp_1+1;
+    	#  }
+    	#    PTU_pc_file_in_1[PTU_temp_1]= ZERO;
+    	#
+    	#  PTU_temp_1 = 0;
+    	#  while(pc_message[PTU_temp_1]!= ZERO)
+    	#  {
+    	#    PTU_pc_message_in_1[PTU_temp_1]= pc_message[PTU_temp_1];  //Verify pc_message
+    	#    PTU_temp_1 = PTU_temp_1+1;
+    	#  }
+    	#    PTU_pc_message_in_1[PTU_temp_1]= ZERO;
+    	#
+    	# }		
+			
+		
+		#void RestoreStatusReg(T_UINT32 _in U32_critical_sr); 
+		
+		#T_UINT32 SaveStatusReg(void); 
+		
+	END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+--No special things that have to be done on the host to run the test.
+
+--ELSE
+
+--No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+--Environment of the file hdudispftimer.c
+
+   ENVIRONMENT ENV_hdudispftimer_c
+   
+   ARRAY Timers,		init = { others => NIL },		ev = init
+   
+   END ENVIRONMENT -- ENV_hdudispftimer_c
+   
+USE ENV_hdudispftimer_c	
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service TimerDriver
+--------------------------------------------------------------------------------
+SERVICE TimerDriver
+SERVICE_TYPE extern
+   
+   --Temporary variable passed to 'TimerInstall'
+   #T_TIMER PTU_timer1;
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftimer-TimerDriver-DB-LLR-002]
+    COMMENT The function initialize the timer pointer to address of Timers and loop till the content
+    COMMENT of timer pointer is not equal to zero and increments the content of Timers by ONE.
+    COMMENT (for loop is covered for 0 times)
+    COMMENT Equivalence Class None.
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			VAR Timers[0],		init=&PTU_temp[0],		ev =&PTU_timer1			
+
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+			--stub called to disable interrupts using OS_ENTER_CRITICAL
+			STUB SaveStatusReg 1..2=>() U32_critical_sr
+			          
+			--stub called to enable the interrupt using OS_EXIT_CRITICAL.
+		 	STUB RestoreStatusReg 1..2=> (U32_critical_sr)
+    
+        END SIMUL
+
+		--The function TimerInstall is called to set value of 'First_call'
+		#TimerInstall(&PTU_timer1);
+		
+        -- Calling the Unit Under Test :
+     	#TimerDriver();
+     	
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- TimerDriver

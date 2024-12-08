@@ -1,0 +1,785 @@
+HEADER hdudispfcbit, Source Code Ver : 1.6, TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name         : Kavya M
+--
+-- File Name           : hducommfcbit.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : StackTest
+--                       CbitTask
+--                       CbitInit
+--						 CbitSignalTask
+--
+-- Version History    :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--   1.1                30.10.2017      Kavya M           Created the PTU file.
+--	 1.2				10.11.2017      Kavya M           Updated as per PR100171
+--	 1.3				14.11.2017      Kavya M           Updated as per PR100171
+--	 1.4				10.04.2018      Chaitra T N       Updated as per PR100201
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdudispfapp.h"       /* routines for all graph */
+##include "hdudispfcbit.h"      /* contains prototypes for CBIT test. */
+##include "hdudispfinit.h"      /* Contains functions prototypes of initialization function.*/
+##include "hdudispfoscpu.h"    /* OS function declarations */
+##include "hdudispfpoller.h"    /* Engine Information System poller. */
+##include "hdudispfresource.h"  /* provides central location to use On Chip Peripherals*/
+##include "hdudispfrterror.h"     /*provides stub routine for run time errors.*/
+##include "hdudispfucos.h"      /* uC/OS routines for the real-time kernel */
+##include "hdudispfa825comm.h"  /* Routines for arinc 825 communication */
+##include "hdudispfpara.h"      /* prototype for builds faults, message and system information */
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+  
+  	--global variable created to hold file name for testing purpose.
+    #extern T_CHAR glob_file_name[2000];
+    
+   	-- Array used to handle the parameter 'buffer' in static function "StackTest"	
+	#T_OS_STK A825_comm2_task_stk[1024]; 
+	#T_OS_STK A825_comm1_task_stk[1024]; 
+	#T_OS_STK Poller_task_stk[1024]; 
+	#T_OS_STK App_task_stk[1024]; 
+	#T_OS_STK Init_task_stk[1024]; 
+	#T_OS_STK Os_task_idle_stk[512]; 
+	#T_OS_STK Demo_task_stk[1024]; 
+	
+	--Array used to hold message words
+	 #T_UINT16   U16_message_words[MAX_MESSAGE_WORDS]; 
+	
+--Declarations of the temporary variables
+	
+	--Temporary variable created to expect the return value from the stub 'OsSemCreate'
+	 #T_OS_EVENT PTU_ret_OsSemCreate; 
+	 
+	-- Temporary variable created to handle the stub parameter 'param_event'
+	# T_OS_EVENT PTU_param_event; 
+	
+	--Temporary variables created for looping 
+	# T_UINT32 PTU_i =0,PTU_count=0;
+	
+	--Temporary variable created for the return type of OsSemCreate
+    #T_OS_EVENT PTU_Sem_cbit_task;
+    
+    -- Variable used  in function OsSemPend
+	#T_UBYTE PTU_error;
+	
+	--Variables created to handle the stub parameter 'p_event' in OsSemPend
+	#T_OS_EVENT PTU_p_event;
+	
+	--Variables created to handle the stub parameter 'p_event' in RterrWidget
+	#T_CHAR PTU_pc_file[200],PTU_pc_message[200];
+	
+	#T_UINT32 PTU4_index,PTU5_index;
+--------------------------------------------------------------------------------
+
+BEGIN
+    COMMENT Author Name      : Kavya M
+    COMMENT
+    COMMENT File Name        :  hducommfcbit.ptu
+    COMMENT Tested Functions    : 	StackTest
+    COMMENT                     	CbitTask
+    COMMENT                     	CbitInit
+    COMMENT					 		CbitSignalTask
+    COMMENT	
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT </AC>
+	COMMENT
+	COMMENT 1.Source file "hdudispfcbit.c" is modified for testing purpose. The while(TRUE)-
+	COMMENT 	is modified for terminating the infinite loop.
+	COMMENT Snippet of code is added in function 'CbitTask':
+	COMMENT T_UINT8 PTU_count =0 /*local variable declared for testing purpose*/
+	COMMENT while(TRUE)
+	COMMENT  {
+ 	COMMENT    .................
+ 	COMMENT   /*Modified for testing purpose to terminate infinite loop*/
+	COMMENT    PTU_count++;
+	COMMENT    if(PTU_count == 4)
+	COMMENT    {
+	COMMENT                                 break;
+ 	COMMENT   } 
+	COMMENT    else
+ 	COMMENT   {
+ 	COMMENT      ;                          /*nothing*/
+ 	COMMENT   }
+ 	COMMENT ....
+ 	COMMENT       PTU_count++;
+	COMMENT   }/*End of while loop*/
+	COMMENT
+	COMMENT Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition .
+	COMMENT
+	COMMENT 2. ‘for’ loop cannot be covered for ‘0’ and '1' times since it is controlled by  macro 'ZERO' and macro Parameters such as
+	COMMENT	 CBIT_TASK_STK_SIZE, OS_IDLE_TASK_STK_SIZE, INIT_TASK_STK_SIZE and so on as inputs in function ‘StackTest’.
+	COMMENT
+	COMMENT code snippet :
+	COMMENT  for(index = ZERO; index<=size; index++)
+	COMMENT    {
+	COMMENT       buffer--;
+	COMMENT    }
+	COMMENT 
+	COMMENT 3. ‘for’ loop cannot be covered for ‘0’ and '1' times since it is controlled by  macro 'ZERO' and 'TEN' in function ‘StackTest’.
+	COMMENT	for(index = ZERO; index<=TEN; index++)
+	COMMENT
+	COMMENT code snippet :
+	COMMENT	   {
+	COMMENT	      .......
+  	COMMENT    }
+  	COMMENT 
+	COMMENT 4. Source file 'hdudispfcbit.c' is modified for testing purpose .The while(1)-
+	COMMENT 	is modified for terminating the infinite loop.
+	COMMENT Snippet of code is added in function 'StackTest':
+	COMMENT T_UINT8 PTU_count =0 /*local variable declared for testing purpose*/
+	COMMENT while(1)
+	COMMENT  {
+ 	COMMENT    .................
+ 	COMMENT   /*Modified for testing purpose to terminate infinite loop*/
+	COMMENT    PTU_count++;
+	COMMENT    if(PTU_count == 4)
+	COMMENT    {
+	COMMENT                                 break;
+ 	COMMENT   } 
+	COMMENT    else
+ 	COMMENT   {
+ 	COMMENT                                /*nothing*/
+ 	COMMENT   }
+ 	COMMENT  PTU_count++;
+	COMMENT   }/*End of while loop*/
+	COMMENT 
+  	COMMENT  
+    COMMENT 
+    COMMENT 5.Modified source file 'hdudispfcbit.c' by declaring the global variable.
+    COMMENT    /*declaring the global variable created in the header file*/
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT    
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT 
+	COMMENT Valid Class(es)
+	COMMENT Class 1
+	COMMENT In 'CbitSignalTask' function , 16-bit tick counter is  equal to CBIT_TASK_TICKS
+	COMMENT
+	COMMENT Class 2
+	COMMENT In 'CbitSignalTask' function , 16-bit tick counter is  greater than CBIT_TASK_TICKS
+	COMMENT
+	COMMENT Class 3
+	COMMENT In 'CbitSignalTask' function , 16-bit tick counter is  Lesser than CBIT_TASK_TICKS
+	COMMENT
+	COMMENT Class 4
+	COMMENT In function 'CbitSignalTask' calls 'OsSemPost' 
+	COMMENT
+	COMMENT Class 5
+	COMMENT Function "CbitInit" calls the "OsSemCreate" and return value equal to NULL
+	COMMENT
+	COMMENT Class 6
+	COMMENT Function "CbitInit" calls the "OsSemCreate" and return value not equal to NULL
+    COMMENT 
+    COMMENT Class 7
+    COMMENT Function "CbitInit" calls RterrWidget . 
+	COMMENT
+	COMMENT Class 8
+	COMMENT Function "CbitInit", calls the "OsTaskCreate" and return value equal to OS_NO_ERR
+	COMMENT
+	COMMENT Class 9
+	COMMENT Function "CbitInit", calls the "OsTaskCreate" and return value not equal to OS_NO_ERR
+	COMMENT
+	COMMENT Class 10
+	COMMENT Function "CbitInit" calls the STATIC function "CbitTask"
+	COMMENT	
+	COMMENT Class 11
+	COMMENT Function "CbitTask" calls the function "OsSemPend" 
+	COMMENT
+	COMMENT Class 12
+	COMMENT Function "CbitTask" calls the static function "StackTest"	
+	COMMENT
+	COMMENT Class 13
+	COMMENT In Function "StackTest", buffer content is equal to 'STK_VAL'
+	COMMENT
+	COMMENT Class 14
+	COMMENT In Function "StackTest", buffer content is not equal to 'STK_VAL'
+	COMMENT
+	COMMENT Invalid Class(es)
+	COMMENT
+	COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+  
+	DEFINE STUB hdudispfcbit_c
+
+	-- Parameter 'task' is made aa _no since function pointer to the task is passed as a parameter
+	-- hence verified explicitly
+		#T_UBYTE OsTaskCreate(void _no ( *  task) (void* pd), void _in * pdata, void * _in pstk, T_UBYTE _in prio)
+		#{
+		#( *  task)(pdata);  
+		#}
+
+	--Parameter 'pc_file' and 'pc_message' made as _no because they are handled explicitly.
+		#void RterrWidget(T_CHAR * _no pc_file, T_INT32  _in s32_line_number, T_CHAR * _no pc_message)
+                #{
+                #             for(PTU5_index = 0; PTU5_index<100;   PTU5_index++)
+                #             {
+                #                             PTU_pc_file[PTU5_index]=*(T_CHAR *)pc_file;
+                #                             pc_file++;
+                #             }
+                #             for(PTU4_index = 0; PTU4_index<24;     PTU4_index++)
+                #             {
+                #                             PTU_pc_message[PTU4_index]=*(T_CHAR *)pc_message;
+                #                             pc_message++;
+                #             }
+                #}
+
+
+		#T_OS_EVENT* OsSemCreate(T_UWORD  _in count); 
+
+	-- Parameter 'param_event' is made aa _no since function pointer to the task is passed as a parameter
+	-- hence verified explicitly
+		#T_UBYTE OsSemPost(T_OS_EVENT  _no *param_event)
+		#{
+		#PTU_param_event =*param_event;
+		#}
+
+	
+	-- Parameter 'error' is made aa _no since local variable address is passed as a parameter
+		#void OsSemPend(T_OS_EVENT  _in *p_event, T_UWORD  _in time_out, T_UBYTE  _no *error) 
+		#{
+		#PTU_error=*error;
+		#}
+
+	END DEFINE
+
+ELSE_SIMUL
+ 
+ --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file 
+ENVIRONMENT ENV_hdudispfcbit_c
+  ARRAY Cbit_task_stack,		init = { others => 0 },		ev = init
+  VAR Sem_cbit_task,		init = &PTU_Sem_cbit_task,		ev = init
+END ENVIRONMENT -- ENV_hdudispfcbit_c
+USE ENV_hdudispfcbit_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CbitInit
+--------------------------------------------------------------------------------
+SERVICE CbitInit
+SERVICE_TYPE extern
+
+ TEST 1
+ FAMILY nominal
+ 
+COMMENT Test Description
+COMMENT <TD>
+COMMENT [hdudispfcbit-CbitInit-DB-LLR-001]
+COMMENT The function calls 'OsSemCreate' with ZERO as parameter 
+COMMENT Eqvivalence Class 5
+COMMENT
+COMMENT [hdudispfcbit-CbitInit-DB-LLR-002]
+COMMENT Function calls RterrWidget with parameter (__FILE__ , __LINE__ and "OS KERNEL ERROR") 
+COMMENT Eqvivalence Class 7
+COMMENT
+COMMENT [hdudispfcbit-CbitInit-DB-LLR-003]
+COMMENT Function calls function 'OsTaskCreate' to create the Task for CBIT by passing following arguments
+COMMENT and does nothing since return value of "OsTaskCreate" is equal to OS_NO_ERR
+COMMENT  - Pointer to the CbitTask's address .
+COMMENT  - NULL pointer passed as argument to the CbitTask.
+COMMENT  - CbitTask's top-of-stack i.e Cbit_task_Stack[CBIT_TASK_STK_SIZE].
+COMMENT  - Task priority as CBIT_TASK_PRIO
+COMMENT  Equivalence Class 8,10
+COMMENT
+COMMENT [hdudispfcbit-CbitTask-DB-LLR-001]
+COMMENT The function shall loop continuously to perform following
+COMMENT 1)	call 'OsSemPend' for waiting on a semaphore with parameter Sem_cbit_task as task, 
+COMMENT ZERO as wait time, and reference to error status.
+COMMENT 2)	call 'StackTest' with address of top of the stack Cbit_task_stack and length of
+COMMENT CbitTask stack CBIT_TASK_STK_SIZE as parameters.
+COMMENT 3)	Call 'StackTest' with address of top of the stack Os_task_idle_stk and length
+COMMENT of IdleTask stack OS_IDLE_TASK_STK_SIZE as parameters.
+COMMENT 4)	Call 'StackTest' with address of top of the stack Init_task_stk and length of
+COMMENT InitTask stack INIT_TASK_STK_SIZE as parameters.
+COMMENT 5)	Call 'StackTest' with address of top of the stack App_task_stk and length of 
+COMMENT AppTask stack APP_TASK_STK_SIZE as parameters.
+COMMENT 6)	Call 'StackTest' with address of top of the stack Poller_task_stk and length
+COMMENT of PollerTask stack POLLER_TASK_STK_SIZE as parameters.
+COMMENT 7)	Call 'StackTest' with address of top of the stack A825_comm1_task_stk and 
+COMMENT length of A825comm1Task stack A825COMM_TASK_STK_SIZE as parameters.
+COMMENT 8) Call 'StackTest' with address of top of the stack A825_comm2_task_stk and length
+COMMENT of A825comm2Task stack A825COMM_TASK_STK_SIZE as parameters.
+COMMENT 9) Call 'StackTest' with address of top of the stack Demo_task_stk and length of 
+COMMENT    Demotask stack DEMO_TASK_STK_SIZE as parameters.
+COMMENT  Equivalence Class 11 and 12
+COMMENT 
+COMMENT [hdudispfcbit-StackTest-DB-LLR-001]
+COMMENT The function does the stack overflow condition check for the last 20 percent
+COMMENT of the stack by performing the following
+COMMENT   1.Calculate the Stack test start index as  GET_80PERC_STACK with parameter length.
+COMMENT   2.Read eleven contiguous memory locations for the pattern STK_VAL from GET_80PERC_STACK index set
+COMMENT 7th bit of U16_message_words with index zero to 32768 
+COMMENT When buffer content is other than STK_VAL .does nothing.
+COMMENT	when pattern STK_VAL is matching with the pattern present in the stack location.
+COMMENT Equivalence Class 13
+COMMENT
+COMMENT </TD>
+
+ELEMENT
+
+ COMMENT INPUT SECTION :
+ 
+		--Array initialization
+	ARRAY Cbit_task_stack,		init = { others =>(T_UINT32)0xDEADDEADU}, ev=init
+
+	ARRAY Os_task_idle_stk,init={others=>(T_UINT32)0xDEADDEADU}, ev=init
+
+	ARRAY Init_task_stk,init={others=>(T_UINT32)0xDEADDEADU},ev=init
+
+	ARRAY App_task_stk,init={others=>(T_UINT32)0xDEADDEADU},ev=init
+
+	ARRAY Poller_task_stk,init={others=>(T_UINT32)0xDEADDEADU},ev=init
+
+	ARRAY A825_comm1_task_stk,init={others=>(T_UINT32)0xDEADDEADU},ev=init
+
+	ARRAY A825_comm2_task_stk,init={others=>(T_UINT32)0xDEADDEADU},ev=init
+
+  	ARRAY Demo_task_stk,		init = {others => (T_UINT32)0xDEADDEADU},	ev = init
+   
+ COMMENT OUTPUT SECTION :
+ 
+	  -- 'PTU_error' holds the local variable 'u8_err' value
+	VAR PTU_error , init= 1 , ev = ZERO
+          
+COMMENT INPUT/OUTPUT SECTION :
+
+		--Holds the value of file name.
+		ARRAY PTU_pc_file,       init="AA",                                              ev= &glob_file_name[0]
+		
+		--Holds the value of message.
+        ARRAY PTU_pc_message,    init= "AAA",                                            ev="OS KERNEL ERROR"
+        --Holds the value of cbit task.
+	VAR Sem_cbit_task,			init = &PTU_Sem_cbit_task,								ev = NULL
+	-- Stub Calls :
+   SIMUL
+  
+            -- Creates and initializes the Semaphore
+            STUB OsSemCreate(ZERO)(T_OS_EVENT *)NULL
+    
+            -- Creates OS Task
+            STUB OsTaskCreate(NULL,&Cbit_task_stack[CBIT_TASK_STK_SIZE],CBIT_TASK_PRIO)OS_NO_ERR
+      
+            -- Waits on a Semaphore
+            STUB OsSemPend 1..5=> (NULL,0)
+      
+      		STUB RterrWidget(343)
+      		
+   END SIMUL
+  
+   -- Calling Unit Under Test
+   #CbitInit();
+ 
+END ELEMENT
+
+ END TEST -- TEST 1
+    
+    
+    TEST 2
+     FAMILY nominal
+     
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcbit-CbitInit-DB-LLR-001]
+    COMMENT The function calls 'OsSemCreate' with  ZERO as parameter 
+    COMMENT Eqvivalence Class 5
+    COMMENT
+    COMMENT [hdudispfcbit-CbitInit-DB-LLR-002]
+    COMMENT The function does nothing since the return value of 'OsSemCreate' is Not Null
+    COMMENT Eqvivalence Class 7,6
+    COMMENT
+    COMMENT [hdudispfcbit-CbitInit-DB-LLR-003]
+    COMMENT Function 'OsTaskCreate' is called to create the Task for CBIT by passing following arguments
+    COMMENT and does nothing since return value of "OsTaskCreate" is not equal to OS_NO_ERR
+    COMMENT  - Pointer to the CbitTask's address .
+    COMMENT  - NULL pointer passed as argument to the CbitTask.
+    COMMENT  - CbitTask's top-of-stack i.e Cbit_task_Stack[CBIT_TASK_STK_SIZE].
+    COMMENT  - Task priority as CBIT_TASK_PRIO
+    COMMENT  Equivalence Class 9 and 10
+    COMMENT
+    COMMENT [hdudispfcbit-CbitTask-DB-LLR-001]
+    COMMENT The function shall loop continuously to perform following
+    COMMENT 1)	call 'OsSemPend' for waiting on a semaphore with parameter Sem_cbit_task as task,
+    COMMENT     ZERO as wait time, and reference to error status.
+    COMMENT 2)	call 'StackTest' with address of top of the stack Cbit_task_stack and length of
+    COMMENT     CbitTask stack CBIT_TASK_STK_SIZE as parameters.
+    COMMENT 3)	Call 'StackTest' with address of top of the stack Os_task_idle_stk and length 
+    COMMENT     of IdleTask stack OS_IDLE_TASK_STK_SIZE as parameters.
+    COMMENT 4)	Call 'StackTest' with address of top of the stack Init_task_stk and length of 
+    COMMENT     InitTask stack INIT_TASK_STK_SIZE as parameters.
+    COMMENT 5)	Call 'StackTest' with address of top of the stack App_task_stk and length of
+    COMMENT     AppTask stack APP_TASK_STK_SIZE as parameters.
+    COMMENT 6)	Call 'StackTest' with address of top of the stack Poller_task_stk and length of
+    COMMENT     PollerTask stack POLLER_TASK_STK_SIZE as parameters.
+    COMMENT 7)	Call 'StackTest' with address of top of the stack A825_comm1_task_stk and length
+    COMMENT     of A825comm1Task stack A825COMM_TASK_STK_SIZE as parameters.
+    COMMENT 8) Call 'StackTest' with address of top of the stack A825_comm2_task_stk and length 
+    COMMENT     of A825comm2Task stack A825COMM_TASK_STK_SIZE as parameters.
+    COMMENT 9) Calls 'StackTest' with address of top of the stack Demo_task_stk and length of 
+    COMMENT    Demotask stack DEMO_TASK_STK_SIZE as parameters.
+    COMMENT  Equivalence Class 11 and 12
+    COMMENT 
+    COMMENT The function does the stack overflow condition check for
+    COMMENT     the last 20 percent of the stack by performing the following
+    COMMENT   1.Calculate the Stack test start index as  GET_80PERC_STACK with parameter length.
+    COMMENT   2.Read eleven contiguous memory locations for the pattern STK_VAL 
+    COMMENT     from GET_80PERC_STACK index set 7th bit of U16_message_words with index zero to 32768 
+    COMMENT When buffer content is other than STK_VAL .does nothing.
+    COMMENT	when pattern STK_VAL is  matching with the pattern present in the stack location.
+    COMMENT Equivalence Class 13
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+    
+     COMMENT INPUT SECTION :
+     
+			--Array initialization
+		ARRAY Cbit_task_stack,			init = { others =>(T_UINT32)0xDEADDEADU}, 	ev=init
+
+		ARRAY Os_task_idle_stk,			init={others=>(T_UINT32)0xDEADDEADU}, 		ev=init
+
+		ARRAY Init_task_stk,			init={others=>(T_UINT32)0xDEADDEADU},		ev=init
+
+		ARRAY App_task_stk,				init={others=>(T_UINT32)0xDEADDEADU},		ev=init
+
+		ARRAY Poller_task_stk,			init={others=>(T_UINT32)0xDEADDEADU},		ev=init
+
+		ARRAY A825_comm1_task_stk,		init={others=>(T_UINT32)0xDEADDEADU},		ev=init
+
+		ARRAY A825_comm2_task_stk,		init={others=>(T_UINT32)0xDEADDEADU},		ev=init
+
+	  	ARRAY Demo_task_stk,			init = {others => (T_UINT32)0xDEADDEADU},	ev = init
+
+     COMMENT OUTPUT SECTION :
+     
+		  -- 'PTU_error' holds the local variable 'u8_err' value
+		VAR PTU_error , 				init= 1 , 									ev = ZERO
+              
+    COMMENT INPUT/OUTPUT SECTION :
+			
+			
+		--Holds the value of file name.
+		ARRAY PTU_pc_file,       init="AA",                                              ev=glob_file_name
+		--Holds the value of message.
+		ARRAY PTU_pc_message,    init= "AAA",                                            ev="OS KERNEL ERROR"
+		   -- 'Sem_cbit_task' holds return value of 'OsSemCreate'
+
+		 VAR Sem_cbit_task,				init = &PTU_Sem_cbit_task,					ev = &PTU_ret_OsSemCreate
+		  -- Stub Calls :
+       SIMUL
+      
+                -- Creates and initializes the Semaphore
+                STUB OsSemCreate(ZERO)(T_OS_EVENT *)&PTU_ret_OsSemCreate
+        
+                -- Creates OS Task
+                STUB OsTaskCreate(NULL,&Cbit_task_stack[CBIT_TASK_STK_SIZE],CBIT_TASK_PRIO)OS_PRIO_EXIST
+          
+                -- Waits on a Semaphore
+                STUB OsSemPend 1..5=> (&PTU_ret_OsSemCreate,ZERO)
+          
+          		STUB RterrWidget(355)
+          
+       END SIMUL
+      
+       -- Calling Unit Under Test
+       #CbitInit();
+     
+    END ELEMENT
+    
+ END TEST -- TEST 2
+    
+    TEST 3
+         FAMILY nominal
+         
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfcbit-CbitInit-DB-LLR-001]
+        COMMENT The function calls 'OsSemCreate' with ZERO as parameter 
+        COMMENT Eqvivalence Class 5
+        COMMENT
+        COMMENT [hdudispfcbit-CbitInit-DB-LLR-002]
+        COMMENT Function calls RterrWidget with parameter (__FILE__ , __LINE__ and "OS KERNEL ERROR") 
+        COMMENT Eqvivalence Class 7,6
+        COMMENT
+        COMMENT [hdudispfcbit-CbitInit-DB-LLR-003]
+        COMMENT Function 'OsTaskCreate' is called to create the Task for CBIT by passing following arguments
+        COMMENT and does nothing since return value of "OsTaskCreate" is equal not to OS_NO_ERR
+        COMMENT  - Pointer to the CbitTask's address .
+        COMMENT  - NULL pointer passed as argument to the CbitTask.
+        COMMENT  - CbitTask's top-of-stack i.e Cbit_task_Stack[CBIT_TASK_STK_SIZE].
+        COMMENT  - Task priority as CBIT_TASK_PRIO
+        COMMENT  Equivalence Class 9 and 10
+        COMMENT
+        COMMENT [hdudispfcbit-CbitTask-DB-LLR-001]
+        COMMENT The function shall loop continuously to perform following
+        COMMENT 1)	call 'OsSemPend' for waiting on a semaphore with parameter Sem_cbit_task as task,
+        COMMENT        ZERO as wait time, and reference to error status.
+        COMMENT 2)	call 'StackTest' with address of top of the stack Cbit_task_stack and length of
+        COMMENT        CbitTask stack CBIT_TASK_STK_SIZE as parameters.
+        COMMENT 3)	Call 'StackTest' with address of top of the stack Os_task_idle_stk and length of
+        COMMENT        IdleTask stack OS_IDLE_TASK_STK_SIZE as parameters.
+        COMMENT 4)	Call 'StackTest' with address of top of the stack Init_task_stk and length of 
+        COMMENT        InitTask stack INIT_TASK_STK_SIZE as parameters.
+        COMMENT 5)	Call 'StackTest' with address of top of the stack App_task_stk and length of
+        COMMENT        AppTask stack APP_TASK_STK_SIZE as parameters.
+        COMMENT 6)	Call 'StackTest' with address of top of the stack Poller_task_stk and length of
+        COMMENT        PollerTask stack POLLER_TASK_STK_SIZE as parameters.
+        COMMENT 7)	Call 'StackTest' with address of top of the stack A825_comm1_task_stk and length 
+        COMMENT        of A825comm1Task stack A825COMM_TASK_STK_SIZE as parameters.
+        COMMENT 8) Call 'StackTest' with address of top of the stack A825_comm2_task_stk and length 
+        COMMENT        of A825comm2Task stack A825COMM_TASK_STK_SIZE as parameters.
+        COMMENT 9) Call 'StackTest' with address of top of the stack Demo_task_stk and length of Demotask
+        COMMENT    stack DEMO_TASK_STK_SIZE as parameters.
+        COMMENT  Equivalence Class 11 and 12
+        COMMENT 
+        COMMENT [hdudispfcbit-StackTest-DB-LLR-001]
+        COMMENT The function does the stack overflow condition check for the last 20
+        COMMENT  percent of the stack by performing the following
+        COMMENT   1.Calculate the Stack test start index as 
+        COMMENT        GET_80PERC_STACK with parameter length.
+        COMMENT   2.Read eleven contiguous memory locations for the
+        COMMENT pattern STK_VAL from GET_80PERC_STACK index set 7th bit of U16_message_words with index zero to 32768 
+        COMMENT When buffer content is other than STK_VAL .does nothing.
+        COMMENT	when pattern STK_VAL is not matching with the pattern present in the stack location.
+        COMMENT Equivalence Class 14
+        COMMENT
+        COMMENT </TD>
+        
+        ELEMENT
+        
+         COMMENT INPUT SECTION :
+         
+        	--Array initialization
+			ARRAY Cbit_task_stack,		init = { others =>(T_UINT32)0x0}, ev=init
+
+			ARRAY Os_task_idle_stk,init={others=>(T_UINT32)0x0}, ev=init
+
+			ARRAY Init_task_stk,init={others=>(T_UINT32)0x0},ev=init
+
+			ARRAY App_task_stk,init={others=>(T_UINT32)0x0},ev=init
+
+			ARRAY Poller_task_stk,init={others=>(T_UINT32)0x0},ev=init
+
+			ARRAY A825_comm1_task_stk,init={others=>(T_UINT32)0x0},ev=init
+
+			ARRAY A825_comm2_task_stk,init={others=>(T_UINT32)0x0},ev=init
+
+		  	ARRAY Demo_task_stk,	init = {others => (T_UINT32)0x0},	ev = init
+
+			   -- Variable initialized before usage        
+			VAR PTU_ret_OsSemCreate , init = 10 , ev = init
+          
+           
+         COMMENT OUTPUT SECTION :
+
+			  -- 'PTU_error' holds the local variable 'u8_err' value
+			VAR PTU_error , init= 1 , ev = ZERO
+
+        COMMENT INPUT/OUTPUT SECTION :
+    
+			--Holds the value of file name.
+			VAR PTU_pc_file,       init="AA",                                              ev=glob_file_name
+			--Holds the value of message.
+			VAR PTU_pc_message,    init= "AAA",                                            ev="OS KERNEL ERROR"
+			
+			VAR U16_message_words[1] , init =0 , 											ev= 1
+			  
+			 VAR Sem_cbit_task,		init = &PTU_Sem_cbit_task,									ev = &PTU_ret_OsSemCreate
+			 
+			 -- Stub Calls :
+           SIMUL
+          
+                    -- Creates and initializes the Semaphore
+                    STUB OsSemCreate(ZERO)(T_OS_EVENT *)&PTU_ret_OsSemCreate
+            
+                    -- Creates OS Task
+                    STUB OsTaskCreate(NULL,&Cbit_task_stack[CBIT_TASK_STK_SIZE],CBIT_TASK_PRIO)OS_PRIO_EXIST
+              
+                    -- Waits on a Semaphore
+                    STUB OsSemPend 1..5=> (&PTU_ret_OsSemCreate,ZERO)
+              
+					STUB RterrWidget(355)
+              
+           END SIMUL
+          
+			   -- Calling Unit Under Test
+			   #CbitInit();
+         
+        END ELEMENT
+        
+ END TEST -- TEST 3
+
+END SERVICE -- CbitInit
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CbitSignalTask
+--------------------------------------------------------------------------------
+SERVICE CbitSignalTask
+SERVICE_TYPE extern
+
+
+    TEST 1
+    FAMILY nominal
+ 	COMMENT [hdudispfcbit-CbitSignalTask-DB-LLR-001]
+ 	COMMENT The function sets the counter to zero and calls 'OsSemPost' with 'Sem_cbit_task' as a parameter.
+ 	COMMENT Eqvivalence Class 4,1
+ 	
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    		
+    		--None
+    		
+    	COMMENT OUTPUT SECTION:
+    	
+    		--None
+    		
+    	COMMENT INPUT / OUTPUT SECTION:
+    	
+    		--None
+    		
+   	 SIMUL 
+   	 
+		--Calling OsSemPost as stub 
+		STUB OsSemPost()OS_NO_ERR
+		
+   	 END SIMUL
+   	 	   	 
+		--to verify if condition for equal to condition 
+		#for (PTU_i=0;PTU_i<=600;PTU_i++)
+		#CbitSignalTask();
+		
+--calling unit under test
+#CbitSignalTask();
+	
+	END ELEMENT
+
+	END TEST -- TEST 1
+
+	TEST 2
+	FAMILY nominal
+	COMMENT [hdudispfcbit-CbitSignalTask-DB-LLR-001]
+	COMMENT The function sets the counter to zero and calls 'OsSemPost' with 'Sem_cbit_task' as a parameter.
+	COMMENT Eqvivalence Class 4,2	
+	
+	ELEMENT
+		
+			COMMENT INPUT SECTION:
+
+				--None
+
+			COMMENT OUTPUT SECTION:
+
+				--None
+
+			COMMENT INPUT / OUTPUT SECTION:
+
+				--None
+		SIMUL 
+		
+			STUB OsSemPost()OS_NO_ERR
+			
+ 		END SIMUL
+ 		
+			--to verify if condition for greater than to condition 
+			#for (PTU_i=0;PTU_i<=650;PTU_i++)
+			#{
+			#CbitSignalTask();
+			#}
+
+		--calling unit under test
+		#CbitSignalTask();
+			
+		END ELEMENT
+
+	END TEST -- TEST 2
+
+	TEST 3
+	FAMILY nominal
+	COMMENT [hdudispfcbit-CbitSignalTask-DB-LLR-001]
+	COMMENT The function sets the counter to zero and calls 'OsSemPost' with 'Sem_cbit_task' as a parameter.
+	COMMENT Eqvivalence Class 4,2,3
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT / OUTPUT SECTION:
+
+			--None
+
+	SIMUL 
+			--None
+	END SIMUL
+	
+			--calling unit under test
+			#CbitSignalTask();
+	END ELEMENT
+	
+	END TEST -- TEST 3
+	
+END SERVICE -- CbitSignalTask
+
+
+

@@ -1,0 +1,374 @@
+HEADER hducommflog, Source Code Ver : 1.4 , TestScript Ver : 1.2
+--------------------------------------------------------------------------------
+-- Author Name         :    Hemalatha S
+--
+-- File Name           :    hducommflog_2.ptu
+--
+-- Test Creation Date  :    04.10.2018
+--
+-- Tested Functions    :    LogInit
+--                          LogTask
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+-- ------------        ---------       -----------        -------------
+--     1.1             04.10.2018      Hemalatha S      Created the PTU file.
+--     1.2             27.04.2021      Vignesh Sunil      Updated as per #PR 100338
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommflog.h"           /* Log Task declarations */
+##include "hducommfapp.h"          /* Appdata constants and structure declarations */
+##include "hducommfhw.h"           /* HW Pins definition */
+##include "hducommfoscfg.h"        /* OS configuration declarations */
+##include "hducommftbase.h"        /*timebase routines for signaling semaphores*/
+##include "hducommfucos.h"         /*uC/OS routines for the real-time kernel*/
+##include "hducommfwdog.h"         /*Watch dog Timer routines*/
+##include "hdulibbasicfunc.h"      /* Standard basic data type definitions */
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+   
+    #T_FAULT_XRAM_LOG App_temp_ft_log; 
+    #T_FAULT_XRAM_LOG *Fault_xram_log; 
+    #T_BOOL App_update_ft_log; 
+   
+    --local variable
+    #T_XRAM_LOG PTU_Xram_log;   
+    #T_UINT8 Revno_id_app[ 16U ]; 
+    #T_XRAM_LOG App_temp_log;
+    #T_XRAM_LOG *Xram_log = &PTU_Xram_log;
+    #T_BOOL App_update_log;
+    
+-- Declarations of the temporary variables
+
+   -- Temporary variables used to verify return value of stub "OsSemCreate"  
+    #T_OS_EVENT *PTU_ret_OsSemCreate;
+    
+    --Temporary variables created to access the address
+    #T_UINT8 PTU_Revno_maint_id[16];
+    #T_UINT8 PTU_Revno_boot_id[16]; 
+
+    -- Temporary variable created to verify "TbaseTaskSignaling" parameter
+    #T_OS_EVENT *PTU_ps_semaphore;
+    
+    -- Temporary variable created to verify parameter "pevent" in function "OsSemPend"
+    #T_OS_EVENT *PTU_p_event;
+    # T_UINT8 PTU_error;
+    #T_UINT8 *Revno_boot_id = (T_UINT8 *)&PTU_Revno_boot_id[0];
+    
+    #T_UINT8 *Revno_maint_id = (T_UINT8 *)&PTU_Revno_maint_id[0]; 
+    --Variable created to verify function HwMemcpy
+    #T_UINT8 PTU_HwMemcpy[4900];
+    #T_UINT8 *PTU_ptr_dest;
+    #T_UINT8 *PTU_ptr_src;  
+    #T_UINT32 PTU_index = 0;
+    #T_UINT32 flag;
+    #T_UINT8 *PTU_ptr_dest_1;
+    #T_UINT8 *PTU_ptr_src_1;	
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Hemalatha S
+    COMMENT
+    COMMENT File Name        : hducommflog_2.ptu
+    COMMENT
+    COMMENT Tested Functions : LogInit
+    COMMENT                    LogTask
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT 1. In Source file "hducommflog.c", Snippet of code is added in first while loop of function 'LogTask'
+    COMMENT to terminate the infinite loop
+    COMMENT
+    COMMENT T_UINT16 PTU_count = 0;/*local variable declared for testing purpose*/
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT  .......
+    COMMENT 
+    COMMENT  /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT  PTU_count++;
+    COMMENT  if(PTU_count == 4)
+    COMMENT  {
+    COMMENT    break;
+    COMMENT  } 
+    COMMENT    else
+    COMMENT  {
+    COMMENT    ;/*Do nothing*/
+    COMMENT  }
+    COMMENT }/*End of while loop*/
+    COMMENT Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition.
+    COMMENT
+    COMMENT 2. PTU has been split into 2 parts due to static dependency.
+    COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function 'LogTask', calls the function 'OsSemPend'.
+    COMMENT 
+    COMMENT Class 2
+    COMMENT Function 'LogTask', calls the function 'WdogKickWatchDog'.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT Function 'LogTask', calls the function 'HwMemcpy'.
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In function 'LogTask', App_update_log is TRUE.
+    COMMENT 
+    COMMENT Class 5
+    COMMENT In function 'LogTask', App_update_log is FALSE.
+    COMMENT 
+    COMMENT Class 6
+    COMMENT Function 'LogInit', calls the function 'TbaseTaskSignaling'.
+    COMMENT 
+    COMMENT Class 7
+    COMMENT Function 'LogInit', calls the function 'OsTaskCreate'.
+    COMMENT 
+    COMMENT Class 8
+    COMMENT Function 'LogInit', calls the function 'LogTask'.
+    COMMENT 
+    COMMENT Class 9
+    COMMENT Function 'LogInit', calls the function 'OsSemCreate'.
+    COMMENT 
+    COMMENT Class 10
+    COMMENT In function 'LogTask', App_update_ft_log is TRUE.
+    COMMENT 
+    COMMENT Class 11
+    COMMENT In function 'LogTask', App_update_ft_log is FALSE.
+    COMMENT 
+    COMMENT Class 12
+    COMMENT In function 'LogTask', App_update_log is TRUE.
+    COMMENT 
+    COMMENT Class 13
+    COMMENT In function 'LogTask', App_update_log is FALSE.	
+    COMMENT 
+    COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hducommflog_c
+    
+        --Parameter '*p_dest','*p_src' is made _no since Local variable address can not be expected.        
+        #void HwMemcpy(void  _no *p_dest, void _no *p_src, T_UINT32  _in count)
+        #{
+        #if(flag==0)
+        #{
+        #PTU_ptr_dest=(T_UINT8 *)p_dest;
+        #PTU_ptr_src=(T_UINT8 *)p_src;
+        #flag++;
+        #}
+        #else
+        #{
+        #PTU_ptr_dest_1=(T_UINT8 *)p_dest;
+        #PTU_ptr_src_1=(T_UINT8 *)p_src;
+        #}		
+        #}		
+        
+        #void WdogKickWatchDog(void);
+
+        --Parameters 'pevent' and 'error' are made as _no since,local address of the variable cannot be expected.
+        #void OsSemPend(T_OS_EVENT _no *pevent, T_UWORD _in timeout, T_UINT8 _no *error)
+        #{
+        # PTU_p_event = pevent;
+        # PTU_error = *error;
+        #}
+    
+        --Parameter 'task' is made as _no since,local address of the variable cannot be expected.
+        #T_UINT8 OsTaskCreate(void _no (*ptask)(void* dptr), void _in *p_data, void _in *pt_os, T_UINT8 _in u8_prio)
+        #{
+        #   (*ptask)(p_data);
+        #}
+    
+        #T_OS_EVENT* OsSemCreate(T_UWORD _in value);
+
+        --Parameter 'ps_semaphore' is made as _no since,local address of the variable cannot be expected.
+        #void TbaseTaskSignaling(T_UINT16 _in u16_task_ticks, T_OS_EVENT _no *ps_semaphore)
+        #{
+        # PTU_ps_semaphore = ps_semaphore;
+        #}
+
+    END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+    -- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+    -- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommflog.c
+
+ENVIRONMENT ENV_hducommflog_c
+
+  ARRAY L_log_task_stk,     init = { others => 0 },     ev = init
+
+END ENVIRONMENT -- ENV_hducommflog_c
+
+USE ENV_hducommflog_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service LogInit
+--------------------------------------------------------------------------------
+SERVICE LogInit
+SERVICE_TYPE extern
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommflog-LogInit-CB-LLR-001]
+    COMMENT The function installs task signalling parameters for the log task by calling the function
+    COMMENT 'TbaseTaskSignaling' with parameters
+    COMMENT a) task ticks LOG_TASK_TICKS and
+    COMMENT b) Return value of function 'OsSemCreate' with parameter DEC_ZERO.
+    COMMENT Equivalence Class 6,9
+    COMMENT
+    COMMENT [hducommflog-LogInit-CB-LLR-002]
+    COMMENT The function creates the Log Task by calling 'OsTaskCreate' with parameters
+    COMMENT a) reference to function 'LogTask',
+    COMMENT b) HW_NULL as task entry point,
+    COMMENT c) Reference to top of stack of log task stack
+    COMMENT d) LOG_TASK_PRIO as task priority.
+    COMMENT Equivalence Class 7,8
+    COMMENT
+    COMMENT [hducommflog-LogTask-CB-LLR-001]
+    COMMENT The function loop forever and in each loop does the following:
+    COMMENT a) pend on semaphore by calling OsSemPend with the following parameters
+    COMMENT     - Allocated semaphore for the task sem log task
+    COMMENT     - pend timeout value as DEC_ZERO
+    COMMENT     - Address of local error code.
+    COMMENT b) call WdogKickWatchDog to reload watchdog counter.
+    COMMENT c) In first iteration :
+    COMMENT     Copies App_temp_log to Xram_log by calling 'HwMemcpy' with parameters(Xram_log, reference of 
+    COMMENT     App_temp_log and sizeof(T_XRAM_LOG) and sets App_update_log to FALSE when App_update_log is TRUE.
+    COMMENT    In rest three iterations :
+    COMMENT     Does nothing.
+    COMMENT Equivalence Class 1,2,3,4,5
+    COMMENT
+    COMMENT [hducommflog-LogTask-CB-LLR-002]
+    COMMENT The function loop and in each loop do the following:
+    COMMENT a) Copy App_temp_ft_log to Fault_xram_log by calling HwMemcpy with 
+    COMMENT parameters(Fault_xram_log, reference of App_temp_ft_log and sizeof(T_FAULT_XRAM_LOG)
+    COMMENT  and sets App_update_ft_log to FALSE if App_update_ft_log is TRUE else do nothing.
+    COMMENT Equivalence Class 3,12,13
+    COMMENT
+    COMMENT
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+            
+            --Holds the value of log task stack
+            ARRAY L_log_task_stk,           init = { others => (T_OS_STK)0 },
+            &                                                                       ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the updated log values
+            VAR flag,             init = 0,                            ev = 1
+			
+            VAR App_update_log,             init = TRUE,                            ev = FALSE
+			
+            VAR App_update_ft_log,          init = TRUE,                            ev = FALSE
+
+             -- Holds the address of 'PTU_ret_OsSemCreate' 
+            VAR PTU_ps_semaphore,           init = NULL,                            ev = &PTU_ret_OsSemCreate
+        
+            -- Holds the address of 'PTU_ret_OsSemCreate' 
+            VAR PTU_p_event,                init = NULL,                            ev = &PTU_ret_OsSemCreate
+
+        COMMENT OUTPUT SECTION:
+            
+            VAR PTU_ptr_dest,               init = NULL,                            ev =Xram_log
+            
+            VAR PTU_ptr_src,                init = NULL,                            ev=&App_temp_log
+			
+            VAR PTU_ptr_dest_1,               init = NULL,                            ev =Fault_xram_log
+            
+            VAR PTU_ptr_src_1,                init = NULL,                            ev=&App_temp_ft_log			
+            
+        -- Stub Calls :
+        SIMUL
+        
+            --To create a semaphore
+            STUB OsSemCreate(DEC_ZERO)&PTU_ret_OsSemCreate
+
+            --installs task signalling parameters 
+            STUB TbaseTaskSignaling(LOG_TASK_TICKS)
+
+            --Creates the log Task
+            STUB OsTaskCreate(HW_NULL,&L_log_task_stk[LOG_TASK_STK_SIZE],LOG_TASK_PRIO)OS_NO_ERR
+
+            --semaphore with a pending Task is called
+            STUB OsSemPend 1..4 => (DEC_ZERO)
+
+            --Reloads watchdog counter
+            STUB WdogKickWatchDog 1..4 => ()
+
+            --copies data from source buffer to destination buffer
+            STUB HwMemcpy(sizeof(T_XRAM_LOG))
+            STUB HwMemcpy(sizeof(T_FAULT_XRAM_LOG))
+
+        END SIMUL
+         
+        -- Calling the Unit Under Test :
+        #LogInit();
+        
+    END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- LogInit
+

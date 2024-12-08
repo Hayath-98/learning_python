@@ -1,0 +1,3146 @@
+HEADER hdulibstm32f7xxhaladc,Source Code Ver : 1.2,TestScript Ver : 1.3 
+--------------------------------------------------------------------------------
+-- Author Name         : Kavya M
+--
+-- File Name           : hdulibstm32f7xxhaladc.ptu
+--
+-- Test Creation Date  : 31.10.2017
+--
+-- Tested Functions    : HalAdcInit
+--			 			 HalAdcPollForConversion
+--			 			 HalAdcConfigChannel
+--			 			 HalAdcMspInit
+--			 			 HalAdcStart
+--			  			 HalAdcGetValue
+--			 			 AdcInit
+--
+--
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE        TESTER NAME        MODIFICATIONS
+--  ------------        ---------        -----------        -------------
+--      1.1             31.10.2017       Kavya M     	 Created the ptu file.
+--      1.2             11.11.2017       Kavya M     	 updated as per PR100171.
+--      1.3             14.11.2017       Kavya M     	 updated as per PR100171.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdulibcmsisgcc.h"
+##include "hdulibstm32f7xxhaladc.h" 
+##include "hdulibstm32f7xxhalconf.h" 
+##include "hdulibstm32f7xxhalconf.h" 
+##include "hdulibbasictypes.h" 
+##include "hdulibstm32f7xxhal.h" 
+##include "hdulibsystemstm32f7xx.h"
+##include "hdulibstm32f7xx.h"  
+##include "hdulibstm32f7xxhaldef.h" 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+	--variable used for sustem core clock 
+	#T_UINT32 System_core_clock; 
+	
+-- Declarations of the Temporary variables of the tested file	
+
+	--Variable used for initializing the structure h_adc
+	#T_ADC PTU_instance;
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      : Kavya M 
+	COMMENT
+	COMMENT File Name    :hdulibstm32f7xxhaladc.ptu
+	COMMENT
+	COMMENT Tested Functions : HalAdcInit
+	COMMENT  				   HalAdcPollForConversion
+	COMMENT  				   HalAdcConfigChannel
+	COMMENT  				   HalAdcMspInit
+	COMMENT 				   HalAdcStart
+	COMMENT  				   HalAdcGetValue
+	COMMENT  			       AdcInit
+	COMMENT 	
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT Assumption(s):
+	COMMENT None
+	COMMENT Constraint(s):
+	COMMENT
+	COMMENT 1.Header file "hdulibstm32f746xx.h" is modified for testing purpose. 
+	COMMENT 	The macro 'ADC' is modified for stubbing hardware address.
+	COMMENT  /*Commented for testing purpose*/
+	COMMENT  //#define ADC                 ((T_ADC_COMMON *) ADC_BASE)
+	COMMENT 
+	COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT T_ADC_COMMON 					PTU_ADC_BASE;
+	COMMENT #define ADC                 	((T_ADC_COMMON *) &PTU_ADC_BASE)
+	COMMENT
+	COMMENT 2.Header file "hdulibstm32f746xx.h" is modified for testing purpose. 
+	COMMENT 	The macro 'ADC1' is modified for stubbing hardware address.
+	COMMENT /*commented for testing purpose*/
+	COMMENT //#define ADC1                	((T_ADC *) PTU_ADC1_BASE)
+	COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT   T_ADC							PTU_ADC1;
+	COMMENT  #define ADC1                ((T_ADC *) &PTU_ADC1)
+	COMMENT
+	COMMENT 3. In functions 'HalAdcInit',
+	COMMENT HalAdcStart','HalAdcPollForConversion' and 'HalAdcConfigChannel','do..while'
+	COMMENT loop present in macros __HAL_UNLOCK(h_adc) and __HAL_LOCK(h_adc) cannot be 
+	COMMENT covered for 2 times or more since it is controlled by constant(ZERO).
+	COMMENT
+	COMMENT 4.Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+	COMMENT warning #191-D: type qualifier is meaningless on cast type
+	COMMENT 
+	COMMENT 5.In the function 'HalAdcConfigChannel' and 'HalAdcStart' while loop cannot be covered for 1 times since it contains a 
+	COMMENT local variable 'counter' which is controlled by macro 'ADC_STAB_DELAY_US' and 'VAL_1000K' and global variable 'System_core_clock'.
+	COMMENT
+	COMMENT </AC>
+	COMMENT
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT 
+	COMMENT Valid Class(es)
+	COMMENT Class 1 :
+	COMMENT The function 'HalAdcMspInit' calls macro 'UNUSED'.
+	COMMENT
+	COMMENT Class 3 :
+	COMMENT The function 'HalAdcGetValue' Return the selected ADC converted value.
+	COMMENT
+	COMMENT Class 5:
+	COMMENT The function 'HalAdcStart' calls macro '__HAL_LOCK'.
+	COMMENT
+	COMMENT Class 6:
+	COMMENT In function 'HalAdcStart',result of bitwise AND of ADC_CR2_ADON and CR2 of Instance of h_adc is not equal to ADC_CR2_ADON.
+	COMMENT
+	COMMENT Class 7:
+	COMMENT In function 'HalAdcStart',result of bitwise AND of ADC_CR2_ADON and CR2 of Instance of h_adc is equal to ADC_CR2_ADON.
+	COMMENT
+	COMMENT Class 8:
+	COMMENT The function 'HalAdcStart', calls macro '__HAL_ADC_ENABLE'.
+	COMMENT
+	COMMENT Class 9:
+	COMMENT The function 'HalAdcStart', returns 'HAL_OK'.
+	COMMENT
+	COMMENT Class 10:
+	COMMENT In function 'HalAdcStart', macro 'HAL_IS_BIT_SET' is not equal to zero.
+	COMMENT
+	COMMENT Class 11:
+	COMMENT In function 'HalAdcStart', macro 'HAL_IS_BIT_SET' is equal to zero.
+	COMMENT
+	COMMENT Class 12:
+	COMMENT The function 'HalAdcInit' ,returns 'HAL_ERROR'.
+	COMMENT
+	COMMENT Class 13:
+	COMMENT In function 'HalAdcInit' , h_adc is equal to 'NULL'. 
+	COMMENT
+	COMMENT Class 14:
+	COMMENT In function 'HalAdcInit' , h_adc is not equal to 'NULL'. 
+	COMMENT
+	COMMENT Class 15:
+	COMMENT In function 'HalAdcInit' , State of h_adc is not equal to 'HAL_ADC_STATE_RESET'.
+	COMMENT
+	COMMENT Class 16:
+	COMMENT In function 'HalAdcInit' , macro 'HAL_IS_BIT_CLR' returns other than 'one'.
+	COMMENT	
+	COMMENT Class 17:
+	COMMENT In function 'HalAdcInit' ,  macro 'HAL_IS_BIT_CLR' returns 'one'.
+	COMMENT
+	COMMENT Class 18:
+	COMMENT In function 'HalAdcInit' , State of h_adc is equal to 'HAL_ADC_STATE_RESET'.
+	COMMENT
+	COMMENT Class 19:
+	COMMENT In function 'HalAdcInit' , macro 'ADC_CLEAR_ERRORCODE' is called.
+	COMMENT
+	COMMENT Class 20
+	COMMENT In function 'HalAdcInit', 'HalAdcMspInit' function is called.
+	COMMENT
+	COMMENT Class 21
+	COMMENT The function 'HalAdcInit', calls macro '__HAL_UNLOCK'. 
+	COMMENT
+	COMMENT Class 22
+	COMMENT The function 'HalAdcInit', returns 'HAL_OK'.
+	COMMENT
+	COMMENT Class 23
+	COMMENT The function 'HalAdcInit', calls macro 'ADC_STATE_CLR_SET'.
+	COMMENT
+	COMMENT Class 24
+	COMMENT The function 'HalAdcInit', calls  function 'AdcInit'
+	COMMENT
+	COMMENT Class 25
+	COMMENT The function 'HalAdcInit', calls macro 'ADC_CLEAR_ERRORCODE'.
+	COMMENT
+	COMMENT Class 26
+	COMMENT The function 'HalAdcInit', calls macro 'ADC_STATE_CLR_SET'.
+	COMMENT
+	COMMENT Class 27
+	COMMENT The function  'AdcInit', calls macro 'ADC_CR1_SCANCONV'.
+	COMMENT
+	COMMENT Class 28
+	COMMENT In function  'AdcInit', ExternalTrigConv of Init of h_adc is not equal to ADC_SOFTWARE_START.
+	COMMENT 
+	COMMENT Class 29
+	COMMENT In function  'AdcInit', ExternalTrigConv of Init of h_adc is equal to ADC_SOFTWARE_START.
+	COMMENT 
+	COMMENT Class 30
+	COMMENT The function 'AdcInit', calls macro 'ADC_CR2_CONTINUOUS'.
+	COMMENT 
+	COMMENT Class 31
+	COMMENT In function 'AdcInit', DiscontinuousConvMode of Init of h_adc is equal to DISABLE.
+	COMMENT 
+	COMMENT Class 32
+	COMMENT The function 'AdcInit', calls macro 'ADC_SQR1'.
+	COMMENT 
+	COMMENT Class 33
+	COMMENT The function 'AdcInit', calls macro 'ADC_CR2_DMACONTREQ'.
+	COMMENT 
+	COMMENT Class 34
+	COMMENT The function 'AdcInit', calls macro 'ADC_CR2_EOCSELECTION'.
+	COMMENT
+	COMMENT Class 35
+	COMMENT The function 'AdcInit',  ExternalTrigConv of Init of h_adc is not equal to ADC_SOFTWARE_START.
+	COMMENT
+	COMMENT Class 36
+	COMMENT The function 'AdcInit',  ExternalTrigConv of Init of h_adc is  equal to ADC_SOFTWARE_START.
+	COMMENT
+	COMMENT Class 37
+	COMMENT In function 'HalAdcInit', result of macro call 'HAL_IS_BIT_CLR' is not equal to zero.
+	COMMENT	
+	COMMENT Class 38
+	COMMENT In function 'HalAdcInit', result of macro call 'HAL_IS_BIT_CLR' is  equal to zero.
+	COMMENT	
+	COMMENT Class 39
+	COMMENT In function 'HalAdcInit', Result of bitwise OR of CR2 of Instance of h_adc and
+	COMMENT	ADC_CR2_EXTEN is not equal to RESET
+	COMMENT
+	COMMENT Class 40
+	COMMENT In function 'HalAdcPollForConversion',return value of calls macro 'HAL_IS_BIT_SET'
+	COMMENT	with parameter 'ADC_CR2_EOCS' and CR2 of h_adc is not equal to zero
+	COMMENT	
+	COMMENT Class 41
+	COMMENT In function 'HalAdcPollForConversion',return value of calls macro 'HAL_IS_BIT_SET'
+	COMMENT	with parameter 'ADC_CR2_DMA' and CR2 of h_adc is not equal to zero
+	COMMENT 
+	COMMENT Class 42
+	COMMENT The function 'HalAdcPollForConversion',calls macro SET_BIT
+	COMMENT
+	COMMENT Class 43
+	COMMENT The function 'HalAdcPollForConversion',calls macro __HAL_UNLOCK
+	COMMENT 
+	COMMENT Class 44
+	COMMENT In function 'HalAdcPollForConversion',return value of  calls macro 'HAL_IS_BIT_SET' 
+	COMMENT	AND with macro call 'HAL_IS_BIT_SET' is  equal to zero
+	COMMENT
+	COMMENT Class 45
+	COMMENT The function 'HalAdcPollForConversion', calls macro '__HAL_ADC_GET_FLAG' and its result is equal to zero
+	COMMENT
+	COMMENT Class 46
+	COMMENT The function 'HalAdcPollForConversion', returns 'HAL_OK'
+	COMMENT
+	COMMENT Class 47
+	COMMENT The function 'HalAdcPollForConversion', returns 'HAL_TIMEOUT'
+	COMMENT	
+	COMMENT Class 50 
+	COMMENT The function 'HalAdcPollForConversion', calls 'HALGetTick'
+	COMMENT
+	COMMENT Class 51
+	COMMENT  The function 'HalAdcPollForConversion', calls 'CLEAR_BIT'
+	COMMENT
+	COMMENT Class 52
+	COMMENT In function 'HalAdcPollForConversion', return value of called macro 'HAL_IS_BIT_SET'
+	COMMENT	with parameter 'ADC_CR2_EOCS' and CR2 of h_adc is  equal to zero
+	COMMENT	
+	COMMENT Class 53
+	COMMENT In function 'HalAdcPollForConversion', return value of  called macro 'HAL_IS_BIT_SET' 
+	COMMENT	with parameter 'ADC_CR2_DMA' 
+	COMMENT 
+	COMMENT Class 54
+	COMMENT The function 'HalAdcConfigChannel', calls macro '__HAL_LOCK' 
+	COMMENT
+	COMMENT Class 55
+	COMMENT In function 'HalAdcConfigChannel', Rank of s_config is less than SEVEN 
+	COMMENT
+	COMMENT Class 56
+	COMMENT The function 'HalAdcConfigChannel', calls macro 'ADC_SQR3_RK'
+	COMMENT
+	COMMENT Class 57
+	COMMENT In function 'HalAdcConfigChannel', Rank of s_config is greater than or equal to
+	COMMENT	SEVEN 
+	COMMENT
+	COMMENT Class 58
+	COMMENT The function 'HalAdcConfigChannel', calls macro 'ADC_SQR2_RK'
+	COMMENT
+	COMMENT Class 59
+	COMMENT In function 'HalAdcConfigChannel', Instance of h_adc is not equal to
+	COMMENT	ADC1 
+	COMMENT	
+	COMMENT Class 60
+	COMMENT In function 'HalAdcConfigChannel',Instance of h_adc is  equal to 
+	COMMENT	ADC1
+	COMMENT	
+	COMMENT Class 61
+	COMMENT The function 'HalAdcConfigChannel', Instance of  h_adc is not equal 
+	COMMENT	to ADC1 
+	COMMENT
+	COMMENT Class 62
+	COMMENT  The function 'HalAdcConfigChannel',return HAL_OK.
+	COMMENT 	
+	COMMENT Class 63
+	COMMENT  The function 'HalAdcConfigChannel', calls macro 'ADC_SMPR1'.
+	COMMENT 
+	COMMENT Class 64
+	COMMENT  In function 'HalAdcConfigChannel', s_config is greater than ADC_CHANNEL_9.
+	COMMENT 
+	COMMENT Class 65
+	COMMENT  In function 'HalAdcConfigChannel', Channel of s_config is equal to ADC_CHANNEL_TEMPSENSOR
+	COMMENT 
+	COMMENT Class 66
+	COMMENT  In function 'HalAdcConfigChannel', Rank of s_config is greater than  THIRTEEN.
+	COMMENT 	
+	COMMENT Class 67
+	COMMENT The function 'HalAdcConfigChannel', calls macro 'ADC_SQR2_RK'
+	COMMENT
+	COMMENT Class 68
+	COMMENT In function 'HalAdcConfigChannel', Channel of s_config is not equal to ADC_CHANNEL_VBAT
+	COMMENT 
+	COMMENT Class 69
+	COMMENT In function 'HalAdcConfigChannel', Instance of h_adc is equal to ADC1
+	COMMENT
+	COMMENT Class 71
+	COMMENT  The function 'HalAdcStart', calls macro 'ADC_CLEAR_ERRORCODE'
+	COMMENT 
+	COMMENT  Class 73
+	COMMENT  The function 'HalAdcStart', calls macro '__HAL_ADC_CLEAR_FLAG'
+	COMMENT 
+	COMMENT  Class 74
+	COMMENT  The function 'HalAdcStart', calls macro 'HAL_IS_BIT_CLR'
+	COMMENT
+	COMMENT Class 80
+	COMMENT In function 'HalAdcConfigChannel', Instance of  h_adc is  equal to ADC1 AND Channel of
+	COMMENT	s_config is  eqaul to ADC_CHANNEL_TEMPSENSOR 
+	COMMENT
+	COMMENT Class 81
+	COMMENT In function 'HalAdcConfigChannel', Channel of s_config is not equal to ADC_CHANNEL_TEMPSENSOR
+	COMMENT 
+	COMMENT Class 82
+	COMMENT The function 'HalAdcConfigChannel', calls macro '__HAL_UNLOCK'.
+	COMMENT 
+	COMMENT Class 83
+	COMMENT In function 'AdcInit', DiscontinuousConvMode of Init of h_adc is not equal to DISABLE.
+	COMMENT 
+	COMMENT Class 84
+	COMMENT In function 'AdcInit', macro 'ADC_CR1_DISCONTINUOUS' is called
+	COMMENT
+	COMMENT Class 85
+	COMMENT In function 'HalAdcStart' , counter is not equal to zero.
+	COMMENT 
+	COMMENT Class 86
+	COMMENT In function 'HalAdcStart' , counter is  equal to zero.
+	COMMENT 
+	COMMENT Class 87
+	COMMENT The function 'HalAdcStart', calls macro 'ADC_STATE_CLR_SET'.
+	COMMENT 
+	COMMENT Class 88
+	COMMENT In function 'HalAdcStart', calls macro 'READ_BIT' which is equal to RESET.
+	COMMENT 
+	COMMENT Class 89
+	COMMENT In function 'HalAdcStart', calls macro 'READ_BIT' and which is not equal to RESET.
+	COMMENT
+	COMMENT Class 90
+	COMMENT In function 'HalAdcPollForConversion', timeout is equal to HAL_MAX_DELAY    
+	COMMENT
+	COMMENT Class 91
+	COMMENT  In function 'HalAdcConfigChannel', Rank of s_config is less than THIRTEEN
+	COMMENT
+	COMMENT Class 101
+	COMMENT In function 'HalAdcPollForConversion', call macro '__HAL_ADC_CLEAR_FLAG'
+	COMMENT
+	COMMENT Class 102
+	COMMENT In function 'HalAdcConfigChannel', Channel of s_config is not equal to ADC_CHANNEL_VBAT
+	COMMENT
+	COMMENT	
+	COMMENT Class 103
+	COMMENT In function 'HalAdcConfigChannel', Channel of s_config is  equal to ADC_CHANNEL_VBAT
+	COMMENT	
+	COMMENT Class 104
+	COMMENT   In function 'HalAdcConfigChannel', Channel of s_config is not eqaul to ADC_CHANNEL_TEMPSENSOR OR Channel
+	COMMENT	of s_config is not equal to ADC_CHANNEL_VREFINT . 
+	COMMENT 
+	COMMENT Class 105
+	COMMENT In function 'HalAdcPollForConversion', CR2 of h_adc is not equal to zero
+	COMMENT 
+	COMMENT Class 106
+	COMMENT In function 'HalAdcPollForConversion', return value of called macro 'HAL_IS_BIT_SET'
+	COMMENT is not equal to zero
+	COMMENT	
+	COMMENT Class 107
+	COMMENT In function 'HalAdcPollForConversion', timeout is not equal to HAL_MAX_DELAY  
+	COMMENT	
+	COMMENT Class 108
+	COMMENT In function 'HalAdcPollForConversion', return value of function HALGetTick is greater than timeout
+	COMMENT	
+	COMMENT Class 109
+	COMMENT In function 'HalAdcPollForConversion', return value of function HALGetTick is less than or equal to timeout
+	COMMENT	
+	COMMENT Class 110
+	COMMENT The function 'HalAdcPollForConversion', calls macro '__HAL_ADC_GET_FLAG' and its result is not equal to zero
+	COMMENT	
+	COMMENT Class 111
+	COMMENT The function 'HalAdcPollForConversion', sets SQR1  of h_adc to Zero
+	COMMENT	
+	COMMENT Class 112
+	COMMENT The function 'HalAdcPollForConversion', sets ContinuousConvMode  of h_adc to DISABLE 
+	COMMENT	
+	COMMENT Class 113
+	COMMENT The function 'HalAdcPollForConversion', sets CR2  of h_adc to zero
+	COMMENT	
+	COMMENT Class 114
+	COMMENT The function 'HalAdcPollForConversion', sets SQR1 of h_adc to other than Zero	
+	COMMENT	
+	COMMENT Class 115
+	COMMENT The function 'HalAdcPollForConversion', set ContinuousConvMode to other than DISABLE
+	COMMENT	
+	COMMENT Class 116
+	COMMENT The function 'HalAdcPollForConversion', set CR2  of h_adc to other than zero
+	COMMENT	
+	COMMENT Class 117
+	COMMENT The function 'HalAdcPollForConversion', set State of h_adc to HAL_ADC_STATE_INJ_BUSY
+	COMMENT	
+	COMMENT Class 118
+	COMMENT The function 'HalAdcPollForConversion', set State of h_adc  to other than HAL_ADC_STATE_INJ_BUSY         
+	COMMENT	
+	COMMENT Class 119
+	COMMENT	In function 'HalAdcConfigChannel', Channel of s_config is less than or equal to ADC_CHANNEL_9. 
+	COMMENT	
+	COMMENT Class 120     
+	COMMENT In function 'HalAdcConfigChannel', Counter value is equal to zero 
+	COMMENT	
+	COMMENT Class 121     
+	COMMENT In function 'HalAdcConfigChannel', Counter value is not equal to zero
+	COMMENT	
+	COMMENT Invalid Class(es)
+	COMMENT 
+	COMMENT Class 2:
+	COMMENT The function 'HalAdcMspInit' is passed with invalid parameter 'NULL'.
+	COMMENT
+	COMMENT	Class 4:
+	COMMENT The function 'HalAdcGetValue' is passed with invalid parameter 'NULL'.
+	COMMENT
+	COMMENT	Class 122:
+	COMMENT The function 'HalAdcStart' is passed with invalid parameter 'NULL'.
+	COMMENT
+	COMMENT </ECD>
+	--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL 
+
+DEFINE STUB hdulibstm32f7xxhaladc_c
+
+    #T_UINT32 HALGetTick(void); 
+    
+    
+    
+END DEFINE
+
+ELSE_SIMUL
+
+	--No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--Environment of the file hdulibstm32f7xxhaladc_c
+
+--ENVIRONMENT  ENV_hdulibstm32f7xxhaladc_c
+
+--None
+
+--END ENVIRONMENT -- ENV_hdulibstm32f7xxhaladc_c
+
+--USE ENV_hdulibstm32f7xxhaladc_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalAdcInit
+--------------------------------------------------------------------------------
+SERVICE HalAdcInit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ADC_HANDLE h_adc;
+    -- By function returned type declaration
+    #T_HAL_STATUS ret_HalAdcInit;
+
+   ENVIRONMENT ENV_HalAdcInit
+  
+  		STRUCTURE h_adc,			init = { Instance => NIL, Init => { ClockPrescaler => 0, Resolution => 0, 
+  		 & 						DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0,
+   		&						 DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+   		&=>						 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+   		&						 DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+   
+   		VAR ret_HalAdcInit,		init = HAL_OK,																ev = init
+   
+   END ENVIRONMENT -- ENV_HalAdcInit
+   
+   USE ENV_HalAdcInit
+
+   TEST 1
+ 	FAMILY nominal
+	COMMENT	Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcInit-DB-LLR-001]
+	COMMENT In the  function  h_adc is equal to NULL  and returns 'HAL_ERROR'
+	COMMENT Equivalence Class 12,13	
+	COMMENT </TD>
+	
+    ELEMENT 
+    
+		COMMENT INPUT SECTION:
+			--None
+			
+		COMMENT INPUT/OUTPUT SECTION :
+			--None
+			
+		COMMENT OUTPUT SECTION :
+			--return value of the function HalAdcInit is stored.
+			VAR ret_HalAdcInit,		init = HAL_OK,		ev = HAL_ERROR
+   		
+   		--stub calls
+   		SIMUL
+			
+			--None
+					
+		END SIMUL
+		
+   		--Calling unit under tesing
+   		#ret_HalAdcInit = HalAdcInit(NULL);
+      END ELEMENT
+ END TEST -- TEST 1
+
+ TEST 2
+    FAMILY nominal
+	COMMENT	Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcInit-DB-LLR-001] 
+	COMMENT In the  function  h_adc is not equal  to NULL  and does nothing.
+	COMMENT Equivalence Class 14
+	COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcInit-DB-LLR-002]
+	COMMENT The function shall do following if State of h_adc is equal
+	COMMENT	to HAL_ADC_STATE_RESET otherwise does nothing.
+	COMMENT 1.	Shall call macro ADC_CLEAR_ERRORCODE with parameter h_adc
+	COMMENT 2.	Set Lock of h_adc to HAL_UNLOCKED
+	COMMENT 3.	Call function HalAdcMspInit with parameter h_adc to Initialize the ADC MSP
+	COMMENT Equivalence Class 18,20,25
+	COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcMspInit-DB-LLR-001]
+	COMMENT The function shall call macro UNUSED with parameter h_adc.
+	COMMENT Eqvivalence class 1
+	COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcInit-DB-LLR-003]
+	COMMENT The function shall do following if result of macro HAL_IS_BIT_CLR with
+	COMMENT	parameters State of h_adc and   
+	COMMENT         HAL_ADC_STATE_ERROR_INTERNAL is one.
+	COMMENT 	1.	Call macro ADC_STATE_CLR_SET with parameter State of h_adc and
+	COMMENT	result of bitwise OR of HAL_ADC_STATE_REG_BUSY and 
+	COMMENT 			HAL_ADC_STATE_INJ_BUSY, HAL_ADC_STATE_BUSY_INTERNAL.
+	COMMENT 	2.	Call function AdcInit with parameter h_adc to configure the
+	COMMENT	selected ADC regular channel its corresponding rank in the 
+	COMMENT 			sequencer and its sample time.
+	COMMENT 	3.	Call macro ADC_CLEAR_ERRORCODE with parameter h_adc.
+	COMMENT 	4.	Call macro ADC_STATE_CLR_SET with parameter State of h_adc,
+	COMMENT	HAL_ADC_STATE_BUSY_INTERNAL,  HAL_ADC_STATE_READY.
+	COMMENT 	5.	Shall return HAL_OK.
+	COMMENT Equivalence Class 37,23,24,19
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhaladc-AdcInit-DB-LLR-001]
+	COMMENT The function shall set CCR of ADC to
+	COMMENT Result of bitwise OR of Result of bitwise AND of CCR of ADC 
+	COMMENT	and inverse of macro ADC_CCR_ADCPRE and ClockPrescaler of Init of h_adc.
+	COMMENT Equivalence Class none
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhaladc-AdcInit-DB-LLR-002]
+	COMMENT The function shall set CR1 of Instance of h_adc to
+	COMMENT Result of bitwise OR of Result of bitwise AND of CR1 of
+	COMMENT	Instance of h_adc and inverse of macro ADC_CR1_SCAN
+	COMMENT and result of macro ADC_CR1_SCANCONV with parameter ScanConvMode of Init of h_adc.
+	COMMENT Equivalence Class 35,27
+	COMMENT 
+	COMMENT[hdulibstm32f7xxhaladc-AdcInit-DB-LLR-003] 
+	COMMENT	The function sets CR1 of Instance of h_adc to 
+	COMMENT	 Result of bitwise OR of Result of bitwise AND of CR1 of 
+	COMMENT	 Instance of h_adc and inverse of macro ADC_CR1_RES.
+	COMMENT	and Resolution of Init of h_adc.
+	COMMENT Equivalence Class none
+	COMMENT 	
+	COMMENT [hdulibstm32f7xxhaladc-AdcInit-DB-LLR-004]
+	COMMENT The function sets CR2 of Instance of h_adc to COND2
+	COMMENT  Result of bitwise OR of Result of bitwise AND of CR2 of 
+	COMMENT  Instance of h_adc and inverse of macro ADC_CR2_ALIGN
+	COMMENT	and DataAlign of Init of h_adc
+	COMMENT Equivalence Class none
+	COMMENT 	
+	COMMENT [hdulibstm32f7xxhaladc-AdcInit-DB-LLR-005]
+	COMMENT	The function sets CR2 of Instance of h_adc 
+	COMMENT	to Result of bitwise OR of Result 
+	COMMENT	of bitwise AND of CR2 of Instance of h_adc and inverse of 
+	COMMENT	macro ADC_CR2_EXTSEL and ExternalTrigConv of
+	COMMENT	Init of h_adc,Since ExternalTrigConv of Init of h_adc
+	COMMENT	is not equal to ADC_SOFTWARE_START.
+	COMMENT Equivalence Class 28
+	COMMENT 
+	COMMENT  [hdulibstm32f7xxhaladc-AdcInit-DB-LLR-006]
+	COMMENT The function sets CR2 of Instance of h_adc
+	COMMENT	to Result of bitwise OR of
+	COMMENT Result of bitwise AND of CR2 of Instance of
+	COMMENT	h_adc and inverse of macro ADC_CR2_EXTEN
+	COMMENT 	and ExternalTrigConvEdge of Init of h_adc.
+	COMMENT  since ExternalTrigConv of Init of h_adc
+	COMMENT	is not equal to ADC_SOFTWARE_START.
+	COMMENT Equivalence class 28
+	COMMENT 
+	COMMENT	[hdulibstm32f7xxhaladc-AdcInit-DB-LLR-008]
+	COMMENT The function shall set CR2 of Instance of h_adc to COND2 
+	COMMENT Where,
+	COMMENT COND1 - Result of bitwise AND of CR2 of Instance 
+	COMMENT	of h_adc and inverse of macro ADC_CR2_CONT.
+	COMMENT COND2  - Result of bitwise OR of COND1 and result of macro
+	COMMENT	ADC_CR2_CONTINUOUS with parameter ContinuousConvMode of Init of h_adc.
+	COMMENT Equivalence class 30
+	COMMENT 
+	COMMENT	[hdulibstm32f7xxhaladc-AdcInit-DB-LLR-010]
+	COMMENT		The function sets CR1 of Instance of h_adc to
+	COMMENT	result of bitwise AND of CR1 of Instance
+	COMMENT 	of h_adc and inverse of macro ADC_CR1_DISCEN.
+	COMMENT		since ,DiscontinuousConvMode of Init of h_adc is equal to DISABLE.
+	COMMENT Equivalence class 31
+	COMMENT 
+	COMMENT	[hdulibstm32f7xxhaladc-AdcInit-DB-LLR-011]
+	COMMENT	The function shall set SQR1 of Instance of h_adc to 
+	COMMENT	 Result of bitwise OR of Result of bitwise AND
+	COMMENT	of SQR1 of Instance of h_adc and inverse of macro ADC_SQR1_L
+	COMMENT	and result of macro ADC_SQR1 with parameter NbrOfConversion of Init of h_adc.
+	COMMENT Equivalence class 32
+	COMMENT 
+	COMMENT	[hdulibstm32f7xxhaladc-AdcInit-DB-LLR-012]
+	COMMENT	The function sets CR2 of Instance of h_adc to 
+	COMMENT	 Result of bitwise OR of Result of bitwise 
+	COMMENT	AND of CR2 of Instance of h_adc and inverse of macro ADC_CR2_DDS
+	COMMENT	and result of macro ADC_CR2_DMACONTREQ with
+	COMMENT	parameter DMAContinuousRequests of Init of h_adc.
+	COMMENT Equivalence class 33
+	COMMENT 
+	COMMENT	[hdulibstm32f7xxhaladc-AdcInit-DB-LLR-013]
+	COMMENT	The function sets CR2 of Instance of h_adc 
+	COMMENT	to Result of bitwise OR of Result 
+	COMMENT	of bitwise AND of CR2 of Instance of h_adc 
+	COMMENT	and inverse of macro ADC_CR2_EOCS and 
+	COMMENT	result of macro 'ADC_CR2_EOCSELECTION' with
+	COMMENT	parameter EOCSelection of Init of h_adc.
+	COMMENT Equivalence class 34
+	COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcInit-DB-LLR-005]
+	COMMENT The function  callS macro '__HAL_UNLOCK' with parameter 'h_adc' to release lock.
+	COMMENT Equivalence Class 21,22
+	COMMENT 
+	COMMENT </TD>
+	ELEMENT 
+        	COMMENT INPUT SECTION :
+        	
+				--Initialising the structure h_adc.
+				STRUCTURE h_adc,		init = { Instance => &PTU_instance, 
+				& 						Init => { ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0, 
+				&						EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, DiscontinuousConvMode =>
+				&						0, NbrOfDiscConversion => 0, ExternalTrigConv
+				&						=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0, 
+				&						DMA_Handle => NIL, ErrorCode => 0 },														ev = init
+				
+			COMMENT INPUT / OUTPUT SECTION :
+				
+				--variable holds state of structure h_adc 
+				VAR	h_adc.State, 		init=0,		ev=1
+				
+				--variable holds SQR1 of sturcture PTU_instance 
+				VAR PTU_instance.SQR1,	init=0,		ev=(T_UINT32)0xFFF00000
+				
+				--variable holds Lock of the structure h_adc
+				VAR h_adc.Lock ,		init=HAL_LOCKED,	ev=HAL_UNLOCKED
+
+				--To handle the value of ADC->CCR
+                VAR PTU_ADC.CCR,        init =0xC3EF01,         ev=0xC0EF01
+				
+				--To handle the value of ADC->CR2
+                VAR PTU_instance.CR2,        init =0x767E0F03,        ev=0x407E0101
+				
+				--To handle the value of ADC->CR1
+                VAR PTU_instance.CR1,        init =0x7C03FE1,            ev=0x4C036E1
+				
+			COMMENT OUTPUT SECTION:
+			   
+			    --variable holds return value of the funtion HalAdcInit
+				VAR ret_HalAdcInit,		init = HAL_ERROR ,		ev = HAL_OK
+			
+			--stub calls
+			SIMUL
+
+				--None
+
+			END SIMUL
+			
+			--Calling unit under testing.
+			#ret_HalAdcInit = HalAdcInit(&h_adc);
+	
+	END ELEMENT
+
+    END TEST -- TEST 2
+    
+    
+	TEST 3
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-AdcInit-DB-LLR-007]
+	COMMENT The function shall set CR2 of Instance of h_adc to COND2 if ExternalTrigConv of Init of h_adc
+	COMMENT is equal to ADC_SOFTWARE_START.
+	COMMENT Where,
+	COMMENT COND1 - Result of bitwise AND of CR2 of Instance of h_adc and inverse of macro ADC_CR2_EXTSEL.
+	COMMENT COND2  - Result of bitwise OR of COND1 and inverse of macro ADC_CR2_EXTEN.
+	COMMENT Eqvivalence class 29
+	COMMENT 
+	COMMENT </TD>
+	ELEMENT 
+            
+          
+            COMMENT INPUT SECTION :
+            
+           		--Initialising the CR2 of PTU_instance
+         		VAR PTU_instance.CR2,				init=0,				ev=init
+         			
+				--To handle the value of ADC->CCR
+				VAR PTU_ADC.CCR, 						init =0,			ev=init
+				
+				--Initialising CR1 of Instance variable.       
+				VAR PTU_instance.CR1,					init=0,				ev=init
+				
+				--Initialising the structure h_adc.
+				STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0,
+				&						Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, 
+				&						ContinuousConvMode => 0, NbrOfConversion => 0, DiscontinuousConvMode => 0, 
+				&						NbrOfDiscConversion => 0, ExternalTrigConv
+				&						=> ADC_SOFTWARE_START, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 },
+				&						NbrOfCurrentConversionRank => 0, DMA_Handle => NIL },							ev = init
+			
+			COMMENT INPUT/OUTPUT SECTION :
+			
+				--variable holds the State of h_adc
+      			VAR h_adc.State, init =0, ev=1
+      			
+      			--Initialising the SQR1 of PTU_instance
+      			VAR PTU_instance.SQR1,init=0,ev=(T_UINT32)0xFFF00000
+      			
+         
+         COMMENT OUTPUT SECTION :
+         
+			   --variable used for the return value of function HalAdcInit
+			   VAR ret_HalAdcInit,		init = HAL_ERROR,		ev =HAL_OK 
+	    
+	    --stub calls
+ 		SIMUL
+			
+			--None
+		
+		END SIMUL			
+		
+		--Calling unit under testing.
+		#ret_HalAdcInit = HalAdcInit(&h_adc);
+    END ELEMENT
+    
+    END TEST -- TEST 3
+    
+	TEST 4
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcInit-DB-LLR-004]
+	COMMENT The function set CR2 of Instance of h_adc to Result of bitwise OR of
+	COMMENT Result of bitwise AND of CR2 of Instance of h_adc and
+	COMMENT Inverse of macro ADC_CR2_ALIGN and DataAlign of Init of h_adc.
+	COMMENT Equivalence Class 38
+	COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcInit-DB-LLR-002]
+	COMMENT The function State of h_adc is  not equal to HAL_ADC_STATE_RESET hence does nothing.
+	COMMENT Equivalence Class 15
+	COMMENT 
+	COMMENT </TD>
+	
+	ELEMENT 
+                COMMENT INPUT SECTION:
+               	 
+               	 --the sturcture PTU_ADC is initialised for member CCR
+                	VAR PTU_ADC.CCR, 			init =0,			ev=init
+                	
+                --the sturcture PTU_instance is initialised for member CR1
+				    VAR PTU_instance.CR1,		init=0,				ev=init
+				      
+				--the sturcture PTU_instance is initialised for member SQR1
+				    VAR PTU_instance.SQR1,		init=0,				ev=init
+				    
+				--the sturcture PTU_instance is initialised for member CR2
+             		VAR PTU_instance.CR2,		init=0,				ev=init
+             		
+             		--the sturcture h_adc is initialised
+                	STRUCTURE h_adc,			init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0,
+                	&				Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode 
+                	&		=> 0, NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+        			&		=> ADC_SOFTWARE_START, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank
+        			&		=> 0, DMA_Handle => NIL },													ev = init
+        			
+         		 --State of h_adc is getting modified.
+          		VAR h_adc.State, init =HAL_ADC_STATE_ERROR_INTERNAL, ev=init
+          		
+          		COMMENT INPUT/OUTPUT SECTION :
+          		
+          			--None
+          		
+          		COMMENT OUTPUT SECTION :
+          			--holds the return value of function HalAdcInit
+           			VAR ret_HalAdcInit,			init = HAL_OK,		ev =HAL_ERROR
+           		
+         --stub calls
+		SIMUL			
+			--None		
+		END SIMUL		
+          	 	--To handle the value of ADC->CCR
+           		#ret_HalAdcInit = HalAdcInit(&h_adc);
+                END ELEMENT
+        
+    END TEST -- TEST 4
+    
+        TEST 5
+		FAMILY nominal
+		COMMENT Test Description
+		COMMENT <TD>
+		COMMENT [hdulibstm32f7xxhaladc-AdcInit-DB-LLR-009]
+		COMMENT The function shall set CR1 of Instance of h_adc to COND3 if 
+		COMMENT		DiscontinuousConvMode of Init of h_adc is not equal to DISABLE.
+		COMMENT  Where,
+		COMMENT  COND1 – Result of bitwise OR of ADC_CR1_DISCEN and CR1	 of Instance of h_adc.
+		COMMENT  COND2 - Result of bitwise AND of COND1 and inverse of macro ADC_CR1_DISCNUM.
+		COMMENT  COND3 - Result of bitwise OR of COND2 and result of macro 
+		COMMENT		ADC_CR1_DISCONTINUOUS with parameter NbrOfDiscConversion of Init of h_adc.
+		COMMENT Equivalence Class 83,84
+		COMMENT </TD> 
+	
+		ELEMENT 
+		
+			COMMENT INPUT SECTION :
+			
+				--Initialising the CCR of the structure variable PTU_ADC
+				VAR PTU_ADC.CCR, 		init =0,		ev=init
+				
+				--Initialising the CR2 of the structure variable PTU_instance
+				VAR PTU_instance.CR2,	init=0,			ev=init
+				
+				--Initialising the sturcture h_adc 
+				STRUCTURE h_adc,				init = { Instance => &PTU_instance, Init => { 
+				&								ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0,
+				&								EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, DiscontinuousConvMode
+				&								=> ENABLE, NbrOfDiscConversion => 0, ExternalTrigConv
+				&								=> ADC_SOFTWARE_START, ExternalTrigConvEdge => 0, DMAContinuousRequests
+				&								=> 0 }, NbrOfCurrentConversionRank => 0, DMA_Handle => NIL },		ev = init
+				
+				--State of h_adc is getting modified.
+				VAR h_adc.State, 				init =0, 	ev=1
+				
+		COMMENT INPUT / OUTPUT SECTION :
+      		
+				--Initialising the CR1 of the structure variable PTU_instance
+				VAR PTU_instance.CR1,init=0,ev=(T_UINT32)0xFFFFE800
+
+				--Initialising the SQR1 of the structure variable PTU_instance
+				VAR PTU_instance.SQR1,init=0,ev=(T_UINT32)0xFFF00000
+			
+		COMMENT OUTPUT SECTION :
+      		--Holds the return value of HalAdcInit function.
+              VAR ret_HalAdcInit,		init = HAL_ERROR,		ev =HAL_OK 
+             
+             
+             SIMUL
+             	--None
+             END SIMUL
+              
+              --Calling the unit under testing.
+               #ret_HalAdcInit = HalAdcInit(&h_adc);
+           
+           END ELEMENT
+        
+    END TEST -- TEST 5
+    
+END SERVICE -- HalAdcInit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalAdcPollForConversion
+--------------------------------------------------------------------------------
+SERVICE HalAdcPollForConversion
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ADC_HANDLE h_adc;
+    #T_UINT32 timeout;
+    -- By function returned type declaration
+    #T_HAL_STATUS ret_HalAdcPollForConversion;
+
+    ENVIRONMENT ENV_HalAdcPollForConversion
+    
+		STRUCTURE h_adc,		init = { Instance => NIL, Init => { ClockPrescaler => 0, Resolution => 0,
+		&						DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0,
+		&						DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+		&						=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+		&						DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+
+		VAR timeout,							init = 0,									ev = init
+
+		VAR ret_HalAdcPollForConversion,		init = HAL_OK,								ev = init
+
+	END ENVIRONMENT -- ENV_HalAdcPollForConversion
+	
+	USE ENV_HalAdcPollForConversion
+
+    TEST 1
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-001] 
+	COMMENT The function does following since result of Result of macro call HAL_IS_BIT_SET with
+	COMMENT 	parameter CR2 of Instance of h_adc and ADC_CR2_EOCS
+	COMMENT AND Result of macro call HAL_IS_BIT_SET with parameter CR2 of Instance of h_adc 
+	COMMENT 	and ADC_CR2_DMA is not equal to zero
+	COMMENT 	1.	Call macro SET_BIT with parameter State of h_adc and HAL_ADC_STATE_ERROR_CONFIG.
+	COMMENT 	2.	Call macro __HAL_UNLOCK with parameter h_adc.
+	COMMENT 	3.	Shall return HAL_ERROR.
+	COMMENT Equivalence class 40,41,42,43
+	COMMENT </TD>
+	ELEMENT
+
+        COMMENT INPUT SECTION :
+        
+			--Initialise the instance variable
+			VAR PTU_instance, 			init={CR2=>0x500,others=>0},		ev=init
+			
+			--Initialising the sturcture
+			STRUCTURE h_adc,			init = { Instance => &PTU_instance, Init => 
+			&							{ ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0,
+			&							EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, DiscontinuousConvMode => 0,
+			&							NbrOfDiscConversion => 0, ExternalTrigConv
+			&							=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0, 
+			&							DMA_Handle => NIL, Lock => HAL_UNLOCKED, ErrorCode => 0 },		ev = init
+			
+			--initialising timeout 
+			VAR timeout,				init = 0,						ev = init
+			
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			--Initialise the State variable
+			VAR h_adc.State, 			init=0,							ev=0x00000020U
+			
+		COMMENT OUTPUT SECTION :
+		
+			--stores the return value of unit under testing.
+			VAR ret_HalAdcPollForConversion,		init = HAL_OK,		ev = HAL_ERROR
+	 
+	 --stub calls
+	 SIMUL
+		--None
+	END SIMUL
+	
+	--calling unit under testing
+	#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+  TEST 2
+	FAMILY nominal
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-001] 
+	COMMENT The function  does nothing since result of (Result of macro call HAL_IS_BIT_SET with parameter
+	COMMENT CR2 of Instance of h_adc and ADC_CR2_EOCS)
+	COMMENT AND (Result of macro call HAL_IS_BIT_SET with parameter CR2 of
+	COMMENT  Instance of h_adc and ADC_CR2_DMA) is equal to zero 
+	COMMENT  Here the false part is covered with TF condition is covered 
+	COMMENT Equivalence class 52,53		
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-002]
+	COMMENT the function calls ' HALGetTick' to tick start
+	COMMENT Equivalence class 50
+	COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-003 ]
+	COMMENT	The function does following since result of macro __HAL_ADC_GET_FLAG with parameter
+	COMMENT h_adc and ADC_FLAG_EOC is equal to zero
+	COMMENT	and timeout is not equal to HAL_MAX_DELAY and result of OR operation of 
+	COMMENT	timeout is equal to ZERO and result of return value of function HALGetTick 
+	COMMENT minus tick start is greater than timeout
+	COMMENT	1.	Call macro SET_BIT with parameter State of h_adc and HAL_ADC_STATE_TIMEOUT.
+	COMMENT	2.	Call macro __HAL_UNLOCK with parameter h_adc.
+	COMMENT	3.	Shall return HAL_TIMEOUT.
+	COMMENT Here the true part is covered with TX condition is covered 
+	COMMENT Equvalence class 45,47,41,107,108,109
+	
+	ELEMENT
+        
+	    COMMENT INPUT SECTION :
+			--Initialise the instance variable
+			VAR PTU_instance, init={CR2=>0x400,others=>0},ev=init
+			
+			--Initialising the sturcture
+			 STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0,
+			 &						Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, 
+			 &						NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&						=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+			&						DMA_Handle => NIL, Lock => HAL_UNLOCKED, ErrorCode => 0 },		ev = init
+			
+			--initialising timeout 
+			VAR timeout,			init = 0,							ev = init
+			
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			--variable used to hold State OF h_adc structure 
+			VAR h_adc.State, 		init=0,								ev=4
+		
+		COMMENT OUTPUT SECTION :
+		
+			--stores the return value of HalAdcPollForConversion
+			VAR ret_HalAdcPollForConversion,		init = HAL_OK,		ev = HAL_TIMEOUT
+		
+		SIMUL
+				--calling the stub HALGetTick 	
+		       STUB HALGetTick() 0
+       		 
+       END SIMUL
+				
+				--Calling unit under testing.
+		#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+		
+        END ELEMENT
+
+    END TEST -- TEST 2
+    
+    
+      TEST 3
+		FAMILY nominal
+		COMMENT Test Description
+		COMMENT <TD>
+		COMMENT  [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-001]
+		COMMENT The function does nothing since  result of ((Result of macro call HAL_IS_BIT_SET
+		COMMENT		with parameter CR2 of Instance of h_adc and ADC_CR2_EOCS)
+		COMMENT AND (Result of macro call HAL_IS_BIT_SET with parameter CR2 of Instance of 
+		COMMENT		h_adc and ADC_CR2_DMA)) is  equal to zero
+		COMMENT Here the else part is covered FX condition 
+		COMMENT Equivalence class 52,53	
+		COMMENT 
+		COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-002]
+		COMMENT the function calls ' HALGetTick' to tick start
+		COMMENT Equivalence class 50
+		COMMENT
+		COMMENT  [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-003]
+		COMMENT	The function does following since result of macro __HAL_ADC_GET_FLAG with 
+		COMMENT		parameter h_adc and ADC_FLAG_EOC is equal to zero
+		COMMENT	and timeout is not equal to HAL_MAX_DELAY and result of OR operation of 
+		COMMENT	timeout is equal to ZERO
+		COMMENT	1.	Call macro SET_BIT with parameter State of h_adc and HAL_ADC_STATE_TIMEOUT.
+		COMMENT	2.	Call macro __HAL_UNLOCK with parameter h_adc.
+		COMMENT	3.	Shall return HAL_TIMEOUT.
+		COMMENT Equvalence class 45,47,41,107,108,109
+		COMMENT <TD>
+		ELEMENT
+ 				COMMENT INPUT SECTION:
+ 				
+					--Initialise the instance variable
+					VAR PTU_instance, init={CR2=>0x90,others=>0},ev=init
+					
+					--Initialising the sturcture
+					STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0, 
+					&				Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0,
+					&				NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+					&				=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+					&				DMA_Handle => NIL, Lock => HAL_UNLOCKED, ErrorCode => 0 },		ev = init
+					
+					--Initialising the timeout
+					VAR timeout,		init = 0,		ev = init
+					
+				COMMENT INPUT / OUTPUT SECTION :
+ 				 
+					--Variable stores value of the State of the sturcture h_adc
+					VAR h_adc.State, init=0,			ev=4
+	        		
+ 				COMMENT OUTPUT SECTION:
+ 				
+ 					--Variable stores the value return by HalAdcPollForConversion
+ 					VAR ret_HalAdcPollForConversion,		init = HAL_OK,		ev = HAL_TIMEOUT
+ 	
+		SIMUL
+			
+			--stub call HALGetTick	
+			STUB HALGetTick() 0
+       		
+       	END SIMUL	
+			
+			--calling unit under testing.
+			#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+
+     END ELEMENT
+	
+    END TEST -- TEST 3
+    
+    TEST 4
+		COMMENT 
+		FAMILY nominal		
+		COMMENT Test Description
+		COMMENT <TD>	
+		COMMENT 
+		COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-002]
+		COMMENT the function calls ' HALGetTick' to tick start
+		COMMENT Equivalence class 50
+		COMMENT
+		COMMENT  [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-003] 
+		COMMENT	The function does following since result of macro __HAL_ADC_GET_FLAG with 
+		COMMENT	parameter h_adc and ADC_FLAG_EOC is equal to zero
+		COMMENT	and timeout is not equal to HAL_MAX_DELAY and result of OR operation of 
+		COMMENT	timeout is not equal to ZERO and result of return value of function HALGetTick 
+		COMMENT	minus tick start is greater than timeout
+		COMMENT	1.	Call macro SET_BIT with parameter State of h_adc and HAL_ADC_STATE_TIMEOUT.
+		COMMENT	2.	Call macro __HAL_UNLOCK with parameter h_adc.
+		COMMENT	3.	Shall return HAL_TIMEOUT.
+		COMMENT Here the else part is covered FT(i.e timeout is not equal to 0)
+		COMMENT Equvalence class 45,47,50,108,106,107 
+		COMMENT </TD>	
+		ELEMENT
+		
+			COMMENT INPUT SECTION :
+			
+        		--Initialise the instance variable
+				VAR PTU_instance, 		init={CR2=>0},							ev=init
+				
+				--Initialising the sturcture
+				STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => 
+				&				{ ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, 
+				&				ContinuousConvMode => 0, NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, 
+				&				ExternalTrigConv=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 },
+				&				NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, ErrorCode => 0 },		ev = init
+				
+				--initialising timeout 
+				VAR timeout,			init = 1,								ev = init
+				
+			COMMENT INPUT/OUTPUT SECTION:
+			
+				--variables of the sturcture h_adc.
+				VAR h_adc.Lock, 		init= HAL_LOCKED ,		 				ev= HAL_UNLOCKED
+
+				--variables of the sturcture h_adc.		
+				VAR h_adc.State, 		init=0,									ev=0x00000004U
+
+			COMMENT OUTPUT SECTION :
+			
+				--stores the return value of unit under testing.
+				VAR ret_HalAdcPollForConversion,		init = HAL_OK,		ev = HAL_TIMEOUT
+
+			
+			
+	        --calling the stubs
+	        SIMUL
+	        
+	        	STUB HALGetTick()0
+	     		STUB HALGetTick()90
+	     		
+	       END SIMUL
+	       --Calling unit under testing.
+	       			#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+	        
+	        END ELEMENT
+	
+	    END TEST -- TEST 3
+	    	
+	TEST 5
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-003]
+	COMMENT	The function does nothing when result of macro __HAL_ADC_GET_FLAG with parameter h_adc and ADC_FLAG_EOC is not equal to zero 
+	COMMENT Equivalence class 110
+	COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-004]
+	COMMENT	The function call macro '__HAL_ADC_CLEAR_FLAG' with parameter
+	COMMENT h_adc and result of bitwise OR of ADC_FLAG_STRT and ADC_FLAG_EOC.
+	COMMENT Equivalence class 101
+	COMMENT 	
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-005]
+	COMMENT	The function call macro SET_BIT with parameter State 
+	COMMENT of h_adc and HAL_ADC_STATE_REG_EOC.
+	COMMENT Equivalence class 42
+	COMMENT 	
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-006]
+	COMMENT  The function calls macro CLEAR_BIT with parameter State 
+	COMMENT  of h_adc and HAL_ADC_STATE_REG_BUSY if COND6 is not equal to zero.
+    COMMENT 	COND1 - Result of macro ADC_IS_SOFTWARE_START_REGULAR with 
+	COMMENT    parameter h_adc is not equal to zero.
+	COMMENT 	COND2 - ContinuousConvMode of Init of h_adc is equal to DISABLE.
+	COMMENT 	COND3 - Result of macro HAL_IS_BIT_CLR with parameter SQR1
+	COMMENT 	of Instance of h_adc and ADC_SQR1_L is not equal to zero.
+	COMMENT 	COND4 - Result of macro HAL_IS_BIT_CLR with parameter CR2 
+	COMMENT 	of Instance of h_adc and ADC_CR2_EOCS is not equal to zero.
+	COMMENT 	COND5 – COND3 OR COND4
+	COMMENT 	COND6 – COND1 AND COND2 AND COND5 here TTFT Condition is checked 
+	COMMENT Equivalence class 51,111,112,113
+	COMMENT 	
+	COMMENT  [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-007]
+	COMMENT	The function 'HalAdcPollForConversion',calls macro SET_BIT
+	COMMENT Equivalence class 42,120
+	COMMENT 	
+	COMMENT </TD>
+	ELEMENT
+
+	      
+        	COMMENT INPUT SECTION :
+
+					--Initialising the PTU_instance.  
+					VAR PTU_instance, 			init={CR2=>0},					ev=init
+					
+				--Initialising the structure h_adc.  
+				STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0, Resolution => 0,
+				&			DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => DISABLE , NbrOfConversion => 0,
+				&			DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+				&			=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+				&			DMA_Handle => NIL, ErrorCode => 0 },				ev = init
+				
+				--Initialising the timeout.
+				VAR timeout,					init = 1,						ev = init
+				
+				--Initialising the Lock .
+				VAR h_adc.Lock, 				init= HAL_LOCKED , 				ev= init
+				
+		COMMENT INPUT/OUTPUT  SECTION :
+				
+				--the variable stores value of  SR of PTU_instance
+				VAR PTU_instance.SR,			init=0x00000002U	,			ev=	0xFFFFFFED
+				
+				--variable used to store state of the sturcture 
+				VAR h_adc.State, 				init=0,							ev=513
+
+		 	COMMENT OUTPUT SECTION :
+		 			--the variable store the return value of HalAdcPollForConversion
+				VAR ret_HalAdcPollForConversion,	init =HAL_TIMEOUT,				ev =  HAL_OK
+
+		--stub calls
+		SIMUL
+			
+			STUB HALGetTick()0
+			
+		END SIMUL
+		
+					--calling unit under testing.
+				#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+	        
+	END ELEMENT
+	
+ END TEST -- TEST 5
+
+TEST 6
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-006]  
+	COMMENT	The function does nothing when Result of macro ADC_IS_SOFTWARE_START_REGULAR with parameter h_adc is equal to zero
+	COMMENT Here the false part is covered with FXXX Condition is checked 
+	COMMENT Equvalence class 51,116
+	COMMENT </TD>
+	
+	ELEMENT
+	        
+	       COMMENT INPUT SECTION :
+	      
+			--Initialise the instance variable  
+			VAR h_adc.Lock, 		init= HAL_LOCKED , 		ev= init
+
+			--Initialising the sturcture
+			VAR PTU_instance, 		init={CR2=>0x30000000U},ev=init
+
+			--Initialising the sturcture
+			STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0,
+			&			Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, 
+			&			NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&			=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0, 
+			&			DMA_Handle => NIL, ErrorCode => 0 },		ev = init
+			--initialising timeout
+			VAR timeout,			init = 110,				ev = init
+			
+		COMMENT INPUT/OUTPUT SECTION:
+		
+				--Holds the state of structure h_adc
+				VAR h_adc.State, 	init=0,					ev=512
+				
+				--holds the SR of the structure PTU_instance
+				VAR PTU_instance.SR,init=0x00000002U,		ev=	0xFFFFFFED
+				
+		
+		COMMENT OUTPUT SECTION:
+		
+			--Holds the return value of the function HalAdcPollForConversion
+		VAR ret_HalAdcPollForConversion,init =HAL_TIMEOUT ,		ev = HAL_OK
+	  
+	    --calling the stub    
+		SIMUL
+		
+			STUB HALGetTick()0
+			
+		END SIMUL
+		
+		--Calling unit under testing.
+		#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+	      
+	END ELEMENT
+	
+END TEST -- TEST 6
+
+
+TEST 7
+	FAMILY nominal 
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-003]
+	COMMENT The function shall call macro SET_BIT with parameter State of h_adc and HAL_ADC_STATE_READY if COND6 is not equal to zero and 
+	COMMENT of macro HAL_IS_BIT_CLR with parameter State of h_adc and HAL_ADC_STATE_INJ_BUSY is not equal to zero.
+	COMMENT Where,
+	COMMENT COND1 - Result of macro ADC_IS_SOFTWARE_START_REGULAR with parameter h_adc is not equal to zero..
+	COMMENT COND2 - ContinuousConvMode of Init of h_adc is equal to DISABLE.
+	COMMENT COND3 - Result of macro HAL_IS_BIT_CLR with parameter SQR1 of Instance of h_adc and ADC_SQR1_L is not equal to zero.
+	COMMENT COND4 - Result of macro HAL_IS_BIT_CLR with parameter CR2 of Instance of h_adc and ADC_CR2_EOCS is not equal to zero.
+	COMMENT COND5 – COND3 OR COND4
+	COMMENT COND6 – COND1 AND COND2 AND COND5
+	COMMENT While loop is covered for 2 times (in first loop return value of function HALGetTick is less than timeout) 
+	COMMENT Equivalence class 106,107,109,108 
+	COMMENT </TD>
+	
+	ELEMENT
+
+		COMMENT INPUT SECTION :
+		
+			--Initialising the PTU_instance.	        
+			VAR PTU_instance, 				init={CR2=>0x30000000U,SQR1=>0},		ev=init
+
+			  --Initialising the h_adc.
+			 STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0, Resolution => 0,
+			 &			DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 1, 
+			 &			NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&			=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+			&			DMA_Handle => NIL, ErrorCode => 0 },						ev = init
+
+			--Initialising the timeout.
+			VAR timeout,					init = 1,								ev = init
+		
+		COMMENT INPUT / OUTPUT SECTION :
+		
+			--Initialising the SR of PTU_instance	
+			VAR PTU_instance.SR, 			init=0,									ev=init
+
+			--Initialising the Lock of h_adc
+			VAR h_adc.Lock, 				init= HAL_LOCKED , 						ev= HAL_UNLOCKED
+
+			--Initialising the State of h_adc
+			VAR h_adc.State, 				init=0,									ev=4
+
+		COMMENT OUTPUT SECTION :
+		
+			--variable used to store return value of HalAdcPollForConversion
+			VAR ret_HalAdcPollForConversion,init = HAL_OK,							ev = HAL_TIMEOUT
+		
+		--Calling the stub
+					SIMUL
+
+						STUB HALGetTick()0
+						STUB HALGetTick()2
+
+			END SIMUL
+	--calling unit under testing.
+	#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+	        
+			
+	END ELEMENT
+END TEST -- TEST 7
+	    
+	TEST 8
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-006]
+	COMMENT The function does not calls macro CLEAR_BIT with parameter State of h_adc 
+	COMMENT and HAL_ADC_STATE_REG_BUSY if COND6 is not equal to zero.	
+	COMMENT COND1 - Result of macro ADC_IS_SOFTWARE_START_REGULAR 
+	COMMENT with parameter h_adc is not equal to zero.
+	COMMENT COND2 - ContinuousConvMode of Init of h_adc is not equal to DISABLE.
+	COMMENT  here while 0 times is covered and TFXX Condition is covered.
+	COMMENT Equivalence class 51,113,115 
+	COMMENT </TD>
+	
+	ELEMENT
+	    	        
+	    	COMMENT INPUT SECTION :	
+	    	
+				--Initialising the PTU_instance.	
+				VAR PTU_instance, 		init={CR2=>0,SQR1=>0},		ev=init
+
+				--Initialising the h_adc.
+				STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0,
+				&		Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 1,
+				&		NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+				&		=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+				&		DMA_Handle => NIL, ErrorCode => 0 },		ev = init
+
+				--Initialising the timeout.
+				VAR timeout,			init = 1,					ev = init
+				
+				--Initialising the Lock .
+				VAR h_adc.Lock, 		init= HAL_LOCKED , 			ev= init
+				
+		 	COMMENT INPUT / OUTPUT SECTION :
+
+					--the variable holds the SR of Instance
+				VAR PTU_instance.SR,	init =2 , 					ev=	0xFFFFFFED
+
+					--the variable holds the State of h_adc
+				VAR h_adc.State, 		init=0,						ev=512
+			
+			COMMENT OUTPUT SECTION :
+				
+				--variable holds the return value of HalAdcPollForConversion
+				VAR ret_HalAdcPollForConversion,		init =HAL_ERROR ,		ev =HAL_OK
+			
+			--calling the stub.	        
+					SIMUL
+						
+						STUB HALGetTick()0
+						
+					END SIMUL
+			
+					--Calling unit under testing.
+		#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+	    	        
+	    
+	END ELEMENT
+END TEST -- TEST 8
+
+--TEST 13
+--	    FAMILY robustness
+--		COMMENT 
+--
+--	      
+--	        COMMENT Test Description
+--	        COMMENT <TD>
+--	        COMMENT[hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-003]
+--	        COMMENT	The function does nothing when  result of macro __HAL_ADC_GET_FLAG with parameter h_adc
+--	        COMMENT	        and ADC_FLAG_EOC is equal to zero
+--		   	COMMENT	and timeout is  equal to HAL_MAX_DELAY.
+--	        COMMENT Here the false part covered.
+--	       COMMENT Equivalence Class 90
+--	        COMMENT 
+--	        COMMENT
+--
+--			ELEMENT
+--			COMMENT INPUT SECTION :
+--	        VAR PTU_instance, init={CR2=>0x0,others=>0},ev=init
+--	         STRUCTURE h_adc,		init = { Instance => &PTU_instance,
+--				& Init => { ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0, 
+--				& EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, DiscontinuousConvMode => 0,
+--&				& NbrOfDiscConversion => 0, ExternalTrigConv
+--		&		=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, 
+--				& NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, ErrorCode => 0 },		ev = init
+--		    VAR timeout,		init = 0xFFFFFFFFU,		ev = init
+
+--		COMMENT INPUT/OUTPUT SECTION :
+			--      --Lock of the structure h_adc.
+			--	    VAR h_adc.Lock, init= HAL_LOCKED , ev= HAL_UNLOCKED
+			--		--State of the structure h_adc.
+			--		VAR h_adc.State, init=0,ev=0x00000004U
+			--		SR of the structure PTU_instance.
+			-- 		VAR PTU_instance.SR, init=0,ev=0x00000002U
+			
+--		COMMENT OUTPUT SECTION :
+--			return value of the function HalAdcPollForConversion is stored. 
+			--	    VAR ret_HalAdcPollForConversion,		init = HAL_OK,		ev = HAL_ERROR
+
+--	        SIMUL
+--				STUB HALGetTick()0
+--				STUB HALGetTick()0xFFFFFFFFU
+--			END SIMUL
+			
+--     calling unit under testing.
+--	        #ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+	      
+--	        END ELEMENT
+	
+--	    END TEST -- TEST 13
+	    
+TEST 9
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-006]
+	COMMENT 	The function calls macro CLEAR_BIT with parameter State of h_adc and HAL_ADC_STATE_REG_BUSY if COND6 is not equal to zero.	
+	COMMENT 	COND1 - Result of macro ADC_IS_SOFTWARE_START_REGULAR with parameter h_adc is not equal to zero.
+	COMMENT 	COND2 - ContinuousConvMode of Init of h_adc is equal to DISABLE.
+	COMMENT 	COND3 - Result of macro HAL_IS_BIT_CLR with parameter SQR1 of Instance of h_adc and ADC_SQR1_L is equal to zero.
+	COMMENT 	COND4 - Result of macro HAL_IS_BIT_CLR with parameter CR2 of Instance of h_adc and ADC_CR2_EOCS is equal to zero.
+	COMMENT 
+	COMMENT  here TTFF Condition is covered.
+	COMMENT Equivalence class 51,116,112,114  
+	COMMENT </TD>
+	ELEMENT
+
+		COMMENT INPUT SECTION :
+			--initialising the Lock of h_adc.
+			VAR h_adc.Lock, 		init= HAL_LOCKED ,			ev= init
+
+			--initialising the structure PTU_instance
+			VAR PTU_instance, init={CR2=>ADC_CR2_EOCS,SQR1=>ADC_SQR1_L},ev=init
+
+			--initialising the structure h_adc
+			STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => 
+			&				{ ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0,
+			&				EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, 
+			&				DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&				=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, 
+			&				NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, ErrorCode => 0 },		ev = init
+			--Initialising the timeout.
+			VAR timeout,					init = 1,			ev = init
+		COMMENT INPUT /OUTPUT SECTION:
+		
+			--variable for the SR of PTU_instance.
+			VAR PTU_instance.SR, 			init=2,				ev=(T_UINT32)0xFFFFFFED
+
+			--variable for the State of h_adc.
+			VAR h_adc.State,				init=0,				ev=512
+		
+		COMMENT OUTPUT SECTION:
+			--holds the return value of the function HalAdcPollForConversion
+			VAR ret_HalAdcPollForConversion,		init = HAL_BUSY,		ev = HAL_OK
+		
+	--stub calls
+	SIMUL
+		STUB HALGetTick()0
+	END SIMUL	
+	
+			--Calling the unit under testing.
+		#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+
+	END ELEMENT
+
+END TEST -- TEST 9
+
+
+TEST 10
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-006]
+	COMMENT The function calls macro CLEAR_BIT with parameter State of h_adc 
+	COMMENT and HAL_ADC_STATE_REG_BUSY if COND6 is not equal to zero.	
+	COMMENT COND1 - Result of macro ADC_IS_SOFTWARE_START_REGULAR with parameter h_adc is not equal to zero.
+	COMMENT COND2 - ContinuousConvMode of Init of h_adc is equal to DISABLE.
+	COMMENT COND3 - Result of macro HAL_IS_BIT_CLR with parameter SQR1 of Instance 
+	COMMENT   of h_adc and ADC_SQR1_L is not equal to zero.
+	COMMENT COND4 - Result of macro HAL_IS_BIT_CLR with parameter CR2 of Instance
+	COMMENT   of h_adc and ADC_CR2_EOCS is not equal to zero.
+	COMMENT COND5 – COND3 OR COND4
+	COMMENT COND6 – COND1 AND COND2 AND COND5
+	COMMENT  here while 0 times is covered and TTFT Condition is covered.
+	COMMENT Equivalence class 51,113,112,114
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-008]
+	COMMENT The function Returns HAL_OK.
+	COMMENT Equivalence class 46
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-007]
+	COMMENT  The function does not call macro SET_BIT with parameter State of h_adc and HAL_ADC_STATE_READY if COND6 is not equal to zero
+	COMMENT  and result of macro HAL_IS_BIT_CLR with parameter State of h_adc and HAL_ADC_STATE_INJ_BUSY is equal to zero.
+	COMMENT  Where,
+	COMMENT  COND1 - Result of macro ADC_IS_SOFTWARE_START_REGULAR with parameter h_adc is not equal to zero..
+	COMMENT  COND2 - ContinuousConvMode of Init of h_adc is equal to DISABLE.
+	COMMENT  COND3 - Result of macro HAL_IS_BIT_CLR with parameter SQR1 of Instance of h_adc and ADC_SQR1_L is not equal to zero.
+	COMMENT  COND4 - Result of macro HAL_IS_BIT_CLR with parameter CR2 of Instance of h_adc and ADC_CR2_EOCS is not equal to zero.
+	COMMENT  COND5 – COND3 OR COND4
+	COMMENT  COND6 – COND1 AND COND2 AND COND5
+	COMMENT  here while 0 times is covered and TTFT Condition is covered.
+	COMMENT Equivalence class 117  
+	COMMENT </TD>
+	
+	ELEMENT
+		COMMENT INPUT SECTION:
+		
+			--Initialising the variable PTU_instance
+			VAR PTU_instance, 		init={CR2=>0,SQR1=>ADC_SQR1_L},		ev=init
+
+			--initialising the sturcture h_adc
+			STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => 
+			&				{ ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0,
+			&				EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, 
+			&				DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&				=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, 
+			&		NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, ErrorCode => 0 },		ev = init
+
+			--Initialising the timeout variable.
+			VAR timeout,		init = 1,		ev = init
+
+			--Initialising the Lock of h_adc
+			VAR h_adc.Lock, 						init= HAL_LOCKED , 		ev= init
+
+		COMMENT INPUT /OUTPUT SECTION :
+		
+			--Initialising the State of h_adc.
+					VAR h_adc.State, 						init=HAL_ADC_STATE_INJ_BUSY,	ev=4608
+
+			--Initialising the SR of PTU_instance
+					VAR PTU_instance.SR	,		init=2,							ev=(T_UINT32)0xFFFFFFED
+				
+		COMMENT OUTPUT SECTION:
+		
+			--Holds the return value of HalAdcPollForConversion
+			VAR ret_HalAdcPollForConversion,		init = HAL_BUSY,		ev =HAL_OK 	
+
+		--stub calls
+		SIMUL
+			STUB HALGetTick()0		
+		END SIMUL
+			
+			--calling Unit under testing
+		#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+	
+	END ELEMENT
+
+END TEST -- TEST 10
+
+	   
+TEST 12
+	FAMILY nominal
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcPollForConversion-DB-LLR-003]
+	COMMENT	In First while loop: Functions does nothing when result of macro __HAL_ADC_GET_FLAG
+	COMMENT	with parameter h_adc and ADC_FLAG_EOC is equal to zero
+	COMMENT	and timeout is not equal to HAL_MAX_DELAY and result of OR (operation of 
+	COMMENT	timeout is not equal to ZERO) and (result of return value of function HALGetTick
+	COMMENT	minus tick start is equal to timeout)
+	COMMENT Here the false part is covered with FT Condition
+	COMMENT Equvalence class 109
+	COMMENT 
+	COMMENT	In second while loop:   
+	COMMENT	The function does following since result of macro __HAL_ADC_GET_FLAG
+	COMMENT	with parameter h_adc and ADC_FLAG_EOC is equal to zero
+	COMMENT	and timeout is not equal to HAL_MAX_DELAY and result of OR operation of 
+	COMMENT	timeout is equal to ZERO and result of return value of function HALGetTick
+	COMMENT	minus tick start is greater than timeout
+	COMMENT	1.	Call macro SET_BIT with parameter State of h_adc and HAL_ADC_STATE_TIMEOUT.
+	COMMENT	2.	Call macro __HAL_UNLOCK with parameter h_adc.
+	COMMENT	3.	Shall return HAL_TIMEOUT.
+	COMMENT Equvalence class 45,47,106,107,108
+	COMMENT 
+	ELEMENT
+	        
+	       COMMENT INPUT SECTION :
+	      
+        --Initialise the instance variable  
+		VAR PTU_instance, 					init={CR2=>0},				ev=init
+		
+		--Initialising the sturcture
+		STRUCTURE h_adc,		init = { Instance => &PTU_instance,
+		&					Init => { ClockPrescaler => 0, Resolution => 0, DataAlign => 0,
+		&					ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, 
+		&					NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+		&					=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 },
+		&					NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, ErrorCode => 0 },		ev = init
+		
+		--initialising timeout
+		VAR timeout,							init = 101,			ev = init
+		
+		COMMENT INPUT/OUTPUT SECTION:
+		
+				--variable used to hold the Lock of h_adc
+				VAR h_adc.Lock, 				init= HAL_LOCKED , 	ev= HAL_UNLOCKED
+				
+				--variable used to hold the State of h_adc
+				VAR h_adc.State, 				init=0,				ev=0x00000004U
+		
+		COMMENT OUTPUT SECTION:
+			--Variable holds the return value of the function HalAdcPollForConversion
+		VAR ret_HalAdcPollForConversion,		init = HAL_OK,		ev = HAL_TIMEOUT
+		
+		
+	        
+		SIMUL
+			STUB HALGetTick()0
+			STUB HALGetTick()101
+			STUB HALGetTick()102
+		END SIMUL
+		
+		
+	--Calling unit under testing.
+					
+	#ret_HalAdcPollForConversion = HalAdcPollForConversion(&h_adc, timeout);
+	        
+	END ELEMENT
+	
+	    END TEST -- TEST 12
+
+
+
+END SERVICE -- HalAdcPollForConversion
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalAdcConfigChannel
+--------------------------------------------------------------------------------
+SERVICE HalAdcConfigChannel
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ADC_HANDLE h_adc;
+    #T_ADC_CHANNEL_CONF s_config;
+    -- By function returned type declaration
+    #T_HAL_STATUS ret_HalAdcConfigChannel;
+
+    ENVIRONMENT ENV_HalAdcConfigChannel
+    
+    STRUCTURE h_adc,		init = { Instance => NIL, Init => { ClockPrescaler => 0, 
+    &		Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0,
+    &		NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+	&		=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+	&		DMA_Handle => NIL, Lock => HAL_UNLOCKED, ErrorCode => 0 },		ev = init
+
+    STRUCTURE s_config,		init = { Channel => 0, Rank => 0, SamplingTime => 0, Offset => 0 },		ev = init
+    
+    VAR ret_HalAdcConfigChannel,		init = HAL_OK,		ev = init
+    
+    END ENVIRONMENT -- ENV_HalAdcConfigChannel
+    
+    USE ENV_HalAdcConfigChannel
+
+    TEST 1
+    FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-001]
+    COMMENT The function shall call macro '__HAL_LOCK' with parameters h_adc.
+    COMMENT Equivalence Class 54
+    COMMENT	
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-005]
+	COMMENT The function shall do following if Channel of s_config is less than or eqaul to ADC_CHANNEL_9
+	COMMENT 1.	Set SMPR2 of Instance of h_adc to result of bitwise AND of SMPR2 of Instance of h_adc
+	COMMENT	and Inverse result of macro ADC_SMPR2 with (boundary value checked)
+	COMMENT parameter ADC_SMPR2_SMP0 and Channel of s_config.
+	COMMENT 2.	Set SMPR2 of Instance of h_adc to result of bitwise OR of SMPR2 of Instance of h_adc
+	COMMENT	and result of macro ADC_SMPR2 with parameter 
+	COMMENT SamplingTime of s_config and Channel of s_config.
+	COMMENT Equivalence Class 119 
+    COMMENT    
+    COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-006]
+    COMMENT The function DOES  following since Rank of s_config is less than SEVEN
+    COMMENT 1.	Set SQR3 of Instance of h_adc to result of bitwise AND of SQR3 of 
+    COMMENT Instance of h_adc and Inverse result of macro ADC_SQR3_RK with parameter ADC_SQR3_SQ1 and Rank of s_config.
+    COMMENT 2.	Set SQR3 of Instance of h_adc to result of bitwise OR of SQR3 of 
+    COMMENT Instance of h_adc and result of macro ADC_SQR3_RK with parameter Channel of s_config and Rank of s_config.
+	COMMENT Equivalence Class 55
+    COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-009]
+	COMMENT The function does nothing when Instance of h_adc is not equal to ADC1 AND Channel of 
+	COMMENT s_config is not equal to ADC_CHANNEL_VBAT.
+	COMMENT Equivalence Class 59
+    COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-010]
+	COMMENT The function does nothing Instance of  h_adc is not equal to ADC1 AND Channel 
+	COMMENT of s_config is not eqaul to ADC_CHANNEL_TEMPSENSOR OR Channel of 
+	COMMENT s_config is not equal to ADC_CHANNEL_VREFINT . 
+	COMMENT Equivalence Class 59
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-012]
+    COMMENT The function calls macro  __HAL_UNLOCK with parameter h_adc.
+    COMMENT Equivalence Class 82
+    COMMENT
+    COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-013]    
+    COMMENT The function  return HAL_OK.
+ 	COMMENT Equivalence Class 62 
+	COMMENT </TD>
+    
+    ELEMENT
+        	 COMMENT INPUT SECTION :
+        	 
+           		--	initialising the sturcture PTU_instance
+        		VAR PTU_instance,init={others => 0},ev=init
+        		
+        		--	initialising the sturcture h_adc
+				STRUCTURE h_adc,		init = { Instance => &PTU_instance,
+				&						Init => { ClockPrescaler => 0, Resolution => 0, DataAlign => 0,
+				&						ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0,
+				&						NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+				&						=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, 
+				&						NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED, 
+				&						State => 0, ErrorCode => 0 },		ev = init
+				--	initialising the sturcture s_config
+				STRUCTURE s_config,		init = { Channel => 8, Rank => 0, SamplingTime => 0, Offset => 0 },		ev = init
+			
+			COMMENT INPUT/OUTPUT SECTION :	
+				--None
+			
+			COMMENT OUTPUT SECTION :
+				--holds the return value of HalAdcConfigChannel
+				VAR ret_HalAdcConfigChannel,		init = HAL_OK,		ev = init
+        
+        --stub calls
+        SIMUL
+        	--None
+        END SIMUL
+        
+        		--Calling unit under testing
+        	#ret_HalAdcConfigChannel = HalAdcConfigChannel(&h_adc, &s_config);
+        END ELEMENT
+
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-002]
+	COMMENT The function set SMPR1 of Instance of h_adc to result of bitwise AND
+	COMMENT of SMPR1 of Instance of h_adc and Inverse result of macro
+	COMMENT ADC_SMPR1 with parameter ADC_SMPR1_SMP10 and Channel of s_config 
+	COMMENT Since Channel of s_config is greater than ADC_CHANNEL_9.
+	COMMENT Equivalence Class 63,64
+	COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-004]
+	COMMENT The function shall set SMPR1 of Instance of h_adc to
+	COMMENT	result of bitwise OR of SMPR1 of Instance of h_adc and result 
+	COMMENT	of macro ADC_SMPR1 with parameter SamplingTime of s_config and
+	COMMENT	Channel of s_config if Channel of s_config is greater than ADC_CHANNEL_9
+	COMMENT	and Channel of s_config is not equal to ADC_CHANNEL_TEMPSENSOR.
+	COMMENT Equivalence Class 63,81
+	COMMENT </TD>
+   
+    ELEMENT
+           COMMENT INPUT SECTION :
+           		--	initialising the sturcture h_adc
+		               STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => 
+		               &					{ ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0,
+		               &					EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, 
+		               &					DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+		       		   &					=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, 
+		       		   &					NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED,
+		       		   &					State => 0, ErrorCode => 0 },		ev = init
+		       		
+		       	--	initialising the sturcture s_config   
+		       	   STRUCTURE s_config,		init = { Channel => 10, Rank => 0, SamplingTime => 0, Offset => 0 },		ev = init
+		       	   
+		    COMMENT INPUT /OUTPUT  SECTION : 
+		    		-- initialising SQR3 of PTU_instance
+		       	   VAR PTU_instance.SQR3,		init=0,					ev=0
+		       	   
+		    COMMENT OUTPUT SECTION :
+		       	   --holds the return value of HalAdcConfigChannel
+        	VAR ret_HalAdcConfigChannel,		init = HAL_TIMEOUT,		ev =HAL_OK
+           
+           --Stub calls
+           SIMUL
+           	--None
+           END SIMUL
+     			--Calling unit under testing.
+            #ret_HalAdcConfigChannel = HalAdcConfigChannel(&h_adc, &s_config);
+     END ELEMENT
+    
+    END TEST -- TEST 2
+    
+     TEST 3
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-003]
+	COMMENT function set SMPR1 of Instance of h_adc to result of bitwise OR of SMPR1 of Instance of h_adc and
+	COMMENT result of macro ADC_SMPR1 with parameter SamplingTime of s_config and ADC_CHANNEL_18 
+	COMMENT Since Channel of s_config is greater than ADC_CHANNEL_9 and Channel of s_config is equal to ADC_CHANNEL_TEMPSENSOR
+	COMMENT Equivalence Class 63,64,65
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-007]
+	COMMENT The function does following since Rank of s_config is greater than or
+	COMMENT 	equal to SEVEN and Rank of s_config is less than THIRTEEN
+	COMMENT 1.	Set SQR2 of Instance of h_adc to result of bitwise AND of SQR2 of
+	COMMENT 	Instance of h_adc and Inverse result of macro ADC_SQR2_RK with parameter ADC_SQR2_SQ7 and Rank of s_config.
+	COMMENT 2.	Set SQR2 of Instance of h_adc to result of bitwise OR of SQR2 of
+	COMMENT 	Instance of h_adc and result of macro  with parameter Channel of s_config and Rank of s_config.
+	COMMENT Equivalence Class 57,91,58
+	COMMENT
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-009]
+	COMMENT In the function, Channel of s_config is not equal to ADC_CHANNEL_VBAT 
+	COMMENT Hence does nothing.here the else part is covered 
+	COMMENT Equivalence Class 60,102 
+	COMMENT </TD>
+	COMMENT
+	
+	ELEMENT
+		 COMMENT INPUT SECTION :
+		 
+					--	initialising the SQR1 of sturcture PTU_instance
+				VAR PTU_instance.SQR1,init=0,ev=init
+
+			--	initialising the  sturcture h_adc
+			STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init =>
+			&					{ ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0, 
+			&					EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, DiscontinuousConvMode => 0,
+			&					NbrOfDiscConversion => 0, ExternalTrigConv
+			&					=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+			&					DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+
+			--	initialising the  sturcture s_config
+			STRUCTURE s_config,		init = { Channel => ADC_CHANNEL_TEMPSENSOR, Rank => 8, SamplingTime => 0, Offset => 0 },		ev = init
+		
+		 COMMENT INPUT/OUTPUT SECTION :
+		 	--None
+		 	
+		COMMENT OUTPUT SECTION :
+			--holds the return value of HalAdcConfigChannel
+			VAR ret_HalAdcConfigChannel,		init = HAL_TIMEOUT,		ev = HAL_OK
+			
+	--stub calls
+	SIMUL
+		--None
+	END SIMUL
+	
+			--Calling the unit under testing.
+		#ret_HalAdcConfigChannel = HalAdcConfigChannel(&h_adc, &s_config);
+	END ELEMENT
+        
+    END TEST -- TEST 3
+    
+    TEST 4
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-008]
+	COMMENT The function does following Since Rank of s_config is greater than  THIRTEEN.
+	COMMENT 1.	Set SQR1 of Instance of h_adc to result of bitwise AND of SQR1 of Instance
+	COMMENT	of h_adc and Inverse result of macro ADC_SQR1_RK with parameter ADC_SQR1_SQ13 and Rank of s_config.
+	COMMENT 2.	Set SQR1 of Instance of h_adc to result of bitwise OR of SQR1 of Instance of
+	COMMENT	h_adc and result of macro ADC_SQR1_RK with parameter Channel of s_config and Rank of s_config.
+	COMMENT Equivalence Class 66,58
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-009]
+	COMMENT The function does nothing,when Channel of s_config is not equal to ADC_CHANNEL_VBAT 
+	COMMENT Equivalence Class 68,60
+	COMMENT 
+	COMMENT </TD>
+	
+	ELEMENT
+          COMMENT INPUT SECTION :
+          
+					
+			--	initialising the sturcture h_adc
+			STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0,
+			&					Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0,
+			&					NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&					=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+			&					DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+			
+			--	initialising the sturcture s_config
+			STRUCTURE s_config,		init = { Channel => ADC_CHANNEL_TEMPSENSOR, Rank => 14, SamplingTime => 0, Offset => 0 },		ev = init
+		 
+		 COMMENT INPUT/OUTPUT SECTION :
+		 
+		 --	variable holds the SQR1 of sturcture PTU_instance         
+			VAR PTU_instance.SQR1,					init=0,				ev=576
+			
+		 COMMENT OUTPUT SECTION :
+		 
+			 --holds the return value of function HalAdcConfigChannel
+			VAR ret_HalAdcConfigChannel,		init =HAL_TIMEOUT ,		ev = HAL_OK
+			
+		--stub calls
+		SIMUL
+			--None
+		END SIMUL
+		
+		--Calling unit under testing
+		#ret_HalAdcConfigChannel = HalAdcConfigChannel(&h_adc, &s_config);
+     
+     END ELEMENT
+            
+    END TEST -- TEST 4
+    
+
+	TEST 5
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-009]
+	COMMENT	The function Instance of h_adc is equal to ADC1 AND Channel of s_config 
+	COMMENT is not eqaul to ADC_CHANNEL_VBAT hence Otherwise does nothing. 
+	COMMENT Equivalence Class 68,69 
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-010]
+	COMMENT	The function sets CCR of ADC to result of bitwise OR of CCR of ADC and ADC_CCR_TSVREFE 
+	COMMENT	Since Instance of  h_adc is equal to ADC1 AND 
+	COMMENT	Channel of s_config is eqaul to ADC_CHANNEL_TEMPSENSOR  
+	COMMENT Equivalence Class 65,69
+	COMMENT	
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-011]
+	COMMENT 	The function decrements Counter value.
+	COMMENT 	since all of the below conditions are satisified
+	COMMENT 	1.	Instance of  h_adc is equal to ADC1 AND Channel of s_config is eqaul 
+	COMMENT    to ADC_CHANNEL_TEMPSENSOR OR Channel of s_config is equal to ADC_CHANNEL_VREFINT. 
+	COMMENT 	2.	Channel of s_config is equal to ADC_CHANNEL_TEMPSENSOR
+	COMMENT 	3.	Counter value is equal to zero
+	COMMENT 	Where,
+	COMMENT 	Counter value = ADC_TEMPSENSOR_DELAY_US multiply with (System_core_clock divide by VAL_100K)
+	COMMENT Here while loop is covered 0 time.
+	COMMENT Equivalence Class 65,120
+	COMMENT	
+	COMMENT <TD>
+
+	ELEMENT
+		COMMENT INPUT SECTION:
+		
+			--Initialise the system core clock value.
+			VAR System_core_clock, init=1000000,ev=init
+			
+			--Initialises the structure PTU_instance
+			VAR PTU_instance,init={others => 0},ev=init
+			
+			--Initialises the structure h_adc
+			STRUCTURE h_adc,		init = { Instance => &PTU_ADC1, Init => 
+			&		{ ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0,
+			&		EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, 
+			&		DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&		=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, 
+			&		NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+			
+			--Initialises the structure s_config
+			STRUCTURE s_config,		init = { Channel => ADC_CHANNEL_TEMPSENSOR, Rank => 14, SamplingTime => 0, Offset => 0 },		ev = init
+
+		COMMENT OUTPUT SECTION:
+			
+			--Holds the return value of HalAdcConfigChannel.
+			VAR ret_HalAdcConfigChannel,		init = HAL_TIMEOUT,		ev =HAL_OK 
+		
+		--stub calls
+		SIMUL
+			--None
+		END SIMUL
+		
+		--calling unit under testing.
+		#ret_HalAdcConfigChannel = HalAdcConfigChannel(&h_adc, &s_config);
+	END ELEMENT
+                
+    END TEST -- TEST 5
+    
+	TEST 6
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-009]
+	COMMENT	The function sets CCR of ADC to result of bitwise OR of CCR of ADC and ADC_CCR_VBATE 
+	COMMENT	since Instance of h_adc is equal to ADC1 AND Channel of s_config is eqaul to ADC_CHANNEL_VBAT.
+	COMMENT Equivalenc Class 103
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-010]
+	COMMENT	The function sets CCR of ADC to result of bitwise OR of CCR of ADC and ADC_CCR_TSVREFE 
+	COMMENT	Since Instance of  h_adc is equal to ADC1 AND 
+	COMMENT	Channel of s_config is eqaul to ADC_CHANNEL_TEMPSENSOR  
+	COMMENT Equivalence Class 65 
+	COMMENT </TD>
+	
+	ELEMENT
+          COMMENT INPUT SECTION : 
+          	--initalising the instance variable 
+			VAR PTU_instance,init={others => 0},ev=init
+			
+			--initialising the sturcture h_adc
+			STRUCTURE h_adc,		init = { Instance => &PTU_ADC1, Init => { ClockPrescaler => 0,	
+			&				Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, 
+			&				NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&				=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+			&				DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+			--initialising the sturcture s_config.
+			STRUCTURE s_config,		init = { Channel => ADC_CHANNEL_VBAT, Rank => 14, SamplingTime => 0, Offset => 0 },		ev = init
+		
+		COMMENT INPUT / OUTPUT SECTION :
+		
+			--None
+			
+		COMMENT OUTPUT SECTION :
+		
+				--holds the return value of HalAdcConfigChannel
+			VAR ret_HalAdcConfigChannel,		init =HAL_TIMEOUT ,		ev = HAL_OK
+	
+	--stub calls	
+	SIMUL
+	
+		--None
+		
+	END SIMUL
+	
+		--calling unit under testing
+		#ret_HalAdcConfigChannel = HalAdcConfigChannel(&h_adc, &s_config);
+    END ELEMENT
+                    
+    END TEST -- TEST 6
+    
+
+	TEST 7
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-011] 
+	COMMENT Channel of s_config is NOT equal  to ADC_CHANNEL_TEMPSENSOR  hence does nothing.
+	COMMENT Equivalence Class 61 
+	COMMENT </TD>
+		
+		ELEMENT 
+
+		COMMENT INPUT SECTION :
+		
+			--Initialising the instance variable.
+			VAR PTU_instance,		init={others => 0},						ev=init
+
+			--Initialising the structure h_adc
+			STRUCTURE h_adc,		init = { Instance => &PTU_ADC1, Init => { ClockPrescaler => 0,
+			&						Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0,
+			&						NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&						=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0, 
+			&						DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+
+			--Initialising the structure s_config
+			STRUCTURE s_config,		init = { Channel => ADC_CHANNEL_VREFINT, Rank => 14, SamplingTime => 0, Offset => 0 },		ev = init
+
+		COMMENT INPUT / OUTPUT SECTION :
+		
+			--None
+		
+		COMMENT OUTPUT SECTION :
+		
+			--Holds the return value of function HalAdcConfigChannel
+			VAR ret_HalAdcConfigChannel,		init = HAL_TIMEOUT,		ev = HAL_OK
+			--Calling unit under testing
+		
+			--Calling stubs
+		SIMUL
+			--None
+		END SIMUL
+	
+		--calling unit under testing.
+		#ret_HalAdcConfigChannel = HalAdcConfigChannel(&h_adc, &s_config);
+    END ELEMENT
+                        
+    END TEST -- TEST 7
+    
+	TEST 8
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-011]
+	COMMENT 	The function decrements Counter value.
+	COMMENT 	since all of the below conditions are satisified
+	COMMENT 	1.	Instance of  h_adc is equal to ADC1 AND Channel of s_config is eqaul to
+	COMMENT    ADC_CHANNEL_TEMPSENSOR OR Channel of s_config is equal to ADC_CHANNEL_VREFINT. 
+	COMMENT 	2.	Channel of s_config is equal to ADC_CHANNEL_TEMPSENSOR
+	COMMENT 	3.	Counter value is not equal to zero
+	COMMENT 	Where,
+	COMMENT 	Counter value = ADC_TEMPSENSOR_DELAY_US multiply with (System_core_clock divide by VAL_900K)
+	COMMENT Here while loop is covered 0
+	COMMENT Equivalence Class 65 
+	COMMENT </TD>
+	ELEMENT
+		COMMENT INPUT SECTION :
+				--Initialising the system core clock.
+			VAR System_core_clock, 					init=1000000,			ev=init
+			
+				--Initialising the structure PTU_instance
+			VAR PTU_instance,						init={others => 0},		ev=init
+			
+				--Initialising the structure h_adc
+			STRUCTURE h_adc,						init = { Instance => &PTU_ADC1, Init => { ClockPrescaler => 0, 
+			&							Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0,
+			&							NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&							=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+			&							DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+			
+			--Initialising the structure s_config
+			STRUCTURE s_config,		init = { Channel => ADC_CHANNEL_TEMPSENSOR, Rank => 14, SamplingTime => 0, Offset => 0 },		ev = init
+		
+		COMMENT INPUT/OUTPUT SECTION :
+		
+			--None
+			
+		COMMENT OUTPUT SECTION :
+				--stores the return value of the function HalAdcConfigChannel
+			VAR ret_HalAdcConfigChannel,		init =HAL_TIMEOUT ,		ev = HAL_OK
+		
+		--stub calls
+		SIMUL
+			--None
+		END SIMUL
+			
+			--unit under testing
+		#ret_HalAdcConfigChannel = HalAdcConfigChannel(&h_adc, &s_config);
+	END ELEMENT
+                    
+    END TEST -- TEST 8
+
+	TEST 9
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-011]
+	COMMENT 	The function decrements Counter value.
+	COMMENT 	since all of the below conditions are satisified
+	COMMENT 	1.	Instance of  h_adc is equal to ADC1 AND Channel of s_config is eqaul to
+	COMMENT    ADC_CHANNEL_TEMPSENSOR OR Channel of s_config is equal to ADC_CHANNEL_VREFINT. 
+	COMMENT 	2.	Channel of s_config is equal to ADC_CHANNEL_TEMPSENSOR
+	COMMENT 	3.	Counter value is equal to zero
+	COMMENT 	Where,
+	COMMENT 	Counter value = ADC_TEMPSENSOR_DELAY_US multiply with (System_core_clock divide by VAL_900K)
+	COMMENT Here while loop is covered 0
+	COMMENT Equivalence Class 81
+	COMMENT </TD>
+
+	ELEMENT
+		COMMENT INPUT SECTION :
+				--Initiailising the system core clock.
+			VAR System_core_clock, init=33333,ev=init
+			
+				--Initialising the sturcture PTU_instance
+			VAR PTU_instance,init={others => 0},ev=init
+			
+				--Initialising the sturcture h_adc
+			STRUCTURE h_adc,		init = { Instance => &PTU_ADC1, Init => { ClockPrescaler => 0,
+			&				Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0,
+			&				NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&				=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+			&				DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+			
+				--Initialising the sturcture s_config
+			STRUCTURE s_config,		init = { Channel => ADC_CHANNEL_TEMPSENSOR, Rank => 14, SamplingTime => 0,
+			&						Offset => 0 },		ev = init
+		
+		COMMENT INPUT /OUTPUT SECTION :
+				--None
+		
+		COMMENT OUTPUT SECTION :
+		
+			--holds the return value of the function HalAdcConfigChannel
+			VAR ret_HalAdcConfigChannel,		init = HAL_TIMEOUT,		ev = HAL_OK
+			--stub calls
+			SIMUL
+				--None
+			END SIMUL
+			
+			--unit under testing
+			#ret_HalAdcConfigChannel = HalAdcConfigChannel(&h_adc, &s_config);
+	END ELEMENT
+                       
+    END TEST -- TEST 9
+    
+	TEST 10
+	FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhaladc-HalAdcConfigChannel-DB-LLR-001]
+	COMMENT The function shall call macro __HAL_LOCK with parameters h_adc.
+	COMMENT Equivalence Class 54 
+	COMMENT </TD>
+	ELEMENT
+		COMMENT INPUT SECTION:
+					--Initalising the variable PTU_instance
+				VAR PTU_instance,	init={others => 0},								ev=init
+				
+					--Initialising the strcture h_adc
+			STRUCTURE h_adc,		init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0,
+			&			Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0,
+			&			NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+			&			=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0, 
+			&			DMA_Handle => NIL, Lock => HAL_LOCKED, State => 0, ErrorCode => 0 },		ev = init
+		
+				--Initialising the structure s_config
+			STRUCTURE s_config,		init = { Channel => 0, Rank => 0, SamplingTime => 0, Offset => 0 },		ev = init
+		COMMENT INPUT/OUTPUT SECTION 
+				--None
+		COMMENT OUTPUT SECTION:
+			---Holds the return value of the function HalAdcConfigChannel
+			VAR ret_HalAdcConfigChannel,		init = HAL_OK,		ev = HAL_BUSY
+			
+		--Stub calls
+		SIMUL
+			--None
+		END SIMUL
+		
+			--Unit under testing
+		#ret_HalAdcConfigChannel = HalAdcConfigChannel(&h_adc, &s_config);
+	END ELEMENT
+   
+   END TEST -- TEST 10
+END SERVICE -- HalAdcConfigChannel
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalAdcStart
+--------------------------------------------------------------------------------
+SERVICE HalAdcStart
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ADC_HANDLE h_adc;
+    -- By function returned type declaration
+    #T_HAL_STATUS ret_HalAdcStart;
+
+    ENVIRONMENT ENV_HalAdcStart
+		STRUCTURE h_adc,		init = { Instance => NIL, Init => { ClockPrescaler => 0, Resolution => 0, DataAlign => 0,
+		&				ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, DiscontinuousConvMode => 0,
+		& 				NbrOfDiscConversion => 0, ExternalTrigConv
+		& 				=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0, 
+		&				DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+		VAR ret_HalAdcStart,		init = HAL_OK,		ev = init
+		END ENVIRONMENT -- ENV_HalAdcStart
+    USE ENV_HalAdcStart
+
+    TEST 1
+    FAMILY nominal
+    	COMMENT Test Description 
+		COMMENT <TD>
+        COMMENT 
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-001]
+        COMMENT The function calls macro '__HAL_LOCK' with parameter 'h_adc'.
+        COMMENT Equivalence Class 5,72
+        COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-002] 
+        COMMENT 
+        COMMENT  function Does the  following since result of bitwise AND of ADC_CR2_ADON and 
+        COMMENT CR2 of Instance of h_adc is not equal to ADC_CR2_ADON.
+        COMMENT  1.	Call macro '__HAL_ADC_ENABLE' with parameter 'h_adc'.
+        COMMENT  2.	Decrement the counter value since counter is not equal to ZERO
+		COMMENT Equivalence Class 6,8,85
+        COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-004]
+        COMMENT  result of macro READ_BIT with parameters CR1 of Instance of h_adc and ADC_CR1_JAUTO
+		COMMENT        is equal to RESET hence does nothing.	
+		COMMENT Equivalence Class 88
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-006]
+        COMMENT The function call macro ADC_CLEAR_ERRORCODE with parameter h_adc.
+        COMMENT since all of the below conditions are satisified:
+        COMMENT 1.	Result of macro HAL_IS_BIT_SET with parameters CR2 of Instance
+  		COMMENT      of h_adc and ADC_CR2_ADON is not equal to zero 
+        COMMENT 2.	Result of macro HAL_IS_BIT_SET with parameters State of h_adc,
+ 		COMMENT       HAL_ADC_STATE_INJ_BUSY is equal to ZERO.
+		COMMENT Equivalence Class 71,10,11
+        COMMENT 
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-007]
+        COMMENT The function call macro '__HAL_UNLOCK' with parameter h_adc since
+        COMMENT Result of macro 'HAL_IS_BIT_SET' with parameters CR2 of Instance of 
+ 		COMMENT       h_adc and 'ADC_CR2_ADON' is not equal to zero.
+        COMMENT 
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-008]
+        COMMENT The function call macro '__HAL_ADC_CLEAR_FLAG' with parameter h_adc and result of
+		COMMENT bitwise OR of ADC_FLAG_EOC and ADC_FLAG_OVR since,
+        COMMENT Result of macro 'HAL_IS_BIT_SET' with parameters CR2 of Instance 
+		COMMENT        of h_adc and 'ADC_CR2_ADON' is not equal to zero..
+		COMMENT Equivalence Class 10,73        
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-009]
+        COMMENT  The function set CR2 of Instance of h_adc to result of bitwise OR
+  		COMMENT      of CR2 of Instance of h_adc and ADC_CR2_SWSTART.
+        COMMENT SINCE all of the below conditions are satisified:
+        COMMENT 1.Result of macro HAL_IS_BIT_SET with parameters CR2 of Instance
+		COMMENT        of h_adc and ADC_CR2_ADON is not equal to zero 
+        COMMENT 2.Result of macro HAL_IS_BIT_CLR with parameters CCR of ADC 
+		COMMENT        and ADC_CCR_MULTI is not equal to ZERO.
+        COMMENT 3.Result of bitwise OR of CR2 of Instance of h_adc and ADC_CR2_EXTEN is equal to  RESET. 
+		COMMENT Equivalence Class 10,73,74
+		COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-011]
+        COMMENT  The function  return HAL_OK.       
+		COMMENT Equivalence Class 9
+		COMMENT	
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-003]
+        COMMENT The function result of macro 'HAL_IS_BIT_SET' with parameters
+		COMMENT        CR2 of Instance of h_adc and ADC_CR2_ADON is  equal to zero. 
+        COMMENT Equivalence Class 11
+        COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-005]
+        COMMENT The function calls macro CLEAR_BIT with parameters ErrorCode 
+ 		COMMENT       of h_adc Result of bitwise OR of HAL_ADC_ERROR_OVR and HAL_ADC_ERROR_DMA.
+        COMMENT Since the follwing conditions are satisfied:
+        COMMENT 1.	Result of macro HAL_IS_BIT_SET with parameters CR2 of Instance
+ 		COMMENT       of h_adc and ADC_CR2_ADON is not equal to ZERO.
+        COMMENT 2.	Result of macro HAL_IS_BIT_SET with parameters State of
+		COMMENT        h_adc, HAL_ADC_STATE_INJ_BUSY is not equal to ZERO. 
+		COMMENT Equivalence Class 10
+        COMMENT </TD>
+        ELEMENT
+         	COMMENT INPUT SECTION :
+				
+				--Initialise the structure h_adc.
+				VAR h_adc,		init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0, Resolution => 0,
+				&				DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0,
+				&				DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+				&				=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0, 
+				&				DMA_Handle => NIL, ErrorCode => 0 },		ev = init
+				
+				--global variable is initialised with a value such that to cover while loop for 2 or more times
+				VAR System_core_clock, 	init=1000000,			ev=init
+				
+			COMMENT INPUT /OUTPUT SECTION :
+				--Initialise the SR of PTU_instance
+				VAR PTU_instance.SR , 							init = 0, 			ev = (T_UINT32)0xFFFFFFDD
+				
+				--Initialise the CR2 of PTU_instance
+				VAR PTU_instance.CR2 , 							init = 0, 			ev = (T_UINT32)0x40000001
+				
+				--the lock of structure 
+				VAR    h_adc,				 init ={Lock=>HAL_UNLOCKED}, 			ev=init
+				--the State of structure 
+				VAR h_adc , 				init ={State => 0}, 					ev ={State => 256}
+			COMMENT OUTPUT SECTION :
+				
+				
+				--holds the return value of unit under testing
+				VAR ret_HalAdcStart,		init = HAL_ERROR,						ev =HAL_OK
+				
+			--stub calls
+			SIMUL
+				--None
+			END SIMUL
+			
+			--Calling unit under testing.
+        #ret_HalAdcStart = HalAdcStart(&h_adc);
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+  TEST 2
+    FAMILY nominal
+    	COMMENT Test Description 
+		COMMENT <TD>
+        COMMENT 
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-001]
+        COMMENT The function calls macro '__HAL_LOCK' with parameter 'h_adc'.
+        COMMENT Equivalence Class 5
+        COMMENT
+        COMMENT </TD>
+        ELEMENT
+         	COMMENT INPUT SECTION :
+         
+				--Initialise the structure h_adc.
+				VAR h_adc,					init = { Instance => &PTU_instance, Init => { ClockPrescaler => 0,
+				&				Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode
+				&				=> 0, NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+				&				=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank 
+				&				=> 0, DMA_Handle => NIL, State => 0, ErrorCode => 0 },		ev = init
+
+				--the lock of structure is affected
+				VAR    h_adc,				 init ={Lock=>HAL_LOCKED}, 			ev=init
+				
+   
+			COMMENT INPUT /OUTPUT SECTION :
+
+				--None
+
+				
+			COMMENT OUTPUT SECTION :
+			
+				--holds the return value of unit under testing
+				VAR ret_HalAdcStart,		init = HAL_ERROR,					ev =HAL_BUSY
+			
+			--stub calls
+			SIMUL
+				--None
+			END SIMUL	
+				
+			--Calling unit under testing.
+        #ret_HalAdcStart = HalAdcStart(&h_adc);
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+--TEST 3
+--    FAMILY robustness
+--    	  COMMENT Test Description 
+--	      COMMENT <TD>
+--        COMMENT 
+--		  COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-001]
+--        COMMENT The function is tested for invalid input given for the parameter of type T_ADC_HANDLE.
+--	  	  COMMENT Equivalence Class 122
+--        COMMENT 
+--        COMMENT
+--        COMMENT </TD>
+--        ELEMENT
+--
+--         	COMMENT INPUT SECTION :
+--         
+----Initialise the structure h_adc.
+--        VAR h_adc,		init =NULL,		ev = init
+--	    
+--    
+--			COMMENT INPUT /OUTPUT SECTION :
+--
+--				--None
+--
+--				
+--			COMMENT OUTPUT SECTION :
+--				--None
+--			--Calling unit under testing.
+--        #ret_HalAdcStart = HalAdcStart(&h_adc);
+--        END ELEMENT
+--
+--    END TEST -- TEST 3
+
+ TEST 4
+    FAMILY nominal
+    	COMMENT Test Description 
+		COMMENT <TD>
+        COMMENT 10
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-001]
+        COMMENT The function calls macro '__HAL_LOCK' with parameter 'h_adc'.
+        COMMENT Equivalence Class 5
+        COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-002]
+        COMMENT 
+        COMMENT  function Does the  following since result of bitwise AND of ADC_CR2_ADON
+        COMMENT and CR2 of Instance of h_adc is not equal to ADC_CR2_ADON.
+        COMMENT  1.	Call macro '__HAL_ADC_ENABLE' with parameter 'h_adc'.
+        COMMENT  2.	Decrement the counter value if counter is not equal to ZERO
+		COMMENT Equivalence Class 6,8
+        COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-003]
+        COMMENT ELSE PART IS COVERED
+        COMMENT Equivalence Class 11
+        COMMENT </TD>
+        ELEMENT
+         	COMMENT INPUT SECTION :
+         		--Initialise the structure PTU_ADC.	
+				VAR PTU_ADC, 		init={CCR=>0x0000001FU,others=>0} ,				ev=init
+				
+					--Initialise the structure PTU_ADC1.	
+				VAR  PTU_ADC1, 		init ={CR1=>0x00000400U},						ev= init
+				
+				--Initialise the structure h_adc.
+				VAR h_adc,			init = {Instance => &PTU_ADC1},					ev = init
+
+				
+			COMMENT INPUT /OUTPUT SECTION :
+
+				--the lock of structure is affected
+				VAR    h_adc,				 init ={State=>0x00001102U}, 			ev=init
+				VAR  PTU_ADC1.SR, init =1	,		ev=(T_UINT32)0xFFFFFFDD
+         			VAR  PTU_ADC1.CR2, init =0	,		ev=(T_UINT32)0x40000001
+				
+			COMMENT OUTPUT SECTION :
+				--holds the return value of unit under testing
+				VAR ret_HalAdcStart,		init = HAL_ERROR,						ev =HAL_OK
+
+			--stub calls	
+			SIMUL
+				--None
+			END SIMUL
+		
+				--Calling unit under testing.
+        		#ret_HalAdcStart = HalAdcStart(&h_adc);
+        		
+        END ELEMENT
+
+    END TEST -- TEST 4
+
+ TEST 5
+    FAMILY nominal
+    	COMMENT Test Description 
+		COMMENT <TD>
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-010]
+        COMMENT Result of bitwise AND of CR2 of Instance of h_adc and ADC_CR2_EXTEN is equal to RESET is  equal to zero.
+		COMMENT 
+        COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-001]
+        COMMENT The function calls macro '__HAL_LOCK' with parameter 'h_adc'.
+        COMMENT Equivalence Class 5
+        COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-002]
+        COMMENT 
+        COMMENT  function Does the  following since result of bitwise AND of ADC_CR2_ADON 
+        COMMENT and CR2 of Instance of h_adc is not equal to ADC_CR2_ADON.
+        COMMENT  1.	Call macro '__HAL_ADC_ENABLE' with parameter 'h_adc'.
+        COMMENT  2.	Decrement the counter value if counter is not equal to ZERO
+		COMMENT Equivalence Class 6,8
+        COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-003]
+        COMMENT ELSE PART IS COVERED
+        COMMENT Equivalence Class 11
+        COMMENT </TD>
+        ELEMENT
+         	COMMENT INPUT SECTION :
+         		--Initialising the PTU_ADC Structure.
+				VAR PTU_ADC, init={CCR=>0x0000001FU,others=>0} ,ev=init
+				
+				--Initialise the structure Variable Instance of h_adc.
+				VAR h_adc.Instance,		init =  &PTU_ADC1,		ev = init
+				
+				--Initialise the structure Variable State of h_adc.
+	  			VAR h_adc.State,		init=0 ,			ev= 4352
+				
+			COMMENT INPUT /OUTPUT SECTION :
+			
+				--Initialise the structure Variable SR of PTU_ADC1.
+				VAR  PTU_ADC1.SR, init =0 , ev= (T_UINT32)0xFFFFFFDD
+				
+				--Initialise the structure Variable CR2 of PTU_ADC1.
+				VAR  PTU_ADC1.CR2, init =ADC_CR2_EXTEN, ev= 	(T_UINT32)0x30000001
+				
+			COMMENT OUTPUT SECTION :
+				
+				--holds the return value of unit under testing
+				VAR ret_HalAdcStart,		init = HAL_ERROR,		ev =HAL_OK
+				
+			--stub calls
+			SIMUL
+				--None
+			END SIMUL
+
+				--Calling unit under testing.
+				#ret_HalAdcStart = HalAdcStart(&h_adc);
+				
+        END ELEMENT
+
+    END TEST -- TEST 5
+
+TEST 6
+    FAMILY nominal
+    	COMMENT Test Description 
+		COMMENT <TD>
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-009]
+        COMMENT Result of bitwise OR of CR2 of Instance of h_adc
+        COMMENT  and ADC_CR2_EXTEN is not equal to  RESET
+        COMMENT here the else is covered 
+        COMMENT Equivalence Class 39
+        COMMENT        
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-001]
+        COMMENT The function calls macro '__HAL_LOCK' with parameter 'h_adc'.
+        COMMENT Equivalence Class 5
+        COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-002]
+        COMMENT 
+        COMMENT  function Does the  following since result of bitwise AND of ADC_CR2_ADON
+        COMMENT and CR2 of Instance of h_adc is not equal to ADC_CR2_ADON.
+        COMMENT  1.	Call macro '__HAL_ADC_ENABLE' with parameter 'h_adc'.
+        COMMENT  2.	Decrement the counter value if counter is not equal to ZERO
+		COMMENT Equivalence Class 6,8
+        COMMENT
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-003]
+        COMMENT The function calls macro 'ADC_STATE_CLR_SET' with parameters 
+		COMMENT	State of h_adc,  Result of Bitwise OR of HAL_ADC_STATE_READY, 
+		COMMENT HAL_ADC_STATE_REG_EOC and HAL_ADC_STATE_REG_OVR
+		COMMENT	and HAL_ADC_STATE_REG_BUSY Since, result of macro HAL_IS_BIT_SET with parameters
+		COMMENT CR2 of Instance of h_adc and ADC_CR2_ADON is not equal to zero.
+        COMMENT Equivalence Class 11,87
+        COMMENT 
+        COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-004]
+        COMMENT  result of macro READ_BIT with parameters CR1 of Instance of h_adc 
+        COMMENT and ADC_CR1_JAUTO is not equal to RESET 	.	
+		COMMENT Equivalence Class 89,87,89	
+        COMMENT </TD>
+        ELEMENT
+         	COMMENT INPUT SECTION :
+				VAR PTU_ADC, init={CCR=>0x0U,others=>0} ,ev=init
+				
+				--Initialise the structure h_adc.
+				VAR h_adc,		init = {Instance => &PTU_ADC1},		ev = init
+
+					VAR h_adc.State, init=0,ev=4352
+			COMMENT INPUT /OUTPUT SECTION :
+				--Initialises the SR register of ADC1
+				VAR PTU_ADC1.SR, 			init=1,					ev=(T_UINT32)0xFFFFFFDD
+				--Initialises the CR2 register of ADC1
+				VAR  PTU_ADC1.CR2, 			init =0x30000000U,		ev= 0x30000001U
+				
+			COMMENT OUTPUT SECTION :
+				--holds the return value of unit under testing
+				VAR ret_HalAdcStart,		init = HAL_ERROR,		ev =HAL_OK
+				
+			--Stub calls
+			SIMUL
+				--None
+			END SIMUL
+			
+					--Calling unit under testing.
+       				 #ret_HalAdcStart = HalAdcStart(&h_adc);
+        END ELEMENT
+
+    END TEST -- TEST 6
+	TEST 7
+	FAMILY nominal
+		COMMENT Test Description 
+		COMMENT <TD>
+		COMMENT 
+		COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-001]
+		COMMENT The function calls macro '__HAL_LOCK' with parameter 'h_adc'.
+		COMMENT Equivalence Class 5
+		COMMENT
+		COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-002]
+		COMMENT 
+		COMMENT  function Does the  following since result of bitwise AND of ADC_CR2_ADON
+		COMMENT and CR2 of Instance of h_adc is not equal to ADC_CR2_ADON.
+		COMMENT  1.	Call macro '__HAL_ADC_ENABLE' with parameter 'h_adc'.
+		COMMENT  2.	Decrement the counter value  , counter is not equal to ZERO
+		COMMENT Equivalence Class 6,8
+		COMMENT
+		COMMENT </TD>
+		ELEMENT
+         	COMMENT INPUT SECTION :
+         	
+				--Initialise the structure h_adc.
+				VAR h_adc,		init = {Instance => &PTU_ADC1},		ev = init
+
+			COMMENT INPUT /OUTPUT SECTION :
+			
+				--Initialises the SR register of ADC1
+				VAR	PTU_ADC1.SR, init=0,							ev=(T_UINT32)0xFFFFFFDD
+				
+				--Initialises the CR2 register of ADC1
+				VAR	PTU_ADC1.CR2, init=0, 							ev=(T_UINT32)0x40000001
+				
+				--Initialises the State for the structure h_adc
+				VAR h_adc.State, init=0,							ev=4352
+				
+			COMMENT OUTPUT SECTION :
+			
+			--holds the return value of unit under testing
+			VAR ret_HalAdcStart,		init = HAL_ERROR,		ev =HAL_OK
+				
+			--stub calls
+				SIMUL
+					--None
+			END SIMUL
+				
+			
+			--Calling unit under testing.
+       		#ret_HalAdcStart = HalAdcStart(&h_adc);
+       END ELEMENT
+
+    END TEST -- TEST 7
+    
+    TEST 8
+		FAMILY nominal
+			COMMENT Test Description 
+			COMMENT <TD>
+			COMMENT 
+			COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-001]
+			COMMENT The function calls macro '__HAL_LOCK' with parameter 'h_adc'.
+			COMMENT Equivalence Class 5
+			COMMENT
+			COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-002]
+			COMMENT 
+			COMMENT  counter is equal to ZERO
+			COMMENT Equivalence Class 6,8,86
+			COMMENT
+			COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-003]
+			COMMENT The function calls macro 'ADC_STATE_CLR_SET' with parameters 
+			COMMENT	State of h_adc,  Result of Bitwise OR of HAL_ADC_STATE_READY, 
+			COMMENT HAL_ADC_STATE_REG_EOC and HAL_ADC_STATE_REG_OVR
+			COMMENT	and HAL_ADC_STATE_REG_BUSY Since, result of macro HAL_IS_BIT_SET with parameters
+			COMMENT CR2 of Instance of h_adc and ADC_CR2_ADON is not equal to zero.
+			COMMENT Equivalence Class 11,37
+			COMMENT </TD>
+			ELEMENT
+	         	COMMENT INPUT SECTION :		
+					
+					--Initialise the structure h_adc.
+					VAR h_adc,		init = {Instance => &PTU_ADC1},		ev = init
+					
+					--Initialising the System core clock 
+					VAR System_core_clock, init=0 ,ev=init
+					
+				COMMENT INPUT /OUTPUT SECTION :
+						--holds value of SR of ADC1
+					VAR  PTU_ADC1.SR, 		init =0,					ev=(T_UINT32)0xFFFFFFDD
+					
+					--holds value of CR2 of ADC1
+	         			VAR  PTU_ADC1.CR2, 	init =0,					ev=(T_UINT32)0x40000001
+					
+				COMMENT OUTPUT SECTION :
+					VAR h_adc.State, init=0,ev=4352
+					--holds the return value of unit under testing	
+					VAR ret_HalAdcStart,		init = HAL_ERROR,		ev =HAL_OK
+				
+				--stub calls
+				SIMUL
+					--None
+				END SIMUL
+				
+		--Calling unit under testing.
+		#ret_HalAdcStart = HalAdcStart(&h_adc);
+	    
+	    END ELEMENT
+	
+    END TEST -- TEST 8
+    
+     TEST 9
+        FAMILY nominal
+        	COMMENT Test Description 
+    		COMMENT <TD>
+            COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-010]
+            COMMENT since all of the below conditions are not satisified:
+            COMMENT 1.	Result of macro HAL_IS_BIT_SET with parameters CR2 of 
+            COMMENT Instance of h_adc and ADC_CR2_ADON is not equal to zero 
+            COMMENT 2.	Result of macro HAL_IS_BIT_CLR with parameters CCR of ADC
+            COMMENT and ADC_CCR_MULTI is not equal to ZERO.
+            COMMENT 3.	Result of AND operation of COND1 and COND2 is not equal to zero.
+	    	COMMENT here else part is covered
+            COMMENT Equivalence Class 11
+            COMMENT            
+            COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-001]
+            COMMENT The function calls macro '__HAL_LOCK' with parameter 'h_adc'.
+            COMMENT Equivalence Class 5
+            COMMENT
+            COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-002]
+            COMMENT 
+            COMMENT  function Does the  following since result of bitwise AND of ADC_CR2_ADON and 
+            COMMENT CR2 of Instance of h_adc is  equal to ADC_CR2_ADON.
+            COMMENT  
+    		COMMENT Equivalence Class 7
+            COMMENT
+            COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-003]
+            COMMENT The function result of macro 'HAL_IS_BIT_SET' with parameters CR2 of 
+            COMMENT Instance of h_adc and ADC_CR2_ADON is  not equal to zero. 
+        	COMMENT Equivalence Class 11
+            COMMENT </TD>
+            ELEMENT
+             	COMMENT INPUT SECTION :
+             		--Initialising the CCR OF PTU_ADC
+    				VAR PTU_ADC, 			init={CCR=>0x0000001FU} ,				ev=init
+    				
+    				--Initialising CR2 of PTU_instance
+    				VAR  PTU_instance.CR2, init=0,									ev= 0
+    				
+    				--Initialise the structure h_adc.
+    				VAR h_adc,				init = {Instance => &PTU_ADC1},			ev = init
+    	  
+    				
+    			COMMENT INPUT /OUTPUT SECTION :
+    
+    				--the lock of structure is affected
+    				--VAR    h_adc,				 init ={Lock=>HAL_UNLOCKED}, 			ev=init
+    				VAR h_adc.State, init=0,ev=4352
+    				
+    			COMMENT OUTPUT SECTION :
+    				--holds the return value of unit under testing
+    
+    				VAR ret_HalAdcStart,		init = HAL_ERROR,		ev =HAL_OK
+    
+				--Calling stubs
+				SIMUL
+					--None
+				END SIMUL
+				
+    				--Calling unit under testing.
+    				#ret_HalAdcStart = HalAdcStart(&h_adc);
+            END ELEMENT
+    
+        END TEST -- TEST 9
+     TEST 10
+        FAMILY nominal
+        	COMMENT Test Description 
+    		COMMENT <TD>
+            COMMENT 10 ELSE
+            COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-001]
+            COMMENT The function calls macro '__HAL_LOCK' with parameter 'h_adc'.
+            COMMENT Equivalence Class 5
+            COMMENT
+            COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-002]
+            COMMENT 
+            COMMENT  function Does the  following since result of bitwise AND of ADC_CR2_ADON
+            COMMENT  and CR2 of Instance of h_adc is not equal to ADC_CR2_ADON.
+            COMMENT  1.	Call macro '__HAL_ADC_ENABLE' with parameter 'h_adc'.
+            COMMENT  2.	Decrement the counter value if counter is not equal to ZERO
+    	    COMMENT Equivalence Class 6,8
+            COMMENT
+            COMMENT [hdulibstm32f7xxhaladc-HalAdcStart-DB-LLR-010]
+            COMMENT since all of the below conditions are not satisified:
+            COMMENT 1.	Result of macro HAL_IS_BIT_SET with parameters CR2 of 
+            COMMENT     Instance of h_adc and ADC_CR2_ADON is not equal to zero 
+            COMMENT 2.	Result of macro HAL_IS_BIT_CLR with parameters CCR of
+            COMMENT    ADC and ADC_CCR_MULTI is not equal to ZERO.
+            COMMENT 3.	Result of AND operation of COND1 and COND2 is not equal to zero.
+	    	COMMENT here else part is covered
+            COMMENT Equivalence Class 11
+            COMMENT </TD>
+            ELEMENT
+             	COMMENT INPUT SECTION :
+             		
+             		--Initialise the structure PTU_ADC.
+    				VAR PTU_ADC, 			init={CCR=>0x0000001FU} ,		ev=init
+    				
+    				--Initialise the structure PTU_instance.
+    				VAR  PTU_instance.CR2, init=0,ev= 1
+    				
+    				--Initialise the structure h_adc.
+    				VAR h_adc,				init = {Instance => &PTU_instance},		ev = init
+    	  			
+    				
+    			COMMENT INPUT /OUTPUT SECTION :
+    			--Stores the state of the sturcture h_adc
+    				VAR h_adc.State, init=0,ev=256
+    				
+    			COMMENT OUTPUT SECTION :
+    			
+    				--holds the return value of unit under testing
+    				VAR ret_HalAdcStart,		init = HAL_ERROR,		             ev =HAL_OK
+    
+    			--Calling stubs
+    			SIMUL
+    				--None
+    			END SIMUL	
+    			
+    				--Calling unit under testing.
+    				#ret_HalAdcStart = HalAdcStart(&h_adc);
+            END ELEMENT
+    
+        END TEST -- TEST 10
+
+END SERVICE -- HalAdcStart
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalAdcGetValue
+--------------------------------------------------------------------------------
+SERVICE HalAdcGetValue
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ADC_HANDLE h_adc;
+    -- By function returned type declaration
+    #T_UINT32 ret_HalAdcGetValue;
+
+    ENVIRONMENT ENV_HalAdcGetValue
+    
+   
+		STRUCTURE h_adc,		init = { Instance => NIL, Init => { ClockPrescaler => 0,
+		&						Resolution => 0, DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode
+		&						=> 0, NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+		&						=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank 
+		&						=> 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+		
+		VAR ret_HalAdcGetValue,		init = 0,		ev = init
+    
+    END ENVIRONMENT -- ENV_HalAdcGetValue
+    USE ENV_HalAdcGetValue
+
+    TEST 1
+    FAMILY nominal
+    	COMMENT Test Description 
+		COMMENT <TD>
+		COMMENT [hdulibstm32f7xxhaladc-HalAdcGetValue-DB-LLR-001]
+		COMMENT The function shall return DR of Instance of h_adc.
+		COMMENT Eqvivalence class 3
+		COMMENT </TD>
+		COMMENT
+       
+        ELEMENT
+			COMMENT INPUT SECTION :
+			
+				--Initialising instance variable
+				VAR PTU_instance , init = {others => 1} , ev = init
+
+				--the Structure h_adc is initialized
+				STRUCTURE  h_adc,		init = { Instance => &PTU_instance,
+				&						Init => { ClockPrescaler => 0, Resolution => 0, DataAlign => 0, ScanConvMode => 0,
+				&						EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, DiscontinuousConvMode => 0, 
+				&						NbrOfDiscConversion => 0, ExternalTrigConv
+				&						=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+				&						DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+
+				--holds the return value  
+				VAR ret_HalAdcGetValue,		init = 0,		ev = 1
+        
+			COMMENT INPUT/OUTPUT SECTION :
+				
+				--None
+
+			COMMENT OUTPUT SECTION :
+				
+				--None
+
+		
+        
+        --stub calls.
+        SIMUL
+        	--None
+        END SIMUL
+        --calling the unit undertest.
+        #ret_HalAdcGetValue = HalAdcGetValue(&h_adc);
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+-- TEST 2
+--    FAMILY robustness
+--		COMMENT Test Description 
+--		COMMENT <TD>
+--		COMMENT [hdulibstm32f7xxhaladc-HalAdcGetValue-DB-LLR-001]
+--		COMMENT The function is tested with invalid input parameters.
+--		COMMENT Eqvivalence class 4
+--		COMMENT
+--		COMMENT </TD>
+--        ELEMENT
+
+--			COMMENT INPUT SECTION :
+
+--				--the Structure h_adc is initialized
+--				STRUCTURE h_adc,		init =NULL ,		ev = init
+--
+				--holds the return value        
+--			   VAR ret_HalAdcGetValue,		init = 0,		ev = init
+
+--			COMMENT INPUT/OUTPUT SECTION :
+				--None
+
+--			COMMENT INPUT SECTION :
+				--None
+
+--		SIMUL
+-- 			--None
+--		END	SIMUL
+--
+
+				--calling the unit undertest.
+--			#ret_HalAdcGetValue = HalAdcGetValue(&h_adc);
+--        END ELEMENT
+--    END TEST -- TEST 2
+END SERVICE -- HalAdcGetValue
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalAdcMspInit
+--------------------------------------------------------------------------------
+SERVICE HalAdcMspInit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ADC_HANDLE h_adc;
+
+    ENVIRONMENT ENV_HalAdcMspInit
+		STRUCTURE h_adc,		init = { Instance => NIL, Init => { ClockPrescaler => 0, Resolution => 0, 
+		&						DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, NbrOfConversion => 0, 
+		&						DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+		&						=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, NbrOfCurrentConversionRank => 0,
+		&						DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+    END ENVIRONMENT -- ENV_HalAdcMspInit
+    USE ENV_HalAdcMspInit
+
+    TEST 1
+    FAMILY nominal
+		COMMENT Test Description 
+		COMMENT <TD>
+		COMMENT [hdulibstm32f7xxhaladc-HalAdcMspInit-DB-LLR-001]
+		COMMENT The function shall call macro UNUSED with parameter h_adc.
+		COMMENT Eqvivalence class 1
+		COMMENT </TD>
+        ELEMENT
+        
+			COMMENT INPUT SECTION :
+			
+				--variables used to initialise Instance member of h_adc
+				VAR PTU_instance , init= { others => 0} ,ev= init
+				
+				--Initialise the structure h_adc
+				STRUCTURE h_adc,		init = { Instance => &PTU_instance,
+				&		Init => { ClockPrescaler => 0, Resolution => 0, DataAlign => 0,
+				&		ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, 
+				&		NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, ExternalTrigConv
+				&		=> 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 },
+				&		NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED, State => 0, ErrorCode => 0 },		ev = init
+    
+			COMMENT INPUT /OUTPUT SECTION :
+			
+				--None
+				
+			COMMENT OUTPUT SECTION :
+			
+				--None
+				
+			--calling stubs.	
+			SIMUL
+					
+					--None
+			
+			END SIMUL
+			
+			--calling unit under testing.
+			#HalAdcMspInit(&h_adc);
+			
+		END ELEMENT
+
+    END TEST -- TEST 1
+
+--TEST 2
+--    FAMILY robustness
+--		COMMENT Test Description 
+--		COMMENT <TD>
+--		COMMENT [hdulibstm32f7xxhaladc-HalAdcMspInit-DB-LLR-001]
+--		COMMENT The function shall call macro UNUSED with INVALID parameter.
+--		COMMENT Eqvivalence class 2
+--		COMMENT </TD>		
+--		ELEMENT
+		
+--			COMMENT INPUT SECTION :
+			
+			--Initialise the structure h_adc
+--			STRUCTURE h_adc,		init = NULL ,		ev = init
+			
+--			COMMENT INPUT /OUTPUT SECTION :
+			
+				--None
+				
+--			COMMENT OUTPUT SECTION :
+			
+				--None
+--			SIMUL
+					--Prevent unused argument
+--					STUB UNUSED(h_adc)
+			
+--			END SIMUL
+			
+--			calling unit under testing
+--			#HalAdcMspInit(&h_adc);
+			
+--		END ELEMENT
+
+--	END TEST -- TEST 2
+END SERVICE -- HalAdcMspInit

@@ -1,0 +1,737 @@
+HEADER hdudispfdma2,Source Code Ver :1.3, TestScript Ver :1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Santosh Mithari
+--
+-- File Name           : hdudispfdma2.ptu
+--
+-- Test Creation Date  : 12.10.2017
+--
+-- Tested Functions    : DmaConfig
+--						 TransferComplete
+--						 TransferError
+--						 ErrorHandler
+--						 Dma2ClearForeground
+--						 Dma2Init
+-- 
+-- Version History     :
+--
+-- TEST-VERSION         TEST-DATE        TESTER NAME           MODIFICATIONS
+-- ------------        -----------       -----------           -------------
+--    1.1               12.10.2017      Santosh Mithari       Created the PTU file.
+--    1.2               10.11.2017		Santosh Mithari       Updated as per #PR100171
+--    1.3               14.11.2017		Santosh Mithari       Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+##include "hdudispfdma2.h"   
+##include "hdulibstm32f7xxhalcortex.h" 
+##include "hdulibstm32f7xxhalrccex.h"  
+##include "hdulibstm32f7xxhaldef.h"  
+##include "hdulibstm32f7xxhaldma.h"  
+##include "hdulibbasictypes.h" 
+
+##define CLEAR_SIZE   10000
+##define THOUSAND     1000
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+
+#static const T_UINT32 U32_clear_data[CLEAR_SIZE] = {ZERO};
+
+-- Declarations of the temporary variable
+	
+	#T_UINT32 PTU_frame_buffer;
+	#T_UINT32 PTU_SrcAddress, PTU_DstAddress;
+  
+--------------------------------------------------------------------------------
+BEGIN
+
+	COMMENT Author Name         : 	Santosh Mithari 
+	COMMENT
+	COMMENT File Name           : 	hdudispfdma2.ptu
+	COMMENT 
+	COMMENT Tested Functions    :  	DmaConfig
+	COMMENT						  	TransferComplete
+	COMMENT							TransferError
+	COMMENT							ErrorHandler
+	COMMENT							Dma2ClearForeground
+	COMMENT							Dma2Init
+	COMMENT 
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT
+	COMMENT Assumption(s): 
+	COMMENT None
+	COMMENT
+	COMMENT Constraint(s):
+	COMMENT 
+	COMMENT 1.Source file "hdudispfdma2.c" is modified for testing purpose.    
+	COMMENT    The function 'ErrorHandler' is modified to break infinite loop.
+	COMMENT   
+	COMMENT    
+	COMMENT			 /*local variable declared for testing purpose*/
+	COMMENT			T_UINT16 PTU_count =0;
+	COMMENT		........
+	COMMENT	     while (ONE)
+	COMMENT      {
+	COMMENT    ............    
+	COMMENT		
+	COMMENT	          /*Modified for testing purpose to terminate infinite loop*/
+	COMMENT	        PTU_count++;
+	COMMENT	       	 if(PTU_count == 4)
+	COMMENT	 	      	 {
+	COMMENT	       	 	break;
+	COMMENT	         	 }
+	COMMENT	       	 else
+	COMMENT	       	  {
+	COMMENT	       	  	;
+	COMMENT           }
+	COMMENT		}
+	COMMENT  Hence while loop cannot be covered for 0 and 1 times and FALSE condition cannot be achieved.
+	COMMENT
+    COMMENT 2.Header file 'hdulibstm32f746xx.h' is modified for testing purpose.
+    COMMENT 
+    COMMENT		/*Commented for testing purpose*/
+    COMMENT		/*#define RCC                 ((T_RCC *) RCC_BASE)*/
+    COMMENT 
+    COMMENT		T_RCC  PTU_RCC_BASE;
+    COMMENT		/*modified macro by hardware stubbing for testing purpose*/
+    COMMENT		#define RCC                 ((T_RCC *) &PTU_RCC_BASE)
+    COMMENT	
+	COMMENT 3. In function 'DmaConfig', the while loop within the macro '__HAL_RCC_DMA2_CLK_ENABLE'
+	COMMENT cannot be covered for 2 or more loop repetitions and TRUE condition cannot be achieved since it is while(0). 
+	COMMENT  
+	COMMENT Code Snippet -
+	COMMENT		do { \
+	COMMENT            __IO T_UINT32 tmpreg; \
+	COMMENT            SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA2EN);\
+	COMMENT            /* Delay after an RCC peripheral clock enabling */ \
+	COMMENT            tmpreg = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA2EN);\
+	COMMENT            UNUSED(tmpreg); \
+    COMMENT      } while(0)
+	COMMENT
+	COMMENT
+	COMMENT  4. Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+    COMMENT    warning #191-D: type qualifier is meaningless on cast type
+	COMMENT
+	COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT
+	COMMENT Valid Class(es)
+	COMMENT Class 1
+	COMMENT In function 'Dma2Init', 'DmaConfig' is called.
+	COMMENT
+	COMMENT Class 2
+	COMMENT In function 'DmaConfig', '__HAL_RCC_DMA2_CLK_ENABLE()'  macro is called.
+	COMMENT 
+	COMMENT Class 3
+	COMMENT In function 'DmaConfig', 'HalDmaInit' stub returns HAL_OK.
+	COMMENT
+	COMMENT Class 4
+	COMMENT In function 'DmaConfig', 'HalDmaInit' stub returns other than HAL_OK.
+	COMMENT
+	COMMENT Class 5
+	COMMENT In function 'DmaConfig', 'ErrorHandler' is called.
+	COMMENT
+	COMMENT Class 6
+	COMMENT In function 'ErrorHandler', 'HalDelay' stub is called
+	COMMENT
+	COMMENT Class 7
+	COMMENT In function 'DmaConfig', 'HALDmaRegisterCallback' stub is called.
+	COMMENT
+	COMMENT Class 8
+	COMMENT In function 'DmaConfig', 'HalNvicSetPriority' is called.
+	COMMENT
+	COMMENT Class 9
+	COMMENT In function 'DmaConfig', 'HalNvicEnableIrq' is called.
+	COMMENT
+	COMMENT Class 10
+	COMMENT In function 'Dma2ClearForeground', 'TransferComplete' is called.
+	COMMENT
+	COMMENT Class 11
+	COMMENT In function 'TransferComplete', data length is equal to ZERO.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In function 'TransferComplete', data length is equal to ONE.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function 'TransferComplete', data length is greater than CLEAR_SIZE.
+	COMMENT
+	COMMENT Class 14
+	COMMENT In function 'TransferComplete', data length  is less than CLEAR_SIZE.
+	COMMENT
+	COMMENT Class 15
+	COMMENT In function 'DmaConfig', 'TransferError' is called.
+	COMMENT
+	COMMENT Class 16
+	COMMENT In function 'DmaConfig', 'TransferComplete' is called.
+	COMMENT
+	COMMENT Class 17
+	COMMENT The Function 'TransferError' is executed when the transfer error interrupt is generated during DMA transfer.
+	COMMENT
+	COMMENT Class 18
+	COMMENT In function 'TransferComplete', data length is other than ZERO and ONE.
+	COMMENT 
+	COMMENT Class 19
+	COMMENT In function 'TransferComplete', data length is equal to CLEAR_SIZE.
+	COMMENT
+	COMMENT Invalid Class(es)
+	COMMENT None
+	COMMENT
+	COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdudispfdma2_c
+    
+    #void HalDelay( volatile  T_UINT32 _in Delay); 
+    
+    --Variables 'SrcAddress' and 'DstAddress' are made _no since local address is passed.
+    #T_HAL_STATUS HALDmaStartIT(T_DMA_HANDLE _in *hdma, T_UINT32 _no SrcAddress, T_UINT32 _no DstAddress, T_UINT32 _in DataLength)
+  	#{
+	#	PTU_SrcAddress = *(T_UINT32 *)SrcAddress;
+	#	PTU_DstAddress = *(T_UINT32 *)DstAddress;
+  	#}
+    
+    #void HalNvicEnableIrq(T_IRQN_TYPE _in IRQn); 
+    
+    #void HalNvicSetPriority(T_IRQN_TYPE _in IRQn, T_UINT32 _in PreemptPriority, T_UINT32 _in SubPriority); 
+    
+    #T_HAL_STATUS HALDmaRegisterCallback(T_DMA_HANDLE _in *hdma, T_HAL_DMA_CALLBACK_ID _in CallbackID, void _no (  *pCallback)(T_DMA_HANDLE _hdma))
+    #{
+    #
+    #	 pCallback(hdma);
+    #}
+    
+    #T_HAL_STATUS HalDmaInit(T_DMA_HANDLE _in *hdma);
+
+	
+	END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+--No special things that have to be done on the host to run the test.
+
+--ELSE
+
+--No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfdma2.c
+ENVIRONMENT ENV_hdudispfdma2_c
+
+  STRUCTURE Dma_handle,		init = { Instance => NIL, Init => { Channel => 0, Direction => 0, 
+	& PeriphInc => 0, MemInc => 0, PeriphDataAlignment => 0, MemDataAlignment => 0, Mode => 0, 
+  	& Priority => 0, FIFOMode => 0, FIFOThreshold => 0, MemBurst => 0, PeriphBurst
+	&=> 0 }, Lock => HAL_UNLOCKED, State => HAL_DMA_STATE_RESET, Parent => NIL, XferCpltCallback => NIL,
+	& XferHalfCpltCallback => NIL, XferM1CpltCallback => NIL, XferM1HalfCpltCallback => NIL, 
+	& XferErrorCallback => NIL, XferAbortCallback => NIL, ErrorCode => 0, StreamBaseAddress
+	&=> 0, StreamIndex => 0 },		ev = init
+	
+END ENVIRONMENT -- ENV_hdudispfdma2_c
+USE ENV_hdudispfdma2_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service Dma2ClearForeground
+--------------------------------------------------------------------------------
+SERVICE Dma2ClearForeground
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #void *frame_buffer;
+    #T_UINT32 u32_bytes;
+
+    ENVIRONMENT ENV_Dma2ClearForeground
+    VAR frame_buffer,		init = 0,		ev = init
+    VAR u32_bytes,			init = 0,		ev = init
+    END ENVIRONMENT -- ENV_Dma2ClearForeground
+    USE ENV_Dma2ClearForeground
+
+ 
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfdma2-Dma2ClearForeground-DB-LLR-001]
+    COMMENT The function does the following:
+	COMMENT 1. Set value of U32 clr address to address of frame_buffer.
+	COMMENT 2. Set the value of U32 data length to u32_bytes divided by FOUR.
+	COMMENT 3. Call the function TransferComplete with address of Dma handle as parameters.
+    COMMENT Equivalence Class 10
+    COMMENT
+    COMMENT [hdudispfdma2-TransferComplete-DB-LLR-001]
+    COMMENT The function returns when data length is equal to ZERO.
+    COMMENT Equivalence Class 11.
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Starting address of the frame.
+			VAR frame_buffer,		init = &PTU_frame_buffer,		ev = init
+    		
+    		--Size in bytes
+    		VAR u32_bytes,			init = 0,						ev = init
+
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+			--No stub
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#Dma2ClearForeground(frame_buffer, u32_bytes);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfdma2-TransferComplete-DB-LLR-002]
+    COMMENT The function reset clear address and data length when data length is equal to ONE and return.
+    COMMENT Equivalence Class 12.
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--Temporary address initialized before usage
+			VAR PTU_frame_buffer,	init =0x10,						ev = 0x0	
+			
+			--Starting address of the frame.
+			VAR frame_buffer,		init = &PTU_frame_buffer,		ev = init
+    		
+    		--Size in bytes
+    		VAR u32_bytes,			init = 4,						ev = init
+    		
+			
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+			--No stub
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#Dma2ClearForeground(frame_buffer, u32_bytes);
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfdma2-TransferComplete-DB-LLR-003]
+    COMMENT The function does the following when data length is not equal to ZERO or ONE and is 
+    COMMENT greater than CLEAR_SIZE:
+    COMMENT 1. Function HALDmaStartIT is called with parameters dma_handle, clear data, clear address and CLEAR_SIZE.
+	COMMENT 2. Increment the value of clear address by the value of CLEAR_SIZE multiplied by FOUR.
+	COMMENT 3. Decrement the value of data length by CLEAR_SIZE.
+    COMMENT Equivalence Class 13,18.
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--Temporary address initialized before usage
+			VAR PTU_frame_buffer,	init =0x100,					ev = init
+			
+			--Starting address of the frame.
+			VAR frame_buffer,		init = &PTU_frame_buffer,		ev = init
+    		
+    		--Size in bytes
+    		VAR u32_bytes,			init = 0x9C44,					ev = init
+    		
+			
+        COMMENT OUTPUT SECTION:
+
+			--temporary variable used to verify source address in stub 'HALDmaStartIT'
+			VAR PTU_SrcAddress,		init = 0x1,			ev = 0x0
+			
+			--temporary variable used to verify destination address in stub 'HALDmaStartIT'
+			VAR PTU_DstAddress,		init = 0x1,			ev= PTU_frame_buffer
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+            --function Starts the DMA Transfer with interrupt enabled
+			STUB HALDmaStartIT(&Dma_handle,CLEAR_SIZE) HAL_OK
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#Dma2ClearForeground(frame_buffer, u32_bytes);
+
+    END ELEMENT
+
+END TEST -- TEST 3  
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfdma2-TransferComplete-DB-LLR-004]
+    COMMENT The function does the following when data length is not equal to ZERO or One 
+    COMMENT and is lesser than equal to CLEAR_SIZE:
+    COMMENT 1. Function HALDmaStartIT is called with parameters dma_handle, clear data, 
+    COMMENT clear address and data length.
+	COMMENT 2. Reset the value of data length.
+    COMMENT Equivalence Class 14,18.
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Starting address of the frame.
+			VAR frame_buffer,		init = &PTU_frame_buffer,		ev = init
+    
+    		--Size in bytes
+    		VAR u32_bytes,			init = 0x190,					ev = init
+
+        COMMENT OUTPUT SECTION:
+
+			--temporary variable used to verify source address in stub 'HALDmaStartIT'
+			VAR PTU_SrcAddress,		init = 0x1,			ev = 0x0
+			
+			--temporary variable used to verify destination address in stub 'HALDmaStartIT'
+			VAR PTU_DstAddress,		init = 0x1,			ev= PTU_frame_buffer
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+            --function Starts the DMA Transfer with interrupt enabled
+			STUB HALDmaStartIT(&Dma_handle,0x64) HAL_OK
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#Dma2ClearForeground(frame_buffer, u32_bytes);
+
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfdma2-TransferComplete-DB-LLR-004]
+    COMMENT The function does the following when data length is not equal to ZERO or One and is
+    COMMENT equal to CLEAR_SIZE:
+	COMMENT 1. Set HAL status to return value of function HALDmaStartIT with parameters dma_handle,
+	COMMENT    clear data, clear address and data length.
+	COMMENT 2. Reset the value of data length.
+    COMMENT Equivalence Class 18,19
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Starting address of the frame.
+			VAR frame_buffer,		init = &PTU_frame_buffer,		ev = init
+    
+    		--Size in bytes
+    		VAR u32_bytes,			init = 0x9C40,					ev = init
+
+        COMMENT OUTPUT SECTION:
+
+			--temporary variable used to verify source address in stub 'HALDmaStartIT'
+			VAR PTU_SrcAddress,		init = 0x1,			ev = 0x0
+			
+			--temporary variable used to verify destination address in stub 'HALDmaStartIT'
+			VAR PTU_DstAddress,		init = 0x1,			ev= PTU_frame_buffer
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+            --function Starts the DMA Transfer with interrupt enabled
+			STUB HALDmaStartIT(&Dma_handle,0x2710) HAL_OK
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#Dma2ClearForeground(frame_buffer, u32_bytes);
+
+    END ELEMENT
+
+END TEST -- TEST 5
+
+END SERVICE -- Dma2ClearForeground
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service Dma2Init
+--------------------------------------------------------------------------------
+SERVICE Dma2Init
+SERVICE_TYPE extern
+
+    
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfdma2-Dma2Init-DB-LLR-001]
+    COMMENT The function calls the function DmaConfig.
+    COMMENT Equivalence Class 1
+    COMMENT
+    COMMENT [hdudispfdma2-DmaConfig-DB-LLR-001]
+    COMMENT The function calls the macro __HAL_RCC_DMA2_CLK_ENABLE to enable DMA2 clock.
+    COMMENT Equivalence Class 2
+    COMMENT
+    COMMENT [hdudispfdma2-DmaConfig-DB-LLR-002]
+    COMMENT The function does the following to select the DMA functional parameter:
+	COMMENT 1. Set value of Channel of Init of Dma handle to DMA_CHANNEL.
+	COMMENT 2. Set value of Direction of Init of Dma handle to DMA_MEMORY_TO_MEMORY.
+	COMMENT 3. Set value of PeriphInc of Init of Dma handle to DMA_PINC_ENABLE.
+	COMMENT 4. Set value of MemInc of Init of Dma handle to DMA_MINC_ENABLE.
+	COMMENT 5. Set value of PeriphDataAlignment of Init of Dma handle to DMA_PDATAALIGN_WORD.
+	COMMENT 6. Set value of MemDataAlignment of Init of Dma handle to DMA_MDATAALIGN_WORD.
+	COMMENT 7. Set value of Mode of Init of Dma handle to DMA_NORMAL.
+	COMMENT 8. Set value of Priority of Init of Dma handle to DMA_PRIORITY_HIGH.
+	COMMENT 9. Set value of FIFOMode of Init of Dma handle to DMA_FIFOMODE_DISABLE.
+	COMMENT 10. Set value of FIFOThreshold of Init of Dma handle to DMA_FIFO_THRESHOLD_FULL.
+	COMMENT 11. Set value of MemBurst of Init of Dma handle to DMA_MBURST_SINGLE.
+	COMMENT 12. Set value of PeriphBurst of Init of Dma handle to DMA_PBURST_SINGLE.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfdma2-DmaConfig-DB-LLR-003]
+    COMMENT The function sets the value of Instance of Dma handle to select the DMA instance to be used for the transfer.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfdma2-DmaConfig-DB-LLR-004] 
+    COMMENT The function does nothing when the return value of the function HalDmaInit
+    COMMENT with address of Dma handle as parameter is equal to HAL_OK.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT	[hdudispfdma2-DmaConfig-DB-LLR-005]
+    COMMENT The function does the following to Select Callbacks functions called after Transfer complete and Transfer error:
+	COMMENT 1.	Call HALDmaRegisterCallback with parameters: address of Dma handle, HAL_DMA_XFER_CPLT_CB_ID and pointer to function TransferComplete.
+ 	COMMENT 2.	Call HALDmaRegisterCallback with parameters: address of Dma handle, HAL_DMA_XFER_ERROR_CB_ID and pointer to function TransferError.
+    COMMENT Equivalence Class 7,15,16
+    COMMENT
+    COMMENT [hdudispfdma2-DmaConfig-DB-LLR-006]
+    COMMENT The function does the following:
+	COMMENT 1.	Call the function HalNvicSetPriority with parameter DMA_INSTANCE_IRQ , ZERO and ZERO to set interrupt group priority.
+	COMMENT 2.	Call the function HalNvicEnableIrq with parameter DMA_INSTANCE_IRQ to Enable the DMA Stream global Interrupt.
+    COMMENT Equivalence Class 8,9    
+    COMMENT 
+    COMMENT [hdudispfdma2-TransferError-DB-LLR-001]
+    COMMENT  The function sets Transfer error detected to ONE.
+    COMMENT Equivalence class 17
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Variable used in macro '__HAL_RCC_DMA2_CLK_ENABLE'.
+			VAR RCC->AHB1ENR,								init= 0x100,			ev = 0x400100
+			
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --DMA functional Parameters
+			VAR Dma_handle.Init.Channel,					init=0x1,	   ev = DMA_CHANNEL           
+			VAR Dma_handle.Init.Direction,					init=0x1,	   ev = DMA_MEMORY_TO_MEMORY  
+			VAR Dma_handle.Init.PeriphInc,					init=0x1,	   ev = DMA_PINC_ENABLE       
+			VAR Dma_handle.Init.MemInc,						init=0x1,	   ev = DMA_MINC_ENABLE       
+			VAR Dma_handle.Init.PeriphDataAlignment,		init=0x1,	   ev = DMA_PDATAALIGN_WORD 
+			VAR Dma_handle.Init.MemDataAlignment,			init=0x1,	   ev = DMA_MDATAALIGN_WORD 
+			VAR Dma_handle.Init.Mode,						init=0x1,	   ev = DMA_NORMAL                
+			VAR Dma_handle.Init.Priority,					init=0x1,	   ev = DMA_PRIORITY_HIGH         
+			VAR Dma_handle.Init.FIFOMode,					init=0x1,	   ev = DMA_FIFOMODE_DISABLE      
+			VAR Dma_handle.Init.FIFOThreshold,				init=0x1,	   ev = DMA_FIFO_THRESHOLD_FULL
+			VAR Dma_handle.Init.MemBurst,					init=0x1,	   ev = DMA_MBURST_SINGLE         
+			VAR Dma_handle.Init.PeriphBurst,				init=0x1,	   ev = DMA_PBURST_SINGLE         
+			
+			--DMA instance to be used for the transfer  
+ 			VAR Dma_handle.Instance,						init=0x1,	   ev  = DMA_INSTANCE
+        
+        -- Stub Calls:
+        SIMUL
+            
+            --Stub called in function 'DmaConfig'
+			STUB HalDmaInit(&Dma_handle) HAL_OK
+			
+			STUB HALDmaRegisterCallback(&Dma_handle, HAL_DMA_XFER_CPLT_CB_ID) HAL_OK 
+  
+  			STUB HALDmaRegisterCallback(&Dma_handle, HAL_DMA_XFER_ERROR_CB_ID) HAL_OK
+  			
+  			STUB HalNvicSetPriority(DMA_INSTANCE_IRQ, ZERO, ZERO)
+  			
+  			STUB HalNvicEnableIrq(DMA_INSTANCE_IRQ)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#Dma2Init();
+
+    END ELEMENT
+
+END TEST -- TEST 1   
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT 
+    COMMENT [hdudispfdma2-DmaConfig-DB-LLR-004]
+    COMMENT The function calls the function ErrorHandler if the return value of the function HalDmaInit
+    COMMENT with address of Dma handle as parameter is not equal to HAL_OK.
+    COMMENT Equivalence Class 4,5.
+    COMMENT 
+    COMMENT [hdudispfdma2-ErrorHandler-DB-LLR-001]
+    COMMENT The function loops infinitely and call the function HalDelay.
+    COMMENT Equivalence Class 6.
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Variable used in macro '__HAL_RCC_DMA2_CLK_ENABLE'.
+			VAR RCC->AHB1ENR,			init= 0x100,			ev = 0x400100
+
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --DMA functional Parameters
+			VAR Dma_handle.Init.Channel,					init=0x1,	   ev = DMA_CHANNEL           
+			VAR Dma_handle.Init.Direction,					init=0x1,	   ev = DMA_MEMORY_TO_MEMORY  
+			VAR Dma_handle.Init.PeriphInc,					init=0x1,	   ev = DMA_PINC_ENABLE       
+			VAR Dma_handle.Init.MemInc,						init=0x1,	   ev = DMA_MINC_ENABLE       
+			VAR Dma_handle.Init.PeriphDataAlignment,		init=0x1,	   ev = DMA_PDATAALIGN_WORD 
+			VAR Dma_handle.Init.MemDataAlignment,			init=0x1,	   ev = DMA_MDATAALIGN_WORD 
+			VAR Dma_handle.Init.Mode,						init=0x1,	   ev = DMA_NORMAL                
+			VAR Dma_handle.Init.Priority,					init=0x1,	   ev = DMA_PRIORITY_HIGH         
+			VAR Dma_handle.Init.FIFOMode,					init=0x1,	   ev = DMA_FIFOMODE_DISABLE      
+			VAR Dma_handle.Init.FIFOThreshold,				init=0x1,	   ev = DMA_FIFO_THRESHOLD_FULL
+			VAR Dma_handle.Init.MemBurst,					init=0x1,	   ev = DMA_MBURST_SINGLE         
+			VAR Dma_handle.Init.PeriphBurst,				init=0x1,	   ev = DMA_PBURST_SINGLE         
+ 			
+ 			--DMA instance to be used for the transfer  
+ 			VAR Dma_handle.Instance,						init=0x1,	   ev  = DMA_INSTANCE
+        
+        -- Stub Calls:
+        SIMUL
+            
+            --Stub called in function 'DmaConfig'
+			STUB HalDmaInit(&Dma_handle) HAL_ERROR
+			
+			STUB HALDmaRegisterCallback(&Dma_handle, HAL_DMA_XFER_CPLT_CB_ID) HAL_OK 
+  
+  			STUB HALDmaRegisterCallback(&Dma_handle, HAL_DMA_XFER_ERROR_CB_ID) HAL_OK
+  			
+  			STUB HalNvicSetPriority(DMA_INSTANCE_IRQ, ZERO, ZERO)
+  			
+  			STUB HalNvicEnableIrq(DMA_INSTANCE_IRQ)
+  			
+  			--Stub called in function 'ErrorHandler'
+  			STUB HalDelay 1.. 4 =>(THOUSAND)
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#Dma2Init();
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- Dma2Init
+

@@ -1,0 +1,1881 @@
+HEADER hdudispflmsscu,Source Code Ver : 1.7 ,TestScript Ver :1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Vignesh Sunil
+--
+-- File Name           : hdudispflmsscu_3.ptu
+--                       
+-- Test Creation Date  : 29.04.2021
+--
+-- Tested Functions    : ScuRTDGetParam
+--                       ProcessingArinc01Fault
+--                       PushFaultLog
+--
+--
+-- Version History     :
+--
+-- TEST-VERSION     TEST-DATE       TESTER NAME        MODIFICATIONS
+-- ------------     ---------       -----------        -------------
+--     1.1          29.04.2021      Vignesh Sunil       Updated as per #PR100338
+--     1.2          14.05.2020      Vignesh Sunil       Updated as per #PR100354
+--     1.3          20.04.2022      P AFREEN            Updated as per #PR1000371
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/  
+
+##include "hdudispflmsscu.c"
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+--------------------------------------------------------------------------------
+
+    #T_UINT8 Du_position; 
+    #T_UINT16 Port1_label_count; 
+    #T_UINT8 Scu_label_flag; 
+    #T_BOOL Demo_mode; 
+    #T_UINT32 Time_in_sec; 
+    #T_UINT16 Flight_count;
+    #T_BOOL Ft_log_overflow; 
+    #T_UINT16 U16_message_words[3]; 
+    #T_A429_DATA_STRUCT A429_data[2][256]; 
+    #T_UINT16 Scu_timer[3]; 
+    #T_UINT8 Scu_fty_offset_flag;
+    #T_UINT32 U32_critical_sr; 
+    # volatile T_INT32 Itm_rx_buffer;
+--------------------------------------------------------------------------------
+    
+BEGIN
+
+    COMMENT  Author Name         : Vignesh Sunil
+    COMMENT 
+    COMMENT  File Name           : hdudispflmsscu_3.ptu
+    COMMENT 
+    COMMENT  Tested Functions    : ScuRTDGetParam
+    COMMENT                        ProcessingArinc01Fault
+    COMMENT                        PushFaultLog
+    COMMENT
+    COMMENT  Assumptions and Constraints
+    COMMENT  <AC>
+    COMMENT
+    COMMENT  Assumption(s):
+    COMMENT  None
+    COMMENT 
+    COMMENT  Constraint(s):
+    COMMENT 1) The testscript is split into 3 due to static dependency.
+    COMMENT 
+    COMMENT  </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT  <ECD>
+    COMMENT 
+    COMMENT  Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+    COMMENT In function 'ScuRTDSetParam', parameter a429_tag is not equal to ZERO
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function 'ScuRTDSetParam', parameter a429_tag is equal to ZERO   
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'ScuRTDSetParam', type of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is equal to BNR  
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'ScuRTDSetParam', type of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is not equal to BNR  
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'ScuRTDSetParam', min_val of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is greater than parameter s32_data   
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'ScuRTDSetParam', min_val of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is less than parameter s32_data  
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'ScuRTDSetParam', max_val of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is less than parameter s32_data
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'ScuRTDSetParam', max_val of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is greater than parameter s32_data   
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'ScuRTDSetParam', max_val and min_val of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is equal to parameter s32_data       
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'ScuRTDSetParam', rtd_tag is equal to ZERO 
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'ScuRTDSetParam', rtd_tag is not equal to ZERO  
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'ScuRTDSetParam', ertd_stat is not equal to THREE       
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'ScuRTDSetParam', ertd_stat is equal to THREE       
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'ScuRTDWatchdog', usRTimer of Storage for Real Time Data with 
+    COMMENT index as loop index count is less than RTD_MAX_INTERVAL_SCU 
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'ScuRTDWatchdog', usRTimer of Storage for Real Time Data with 
+    COMMENT index as loop index count is greater than RTD_MAX_INTERVAL_SCU
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'ScuRTDWatchdog', Scu_timer with 
+    COMMENT index as loop index count is greater than RTD_MAX_INTERVAL_SCU  
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'ScuRTDWatchdog', Scu_timer with 
+    COMMENT index as loop index count is less than RTD_MAX_INTERVAL_SCU     
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'ScuRTDWatchdog', Scu_timer with 
+    COMMENT index as loop index count is equal to RTD_MAX_INTERVAL_SCU  
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'ProcessingArinc01Fault', Demo_mode is not equal to TRUE
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'ProcessingArinc01Fault', Demo_mode is equal to TRUE    
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'ProcessingArinc01Fault', Arinc Fault set is equal to ZERO 
+    COMMENT    
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'ProcessingArinc01Fault', scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is less than RTD_MAX_INTERVAL_SCU 
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'ProcessingArinc01Fault', scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is equal to RTD_MAX_INTERVAL_SCU  
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'ProcessingArinc01Fault', scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is greater than RTD_MAX_INTERVAL_SCU  
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'ProcessingArinc01Fault', error state is FALSE  
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'ProcessingArinc01Fault', error state is TRUE       
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'ProcessingArinc01Fault', fault_active_flag of Fault log structure with index as ft index is TRUE
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'ProcessingArinc01Fault', fault_active_flag of Fault log structure with index as ft index is FALSE
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'ProcessingArinc01Fault', index flag is equal to FALSE  
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'ProcessingArinc01Fault', index flag is equal to TRUE
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'ProcessingArinc01Fault', scu label flag is 
+    COMMENT equal to SEVEN
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'ProcessingArinc01Fault', scu label flag is 
+    COMMENT not equal to SEVEN  
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'ProcessingArinc01Fault', data_present of Fault log structure with index as fault index count is 
+    COMMENT equal to FALSE
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'ProcessingArinc01Fault', data_present of Fault log structure with index as fault index count is 
+    COMMENT not equal to FALSE  
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'ProcessingArinc01Fault',ft index flag is equal to FALSE
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'ProcessingArinc01Fault',ft index flag is equal to TRUE 
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'ProcessingArinc01Fault',initial_fault_index of Fault log structure 
+    COMMENT with index as ft index is equal to FALSE.   
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'ProcessingArinc01Fault',initial_fault_index of Fault log structure 
+    COMMENT with index as ft index is equal to TRUE.    
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'ProcessingArinc01Fault',fault index is less than TEN and Stop log variable is equal to FALSE.  
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'ProcessingArinc01Fault',fault index is less than TEN and Stop log variable is equal to TRUE.
+    COMMENT
+    COMMENT Class 42
+    COMMENT In function 'ProcessingArinc01Fault',fault index is greater than TEN and Stop log variable is equal to FALSE.   
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function 'StartProcessingFaultLog',fault id count is greater than 65534  
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'StartProcessingFaultLog',fault id count is less than 65534 
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function 'StartProcessingFaultLog',fault id count is equal to 65534      
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'StartProcessingFaultLog',Ft log 
+    COMMENT Size is less than fault id count    
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'StartProcessingFaultLog',Ft log 
+    COMMENT Size is greater than fault id count 
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function 'GetFaultParamData',label of A429_data with index zero and first loop index count is equal 
+    COMMENT to fault_label of fault data with index zero    
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function 'GetFaultParamData',label of A429_data with index zero and first loop index count is not equal 
+    COMMENT to fault_label of fault data with index zero    
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function 'GetFaultParamData',stat of label_data of fault data with index as second 
+    COMMENT loop index count is equal to PARAM_OK
+    COMMENT
+    COMMENT Class 51
+    COMMENT In function 'GetFaultParamData',stat of label_data of fault data with index as second 
+    COMMENT loop index count is not equal to PARAM_OK   
+    COMMENT
+    COMMENT Class 52
+    COMMENT In function 'GetFaultParamData',data set flag equal to TRUE
+    COMMENT
+    COMMENT Class 53
+    COMMENT In function 'GetFaultParamData',data set flag equal to FALSE    
+    COMMENT
+    COMMENT Class 54
+    COMMENT In function 'GetFaultParamData',param_data_present with index as second loop index count of Fault 
+    COMMENT log structure with index as parameter arr_index is equal to FALSE
+    COMMENT
+    COMMENT Class 55
+    COMMENT In function 'GetFaultParamData',param_data_present with index as second loop index count of Fault 
+    COMMENT log structure with index as parameter arr_index is equal to TRUE    
+    COMMENT
+    COMMENT Class 56
+    COMMENT In function 'GetFaultParamData',parameter timer reset state with index as second loop index count 
+    COMMENT is equal to FALSE   
+    COMMENT
+    COMMENT Class 57
+    COMMENT In function 'GetFaultParamData',parameter timer reset state with index as second loop index count 
+    COMMENT is equal to TRUE 
+    COMMENT
+    COMMENT Class 58
+    COMMENT In function 'GetFaultParamData',param_data_present with index as second loop index count of 
+    COMMENT Fault log structure with index as parameter arr_index is equal to FALSE
+    COMMENT
+    COMMENT Class 59
+    COMMENT In function 'GetFaultParamData',param_data_present with index as second loop index count of 
+    COMMENT Fault log structure with index as parameter arr_index is equal to TRUE  
+    COMMENT
+    COMMENT Class 60
+    COMMENT In function 'GetFaultParamData',Return value of FaultTimer with index as second loop index count 
+    COMMENT is not equal to TRUE
+    COMMENT
+    COMMENT Class 61
+    COMMENT In function 'GetFaultParamData',Return value of FaultTimer with index as second loop index count 
+    COMMENT is equal to TRUE
+    COMMENT
+    COMMENT Class 62
+    COMMENT In function 'GetFaultParamData',parameter ssm validity with index as second loop index count is 
+    COMMENT equal to TRUE 
+    COMMENT
+    COMMENT Class 63
+    COMMENT In function 'GetFaultParamData',parameter ssm validity with index as second loop index count is 
+    COMMENT not equal to TRUE   
+    COMMENT
+    COMMENT Class 64
+    COMMENT In function 'FaultTimer',initial variable is TRUE
+    COMMENT
+    COMMENT Class 65
+    COMMENT In function 'FaultTimer',initial variable is FALSE  
+    COMMENT
+    COMMENT Class 66
+    COMMENT In function 'FaultTimer',Fault timer with index as parameter
+    COMMENT index is greater than TIME_FRAME
+    COMMENT
+    COMMENT Class 67
+    COMMENT In function 'FaultTimer',Fault timer with index as parameter
+    COMMENT index is less than TIME_FRAME   
+    COMMENT
+    COMMENT Class 68
+    COMMENT In function 'GetFaultParamData',stat of 
+    COMMENT label_data of Fault_data with index zero and one and two and three and 
+    COMMENT four and five are equal to PARAM_OK 
+    COMMENT
+    COMMENT Class 69
+    COMMENT In function 'GetFaultParamData',stat of 
+    COMMENT label_data of Fault_data with index zero and one and two and three and 
+    COMMENT four and five are not equal to PARAM_OK     
+    COMMENT
+    COMMENT Class 70
+    COMMENT In function 'PushFaultLog',Fault_index of Fault log structure 
+    COMMENT with index as fault index is greater than ZERO
+    COMMENT
+    COMMENT Class 71
+    COMMENT In function 'PushFaultLog',Fault_index of Fault log structure 
+    COMMENT with index as fault index is equal to ZERO
+    COMMENT
+    COMMENT Class 72
+    COMMENT In function 'PushFaultLog',end_ft_transmission 
+    COMMENT of Fault log structure with index as fault index count is equal to FALSE
+    COMMENT
+    COMMENT Class 73
+    COMMENT In function 'PushFaultLog',end_ft_transmission 
+    COMMENT of Fault log structure with index as fault index count is equal to TRUE 
+    COMMENT
+    COMMENT Class 74
+    COMMENT In function 'PushFaultLog',Stop ft log is equal to FALSE    
+    COMMENT
+    COMMENT Class 75
+    COMMENT In function 'PushFaultLog',Stop ft log is equal to TRUE     
+    COMMENT
+    COMMENT Class 76
+    COMMENT In function 'PushFaultLog',fault_data_write of Fault log structure with index as fault index count 
+    COMMENT is equal to FALSE   
+    COMMENT
+    COMMENT Class 77
+    COMMENT In function 'PushFaultLog',fault_data_write of Fault log structure with index as fault index count 
+    COMMENT is equal to TRUE    
+    COMMENT
+    COMMENT Class 78
+    COMMENT In function 'PushFaultLog',test result is not equal to A825_XM_OK
+    COMMENT
+    COMMENT Class 79
+    COMMENT In function 'PushFaultLog',test result is equal to A825_XM_OK   
+    COMMENT
+    COMMENT Class 80
+    COMMENT In function 'PushFaultLog',fault_active_flag of Fault log structure with index as fault index is equal to TRUE
+    COMMENT
+    COMMENT Class 81
+    COMMENT In function 'PushFaultLog',fault_active_flag of Fault log structure with index as fault index is equal to FALSE 
+    COMMENT
+    COMMENT Class 82
+    COMMENT In function 'PushFaultLog',param_data_present with index as data index count of Fault log structure 
+    COMMENT with index as parameter arr_index is equal to TRUE and param_data_write with 
+    COMMENT index as data index count of Fault log structure with index as parameter 
+    COMMENT arr_index is equal to FALSE 
+    COMMENT
+    COMMENT Class 83
+    COMMENT In function 'PushFaultLog',param_data_present with index as data index count of Fault log structure 
+    COMMENT with index as parameter arr_index is equal to TRUE and param_data_write with 
+    COMMENT index as data index count of Fault log structure with index as parameter 
+    COMMENT arr_index is equal to TRUE 
+    COMMENT
+    COMMENT Class 84
+    COMMENT In function 'PushFaultLog',param_data_present with index as data index count of Fault log structure 
+    COMMENT with index as parameter arr_index is equal to FALSE and param_data_write with 
+    COMMENT index as data index count of Fault log structure with index as parameter 
+    COMMENT arr_index is equal to FALSE 
+    COMMENT
+    COMMENT Class 85
+    COMMENT In function 'PushFaultLog'Last_ft_record of Fault log structure with index as fault index 
+    COMMENT count is equal to TRUE      
+    COMMENT
+    COMMENT Class 86
+    COMMENT In function 'PushFaultLog'Last_ft_record of Fault log structure with index as fault index 
+    COMMENT count is equal to FALSE 
+    COMMENT
+    COMMENT Class 87
+    COMMENT In function 'ProcessLmsScuSysStatusErr'data_present of Fault log structure with index as 
+    COMMENT loop index count is equal to FALSE
+    COMMENT
+    COMMENT Class 88
+    COMMENT In function 'ProcessLmsScuSysStatusErr'data_present of Fault log structure with index as 
+    COMMENT loop index count is equal to TRUE
+    COMMENT
+    COMMENT Class 89
+    COMMENT In function 'ProcessLmsScuSysStatusErr'status is equal to THREE 
+    COMMENT
+    COMMENT Class 90
+    COMMENT In function 'ProcessLmsScuSysStatusErr'status is not equal to THREE or ONE  
+    COMMENT
+    COMMENT Class 91
+    COMMENT In function 'ProcessLmsScuSysStatusErr'fault_active_flag of Fault log structure with index as index with index 
+    COMMENT zero to four is FALSE   
+    COMMENT
+    COMMENT Class 92
+    COMMENT In function 'ProcessLmsScuSysStatusErr'fault_active_flag of Fault log structure with index as index with index 
+    COMMENT zero to four is TRUE
+    COMMENT
+    COMMENT Class 93
+    COMMENT In function 'ProcessLmsScuSysStatusErr'parameter data right shifting to 
+    COMMENT NINE,TWELVE,THIRTEEN,FORTEEN,FIFTEEN and with HEX_ONE is not equal to ONE
+    COMMENT
+    COMMENT Class 94
+    COMMENT In function 'ProcessLmsScuSysStatusErr'parameter data right shifting to 
+    COMMENT NINE,TWELVE,THIRTEEN,FORTEEN,FIFTEEN and with HEX_ONE is equal to ONE
+    COMMENT
+    COMMENT Class 95
+    COMMENT In function 'ProcessLmsScuSysStatusErr'err_stat is TRUE 
+    COMMENT
+    COMMENT Class 96
+    COMMENT In function 'ProcessLmsScuSysStatusErr'err_stat is FALSE
+    COMMENT
+    COMMENT Class 97
+    COMMENT In function 'ProcessLmsScuSysStatusErr'index flag with index zero,one,two,three,four is equal to FALSE
+    COMMENT
+    COMMENT Class 98
+    COMMENT In function 'ProcessLmsScuSysStatusErr'index flag with index zero,one,two,three,four is equal to TRUE   
+    COMMENT
+    COMMENT Class 99
+    COMMENT In function 'ProcessLmsScuSysStatusErr'initial_fault_index of Fault log structure with index as 
+    COMMENT index with index zero is equal to FALSE.    
+    COMMENT
+    COMMENT Class 100
+    COMMENT In function 'ProcessLmsScuSysStatusErr'initial_fault_index of Fault log structure with index as 
+    COMMENT index with index zero is equal to TRUE. 
+    COMMENT
+    COMMENT Class 101
+    COMMENT In function 'ProcessLmsScuSysStatusErr'fault index is less than TEN and Stop log variable is equal to FALSE 
+    COMMENT
+    COMMENT Class 102
+    COMMENT In function 'ProcessLmsScuSysStatusErr'fault index is less than TEN and Stop log variable is equal to TRUE  
+    COMMENT
+    COMMENT Class 103
+    COMMENT In function 'ProcessLmsScuSysStatusErr'fault index is greater than TEN and Stop log variable is equal to TRUE   
+    COMMENT
+    COMMENT Class 104
+    COMMENT In function 'ProcessLmsScuProbeErr'parameter data right shifting to ZERO,ONE,TWO,THREE
+    COMMENT and with HEX_ONE is not equal to ONE
+    COMMENT
+    COMMENT Class 105
+    COMMENT In function 'ProcessLmsScuProbeErr'parameter data right shifting to ZERO,ONE,TWO,THREE
+    COMMENT and with HEX_ONE is equal to ONE
+    COMMENT
+    COMMENT Class 106
+    COMMENT In function 'ProcessLmsScuProbeErr'fault_active_flag of Fault log structure with index as 
+    COMMENT index with index ZERO,ONE,TWO,THREE is FALSE    
+    COMMENT
+    COMMENT Class 107
+    COMMENT In function 'ProcessLmsScuProbeErr'fault_active_flag of Fault log structure with index as 
+    COMMENT index with index ZERO,ONE,TWO,THREE is TRUE 
+    COMMENT
+    COMMENT Class 108
+    COMMENT In function 'ProcessLmsScuProbeErr'index flag with index ZERO,ONE,TWO,THREE is equal to TRUE
+    COMMENT
+    COMMENT Class 109
+    COMMENT In function 'ProcessLmsScuProbeErr'index flag with index ZERO,ONE,TWO,THREE is equal to FALSE   
+    COMMENT
+    COMMENT Class 110
+    COMMENT In function 'ProcessLmsScuProbeErr'status is equal to THREE 
+    COMMENT
+    COMMENT Class 111
+    COMMENT In function 'ProcessLmsScuProbeErr'status is not equal to THREE or ZERO  
+    COMMENT
+    COMMENT Class 112
+    COMMENT In function 'ProcessLmsScuProbeErr'initial_fault_index of Fault log structure with index as index with index
+    COMMENT  zero,one,two,three is equal to FALSE
+    COMMENT
+    COMMENT Class 113
+    COMMENT In function 'ProcessLmsScuProbeErr'initial_fault_index of Fault log structure with index as index with index
+    COMMENT  zero,one,two,three is equal to TRUE    
+    COMMENT
+    COMMENT Class 114
+    COMMENT In function 'ProcessLmsScuProbeErr'fault index is less than TEN and Stop log variable is equal to FALSE 
+    COMMENT
+    COMMENT Class 115
+    COMMENT In function 'ProcessLmsScuProbeErr'fault index is greater than TEN and Stop log variable is equal to FALSE  
+    COMMENT
+    COMMENT Class 116
+    COMMENT In function 'ProcessLmsScuProbeErr'fault index is less than TEN and Stop log variable is equal to TRUE  
+    COMMENT
+    COMMENT Class 117
+    COMMENT In function 'ScuRTDGetParam'rtd_tag is greater 
+    COMMENT than SCU_RTDMAX_PARAM       
+    COMMENT
+    COMMENT Class 118
+    COMMENT In function 'ScuRTDGetParam'rtd_tag is less 
+    COMMENT than SCU_RTDMAX_PARAM       
+    COMMENT
+    COMMENT Class 119
+    COMMENT In function 'ScuRTDGetParam'rtd_tag is equal to 
+    COMMENT SCU_RTDMAX_PARAM    
+    COMMENT
+    COMMENT Class 120
+    COMMENT In function 'ScuRTDGetParam'a429_type is BNR
+    COMMENT
+    COMMENT Class 121
+    COMMENT In function 'ScuRTDGetParam'a429_type is DDW    
+    COMMENT
+    COMMENT Class 122
+    COMMENT In function 'ScuRTDGetParam'a429_type is otherthan BNR or DDW   
+    COMMENT
+    COMMENT Class 123
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is RTD_STAT_FAIL        
+    COMMENT
+    COMMENT Class 124
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is not RTD_STAT_FAIL, RTD_NCD,
+    COMMENT RTD_MISSING ,RTD_NORMAL and RTD_RANGE_ERR.
+    COMMENT
+    COMMENT Class 125
+    COMMENT In function 'ScuRTDGetParam'Fault_set is not equal to ZERO  
+    COMMENT
+    COMMENT Class 126
+    COMMENT In function 'ScuRTDGetParam'Fault_set is equal to ZERO  
+    COMMENT
+    COMMENT Class 127
+    COMMENT In function 'ScuRTDGetParam'Ssm_ncd is equal to zero    
+    COMMENT
+    COMMENT Class 128
+    COMMENT In function 'ScuRTDGetParam'Ssm_ncd is not equal to zero    
+    COMMENT
+    COMMENT Class 129
+    COMMENT In function 'ScuRTDGetParam'second 
+    COMMENT or third bit of Scu_fty_offset_flag is equal to one
+    COMMENT
+    COMMENT Class 130
+    COMMENT In function 'ScuRTDGetParam'second 
+    COMMENT or third bit of Scu_fty_offset_flag is not equal to one 
+    COMMENT
+    COMMENT Class 137
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is RTD_NCD      
+    COMMENT
+    COMMENT Class 138
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is RTD_MISSING
+    COMMENT
+    COMMENT Class 139
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is RTD_NORMAL       
+    COMMENT
+    COMMENT Class 140
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is RTD_RANGE_ERR        
+    COMMENT
+    COMMENT Class 141
+    COMMENT In function 'ScuRTDGetParam'second 
+    COMMENT bit of Fault_set is not ONE         
+    COMMENT
+    COMMENT Class 142
+    COMMENT In function 'ScuRTDGetParam'second 
+    COMMENT bit of Fault_set is ONE     
+    COMMENT
+    COMMENT Class 143
+    COMMENT In function 'ScuRTDGetParam'stat of ps_dest is not equal to RANGE_ERROR     
+    COMMENT
+    COMMENT Class 144
+    COMMENT In function 'ScuRTDGetParam'stat of ps_dest is equal to RANGE_ERROR         
+    COMMENT 
+    COMMENT
+    COMMENT Class 146
+    COMMENT In function 'ProcessingArinc01Fault', initial variable is TRUE
+    COMMENT
+    COMMENT Class 147
+    COMMENT In function 'ProcessingArinc01Fault', initial variable is FALSE 
+    COMMENT
+    COMMENT Class 150
+    COMMENT In function 'ProcessLmsScuProbeErr'error 
+    COMMENT state is equal to TRUE 
+    COMMENT 
+    COMMENT Class 151
+    COMMENT In function 'ProcessLmsScuProbeErr'error 
+    COMMENT state is equal to FALSE 
+    COMMENT 
+    COMMENT Class 152
+    COMMENT In function 'ProcessLmsScuProbeErr' status is equal to ZERO.    
+    COMMENT 
+    COMMENT Class 153
+    COMMENT In function 'ProcessLmsScuSysStatusErr' status is equal to ZERO.    
+    COMMENT
+    COMMENT Class 154
+    COMMENT In function 'ProcessLmsScuSysStatusErr' M_ENGSTART  is equal to N1_value
+    COMMENT
+    COMMENT Class 155
+    COMMENT In function 'ProcessLmsScuSysStatusErr' M_ENGSTART  is Greater than N1_value
+    COMMENT
+    COMMENT Class 156
+    COMMENT In function 'ProcessLmsScuSysStatusErr' M_ENGSTART is  less than n1 value   
+    COMMENT
+    COMMENT </ECD>
+    
+    
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------    
+
+DEFINE STUB hdudispflmsscu_c
+    #T_A825_XMITRESULT A8251Xmit(T_A825_MESSAGE  _inout ps_xm); 
+    #void RTDGetParam(T_UINT16  _in a429_tag, T_PARAM_READING  _inout ps_dest); 
+    #void RTDGetParamDdw(T_UINT16  _in a429_tag, T_PARAM_READING  _inout ps_dest); 
+    #void TimerPreset( volatile T_TIMER  _inout timer, T_INT32  _in s32_set_val);
+    #void TimerInstall( volatile T_TIMER  _inout timer);
+    #void RestoreStatusReg(T_UINT32  _in U32_critical_sr); 
+    #T_UINT32 SaveStatusReg(void);
+  --  #void volatile(); 
+END DEFINE
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- INCLUDED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file D:\HDU\AFREEN\hdudispflmsscu\src\hdudispflmsscu.c
+ENVIRONMENT ENV_hdudispflmsscu_c
+  ARRAY Fault_timer_mirror,     init = { others => 0 },     ev = init
+  VAR Ssm_ncd,      init = 0,       ev = init
+  --ARRAY Previous_fault_data,      init = { others => { fault_label => 0, label_data => { r => 0, stat => PARAM_OK, fread => 0.0 } } },        ev = init
+  VAR Stop_ft_log,      init = FALSE,       ev = init
+  VAR Flt_id_count,     init = 0,       ev = init
+--  ARRAY Fault_data,       init = { others => { fault_label => 0, label_data => { r => 0, stat => PARAM_OK, fread => 0.0 } } },        ev = init
+  VAR N1_value,     init = 0.0,     ev = init
+--  ARRAY Scu_rtd_readings,     init = { others => { s32reading => 0.0, usRTimer => 0, eRTDStat => RTD_STAT_FAIL } },       ev = init
+  VAR Arinc_fault_set,      init = 0,       ev = init
+  VAR Fault_set,        init = 0,       ev = init
+  ARRAY Param_ssm_validity,     init = { others => FALSE },     ev = init
+  ARRAY Fault_timer,        init = { others => 0 },     ev = init
+  VAR Stop_log,     init = FALSE,       ev = init
+ -- ARRAY Fault_log_structure,      init = { others => { Fault_index => 0, flight_number => 0, fault_type => PROBE_ERROR, error_code => 0, timestamp => 0, param_data => { others => 0 }, initial_fault_index => FALSE, start_duration => 0, stop_duration => 0, param_data_present
+--&=> { others => FALSE }, data_present => FALSE, fault_active_flag => FALSE, fault_data_write => FALSE, Last_ft_record => FALSE, end_ft_transmission => FALSE, param_data_write => { others => FALSE } } },        ev = init
+END ENVIRONMENT -- ENV_hdudispflmsscu_c
+USE ENV_hdudispflmsscu_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service ScuRTDGetParam
+--------------------------------------------------------------------------------
+SERVICE ScuRTDGetParam
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT16 rtd_tag;
+    #T_PARAM_READING ps_dest;
+    #T_A429_DATA_TYPE a429_type;
+
+    TEST 1
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-001]
+    COMMENT The function set the parameter rtd_tag to ZERO when parameter rtd_tag is greater 
+    COMMENT than SCU_RTDMAX_PARAM
+    COMMENT Equivalence Class  117
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-002]
+    COMMENT The function call the macro OS_ENTER_CRITICAL.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-003]
+    COMMENT The function set RTD reading i.e of structure type 
+    COMMENT T_SRTD_READING to Storage for "Real Time Data with index rtd_tag.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-004]
+    COMMENT The function call the macro OS_EXIT_CRITICAL.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-005]
+    COMMENT The function does the following
+    COMMENT 1. Set the fread of param reading structure to s32reading of 
+    COMMENT RTD reading structure
+    COMMENT 2. Set member r of param reading structure to sum of FIVE and 
+    COMMENT s32reading of RTD reading multiplied by ONE_HUNDRED , divided 
+    COMMENT by TEN when parameter a429_type is BNR 
+    COMMENT Equivalence Class 120
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-006]
+    COMMENT The function set the member stat of ps_dest to 
+    COMMENT PARAM_BAD if member eRTDStat of RTD reading is RTD_STAT_FAIL.
+    COMMENT Equivalence Class  123
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-012]
+    COMMENT - Set eRTDStat of SCU RTD reading of index ZERO to RTD_STAT_FAIL when 
+    COMMENT Fault_set is not equal to ZERO AND Ssm_ncd is equal to zero OR second 
+    COMMENT or third bit of Scu_fty_offset_flag is equal to one.
+    COMMENT Equivalence Class  125,127,129
+    COMMENT
+    COMMENT </TD> 
+
+    
+        ELEMENT
+        
+        COMMENT INPUT SECTION:  
+        VAR rtd_tag,        init = 4,       ev = init
+        
+        STRUCTURE ps_dest,      init = { r => 0, stat => PARAM_OK, fread => 0.0 },      ev = { r =>10, stat => 4, fread => 1.0 }
+        
+        VAR a429_type,      init = BNR,     ev = init   
+        
+        VAR Scu_rtd_readings[0].eRTDStat,       init = RTD_STAT_FAIL,       ev = init
+        
+        VAR Fault_set,      init = 1,       ev = init   
+
+        VAR Scu_rtd_readings[0].s32reading,     init = 1,       ev = init       
+        
+        VAR Ssm_ncd,        init = 0,       ev = init       
+
+        VAR Scu_fty_offset_flag,  init=0XFF,  ev=init   
+         
+        COMMENT OUTPUT SECTION: 
+
+        VAR U32_critical_sr,        init = 0,       ev = 1          
+            
+        COMMENT INPUT/OUTPUT SECTION:       
+        
+            --None
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        
+            STUB SaveStatusReg()1
+            STUB RestoreStatusReg(1)
+            
+        END SIMUL
+        
+         -- Calling the Unit Under Test:            
+        #ScuRTDGetParam(rtd_tag, &ps_dest, a429_type);
+
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+
+    TEST 2
+    FAMILY nominal
+    
+     COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-001]
+    COMMENT The function set the parameter rtd_tag to ZERO when parameter rtd_tag is less 
+    COMMENT than SCU_RTDMAX_PARAM
+    COMMENT Equivalence Class  118
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-005]
+    COMMENT The function  does the following
+    COMMENT 1. Set the fread of param reading structure to s32reading of 
+    COMMENT RTD reading structure
+    COMMENT Set member r of param reading structure to s32reading of RTD 
+    COMMENT reading when parameter a429_type is DDW
+    COMMENT Equivalence Class 121
+    COMMENT
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-007]
+    COMMENT The function set the member stat of ps_dest to NCD 
+    COMMENT if member eRTDStat of RTD reading is RTD_NCD.
+    COMMENT Equivalence Class 137
+    COMMENT
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-012]
+    COMMENT The function do the following 
+    COMMENT - Set eRTDStat of SCU RTD reading of index ZERO to RTD_STAT_FAIL when 
+    COMMENT Fault_set is not equal to ZERO AND Ssm_ncd is equal to zero OR second 
+    COMMENT or third bit of Scu_fty_offset_flag is equal to one.
+    COMMENT Equivalence Class 125,128,129
+    COMMENT
+    COMMENT </TD>  
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:  
+        
+        VAR rtd_tag,        init = 1,       ev = init
+        
+        STRUCTURE ps_dest,      init = { r => 0, stat => PARAM_OK, fread => 0.0 },      ev = { r =>1, stat => 8, fread => 0.0 }
+        
+        VAR a429_type,      init = DDW,     ev = init   
+        
+        VAR Scu_rtd_readings[1].s32reading,     init = 1,       ev = init   
+        
+        VAR Scu_rtd_readings[1].eRTDStat,       init = RTD_NCD,     ev = init
+        
+        VAR Fault_set,      init = 1,       ev = init       
+        
+        VAR Ssm_ncd,        init = 1,       ev = init   
+        
+        VAR Scu_fty_offset_flag,        init = 4,       ev = init       
+
+                
+        COMMENT OUTPUT SECTION: 
+
+        VAR U32_critical_sr,        init = 0,       ev = 1          
+            
+        COMMENT INPUT/OUTPUT SECTION:       
+        
+            --None
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        
+            STUB SaveStatusReg()1
+            STUB RestoreStatusReg(1)
+                     
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ScuRTDGetParam(rtd_tag, &ps_dest, a429_type);
+        END ELEMENT
+        
+    END TEST -- TEST 2  
+
+
+    TEST 3
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-005]
+    COMMENT The function  do nothing when
+    COMMENT a429_type is not BNR or DDW
+    COMMENT Equivalence Class 122
+    COMMENT
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-008]
+    COMMENT The function set the member stat of ps_dest to MISSING if second 
+    COMMENT bit of Fault_set is ONE and member eRTDStat of RTD reading is RTD_MISSING.
+    COMMENT Equivalence Class 138,142
+    COMMENT
+    COMMENT </TD>
+    
+        ELEMENT
+        
+    
+        
+        COMMENT INPUT SECTION:  
+        VAR rtd_tag,        init = 0,       ev = init
+        
+        STRUCTURE ps_dest,      init = { r => 0, stat => PARAM_OK, fread => 0.0 },      ev = { r =>0,stat => 7, fread => 0.0 }
+        
+        VAR a429_type,      init = BCD,     ev = init   
+        
+        VAR Scu_rtd_readings[0].s32reading,     init = 1,       ev = init   
+        
+        VAR Scu_rtd_readings[0].eRTDStat,       init = RTD_MISSING,     ev = 0
+        
+        VAR Fault_set,      init = 4,       ev = init       
+        
+        VAR Ssm_ncd,        init = 1,       ev = init   
+        
+        VAR Scu_fty_offset_flag,        init = 8,       ev = init   
+                
+        COMMENT OUTPUT SECTION: 
+
+        VAR U32_critical_sr,        init = 0,       ev = 1          
+            
+        COMMENT INPUT/OUTPUT SECTION:       
+        
+            --None
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        
+            STUB SaveStatusReg()1
+            STUB RestoreStatusReg(1)
+          
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ScuRTDGetParam(rtd_tag, &ps_dest, a429_type);
+        END ELEMENT
+        
+    END TEST -- TEST 3
+
+   TEST 4
+   FAMILY nominal
+   
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-009]
+    COMMENT The function set the member stat of ps_dest to PARAM_OK 
+    COMMENT if member eRTDStat of RTD reading is RTD_NORMAL.
+    COMMENT Equivalence Class 139
+    COMMENT
+    COMMENT </TD> 
+       ELEMENT
+        
+        COMMENT INPUT SECTION:  
+        VAR rtd_tag,        init = 0,       ev = init
+        
+        STRUCTURE ps_dest,      init = { r => 0, stat => PARAM_OK, fread => 0.0 },      ev = { r =>1, stat => 0, fread => 0.0 }
+        
+        VAR a429_type,      init = DDW,     ev = init   
+        
+        VAR Scu_rtd_readings[0].s32reading,     init = 1,       ev = init   
+        
+        VAR Scu_rtd_readings[0].eRTDStat,       init = RTD_NORMAL,      ev = 0
+        
+        VAR Fault_set,      init = 0,       ev = init       
+        
+        VAR Ssm_ncd,        init = 0,       ev = init   
+        
+        VAR Scu_fty_offset_flag,        init = 4,       ev = init       
+
+                
+        COMMENT OUTPUT SECTION: 
+
+        VAR U32_critical_sr,        init = 0,       ev = 1          
+            
+        COMMENT INPUT/OUTPUT SECTION:       
+        
+            --None
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        
+            STUB SaveStatusReg()1
+            STUB RestoreStatusReg(1)        
+            
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ScuRTDGetParam(rtd_tag, &ps_dest, a429_type);
+        END ELEMENT
+
+ END TEST -- TEST 4
+
+   TEST 5
+   FAMILY nominal
+   
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-010]
+    COMMENT The function set the member stat of ps_dest to RANGE_ERROR 
+    COMMENT if member eRTDStat of RTD reading is RTD_RANGE_ERR.
+    COMMENT Equivalence Class 140
+    COMMENT
+    COMMENT </TD
+    
+        ELEMENT
+        
+        COMMENT INPUT SECTION:  
+        VAR rtd_tag,        init = 0,       ev = init
+        
+        STRUCTURE ps_dest,      init = { r => 0, stat => PARAM_OK, fread => 0.0 },      ev = { r =>1, stat => 5, fread => 0.0 }
+        
+        VAR a429_type,      init = DDW,     ev = init   
+        
+        VAR Scu_rtd_readings[0].s32reading,     init = 1,       ev = init   
+        
+        VAR Scu_rtd_readings[0].eRTDStat,       init = RTD_RANGE_ERR,       ev = 0
+        
+        VAR Fault_set,      init = 0,       ev = init       
+        
+        VAR Ssm_ncd,        init = 0,       ev = init   
+        
+        VAR Scu_fty_offset_flag,        init = 8,       ev = init       
+
+                
+        COMMENT OUTPUT SECTION: 
+
+        VAR U32_critical_sr,        init = 0,       ev = 1          
+            
+        COMMENT INPUT/OUTPUT SECTION:       
+        
+            --None
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        
+            STUB SaveStatusReg()1
+            STUB RestoreStatusReg(1)           
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ScuRTDGetParam(rtd_tag, &ps_dest, a429_type);
+        END ELEMENT
+        
+
+END TEST -- TEST 5
+
+  TEST 6
+  FAMILY nominal
+  
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-011]
+    COMMENT The function set the member stat of ps_dest to PARAM_BAD if 
+    COMMENT member eRTDStat of RTD reading is other than RTD_STAT_FAIL, RTD_NCD,
+    COMMENT RTD_MISSING ,RTD_NORMAL and RTD_RANGE_ERR.
+    COMMENT Equivalence Class 124
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+        
+        COMMENT INPUT SECTION:  
+        VAR rtd_tag,        init = 1,       ev = init
+        
+        STRUCTURE ps_dest,      init = { r => 0, stat => PARAM_OK, fread => 0.0 },      ev = { r =>1, stat => 4, fread => 0 }
+        
+        VAR a429_type,      init = DDW,     ev = init   
+        
+        VAR Scu_rtd_readings[1].s32reading,     init = 1,       ev = init   
+        
+        VAR Scu_rtd_readings[1].eRTDStat,       init = RTD_RANGE_ERR+1,     ev =  init
+        
+        VAR Fault_set,      init = 1,       ev = init       
+        
+        VAR Ssm_ncd,        init = 1,       ev = init   
+        
+        VAR Scu_fty_offset_flag,        init = 0,       ev = init       
+
+                
+        COMMENT OUTPUT SECTION: 
+
+        VAR U32_critical_sr,        init = 0,       ev = 1          
+            
+        COMMENT INPUT/OUTPUT SECTION:       
+        
+            --None
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        
+            STUB SaveStatusReg()1
+            STUB RestoreStatusReg(1)
+                
+                       
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ScuRTDGetParam(rtd_tag, &ps_dest, a429_type);
+        END ELEMENT
+        
+END TEST -- TEST 6
+
+
+  TEST 7
+  FAMILY nominal
+  
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-008]
+    COMMENT The function don't  set the member stat of ps_dest to MISSING if second 
+    COMMENT bit of Fault_set is not ONE and member eRTDStat of RTD reading is RTD_MISSING.
+    COMMENT Equivalence Class 138,141
+    COMMENT
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-012]
+    COMMENT The function do the following 
+    COMMENT - Set eRTDStat of SCU RTD reading of index ZERO to RTD_NCD when 
+    COMMENT Fault_set is not equal to ZERO AND Ssm_ncd is not equal to zero AND 
+    COMMENT stat of ps_dest is equal to RANGE_ERROR
+    COMMENT Equivalence Class 125,128,144
+    COMMENT
+    COMMENT </TD>   
+
+  
+    ELEMENT
+        
+        COMMENT INPUT SECTION:  
+        VAR rtd_tag,        init = 1,       ev = init
+        
+        STRUCTURE ps_dest,      init = { r => 0, stat => PARAM_OK, fread => 0.0 },      ev = { r =>1, stat => 0, fread => 0.0 }
+        
+        VAR a429_type,      init = DDW,     ev = init   
+        
+        VAR Scu_rtd_readings[1].s32reading,     init = 1,       ev = init   
+        
+        VAR Scu_rtd_readings[1].eRTDStat,       init = RTD_MISSING,     ev = init
+        
+        VAR Fault_set,      init = 1,       ev = init       
+        
+        VAR Ssm_ncd,        init = 1,       ev = init   
+        
+        VAR Scu_fty_offset_flag,        init = 0,       ev = init       
+
+                
+        COMMENT OUTPUT SECTION: 
+
+        VAR U32_critical_sr,        init = 0,       ev = 1          
+            
+        COMMENT INPUT/OUTPUT SECTION:       
+        
+            --None
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        
+            STUB SaveStatusReg()1
+            STUB RestoreStatusReg(1)            
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ScuRTDGetParam(rtd_tag, &ps_dest, a429_type);
+        END ELEMENT
+    
+
+END TEST -- TEST 7
+
+
+  TEST 8
+  FAMILY nominal    
+  
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-012]
+    COMMENT The function do the following 
+    COMMENT - don't Set eRTDStat of SCU RTD reading of index ZERO to RTD_NCD when 
+    COMMENT Fault_set is not equal to ZERO AND Ssm_ncd is not equal to zero AND 
+    COMMENT stat of ps_dest is equal to RANGE_ERROR
+    COMMENT Equivalence Class 125,128,144
+    COMMENT
+    COMMENT </TD>   
+  
+   ELEMENT
+        
+        COMMENT INPUT SECTION:  
+        VAR rtd_tag,        init = 1,       ev = init
+        
+        STRUCTURE ps_dest,      init = { r => 0, stat => PARAM_OK, fread => 0.0 },      ev = { r =>1, stat => 5, fread => 0 }
+        
+        VAR a429_type,      init = DDW,     ev = init   
+        
+        VAR Scu_rtd_readings[1].s32reading,     init = 1,       ev = init   
+        
+        VAR Scu_rtd_readings[1].eRTDStat,       init = RTD_RANGE_ERR,       ev = init
+        
+        VAR Fault_set,      init = 1,       ev = init       
+        
+        VAR Ssm_ncd,        init = 1,       ev = init   
+        
+        VAR Scu_fty_offset_flag,        init = 0,       ev = init       
+
+                
+        COMMENT OUTPUT SECTION: 
+
+        VAR U32_critical_sr,        init = 0,       ev = 1          
+            
+        COMMENT INPUT/OUTPUT SECTION:       
+        
+            --None
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        
+            STUB SaveStatusReg()1
+            STUB RestoreStatusReg(1)
+                
+                       
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ScuRTDGetParam(rtd_tag, &ps_dest, a429_type);
+        END ELEMENT
+
+END TEST -- TEST 8
+
+   TEST 9
+   FAMILY nominal   
+   
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispflmsscu-ScuRTDGetParam-DB-LLR-012]
+    COMMENT - do nothing when 
+    COMMENT Fault_set is equal to ZERO AND Ssm_ncd is equal to zero OR second 
+    COMMENT or third bit of Scu_fty_offset_flag is equal to one.
+    COMMENT Equivalence Class  126,127,129
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:  
+        VAR rtd_tag,        init = 1,       ev = init
+        
+        STRUCTURE ps_dest,      init = { r => 0, stat => PARAM_OK, fread => 0.0 },      ev = { r =>1, stat => 0, fread => 0.0 }
+        
+        VAR a429_type,      init = DDW,     ev = init   
+        
+        VAR Scu_rtd_readings[1].s32reading,     init = 1,       ev = init   
+        
+        VAR Scu_rtd_readings[1].eRTDStat,       init = RTD_MISSING,     ev = init
+        
+        VAR Fault_set,      init = 0,       ev = init       
+        
+        VAR Ssm_ncd,        init = 1,       ev = init   
+        
+        VAR Scu_fty_offset_flag,        init = 0,       ev = init       
+
+                
+        COMMENT OUTPUT SECTION: 
+
+        VAR U32_critical_sr,        init = 0,       ev = 1          
+            
+        COMMENT INPUT/OUTPUT SECTION:       
+        
+            --None
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        
+            STUB SaveStatusReg()1
+            STUB RestoreStatusReg(1)        
+                      
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ScuRTDGetParam(rtd_tag, &ps_dest, a429_type);
+        END ELEMENT
+        
+
+END TEST -- TEST 9
+
+END SERVICE -- ScuRTDGetParam
+
+
+-------------------------------------------------------------------------------
+-- Declaration of the service ProcessingArinc01Fault
+--------------------------------------------------------------------------------
+SERVICE ProcessingArinc01Fault
+SERVICE_TYPE extern
+
+
+    TEST 18
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispflmsscu-ProcessingArinc01Fault-DB-LLR-001]
+    COMMENT The function set the error set to TRUE and Fault set to Fault set bitwise 
+    COMMENT or with FOUR when the following conditions are satisfied:
+    COMMENT 1. Demo_mode is not equal to TRUE.
+    COMMENT 2.(Arinc Fault set is not equal to ZERO)  
+    COMMENT or  scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is greater than or equal to RTD_MAX_INTERVAL_SCU and scu label flag is 
+    COMMENT equal to SEVEN and error state is FALSE.
+    COMMENT Equivalence Class 21,23
+    COMMENT 
+    COMMENT
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR Demo_mode,                init = FALSE,                  ev = init
+        
+        VAR Arinc_fault_set,                init = 1,                  ev = init
+        
+
+       VAR Fault_set,       init = 0,       ev = 4
+
+       VAR Stop_log,        init = FALSE,       ev = TRUE
+        
+        VAR Scu_timer[0],                init = RTD_MAX_INTERVAL_SCU,                  ev = init
+        
+        VAR Scu_label_flag,                init = SEVEN,                  ev = init 
+        
+        VAR Fault_log_structure[0].data_present,                init = FALSE,                  ev = init    
+        
+        VAR Fault_log_structure[0].initial_fault_index,                init = TRUE,                  ev = init  
+        
+        VAR Port1_label_count,                init = 0,                  ev = init      
+        
+        
+        VAR Fault_data[0].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[1].label_data.stat,                init = PARAM_ADVISORY,                  ev = init 
+        VAR Fault_data[2].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[3].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[4].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[5].label_data.stat,                init = PARAM_OK,            ev = init 
+                            
+
+        COMMENT OUTPUT SECTION:     
+
+        VAR U16_message_words[2],                init = 0,                  ev = 16         
+        
+        COMMENT INPUT/OUTPUT SECTION:
+               --NONE
+        
+        COMMENT Stub Calls:
+        SIMUL   
+ 
+            --NONE
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ProcessingArinc01Fault();
+        END ELEMENT 
+
+    END TEST -- TEST 18
+    
+    TEST 19
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispflmsscu-ProcessingArinc01Fault-DB-LLR-001]
+    COMMENT The function set the error set to TRUE and Fault set to Fault set bitwise 
+    COMMENT or with FOUR when the following conditions are satisfied:
+    COMMENT 1. Demo_mode is not equal to TRUE.
+    COMMENT 2.  (Arinc Fault set is not equal to ZERO)
+    COMMENT  or  scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is greater than or equal to RTD_MAX_INTERVAL_SCU and scu label flag is 
+    COMMENT equal to SEVEN and error state is FALSE.
+    COMMENT Equivalence Class 21,23,24
+    COMMENT
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR Demo_mode,                init = FALSE,                  ev = init
+        
+        VAR Arinc_fault_set,                init = 1,                  ev = init
+        
+
+        VAR Fault_set,      init = 0,       ev = init
+
+        VAR Stop_log,       init = FALSE,       ev = init
+        
+        VAR Scu_timer[0],                init = RTD_MAX_INTERVAL_SCU-1,                  ev = init
+        VAR Scu_timer[1],                init = RTD_MAX_INTERVAL_SCU,                  ev = init
+        
+        VAR Scu_label_flag,                init = SEVEN,                  ev = init 
+        
+        VAR Fault_log_structure[0].data_present,                init = FALSE,                  ev = init    
+        
+        VAR Fault_log_structure[0].initial_fault_index,                init = TRUE,                  ev = init  
+        
+        VAR Port1_label_count,                init = 0,                  ev = init      
+        
+        
+        VAR Fault_data[0].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[1].label_data.stat,                init = PARAM_ADVISORY,                  ev = init 
+        VAR Fault_data[2].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[3].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[4].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[5].label_data.stat,                init = PARAM_OK,            ev = init 
+                            
+
+        COMMENT OUTPUT SECTION:     
+
+        VAR U16_message_words[2],                init = 0,                  ev = init           
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --NONE
+        
+        COMMENT Stub Calls:
+        SIMUL   
+          --NONE
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ProcessingArinc01Fault();
+        END ELEMENT 
+
+    END TEST -- TEST 19 
+    
+    TEST 20
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispflmsscu-ProcessingArinc01Fault-DB-LLR-001]
+    COMMENT The function set the error set to TRUE and Fault set to Fault set bitwise 
+    COMMENT or with FOUR when the following conditions are satisfied:
+    COMMENT 1. Demo_mode is not equal to TRUE.
+    COMMENT 2. (Arinc Fault set is not equal to ZERO)
+    COMMENT  or  scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is greater than or equal to RTD_MAX_INTERVAL_SCU and scu label flag is 
+    COMMENT equal to SEVEN and error state is FALSE.
+    COMMENT Equivalence Class 21,25,24
+    COMMENT
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR Demo_mode,                init = FALSE,                  ev = init
+        
+        VAR Arinc_fault_set,                init = 1,                  ev = init
+        
+
+        VAR Fault_set,      init = 0,       ev = init
+
+        VAR Stop_log,       init = FALSE,       ev = init
+        
+        VAR Scu_timer[0],                init = RTD_MAX_INTERVAL_SCU-1,                  ev = init
+        VAR Scu_timer[1],                init = RTD_MAX_INTERVAL_SCU-1,                  ev = init
+        VAR Scu_timer[2],                init = RTD_MAX_INTERVAL_SCU,                  ev = init
+        
+        VAR Scu_label_flag,                init = SEVEN,                  ev = init 
+        
+        VAR Fault_log_structure[0].data_present,                init = FALSE,                  ev = init    
+        
+        VAR Fault_log_structure[0].initial_fault_index,                init = TRUE,                  ev = init  
+        
+        VAR Port1_label_count,                init = 0,                  ev = init      
+        
+        
+        VAR Fault_data[0].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[1].label_data.stat,                init = PARAM_ADVISORY,                  ev = init 
+        VAR Fault_data[2].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[3].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[4].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[5].label_data.stat,                init = PARAM_OK,            ev = init 
+                            
+
+        COMMENT OUTPUT SECTION:     
+
+        VAR U16_message_words[2],                init = 0,                  ev = init           
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        --NONE
+        COMMENT Stub Calls:
+        SIMUL   
+ 
+           --NONE 
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ProcessingArinc01Fault();
+        END ELEMENT 
+
+    END TEST -- TEST 20 
+    
+    TEST 21
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispflmsscu-ProcessingArinc01Fault-DB-LLR-001]
+    COMMENT The function set the error set to TRUE and Fault set to Fault set bitwise 
+    COMMENT or with FOUR when the following conditions are satisfied:
+    COMMENT 1. Demo_mode is not equal to TRUE.
+    COMMENT 2. (Arinc Fault set is not equal to ZERO)
+    COMMENT  or scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is greater than or equal to RTD_MAX_INTERVAL_SCU and scu label flag is 
+    COMMENT equal to SEVEN and error state is FALSE.
+    COMMENT Equivalence Class 21,25,24
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR Demo_mode,                init = FALSE,                  ev = init
+        
+        VAR Arinc_fault_set,                init = 1,                  ev = init
+        
+        VAR Fault_set,      init = 0,       ev = init
+
+        VAR Stop_log,       init = FALSE,       ev = init
+        
+        VAR Scu_timer[0],                init = RTD_MAX_INTERVAL_SCU,                  ev = init
+        
+        VAR Scu_label_flag,                init = 1,                  ev = init 
+        
+        VAR Fault_log_structure[0].data_present,                init = FALSE,                  ev = init    
+        
+        VAR Fault_log_structure[0].initial_fault_index,                init = TRUE,                  ev = init  
+        
+        VAR Port1_label_count,                init = 0,                  ev = init      
+        
+        
+        VAR Fault_data[0].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[1].label_data.stat,                init = PARAM_ADVISORY,            ev = init 
+        VAR Fault_data[2].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[3].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[4].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[5].label_data.stat,                init = PARAM_OK,            ev = init 
+                            
+
+        COMMENT OUTPUT SECTION:     
+
+        VAR U16_message_words[2],                init = 0,                  ev = init           
+        
+        COMMENT INPUT/OUTPUT SECTION:
+         --NONE
+        
+        COMMENT Stub Calls:
+        SIMUL   
+         --NONE
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ProcessingArinc01Fault();
+        END ELEMENT 
+
+    END TEST -- TEST 21 
+    
+    TEST 22
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispflmsscu-ProcessingArinc01Fault-DB-LLR-001]
+    COMMENT The function set the error set to TRUE and Fault set to Fault set bitwise 
+    COMMENT or with FOUR when the following conditions are satisfied:
+    COMMENT 1. Demo_mode is not equal to TRUE.
+    COMMENT 2.  (Arinc Fault set is not equal to ZERO)
+    COMMENT  or  scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is greater than or equal to RTD_MAX_INTERVAL_SCU and scu label flag is 
+    COMMENT equal to SEVEN and error state is FALSE.
+    COMMENT Equivalence Class 21,25,24
+    COMMENT
+    COMMENT
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR Demo_mode,                init = FALSE,                  ev = init
+        
+        VAR Arinc_fault_set,                init = 1,                  ev = init
+        
+
+        VAR Fault_set,      init = 0,       ev = init
+
+        VAR Stop_log,       init = FALSE,       ev = init
+        
+        VAR Scu_timer[0],                init = RTD_MAX_INTERVAL_SCU-1,                  ev = init
+        
+        VAR Scu_timer[1],                init = RTD_MAX_INTERVAL_SCU,                  ev = init
+        
+        VAR Scu_label_flag,                init = 1,                  ev = init 
+        
+        VAR Fault_log_structure[0].data_present,                init = FALSE,                  ev = init    
+        
+        VAR Fault_log_structure[0].initial_fault_index,                init = TRUE,                  ev = init  
+        
+        VAR Port1_label_count,                init = 0,                  ev = init      
+        
+        
+        VAR Fault_data[0].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[1].label_data.stat,                init = PARAM_ADVISORY,                  ev = init 
+        VAR Fault_data[2].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[3].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[4].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[5].label_data.stat,                init = PARAM_OK,            ev = init 
+                            
+
+        COMMENT OUTPUT SECTION:     
+
+        VAR U16_message_words[2],                init = 0,                  ev = init           
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --NONE
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        --NONE
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ProcessingArinc01Fault();
+        END ELEMENT 
+
+    END TEST -- TEST 22 
+    
+    TEST 23
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispflmsscu-ProcessingArinc01Fault-DB-LLR-001]
+    COMMENT The function set the error set to TRUE and Fault set to Fault set bitwise 
+    COMMENT or with FOUR when the following conditions are satisfied:
+    COMMENT 1. Demo_mode is not equal to TRUE.
+    COMMENT 2.  (Arinc Fault set is not equal to ZERO)
+    COMMENT  or  scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is greater than or equal to RTD_MAX_INTERVAL_SCU and scu label flag is 
+    COMMENT equal to SEVEN and error state is FALSE.
+    COMMENT Equivalence Class 21,25,24
+    COMMENT
+    COMMENT
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR Demo_mode,                init = FALSE,                  ev = init
+        
+        VAR Arinc_fault_set,                init = 1,                  ev = init
+        
+
+        VAR Fault_set,      init = 0,       ev = init
+
+        VAR Stop_log,       init = FALSE,       ev = init
+        
+        VAR Scu_timer[0],                init = RTD_MAX_INTERVAL_SCU-1,                  ev = init
+        VAR Scu_timer[1],                init = RTD_MAX_INTERVAL_SCU-1,                  ev = init
+        VAR Scu_timer[2],                init = RTD_MAX_INTERVAL_SCU,                  ev = init
+        
+        VAR Scu_label_flag,                init = 1,                  ev = init 
+        
+        VAR Fault_log_structure[0].data_present,                init = FALSE,                  ev = init    
+        
+        VAR Fault_log_structure[0].initial_fault_index,                init = TRUE,                  ev = init  
+        
+        VAR Port1_label_count,                init = 0,                  ev = init      
+        
+        
+        VAR Fault_data[0].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[1].label_data.stat,                init = PARAM_ADVISORY,                  ev = init 
+        VAR Fault_data[2].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[3].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[4].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[5].label_data.stat,                init = PARAM_OK,            ev = init 
+                            
+
+        COMMENT OUTPUT SECTION:     
+
+        VAR U16_message_words[2],                init = 0,                  ev = init           
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --NONE
+        
+        COMMENT Stub Calls:
+        SIMUL   
+ 
+            --NONE  
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ProcessingArinc01Fault();
+        END ELEMENT 
+
+    END TEST -- TEST 23 
+    
+    TEST 24
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispflmsscu-ProcessingArinc01Fault-DB-LLR-001]
+    COMMENT The function set the error set to TRUE and Fault set to Fault set bitwise 
+    COMMENT or with FOUR when the following conditions are satisfied:
+    COMMENT 1. Demo_mode is not equal to TRUE.
+    COMMENT 2.  (Arinc Fault set is not equal to ZERO )
+    COMMENT or  scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is greater than or equal to RTD_MAX_INTERVAL_SCU and scu label flag is 
+    COMMENT equal to SEVEN and error state is FALSE.
+    COMMENT Equivalence Class 21,25,24
+    COMMENT
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR Demo_mode,                init = FALSE,                  ev = init
+        
+        VAR Arinc_fault_set,                init = 1,                  ev = init
+
+        VAR Fault_set,      init = 1,       ev = init
+
+        VAR Stop_log,       init = FALSE,       ev = init
+        
+        VAR Scu_timer[0],                init = RTD_MAX_INTERVAL_SCU,                  ev = init
+        
+        VAR Scu_label_flag,                init = SEVEN,                  ev = init 
+        
+        VAR Fault_log_structure[0].data_present,                init = FALSE,                  ev = init    
+        
+        VAR Fault_log_structure[0].initial_fault_index,                init = TRUE,                  ev = init  
+        
+        VAR Port1_label_count,                init = 0,                  ev = init      
+        
+        
+        VAR Fault_data[0].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[1].label_data.stat,                init = PARAM_ADVISORY,                  ev = init 
+        VAR Fault_data[2].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[3].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[4].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[5].label_data.stat,                init = PARAM_OK,            ev = init 
+                            
+
+        COMMENT OUTPUT SECTION:     
+
+        VAR U16_message_words[2],                init = 0,                  ev = init           
+        
+        COMMENT INPUT/OUTPUT SECTION:
+           --NONE
+        
+        COMMENT Stub Calls:
+        SIMUL   
+         --NONE
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ProcessingArinc01Fault();
+        END ELEMENT 
+
+    END TEST -- TEST 24 
+    
+    TEST 25
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispflmsscu-ProcessingArinc01Fault-DB-LLR-001]
+    COMMENT The function set the error set to TRUE and Fault set to Fault set bitwise 
+    COMMENT or with FOUR when the following conditions are satisfied:
+    COMMENT 1. Demo_mode is not equal to TRUE.
+    COMMENT 2.  (Arinc Fault set is not equal to ZERO ) 
+    COMMENT   or  scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is greater than or equal to RTD_MAX_INTERVAL_SCU and scu label flag is 
+    COMMENT equal to SEVEN and error state is FALSE.
+    COMMENT Equivalence Class 21,25,24
+    COMMENT
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        VAR Demo_mode,                init = FALSE,                  ev = init
+        
+        VAR Arinc_fault_set,                init = 1,                  ev = init
+        
+
+        VAR Fault_set,      init = 1,       ev = init
+
+        VAR Stop_log,       init = FALSE,       ev = init
+        
+        VAR Scu_timer[0],                init = RTD_MAX_INTERVAL_SCU,                  ev = init
+        
+        VAR Scu_label_flag,                init = 1,                  ev = init 
+        
+        VAR Fault_log_structure[0].data_present,                init = FALSE,                  ev = init    
+        
+        VAR Fault_log_structure[0].initial_fault_index,                init = TRUE,                  ev = init  
+        
+        VAR Port1_label_count,                init = 0,                  ev = init      
+        
+        
+        VAR Fault_data[0].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[1].label_data.stat,                init = PARAM_ADVISORY,                  ev = init 
+        VAR Fault_data[2].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[3].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[4].label_data.stat,                init = PARAM_OK,                  ev = init   
+        VAR Fault_data[5].label_data.stat,                init = PARAM_OK,            ev = init 
+                            
+
+        COMMENT OUTPUT SECTION:     
+
+        VAR U16_message_words[2],                init = 0,                  ev = init           
+        
+        COMMENT INPUT/OUTPUT SECTION:
+         --NONE
+        
+        COMMENT Stub Calls:
+        SIMUL   
+          --NONE
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #ProcessingArinc01Fault();
+        END ELEMENT 
+
+    END TEST -- TEST 25 
+    
+END SERVICE -- ProcessingArinc01Fault
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PushFaultLog
+--------------------------------------------------------------------------------
+SERVICE PushFaultLog
+SERVICE_TYPE extern
+    
+    TEST 4
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispflmsscu-PushFaultLog-DB-LLR-002]
+    COMMENT The function loop from fault index ZERO till index is less than 
+    COMMENT MAX_FAULT_LOG and do nothing when Fault_index of Fault log structure 
+    COMMENT with index as fault index is greater than ZERO and end_ft_transmission 
+    COMMENT of Fault log structure with index as fault index count is equal to FALSE 
+    COMMENT and Stop ft log is equal to TRUE.
+    COMMENT Equivalence Class 71,73,75
+    COMMENT
+    COMMENT
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+                        
+        VAR Fault_log_structure[0..9].Fault_index,              init = 10,                  ev = init   
+        
+        VAR Fault_log_structure[0..9].end_ft_transmission,      init = FALSE,               ev = init   
+        
+        VAR Stop_ft_log,        init = TRUE,               ev = init                
+
+        COMMENT OUTPUT SECTION: 
+        
+        
+        COMMENT INPUT/OUTPUT SECTION:
+    
+
+        COMMENT Stub Calls:
+        SIMUL   
+        
+                   
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:            
+        #PushFaultLog();
+        END ELEMENT
+
+    END TEST -- TEST 4  
+    
+END SERVICE -- PushFaultLog
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

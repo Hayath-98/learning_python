@@ -1,0 +1,860 @@
+HEADER hducommfoscpu,Source Code Ver :  1.3, TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Soumya Patil
+--
+-- File Name           : hducommfoscpu.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : OsTaskCreate
+--
+-- Version History     :
+--
+-- TEST-VERSION         TEST-DATE       TESTER NAME        MODIFICATIONS
+-- ------------         ---------       -----------        -------------
+--    1.1               30.10.2017      Soumya Patil       Created the PTU file.
+--    1.2               10.11.2017      Soumya Patil       Updated as per #PR100171
+--    1.3               14.11.2017      Soumya Patil       Updated as per #PR100171
+--
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommfoscpu.h"            
+##include "hdulibbasicfunc.h"          
+##include "hducommfoscfg.h"            
+##include "hducommfucos.h"             
+
+--Macros declared to be used in PTU
+##define FPCCR           0x80000000UL     
+##define FPSCR           0x00000000UL     
+##define XPSR            0x01000000UL     
+##define R14_LR          0xFFFFFFFEUL     
+##define NO_OF_REM_REG   24U              
+
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file 
+
+    --TCB priority table.
+    #T_OS_TCB *Os_tcb_prio_tbl[64]; 
+    
+    #T_BOOLEAN Os_running;      
+    
+-- Declarations of the temporary variables of the tested file
+
+    --Temporary variables to hold the value of the pointer in the function OsTcbInit 
+    # T_UINT32 *PTU_stck;
+    
+    --Temporary variable used to assign address to TCB priority table 'Os_tcb_prio_tbl' 
+    # T_OS_TCB PTU_Os_tcb_prio_tbl; 
+    
+    -- Temporary variables created to access the pointer variables.
+    # T_UINT32  PTU_pdata;
+    # T_UINT32  PTU_ptos[50];
+        
+    -- The dummy function is created to assign address to function pointer 'ptask'
+    # void Dummy_Function(void );
+
+    --Temporary variables used to handle the pointer members of the structure T_OS_TCB.
+    # void  *PTU_os_tcb_stkptr;
+    # T_OS_EVENT *PTU_os_tcb_eventptr;
+    # T_UINT32 PTU_os_tcb_next,PTU_os_tcb_prev;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+   COMMENT Author Name      : Soumya Patil
+   COMMENT
+   COMMENT File Name        : hducommfoscpu.ptu
+   COMMENT
+   COMMENT Tested Functions : OsTaskCreate
+   COMMENT
+   COMMENT
+   COMMENT Assumptions and Constraints
+   COMMENT <AC>
+   COMMENT
+   COMMENT Assumption(s):
+   COMMENT None
+   COMMENT 
+   COMMENT Constraint(s):
+   COMMENT None
+   COMMENT
+   COMMENT </AC>
+
+   COMMENT Equivalence Class Description
+   COMMENT <ECD>
+   COMMENT
+   COMMENT Valid Class(es)
+   COMMENT
+   COMMENT Class 1
+   COMMENT In the Function "OsTaskCreate", task to be created exists .
+   COMMENT
+   COMMENT Class 2
+   COMMENT In the Function "OsTaskCreate", task to be created does not exists
+   COMMENT
+   COMMENT Class 3
+   COMMENT The Function "OsTaskCreate", calls the function 'OsTcbInit'
+   COMMENT
+   COMMENT Class 4
+   COMMENT The Function "OsTaskCreate", calls the function 'SaveStatusReg'. 
+   COMMENT
+   COMMENT Class 5
+   COMMENT The Function "OsTaskCreate", calls the function 'RestoreStatusReg'.
+   COMMENT
+   COMMENT Class 6
+   COMMENT In the Function "OsTaskCreate", 'OsTcbInit' returns OS_NO_ERR.
+   COMMENT
+   COMMENT Class 7
+   COMMENT In the Function "OsTaskCreate", 'OsTcbInit' returns other than OS_NO_ERR.
+   COMMENT
+   COMMENT Class 8
+   COMMENT In the Function "OsTaskCreate", the task priority 'u8_prio' is available in the TCB priority table 'Os_tcb_prio_tbl' 
+   COMMENT
+   COMMENT Class 9
+   COMMENT In the Function "OsTaskCreate", the task priority 'u8_prio' is not available in the TCB priority table 'Os_tcb_prio_tbl'    
+   COMMENT
+   COMMENT Class 10
+   COMMENT The Function "OsTaskCreate", calls the function 'OsSched'.
+   COMMENT 
+   COMMENT Class 11
+   COMMENT In the Function "OsTaskCreate", Os_running is TRUE.
+   COMMENT 
+   COMMENT Class 12
+   COMMENT In the Function "OsTaskCreate", Os_running is FALSE.
+   COMMENT 
+   COMMENT Invalid Class(es)
+   COMMENT Class 13
+   COMMENT In the function "OsTaskCreate", invalid reference is passed to the function parameter pt_os.
+   COMMENT 
+   COMMENT Class 14
+   COMMENT In the function "OsTaskCreate", invalid reference is passed to the function parameter p_data.
+   COMMENT
+   COMMENT Class 15
+   COMMENT In the function "OsTaskCreate", invalid reference is passed to the function parameter ptask.
+   COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hducommfoscpu_c
+
+        #void OsSched(void); 
+
+        #void RestoreStatusReg(T_UINT32 _in U32_critical_sr); 
+
+        #T_UINT32 SaveStatusReg(void); 
+
+        --In stub OsTcbInit 'stck' variable made as _no because local variable address cannot be expected.
+        # T_UBYTE OsTcbInit(T_UINT8 _in prio,void _no *stck )
+        # {
+        #   PTU_stck=stck;
+        # }
+
+        --In stub Dummy_Function 'dptr' variable made as _no because local variable address cannot be expected.
+        # void Dummy_Function(void)
+        # {
+        #   ;
+        # }
+
+    END DEFINE
+
+ELSE_SIMUL
+
+-- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommfoscpu.c
+ENVIRONMENT ENV_hducommfoscpu_c
+
+    VAR U32_critical_sr,      init = 0,       ev = init
+  
+END ENVIRONMENT -- ENV_hducommfoscpu_c
+
+USE ENV_hducommfoscpu_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OsTaskCreate
+--------------------------------------------------------------------------------
+SERVICE OsTaskCreate
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #void ( *ptask)(void* dptr);
+    #void *p_data;
+    #void *pt_os;
+    #T_UINT8 u8_prio;
+
+    -- By function returned type declaration
+    #T_UINT8 ret_OsTaskCreate;
+
+    ENVIRONMENT ENV_OsTaskCreate
+
+        VAR ptask,                  init = NIL,         ev = init
+
+        VAR p_data,                 init = 0,           ev = init
+
+        VAR pt_os,                  init = 0,           ev = init
+
+        VAR u8_prio,                init = 0,           ev = init
+
+        VAR ret_OsTaskCreate,           init = 0,               ev = init
+
+    END ENVIRONMENT -- ENV_OsTaskCreate
+
+    USE ENV_OsTaskCreate
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-001]
+    COMMENT The function 'OsTaskCreate' returns OS_NO_MORE_TCB when there is no free TCB to initialize after creation of the task.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-002]
+    COMMENT The function 'OsTaskCreate' calls SaveStatusReg to disable interrupts before checking when the task to be created already exists.
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-003]
+    COMMENT The function 'OsTaskCreate' performs the following operations when requested task priority 'u8_prio'(min)is  
+    COMMENT available in the TCB priority table 'Os_tcb_prio_tbl':
+    COMMENT a) RestoreStatusReg function is called to enable the interrupt using OS_EXIT_CRITICAL
+    COMMENT b) Sets local stack variable to top of stack pointer (pt_os)
+    COMMENT c) Sets (Stack top - 1) with FPCCR.
+    COMMENT d) Sets (Stack top - 2) with FPSCR. 
+    COMMENT e) Sets (Stack top - 19) with XPSR.
+    COMMENT f) Sets (Stack top - 20) with 'ptask'.
+    COMMENT g) Sets (Stack top - 21) with R14_LR.
+    COMMENT h) Sets (Stack top - 26) with 'p_data'. 
+    COMMENT i) Decrement the stack pointer stack top further by size (24) required to save the remaining registers on process stack. 
+    COMMENT j) Calls function OsTcbInit with the parameters u8_prio and reference to OS task stack to initialize the TCB. 
+    COMMENT k) does nothing when the function OsTcbInit returns other than OS_NO_ERR.
+    COMMENT Equivalence Class 5,7,8
+    COMMENT </TD> 
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --task priority
+            VAR u8_prio,                    init = 0,                           ev = init
+
+            --Table of pointers to all created TCBs
+            ARRAY Os_tcb_prio_tbl,          init = { 0=>(T_OS_TCB *)DEC_ZERO,others =>(T_OS_TCB *)&PTU_Os_tcb_prio_tbl},
+            &                                                                   ev = init 
+
+            --Flag indicating that kernel is running
+            VAR Os_running,                 init = FALSE,                       ev = init 
+
+            --Function pointer assigned the address of dummy function.
+            VAR ptask,                      init = &Dummy_Function,             ev = init 
+
+            --Temporary parameter initialized with 0 before usage.
+            VAR PTU_pdata,                  init = 0,                           ev = init
+
+            --Pointer variable holds the address of temporary variable.
+            VAR p_data,                     init = (T_UINT32 *)&PTU_pdata,      ev = init
+
+            --Pointer variable which points to top of stack.
+            --The content present in this stack is verified through variable PTU_ptos.
+            VAR pt_os,                      init = (T_UINT32 *)&PTU_ptos[50],   ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --The loaded contents in the Stack are verified.
+            ARRAY PTU_ptos,         init = {others=>1},         ev = {0..23=>1,24=>(T_UINT32)p_data,25..28=>1,29=>(T_UINT32)R14_LR,30=>(T_UINT32)ptask,
+            &                           31=>(T_UINT32)XPSR,32..47=>1,48=>(T_UINT32)FPSCR,49=>(T_UINT32)FPCCR,others=>(T_UINT32)1}
+
+            --Global variable holds status register value.
+            VAR U32_critical_sr,            init = 1,                           ev = 0
+
+        COMMENT OUTPUT SECTION:
+
+            --return value of the function 'OsTaskCreate'
+            VAR ret_OsTaskCreate,           init = 1,                           ev = (T_UINT8)OS_NO_MORE_TCB
+
+            --Verifies the address of Stack.
+            VAR PTU_stck,                   init = 0,                           ev = &PTU_ptos[0]
+            
+        -- Stub Calls :
+        SIMUL
+
+            --Disables interrupts before loading
+            STUB SaveStatusReg()0
+
+            --Restore Priority mask register
+            STUB RestoreStatusReg(0)
+
+            --initializes the task control block
+            STUB OsTcbInit(0)OS_NO_MORE_TCB
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OsTaskCreate = OsTaskCreate(ptask, p_data, pt_os, u8_prio);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-001]
+    COMMENT The function 'OsTaskCreate' returns OS_PRIO_EXIST when task priority to be created already exists.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-004]    
+    COMMENT The function 'OsTaskCreate' performs the following operation
+    COMMENT a) sets the return value of "RestoreStatusReg" to U32_critical_sr. 
+    COMMENT    "RestoreStatusReg" is called to enable the interrupt using OS_EXIT_CRITICAL macro when the task to be created already exists.
+    COMMENT    (i.e., requested task priority 'u8_prio' is not available in the TCB priority table 'Os_tcb_prio_tbl'
+    COMMENT    and the formal parameter 'u8_prio'passed with (nominal)value)
+    COMMENT b) returns OS_PRIO_EXIST when the task priority to be created already exist.
+    COMMENT Equivalence Class 1,5,9 
+    COMMENT </TD> 
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --task priority
+            VAR u8_prio,                    init = 0xF,                     ev = init
+
+            --Table of pointers to all created TCBs
+            ARRAY Os_tcb_prio_tbl,          init = { 0=>NULL,15 =>&PTU_Os_tcb_prio_tbl,others =>NULL },
+            &                                                               ev = init 
+            -- Function pointer assigned the address of dummy function.
+            VAR ptask,                      init = &Dummy_Function,         ev = init 
+
+            --Pointer variable initialized with the value 0xF.
+            VAR p_data,                      init = 0xF,                    ev = init
+
+            --Pointer variable which points to top of stack.
+            --The content present in this stack is verified through variable PTU_ptos.
+            VAR pt_os,                      init = 0xF,                     ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Global variable holds status register value.
+            VAR U32_critical_sr,            init = 0,                       ev = 0xF
+
+        COMMENT OUTPUT SECTION;
+
+            --return value of the function 'OsTaskCreate'
+            VAR ret_OsTaskCreate,           init = 0,                       ev = OS_PRIO_EXIST
+
+        -- Stub Calls:
+        SIMUL
+
+            --Disables interrupts before loading
+            STUB SaveStatusReg()0xF
+
+            --Restore Priority mask register
+            STUB RestoreStatusReg(0xF)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OsTaskCreate = OsTaskCreate(ptask, p_data, pt_os, u8_prio);
+
+    END ELEMENT
+
+END TEST    -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-001]
+    COMMENT The function 'OsTaskCreate' returns OS_NO_ERR on successful creation of the task.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-003]
+    COMMENT The function 'OsTaskCreate' performs the following operations when requested task priority 'u8_prio'(max=63)is  
+    COMMENT available in the TCB priority table 'Os_tcb_prio_tbl':
+    COMMENT a) RestoreStatusReg function is called to enable the interrupt using OS_EXIT_CRITICAL
+    COMMENT b) Sets local stack variable to top of stack pointer (pt_os)
+    COMMENT c) Sets (Stack top - 1) with FPCCR.
+    COMMENT d) Sets (Stack top - 2) with FPSCR. 
+    COMMENT e) Sets (Stack top - 19) with XPSR.
+    COMMENT f) Sets (Stack top - 20) with 'ptask'.
+    COMMENT g) Sets (Stack top - 21) with R14_LR.
+    COMMENT h) Sets (Stack top - 26) with 'p_data'. 
+    COMMENT i) Decrement the stack pointer stack top further by size (24) required to save the remaining registers on process stack. 
+    COMMENT j) Calls function OsTcbInit with the parameters u8_prio and reference to OS task stack to initialize the TCB. 
+    COMMENT k) does nothing when the return value of the function OsTcbInit is OS_NO_ERR 
+    COMMENT and flag indicating that Kernel is running (Os_running) is FALSE. 
+    COMMENT Equivalence Class 3,5,6,8,12
+    COMMENT </TD> 
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --task priority
+            VAR u8_prio,               init = 63,                       ev = init
+
+            --Table of pointers to all created TCBs
+            ARRAY Os_tcb_prio_tbl,     init = { 0..62 =>&PTU_Os_tcb_prio_tbl,others =>NULL }, 
+            &                                                           ev = init 
+            -- Global variable of boolean datatype
+            VAR Os_running,            init = FALSE,                    ev = init 
+
+            -- Function pointer assigned the address of dummy function
+            VAR ptask,                 init = &Dummy_Function,          ev = init 
+
+            --Temporary parameter initialized with 0 before usage.
+            VAR PTU_pdata,             init = 0,                        ev = init
+
+            --Pointer variable holds the address of temporary variable.
+            VAR p_data,                init = (T_UINT32 *)&PTU_pdata,   ev = init
+
+            --Pointer variable which points to top of stack.
+            --The content present in this stack is verified through variable PTU_ptos.
+            VAR pt_os,                 init = (T_UINT32 *)&PTU_ptos[50], ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --The loaded contents in the Stack are verified.
+            ARRAY PTU_ptos,            init = {others=>1},               ev = {0..23=>1,24=>(T_UINT32)p_data,25..28=>1,
+            &                                                               29=>(T_UINT32)R14_LR,30=>(T_UINT32)ptask,
+            &                                                               31=>(T_UINT32)XPSR,32..47=>1,48=>(T_UINT32)FPSCR,
+            &                                                               49=>(T_UINT32)FPCCR,others=>1}
+
+            --Verifies the address of Stack.
+            VAR PTU_stck,              init = 0,                         ev = &PTU_ptos[0]
+
+            --Global variable holds status register value.
+            VAR U32_critical_sr,       init = 1,                         ev = 63
+
+        COMMENT OUTPUT SECTION:
+
+            --return value of the function 'OsTaskCreate'
+            VAR ret_OsTaskCreate,      init = 1,                         ev = OS_NO_ERR
+
+        -- Stub Calls :
+        SIMUL
+
+            --Disables interrupts before loading
+            STUB SaveStatusReg ()63
+
+            --Restore Priority mask register
+            STUB RestoreStatusReg   (63)
+
+            --initializes the task control block
+            STUB OsTcbInit (63)OS_NO_ERR
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OsTaskCreate = OsTaskCreate(ptask, p_data, pt_os, u8_prio);
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>    
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-001]
+    COMMENT The function 'OsTaskCreate' returns OS_NO_ERR on successful creation of the task.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-003]
+    COMMENT The function 'OsTaskCreate' performs the following operations when requested task priority 'u8_prio'is  
+    COMMENT available in the TCB priority table 'Os_tcb_prio_tbl':
+    COMMENT a) RestoreStatusReg function is called to enable the interrupt using OS_EXIT_CRITICAL
+    COMMENT b) Sets local stack variable to top of stack pointer (pt_os)
+    COMMENT c) Sets (Stack top - 1) with FPCCR.
+    COMMENT d) Sets (Stack top - 2) with FPSCR. 
+    COMMENT e) Sets (Stack top - 19) with XPSR.
+    COMMENT f) Sets (Stack top - 20) with 'ptask'.
+    COMMENT g) Sets (Stack top - 21) with R14_LR.
+    COMMENT h) Sets (Stack top - 26) with 'p_data'. 
+    COMMENT i) Decrement the stack pointer stack top further by size (24) required to save the remaining registers on process stack. 
+    COMMENT j) Calls function OsTcbInit with the parameters u8_prio and reference to OS task stack to initialize the TCB. 
+    COMMENT k) Calls function OsSched to find highest priority task when the call to function OsTcbInit returned OS_NO_ERR and 
+    COMMENT    flag indicating that Kernel is running (Os_running) is TRUE.    
+    COMMENT Equivalence Class 2,6,8,10,11
+    COMMENT </TD> 
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --task priority
+            VAR u8_prio,                    init = 1,                           ev = init
+
+            --Table of pointers to all created TCBs
+            ARRAY Os_tcb_prio_tbl,          init = { 0=>&PTU_Os_tcb_prio_tbl,1=>NULL,others =>&PTU_Os_tcb_prio_tbl },
+            &                                                                   ev = init 
+            -- Global variable of boolean datatype
+            VAR Os_running,                 init = TRUE,                        ev = init 
+
+            -- Function pointer assigned the address of dummy function.
+            VAR ptask,                      init = &Dummy_Function,             ev = init
+
+            --Temporary parameter initialized with 0 before usage.
+            VAR PTU_pdata,                  init = 0,                           ev = init
+
+            --Pointer variable holds the address of temporary variable.
+            VAR p_data,                     init = (T_UINT32 *)&PTU_pdata,      ev = init
+
+            --Pointer variable which points to top of stack.
+            --The content present in this stack is verified through variable PTU_ptos.
+            VAR pt_os,                      init = (T_UINT32 *)&PTU_ptos[50],    ev = init
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --The loaded contents in the Stack are verified.
+            ARRAY PTU_ptos,                 init = {others=>1},                 ev = {0..23=>1,24=>(T_UINT32)p_data,25..28=>1,29=>(T_UINT32)R14_LR,
+            &                                                                   30=>(T_UINT32)ptask,31=>(T_UINT32)XPSR,32..47=>1,
+            &                                                                   48=>(T_UINT32)FPSCR,49=>(T_UINT32)FPCCR,others=>1}
+
+            --Verifies the address of Stack.
+            VAR PTU_stck,                   init = 0,                           ev = &PTU_ptos[0]
+
+            --Global variable holds status register value.
+            VAR U32_critical_sr,            init = 0,                           ev = 1 
+
+        COMMENT OUTPUT SECTION:
+
+            --return value of the function 'OsTaskCreate'
+            VAR ret_OsTaskCreate,           init = 1,                           ev = OS_NO_ERR
+
+        -- Stub Calls :
+        SIMUL
+
+            --Disables interrupts before loading
+            STUB SaveStatusReg ()1
+
+            --Restore Priority mask register
+            STUB RestoreStatusReg   (1)
+
+            --initializes the task control block
+            STUB OsTcbInit (0x1)OS_NO_ERR
+
+            --In order to find highest priority task,if multitasking has started
+            STUB OsSched ()
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OsTaskCreate = OsTaskCreate(ptask, p_data, pt_os, u8_prio);
+
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-003]
+    COMMENT The function tested for priority specified is higher than the maximum allowed(63).
+    COMMENT Equivalence Class 1
+    COMMENT </TD> 
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --task priority
+            VAR u8_prio,                    init = 64,                          ev = init
+
+            --Table of pointers to all created TCBs
+            ARRAY Os_tcb_prio_tbl,          init = { 0 },                       ev = init 
+
+            -- Function pointer assigned the address of dummy function
+            VAR ptask,                      init = &Dummy_Function,             ev = init 
+
+            --Temporary parameter initialized with 0 before usage.
+            VAR PTU_pdata,                  init = 0,                           ev = init
+
+            --Pointer variable holds the address of temporary variable.
+            VAR p_data,                     init = (T_UINT32 *)&PTU_pdata,      ev = init
+
+            --Pointer variable which points to top of stack.
+            --The content present in this stack is verified through variable PTU_ptos.
+            VAR pt_os,                      init = (T_UINT32 *)&PTU_ptos[50],   ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Global variable holds status register value.
+            VAR U32_critical_sr,            init = 0,                           ev = 0xFFFFFFFF   
+            
+            --The loaded contents in the Stack are verified.  
+            ARRAY PTU_ptos,                 init = {others=>1},                 ev = {0..23=>1,24=>(T_UINT32)p_data,25..28=>1,29=>(T_UINT32)R14_LR,
+            &                                                                   30=>(T_UINT32)ptask,31=>(T_UINT32)XPSR,32..47=>1,
+            &                                                                   48=>(T_UINT32)FPSCR,49=>(T_UINT32)FPCCR,others=>1}       
+ 
+        COMMENT OUTPUT SECTION:
+
+            --return value of the function 'OsTaskCreate'
+            VAR ret_OsTaskCreate,           init = 1,                           ev = OS_PRIO_EXIST
+
+        -- Stub Calls :
+        SIMUL
+
+            --Disables interrupts before loading
+            STUB SaveStatusReg ()(T_UINT32)0xFFFFFFFF
+
+            --Restore Priority mask register
+            STUB RestoreStatusReg((T_UINT32)0xFFFFFFFF)
+
+            --initializes the task control block
+            STUB OsTcbInit (64)OS_PRIO_EXIST
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OsTaskCreate = OsTaskCreate(ptask, p_data, pt_os, u8_prio);
+        
+    END ELEMENT
+
+END TEST -- TEST 5
+
+--TEST 6
+--FAMILY robustness
+--
+--  COMMENT Test Description
+--  COMMENT <TD> 
+--  COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-003]
+--  COMMENT The function is tested by passing NULL Value to the formal pointer parameter pt_os.
+--  COMMENT Equivalence Class 13
+--  COMMENT </TD> 
+--  
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --task priority
+--          VAR u8_prio,                    init = 62,                          ev = init
+--
+--          -- Function pointer assigned the address of dummy function.
+--          VAR ptask,                      init = &Dummy_Function,             ev = init
+--
+--          --Pointer variable initialized with the value 0xF.
+--          VAR p_data,                     init = 0xF,                         ev = init
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      -- Stub Calls :
+--      SIMUL
+--
+--          --No Stubs
+--
+--      END SIMUL
+--
+--      -- Calling the Unit Under Test :
+--      #ret_OsTaskCreate = OsTaskCreate(ptask, p_data, NULL, u8_prio);
+--
+--  END ELEMENT
+--  
+--END TEST  -- TEST 6
+
+TEST 7
+FAMILY robustness
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-003]
+    COMMENT The function is tested by passing NULL Value to the formal pointer parameter p_data.
+    COMMENT Equivalence Class 14
+    COMMENT </TD> 
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --task priority
+            VAR u8_prio,                    init = 0,                           ev = init
+
+            --Table of pointers to all created TCBs
+            ARRAY Os_tcb_prio_tbl,          init = { 0=>(T_OS_TCB *)DEC_ZERO,1=>(T_OS_TCB *)DEC_ZERO,others =>
+            &                                        (T_OS_TCB *)&PTU_Os_tcb_prio_tbl},
+            &                                                                   ev = init 
+
+            --Flag indicating that kernel is running
+            VAR Os_running,                 init = FALSE,                       ev = init 
+
+            --Function pointer assigned the address of dummy function.
+            VAR ptask,                      init = &Dummy_Function,             ev = init 
+
+            --Pointer variable holds the Invalid address.
+            VAR p_data,                     init = NULL,                        ev = init
+
+            --Pointer variable which points to top of stack.
+            --The content present in this stack is verified through variable PTU_ptos.
+            VAR pt_os,                      init = (T_UINT32 *)&PTU_ptos[50],   ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --The loaded contents in the Stack are verified.
+            ARRAY PTU_ptos,                 init = {others=>1},                 ev = {0..23=>1,24=>(T_UINT32)p_data,25..28=>1,
+            &                                                                         29=>(T_UINT32)R14_LR,30=>(T_UINT32)ptask,
+            &                                                                         31=>(T_UINT32)XPSR,32..47=>1,48=>(T_UINT32)FPSCR,
+            &                                                                         49=>(T_UINT32)FPCCR,others=>(T_UINT32)1}
+
+            --Verifies the address of Stack.
+            VAR PTU_stck,                   init = 0,                           ev = &PTU_ptos[0]
+
+            --Global variable holds status register value.
+            VAR U32_critical_sr,            init = 1,                           ev = 0
+
+        COMMENT OUTPUT SECTION:
+
+            --return value of the function 'OsTaskCreate'
+            VAR ret_OsTaskCreate,           init = 1,                           ev = (T_UINT8)OS_NO_MORE_TCB
+
+        -- Stub Calls :
+        SIMUL
+
+            --Disables interrupts before loading
+            STUB SaveStatusReg()0
+
+            --Restore Priority mask register
+            STUB RestoreStatusReg(0)
+
+            --initializes the task control block
+            STUB OsTcbInit(0)OS_NO_MORE_TCB
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OsTaskCreate = OsTaskCreate(ptask, p_data, pt_os, u8_prio);
+
+    END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY robustness
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hducommfoscpu-OsTaskCreate-CB-LLR-003]
+    COMMENT The function is tested by passing NULL Value to the formal pointer parameter ptask.
+    COMMENT Equivalence Class 15
+    COMMENT </TD> 
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --task priority
+            VAR u8_prio,                    init = 0,                           ev = init
+
+            --Table of pointers to all created TCBs
+            ARRAY Os_tcb_prio_tbl,          init = { 0=>(T_OS_TCB *)DEC_ZERO,1=>(T_OS_TCB *)DEC_ZERO,others =>
+            &                                        (T_OS_TCB *)&PTU_Os_tcb_prio_tbl},
+            &                                                                   ev = init 
+
+            --Flag indicating that kernel is running
+            VAR Os_running,                 init = FALSE,                       ev = init 
+
+            --Function pointer assigned the Invalid address.
+            VAR ptask,                      init = NULL,                        ev = init 
+
+            --Temporary parameter initialized with 0 before usage.
+            VAR PTU_pdata,                  init = 0,                           ev = init
+
+            --Pointer variable holds the address of temporary variable.
+            VAR p_data,                     init = (T_UINT32 *)&PTU_pdata,      ev = init
+
+            --Pointer variable which points to top of stack.
+            --The content present in this stack is verified through variable PTU_ptos.
+            VAR pt_os,                      init = (T_UINT32 *)&PTU_ptos[50],   ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --The loaded contents in the Stack are verified.
+            ARRAY PTU_ptos,                 init = {others=>1},                 ev = {0..23=>1,24=>(T_UINT32)p_data,25..28=>1,
+            &                                                                         29=>(T_UINT32)R14_LR,30=>(T_UINT32)ptask,
+            &                                                                         31=>(T_UINT32)XPSR,32..47=>1,48=>(T_UINT32)FPSCR,
+            &                                                                         49=>(T_UINT32)FPCCR,others=>(T_UINT32)1}
+
+            --Verifies the address of Stack.
+            VAR PTU_stck,                   init = 0,                           ev = &PTU_ptos[0]
+
+            --Global variable holds status register value.
+            VAR U32_critical_sr,            init = 1,                           ev = 0
+
+        COMMENT OUTPUT SECTION:
+
+            --return value of the function 'OsTaskCreate'
+            VAR ret_OsTaskCreate,           init = 1,                           ev = (T_UINT8)OS_NO_MORE_TCB
+
+        -- Stub Calls :
+        SIMUL
+
+            --Disables interrupts before loading
+            STUB SaveStatusReg ()0
+
+            --Restore Priority mask register
+            STUB RestoreStatusReg   (0)
+
+            --initializes the task control block
+            STUB OsTcbInit (0)OS_NO_MORE_TCB
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OsTaskCreate = OsTaskCreate(ptask, p_data, pt_os, u8_prio);
+
+    END ELEMENT
+    
+END TEST -- TEST 8
+
+END SERVICE -- OsTaskCreate
+

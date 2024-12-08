@@ -1,0 +1,823 @@
+HEADER hdudispfpwm,Source Code Ver : 1.7,TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+-- Author Name          : Pallavi V N
+--
+-- File Name            : hdudispfpwm_7.ptu
+--
+-- Test Creation Date   : 10.10.2017
+--
+-- Tested Functions     : PwmLcdBackLightPcnt
+--                        PwmBlink 
+--                        PwmBackLightDriver
+-- 
+-- Version History      :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------       ---------       -----------        -------------
+--     1.1             10.10.2017      Pallavi V N        Created the ptu file 
+--     1.2             10.11.2017      Pallavi V N        Updated as per #PR100171 
+--     1.3             14.11.2017      Pallavi V N        Updated as per #PR100171 
+--	   1.4 			   28.07.2020	   Harshitha R 		  Updated as per #PR100267
+--	   1.5 			   15.09.2020	   Harshitha R 		  Updated as per #PR100281
+
+-------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+##include "hdudispfglobalsettings.h"    
+##include "hdudispfpolygon1.h"          
+##include "hdudispfpwm.h"               
+##include "hdudispfstmadc.h"            
+##include "hdudispftimer.h"             
+##include "hdulibstm32f7xxhalrccex.h"   
+##include "hdulibstm32f7xxhaltim.h"     
+##include "hdulibstm32f7xxhalgpio.h"    
+##include "hdulibstm32f7xxhal.h"        
+##include "hdudispflookup.h"            
+##include "hdudispfparams.h"            
+##include "hdulibstm32hallegacy.h" 
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern void PwmLcdBezelLightPcnt(T_UINT16 u16_pcnt_onx100);
+    #T_INT16 Manual_brightness;                                                                                           
+    #T_BRIGHTNESS_MODE Brightness_mode; 
+    #T_INT16 Auto_brightness;                                                                                             
+    #T_INT16 S16_adc_reading[ 2U ]; 
+    #volatile  T_INT32 Itm_rx_buffer;   
+	#T_UINT8 Back_light;
+
+
+    ##define TIM5_PERIOD     5000U
+    ##define TIM2_PRESCALER  (T_INT16)(216/5)
+    ##define TIM2_PERIOD  10000
+    ##define TIM2_INIT_DC    0U
+    ##define TIM5_INIT_DC    500U
+    ##define DELAY_DSTB    -200
+    ##define DEC_64         64U
+    ##define DEC_500        500U
+    ##define DEC_100K       100000U
+    ##define POINT_FIVE_PERCNT  50U
+    
+-- Declaration of local variables
+
+    --This variable is created to verify parameter htim  of 'HalTimPwmStart' function.
+    #T_TIM_HANDLE  PTU_htim;
+    --This variable is created to verify parameter htim of 'HalTimPwmConfigChannel' function.
+    #T_TIM_HANDLE  PTU_htim_2;
+    #T_TIM_HANDLE  PTU_htim_3;
+    #T_TIM_HANDLE  PTU_htim_5;
+    --This variable is created to verify parameter stat of 'LookupTableLookup' function.
+    #T_PARAM_STAT PTU_stat;
+    --This variable is created to verify parameter GPIO_Init of 'HalGpioInit' function.
+    #T_GPIO_INIT PTU_GPIO_Init_2;
+    #T_GPIO_INIT PTU_GPIO_Init_3;
+    #T_GPIO_INIT PTU_GPIO_Init_5;
+    --This variable is created to verify parameter sConfig of 'HalTimPwmConfigChannel' function.
+    #T_TIM_OC_INIT  PTU_sConfig_2;
+    #T_TIM_OC_INIT  PTU_sConfig_3;
+    #T_TIM_OC_INIT  PTU_sConfig_5;
+    --This variable is created to verify parameter timer of 'TimerInstall' function.
+    #T_TIMER PTU_timer;
+    --This variable is created to verify parameter count of 'HalGpioInit' function.
+    #T_UINT8 PTU_count;
+    #T_UINT8 PTU_count_1;
+    #T_UINT8 PTU_count_2;  
+    --This variable is created to handle loop index.  
+    #T_INT32 PTU_i;
+    --This variable is created to verify parameter table of 'LookupTableLookup' function.
+    #T_INT32 PTU_x[4], PTU_y[3];
+    -- Local variable is created to provide the minimum value of T_INT16
+    # T_INT16 PTU_int16_min = (T_INT16)-32768;
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Pallavi V N
+    COMMENT
+    COMMENT File name        : hdudispfpwm_7.ptu
+    COMMENT
+    COMMENT Tested functions : PwmLcdBackLightPcnt
+    COMMENT                    PwmBlink
+    COMMENT                    PwmBackLightDriver
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1) PTU has been split as 1 to 8 due to static dependency.
+    COMMENT
+    COMMENT 2) Source file "hdudispfpwm.c" is modified for testing purpose in function "ErrorHandler". 
+    COMMENT  The while(TRUE)
+    COMMENT  is modified for terminating the infinite loop.Hence while loop cannot be covered for 0 and 1 times .
+    COMMENT 
+    COMMENT 3) In header file hdulibstm32f746xx.h below mentioned macros are modified due to hardware stubbing.
+    COMMENT     - TIM2
+    COMMENT     - TIM3
+    COMMENT     - TIM4
+    COMMENT     - TIM5
+    COMMENT     - GPIOA
+    COMMENT     - RCC
+    COMMENT
+    COMMENT  4) In function PwmInit ‘do while’ loop cannot be covered for '2 or more' times since it is controlled by value '0' 
+    COMMENT     in function ‘PwmInit’ for following macros:
+    COMMENT     __HAL_RCC_TIM2_CLK_ENABLE()
+    COMMENT     __HAL_RCC_GPIOA_CLK_ENABLE()
+    COMMENT     __HAL_RCC_TIM3_CLK_ENABLE()
+    COMMENT     __HAL_RCC_TIM5_CLK_ENABLE() 
+    COMMENT
+    COMMENT 6) Following Test script related warnings are observed during Target 
+    COMMENT     Execution for volatile keyword member/variable:
+    COMMENT     warning #191-D: type qualifier is meaningless on cast type
+    COMMENT
+    COMMENT</AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'PwmInit', macro "__HAL_RCC_TIM2_CLK_ENABLE" is called.
+    COMMENT     
+    COMMENT Class 2
+    COMMENT In function 'PwmInit','ErrorHandler' function is called.
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'PwmInit','ErrorHandler' function is not called.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'PwmInit', return value from function 'HalTimPwmInit' is not equal to HAL_OK. 
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'PwmInit', return value from function 'HalTimPwmInit' is equal to HAL_OK.   
+    COMMENT   
+    COMMENT Class 6
+    COMMENT In function 'PwmInit', return value from function 'HalTimPwmConfigChannel' is not equal to HAL_OK.    
+    COMMENT      
+    COMMENT Class 7
+    COMMENT In function 'PwmInit', return value from function 'HalTimPwmConfigChannel' is equal to HAL_OK.   
+    COMMENT   
+    COMMENT Class 8
+    COMMENT In function 'PwmInit', return value from function 'HalTimPwmStart' is not equal to HAL_OK. 
+    COMMENT   
+    COMMENT Class 9
+    COMMENT In function 'PwmInit', return value from function 'HalTimPwmStart' is equal to HAL_OK.    
+    COMMENT   
+    COMMENT Class 10
+    COMMENT In function 'PwmInit', macro "__HAL_RCC_GPIOA_CLK_ENABLE" is called.     
+    COMMENT   
+    COMMENT Class 11
+    COMMENT In function 'PwmInit', 'HalGpioInit' function is called.    
+    COMMENT   
+    COMMENT Class 12
+    COMMENT In function 'PwmInit', macro "__HAL_RCC_TIM3_CLK_ENABLE" is called.    
+    COMMENT   
+    COMMENT Class 13
+    COMMENT In function 'PwmInit', macro "__HAL_RCC_TIM5_CLK_ENABLE" is called.       
+    COMMENT   
+    COMMENT Class 14
+    COMMENT In function 'PwmInit', "TimerInstall" function is called.   
+    COMMENT     
+    COMMENT Class 15 
+    COMMENT In function 'PwmLcdBackLightPcnt', parameter u32_pcnt_onx1000 is equal to DEC_100K     
+    COMMENT   
+    COMMENT Class 16 
+    COMMENT In function 'PwmLcdBackLightPcnt', parameter u32_pcnt_onx1000 is less than DEC_100K     
+    COMMENT   
+    COMMENT Class 17
+    COMMENT In function 'PwmLcdBackLightPcnt', parameter u32_pcnt_onx1000 is greater than DEC_100K     
+    COMMENT   
+    COMMENT Class 18
+    COMMENT In function 'PwmLcdBackLightPcnt', parameter u32_pcnt_onx1000 is equal to POINT_FIVE_PERCNT  
+    COMMENT   
+    COMMENT Class 19
+    COMMENT In function 'PwmLcdBackLightPcnt', parameter u32_pcnt_onx1000 is less than POINT_FIVE_PERCNT  
+    COMMENT   
+    COMMENT Class 20 
+    COMMENT In function 'PwmLcdBackLightPcnt', parameter u32_pcnt_onx1000 is greater than POINT_FIVE_PERCNT 
+    COMMENT   
+    COMMENT Class 21
+    COMMENT In function 'PwmLcdBackLightPcnt', when return value of macro ABS is not equal to ZERO   
+    COMMENT   
+    COMMENT Class 22
+    COMMENT In function 'PwmLcdBackLightPcnt', when return value of macro ABS is equal to ZERO   
+    COMMENT   
+    COMMENT Class 23
+    COMMENT In function 'PwmLcdBackLightPcnt', when temp variable  is equal to DEC_64 
+    COMMENT   
+    COMMENT Class 24
+    COMMENT In function 'PwmLcdBackLightPcnt', when temp variable  is less than DEC_64   
+    COMMENT   
+    COMMENT Class 25
+    COMMENT In function 'PwmLcdBackLightPcnt', when temp variable  is greater than DEC_64    
+    COMMENT   
+    COMMENT Class 26
+    COMMENT In function 'PwmLcdBackLightPcnt', when target percentage value subtracted by percentage counter is equal to ZERO    
+    COMMENT   
+    COMMENT Class 27
+    COMMENT In function 'PwmLcdBackLightPcnt', when target percentage value subtracted by percentage counter is less than ZERO    
+    COMMENT   
+    COMMENT Class 28
+    COMMENT In function 'PwmLcdBackLightPcnt', when target percentage value subtracted by percentage counter is greater than ZERO    
+    COMMENT   
+    COMMENT Class 29
+    COMMENT In function 'PwmLcdBackLightPcnt', when percentage counter is equal to TIM2_PERIOD    
+    COMMENT  
+    COMMENT Class 30
+    COMMENT In function 'PwmLcdBackLightPcnt', when percentage counter is less than TIM2_PERIOD    
+    COMMENT  
+    COMMENT Class 31
+    COMMENT In function 'PwmLcdBackLightPcnt', when percentage counter is greater than TIM2_PERIOD    
+    COMMENT  
+    COMMENT Class 32
+    COMMENT In function 'PwmLcdBezelLightPcnt', u16_pcnt_onx100 is equal to TIM2_PERIOD.  
+    COMMENT  
+    COMMENT Class 33
+    COMMENT In function 'PwmLcdBezelLightPcnt', u16_pcnt_onx100 is less than TIM2_PERIOD.  
+    COMMENT  
+    COMMENT Class 34
+    COMMENT In function 'PwmLcdBezelLightPcnt', u16_pcnt_onx100 is greater than TIM2_PERIOD.  
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'PwmLcdBezelLightPcnt', Return value of macro ABS is not equal to ZERO
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'PwmLcdBezelLightPcnt', Return value of macro ABS is equal to ZERO
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'PwmLcdBezelLightPcnt', temp variable  is equal to THIRTY_TWO  
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'PwmLcdBezelLightPcnt', temp variable  is less than THIRTY_TWO   
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'PwmLcdBezelLightPcnt', temp variable  is greater than THIRTY_TWO  
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'PwmLcdBezelLightPcnt', target percentage value subtracted by percentage counter is equal to ZERO  
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'PwmLcdBezelLightPcnt', target percentage value subtracted by percentage counter is less than ZERO   
+    COMMENT
+    COMMENT Class 42
+    COMMENT In function 'PwmLcdBezelLightPcnt', target percentage value subtracted by percentage counter is greater than ZERO   
+    COMMENT 
+    COMMENT Class 43
+    COMMENT In function 'PwmBackLightDriver', Back light timer is equal to ZERO.
+    COMMENT  
+    COMMENT Class 44
+    COMMENT In function 'PwmBackLightDriver', Back light timer is less than ZERO.
+    COMMENT  
+    COMMENT Class 45
+    COMMENT In function 'PwmBackLightDriver', Back light timer is greater than ZERO.
+    COMMENT  
+    COMMENT Class 46
+    COMMENT In function 'PwmBackLightDriver', Brightness_mode is equal EBRIGHTNESS_MANUAL
+    COMMENT  
+    COMMENT Class 47
+    COMMENT In function 'PwmBackLightDriver', Brightness_mode is not equal EBRIGHTNESS_MANUAL
+    COMMENT    
+    COMMENT Class 48
+    COMMENT In function 'PwmBackLightDriver', calls PwmLcdBackLightPcnt function.
+    COMMENT     
+    COMMENT Class 49
+    COMMENT In function 'PwmBackLightDriver', calls PwmLcdBezelLightPcnt function.
+    COMMENT  
+    COMMENT Class 50
+    COMMENT In function 'PwmBackLightStepTo', Brightness_mode is equal to EBRIGHTNESS_MANUAL 
+    COMMENT 
+    COMMENT Class 51
+    COMMENT In function 'PwmBackLightStepTo', Brightness_mode is not equal EBRIGHTNESS_MANUAL
+    COMMENT 
+    COMMENT Class 52
+    COMMENT In function 'PwmBackLightStepTo', percentage variable is equal to DEC_100K
+    COMMENT
+    COMMENT Class 53
+    COMMENT In function 'PwmBackLightStepTo', percentage variable is less than DEC_100K
+    COMMENT
+    COMMENT Class 54
+    COMMENT In function 'PwmBackLightStepTo', percentage variable is greater than DEC_100K
+    COMMENT 
+    COMMENT Class 55
+    COMMENT In function 'PwmBackLightStepTo', percentage variable is equal to POINT_FIVE_PERCNT
+    COMMENT
+    COMMENT Class 56
+    COMMENT In function 'PwmBackLightStepTo', percentage variable is less than POINT_FIVE_PERCNT
+    COMMENT
+    COMMENT Class 57
+    COMMENT In function 'PwmBackLightStepTo', percentage variable is greater than POINT_FIVE_PERCNT
+    COMMENT
+    COMMENT Class 58
+    COMMENT In function 'PwmBackLightNewMode', Brightness_mode is equal to EBRIGHTNESS_AUTO 
+    COMMENT
+    COMMENT Class 59
+    COMMENT In function 'PwmBackLightNewMode', Brightness_mode is not equal to EBRIGHTNESS_AUTO 
+    COMMENT
+    COMMENT Class 60
+    COMMENT In function 'PwmBackLightNewMode', percentage variable is equal to DEC_100K 
+    COMMENT
+    COMMENT Class 61
+    COMMENT In function 'PwmBackLightNewMode', percentage variable is less than DEC_100K 
+    COMMENT
+    COMMENT Class 62
+    COMMENT In function 'PwmBackLightNewMode', percentage variable is greater than DEC_100K 
+    COMMENT
+    COMMENT Class 63
+    COMMENT In function 'PwmBackLightNewMode', percentage variable is equal to POINT_FIVE_PERCNT 
+    COMMENT
+    COMMENT Class 64
+    COMMENT In function 'PwmBackLightNewMode', percentage variable is less than POINT_FIVE_PERCNT 
+    COMMENT
+    COMMENT Class 65
+    COMMENT In function 'PwmBackLightNewMode', percentage variable is greater than POINT_FIVE_PERCNT
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT  
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+DEFINE STUB hdudispfpwm_c  
+    -- Parameter table is made as _no and verified explicitly.
+    -- Parameter stat is made as _no and verified explicitly.
+    #T_INT32 LookupTableLookup( const  T_LOOKUP_TABLE _no *table, T_INT32 _in ind_var, T_PARAM_STAT _no *stat)
+    #{
+    #for(PTU_i=0;PTU_i<4;PTU_i++)
+    # PTU_x[PTU_i] = table ->x[PTU_i];
+    #
+    #for(PTU_i=0;PTU_i<3;PTU_i++)
+    # PTU_y[PTU_i] = table ->y[PTU_i];
+    # 
+    # PTU_stat = *stat;
+    #}
+    
+    -- Parameter timer is made as _no and verified explicitly.
+    #void TimerInstall( volatile  T_TIMER _no *timer)
+    #{
+    # PTU_timer = *timer;
+    #}
+    
+    -- Parameter GPIO_Init is made as _no and verified explicitly.
+    #void HalGpioInit(T_GPIO _in *GPIOx, T_GPIO_INIT _no *GPIO_Init)
+    #{
+    # PTU_count_2++;
+    # if (PTU_count_2 == 1)
+    #   PTU_GPIO_Init_2 = *GPIO_Init;
+    # if (PTU_count_2 == 2)
+    #   PTU_GPIO_Init_3 = *GPIO_Init;
+    # if (PTU_count_2 == 3)
+    #   PTU_GPIO_Init_5 = *GPIO_Init;
+    #}
+    
+    -- Parameter htim is made as _no and verified explicitly.
+    #T_HAL_STATUS HalTimPwmStart(T_TIM_HANDLE _no *htim, T_UINT32 _in Channel)
+    #{
+    # htim = &PTU_htim;
+    #}
+    
+    -- Parameter htim and sConfig are made as _no and verified explicitly.
+    #T_HAL_STATUS HalTimPwmConfigChannel(T_TIM_HANDLE _no *htim, T_TIM_OC_INIT _no *sConfig, T_UINT32 _in Channel)
+    #{
+    # PTU_count_1++;
+    # if (PTU_count_1 == 1)
+    # {
+    #   PTU_htim_2 = *htim;
+    #   PTU_sConfig_2 = *sConfig;
+    # }
+    # if (PTU_count_1 == 2)
+    # {
+    #   PTU_htim_3 = *htim;
+    #   PTU_sConfig_3 = *sConfig;
+    # }
+    # if (PTU_count_1 == 3)
+    # {
+    #   PTU_htim_5 = *htim;
+    #   PTU_sConfig_5 = *sConfig;
+    # }
+    #}
+    
+    -- Parameter htim is made as _no and verified explicitly.
+    #T_HAL_STATUS HalTimPwmInit(T_TIM_HANDLE _no *htim)
+    #{
+    # PTU_count++;
+    # if (PTU_count == 1)
+    #   PTU_htim_2 = *htim;
+    # if (PTU_count == 2)
+    #   PTU_htim_3 = *htim;
+    # if (PTU_count == 3)
+    #   PTU_htim_5 = *htim;
+    #}                                                                                               
+END DEFINE
+
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+--Environment of the hdudispfpwm.c
+
+--ENVIRONMENT ENV_hdudispfpwm_c
+
+    --None
+
+--END ENVIRONMENT -- ENV_hdudispfpwm_c
+
+--USE ENV_hdudispfpwm_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PwmBackLightDriver
+--------------------------------------------------------------------------------
+SERVICE PwmBackLightDriver
+SERVICE_TYPE extern
+
+TEST 6
+FAMILY nominal  
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpwm-PwmBackLightDriver-DB-LLR-001]
+    COMMENT The function 'PwmBackLightDriver' does nothing when Back light timer is equal to ZERO.
+    COMMENT Equivalence Class 43
+    COMMENT
+    COMMENT [hdudispfpwm-PwmBackLightDriver-DB-LLR-002]
+    COMMENT The function 'PwmBackLightDriver' sets Back light timer with value Back light timer subtracted by TEN
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfpwm-PwmBackLightDriver-DB-LLR-004]
+    COMMENT The function 'PwmBackLightDriver' does the following when Brightness_mode is not equal EBRIGHTNESS_MANUAL.
+    COMMENT a)  Sets percentage variable to return value of function LookupTableLookup with reference 
+    COMMENT     to Photo_table, S16_adc_reading with index 0 and reference of stat as parameters.
+    COMMENT b)  Sets percentage variable to  percentage variable multiplied by Auto_brightness
+    COMMENT c)  Sets percentage variable to percentage variable divided by TEN.  
+    COMMENT S16_adc_reading with index 0 = maximum value,
+    COMMENT return value of function LookupTableLookup = minimum value
+    COMMENT Equivalence Class 47
+    COMMENT
+    COMMENT [hdudispfpwm-PwmBackLightDriver-DB-LLR-005]
+    COMMENT The function 'PwmBackLightDriver' calls function PwmLcdBackLightPcnt with percentage variable as parameter
+    COMMENT and call function PwmLcdBezelLightPcnt with percentage variable divided by TEN as parameter.
+    COMMENT Equivalence Class 48, 49
+    COMMENT </TD>   
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+            --Holds the brightness mode
+            VAR Brightness_mode,            init = EBRIGHTNESS_AUTO,    ev = init
+            --Holds the manual brightness value
+            VAR Manual_brightness,          init = 100,                 ev = init
+            --Holds the adc reading
+            VAR S16_adc_reading[0],         init = 32767,               ev = init
+
+        COMMENT OUTPUT SECTION:
+        
+            -- Holds value of TIM capture/compare register 3
+            VAR TIM2->CCR3,                 init = DEC_100K,            ev = 0
+            -- Holds value of TIM capture/compare register 4
+            VAR TIM5->CCR4,                 init = DEC_100K,            ev = 0
+            -- Verifies the value of parameter table of 'LookupTableLookup' function
+            ARRAY PTU_x,                    init = {others=>10},        ev = {0 => 2,1 => 20, 2 => 2048, 3 => 4096}
+            -- Verifies the value of parameter table of 'LookupTableLookup' function
+            ARRAY PTU_y,                    init = {others=>10},        ev = {0 => 2,1 => 15, 2 => 10000}
+            -- Verifies the value of parameter stat of 'LookupTableLookup' function
+            VAR PTU_stat,                   init = NCD,                 ev = PARAM_OK
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+            --None
+        
+        --Stub Calls:
+        SIMUL   
+            
+            STUB LookupTableLookup(32767)PTU_int16_min
+        
+        END SIMUL 
+        
+        -- Calling the Unit Under Test:        
+        #PwmBackLightDriver();
+    
+    END ELEMENT
+    
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal  
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpwm-PwmBackLightDriver-DB-LLR-001]
+    COMMENT The function 'PwmBackLightDriver' returns when Back light timer is less than ZERO.
+    COMMENT Equivalence Class 44
+    COMMENT
+    COMMENT </TD>   
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            --Holds the brightness mode
+            VAR Brightness_mode,            init = EBRIGHTNESS_AUTO,    ev = init
+               
+        COMMENT OUTPUT SECTION:
+            --None
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+            --None
+        
+        --Stub Calls:
+        SIMUL   
+            --None
+        
+        END SIMUL 
+        
+        -- Calling the Unit Under Test:        
+        #PwmBackLightDriver();
+    
+    END ELEMENT
+
+END TEST -- TEST 7
+
+END SERVICE -- PwmBackLightDriver
+--------------------------------------------------------------------------------
+-- Declaration of the service PwmLcdBackLightPcnt
+--------------------------------------------------------------------------------
+SERVICE PwmLcdBackLightPcnt
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT32 u32_pcnt_onx1000 ;
+    #T_INT16 new_auto_brightness;
+
+    ENVIRONMENT ENV_PwmLcdBackLightPcnt
+        VAR u32_pcnt_onx1000,           init =  0,  ev = init
+    END ENVIRONMENT -- ENV_PwmLcdBackLightPcnt
+    USE ENV_PwmLcdBackLightPcnt
+    
+TEST 13
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispfpwm-PwmLcdBackLightPcnt-DB-LLR-008]
+    COMMENT The function 'PwmLcdBackLightPcnt' sets timer2 duty with DEC_500 and timer12 duty with percentage 
+    COMMENT counter value when percentage counter is less than TIM2_PERIOD. (TIM2_PERIOD-1)
+    COMMENT Equivalence Class 30 
+    COMMENT
+    COMMENT [hdudispfpwm-PwmLcdBackLightPcnt-DB-LLR-009]
+    COMMENT The function 'PwmLcdBackLightPcnt' sets register CCR3 of TIM2 with timer12 duty and 
+    COMMENT register CCR4 of TIM5 with timer2 duty,if Back_light is equal to one
+    COMMENT Equivalence Class:66 
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+			VAR Back_light,					init = 1,					ev = init 
+
+            -- desired duty percent x 1000 is initialized
+            VAR u32_pcnt_onx1000,           init = 10000,                 ev = init
+                
+        COMMENT OUTPUT SECTION:
+            
+            -- Holds value of TIM capture/compare register 3
+            VAR TIM2->CCR3,                 init = DEC_100K,            ev = 9999
+            -- Holds value of TIM capture/compare register 4
+            VAR TIM5->CCR4,                 init = DEC_100K,            ev = DEC_500
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+        
+            --None
+        
+        
+        --Stub Calls:
+        SIMUL   
+            --None
+        
+        END SIMUL 
+        
+        -- Calling the Unit Under Test: 
+        -- To check percentage counter is less than TIM2_PERIOD (It is looped for 419 times to obtain value equal to TIM2_PERIOD-1)
+        #for (PTU_i = 0; PTU_i < 419; PTU_i++)
+        #{
+        #PwmLcdBackLightPcnt(u32_pcnt_onx1000);
+        #}
+    
+    END ELEMENT
+
+END TEST -- TEST 13
+
+TEST 14
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispfpwm-PwmLcdBackLightPcnt-DB-LLR-008]
+    COMMENT The function 'PwmLcdBackLightPcnt' sets timer2 duty with DEC_500 and timer12 duty with percentage 
+    COMMENT counter value when percentage counter is equal to TIM2_PERIOD. 
+    COMMENT Equivalence Class 29 
+    COMMENT
+    COMMENT [hdudispfpwm-PwmLcdBackLightPcnt-DB-LLR-009]
+    COMMENT The function 'PwmLcdBackLightPcnt' sets register CCR3 of TIM2 with timer12 duty and 
+    COMMENT register CCR4 of TIM5 with timer2 duty,if Back_light is equal to one
+    COMMENT Equivalence Class:66 
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+			VAR Back_light,					init = 1,					ev = init 
+
+            -- desired duty percent x 1000 is initialized
+            VAR u32_pcnt_onx1000,           init = 10000,                 ev = init
+                
+        COMMENT OUTPUT SECTION:
+            
+            -- Holds value of TIM capture/compare register 3
+            VAR TIM2->CCR3,                 init = DEC_100K,            ev = 10000
+            -- Holds value of TIM capture/compare register 4
+            VAR TIM5->CCR4,                 init = DEC_100K,            ev = DEC_500
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+        
+            --None
+            
+        
+        --Stub Calls:
+        SIMUL   
+            --None
+        
+        END SIMUL 
+
+        -- Calling the Unit Under Test:
+        -- To check percentage counter is equal to TIM2_PERIOD  
+        #PwmLcdBackLightPcnt(u32_pcnt_onx1000);
+       
+    END ELEMENT
+
+END TEST -- TEST 14
+
+TEST 15
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT 
+    COMMENT [hdudispfpwm-PwmLcdBackLightPcnt-DB-LLR-008]
+    COMMENT The function 'PwmLcdBackLightPcnt' sets timer2 duty with DEC_500 and timer12 duty with percentage 
+    COMMENT counter value when percentage counter is not greater than TIM2_PERIOD. 
+    COMMENT Equivalence Class 31 
+    COMMENT
+    COMMENT [hdudispfpwm-PwmLcdBackLightPcnt-DB-LLR-009]
+    COMMENT The function 'PwmLcdBackLightPcnt' sets register CCR3 of TIM2 with timer12 duty and 
+    COMMENT register CCR4 of TIM5 with timer2 duty,if Back_light is equal to one
+    COMMENT Equivalence Class:66
+    COMMENT
+    COMMENT </TD>
+       
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+			VAR Back_light,					init = 1,					ev = init 
+           
+            --Holds the new auto brightness value
+            VAR new_auto_brightness,        init = 0,                      ev = init
+            --Holds the manual brightness value
+            VAR Manual_brightness,          init = 1001,                   ev = init
+            --Holds the brightness mode
+            VAR Brightness_mode,            init = EBRIGHTNESS_MANUAL,     ev = init 
+            
+            -- Variable of function PwmLcdBackLightPcnt
+            -- desired duty percent x 1000 is initialized
+            VAR u32_pcnt_onx1000,           init = 10000,                   ev = init   
+           
+        COMMENT OUTPUT SECTION:
+            --None
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+            -- Variable of function PwmLcdBackLightPcnt
+            -- Holds value of TIM capture/compare register 3    
+            VAR TIM2->CCR3,                 init = DEC_100K,            ev = 10000
+            -- Holds value of TIM capture/compare register 4
+            VAR TIM5->CCR4,                 init = DEC_100K,            ev = DEC_500 
+
+        --Stub Calls:
+        SIMUL   
+        
+            --None
+            
+        END SIMUL
+        
+         -- Calling to verify percentage counter is greater than TIM2_PERIOD
+        #PwmBackLightNewMode(new_auto_brightness);
+        -- To check percentage counter is greater than TIM2_PERIOD (It is looped for 9 times to obtain value equal to TIM2_PERIOD+1)
+        -- Calling the Unit Under Test:
+        #for(PTU_i = 0; PTU_i<9; PTU_i++)
+        #PwmLcdBackLightPcnt(u32_pcnt_onx1000);
+    
+    END ELEMENT
+
+END TEST -- TEST 15
+       
+END SERVICE -- PwmLcdBackLightPcnt
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PwmBlink
+--------------------------------------------------------------------------------
+SERVICE PwmBlink
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpwm-PwmBlink-DB-LLR-001]
+    COMMENT The function 'PwmBlink' sets CCR3 of TIM2 to ZERO, sets CCR4 of TIM5 to ZERO 
+    COMMENT and sets Back light timer to MINUS_100.
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+            --None  
+            
+        COMMENT OUTPUT SECTION:
+            -- Holds value of TIM capture/compare register 3
+            VAR TIM2->CCR3,             init = 1,       ev = ZERO
+            -- Holds value of TIM capture/compare register 4
+            VAR TIM5->CCR4,             init = 1,       ev = ZERO
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+            
+            --Holds parameter timer of 'TimerInstall' function. 
+            VAR PTU_timer,                   init = 10,                          ev = MINUS_100  
+        
+        --Stub Calls:
+        SIMUL   
+        
+            STUB TimerInstall()     
+            --Dont care stub calls of function "PwmInit"
+            STUB HalGpioInit 1..3=>(GPIOA)   
+            STUB HalTimPwmInit 1..3=>()HAL_OK
+            STUB HalTimPwmConfigChannel 1 =>(TIM_CHANNEL_3)HAL_OK
+            STUB HalTimPwmConfigChannel 2 =>(TIM_CHANNEL_1)HAL_OK
+            STUB HalTimPwmConfigChannel 3 =>(TIM_CHANNEL_4)HAL_OK
+            STUB HalTimPwmStart 1=>(TIM_CHANNEL_3)HAL_OK
+            STUB HalTimPwmStart 2=>(TIM_CHANNEL_1)HAL_OK
+            STUB HalTimPwmStart 3=>(TIM_CHANNEL_4)HAL_OK  
+        
+        END SIMUL
+        
+        -- Calling the Unit Under Test:
+        #PwmBlink();        
+        -- Calling function to verify static variable "S32_back_light_timer"
+        #PwmInit();
+    END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- PwmBlink
+

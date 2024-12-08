@@ -1,0 +1,283 @@
+HEADER hdulibstm32f4xxpwr,Source Code Ver :1.2,TestScript Ver : 1.2
+--------------------------------------------------------------------------------
+-- Author Name         : Kavya M 
+--
+-- File Name           : hdulibstm32f4xxpwr.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : PwrMainRegulatorModeConfig
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE               TESTER NAME        MODIFICATIONS
+--  ------------        ---------               -----------        -------------
+--     1.1              30.10.2017              Kavya M		      created the ptu file.
+--     1.2              11.11.2017		        Kavya M		      updated as per PR100171.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibbasicfunc.h"         
+##include "hdulibstm32f4xxpwr.h"     
+##include "hdulibstm32f4xxrcc.h"     
+##include "hdulibstm32f4xx.h"        
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	--None
+  		
+-- Declarations of the temporary variable
+
+	--None
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Kavya M
+    COMMENT
+    COMMENT File Name        : hdulibstm32f4xxpwr.ptu
+    COMMENT
+    COMMENT Tested Functions : PwrMainRegulatorModeConfig
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1.Header file "hdulibstm32f4xx.h" is modified for testing purpose. The macro 'PWR' is modified for stubbing hardware address.
+    COMMENT 
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define PWR                   ((T_PWR_TYPE *) PWR_BASE)*/
+    COMMENT 
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_PWR_TYPE			PTU_PWR;
+    COMMENT #define PWR			((T_PWR_TYPE *) &PTU_PWR)
+    COMMENT 
+    COMMENT </AC>
+    COMMENT
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1 
+    COMMENT In function 'PwrMainRegulatorModeConfig',parameter pwr_regulator_voltage is equal PWR_REGULATOR_VOLTAGE_SCALE2
+    COMMENT  
+    COMMENT Class 2    
+    COMMENT In function 'PwrMainRegulatorModeConfig',parameter pwr_regulator_voltage is not equal PWR_REGULATOR_VOLTAGE_SCALE2
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT None
+    COMMENT </ECD>      
+    
+-------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hdulibstm32f4xxpwr_c
+
+        -- No stubs
+
+    END DEFINE
+    
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONEMENT
+--------------------------------------------------------------------------------
+
+--Environment of the file hdulibstm32f4xxpwr.c
+
+--ENVIRONMENT ENV_hdulibstm32f4xxpwr_c
+    
+--None 
+    
+--END ENVIRONMENT -- ENV_hdulibstm32f4xxpwr_c
+
+--USE ENV_hdulibstm32f4xxpwr_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PwrMainRegulatorModeConfig
+--------------------------------------------------------------------------------
+SERVICE PwrMainRegulatorModeConfig
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT32 pwr_regulator_voltage;
+
+    ENVIRONMENT ENV_PwrMainRegulatorModeConfig
+    	
+    	VAR pwr_regulator_voltage,		init = 0,		ev = init
+    
+    END ENVIRONMENT -- ENV_PwrMainRegulatorModeConfig
+    
+    USE ENV_PwrMainRegulatorModeConfig
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f4xxpwr-PwrMainRegulatorModeConfig-CB-LLR-001]
+	COMMENT The function configures power control register(PWR_CR) by writing 0 to bit  14 (Scale 2 mode) 
+	COMMENT and pwr_regulator_voltage is equal to PWR_REGULATOR_VOLTAGE_SCALE2 
+	COMMENT Equivalence Class 1
+	COMMENT </TD>
+	
+	ELEMENT
+
+		COMMENT  INPUT SECTION:
+
+			--assigning value to power regulator voltage as PWR_REGULATOR_VOLTAGE_SCALE2
+			VAR pwr_regulator_voltage,      init = PWR_REGULATOR_VOLTAGE_SCALE2 ,     	ev = init
+
+		COMMENT  INPUT/OUTPUT SECTION:
+
+			--assigning  a value of CR bit of PWR.   
+			VAR PWR->CR,                    init = 0x0000430C,                  		ev = 0x0000030C
+			
+		COMMENT OUTPUT SECTION:
+		
+			--None
+
+	-- Stub Calls :
+	SIMUL
+
+		--No stubs
+
+	END SIMUL
+
+		-- Calling the Unit Under Test :
+		#PwrMainRegulatorModeConfig(pwr_regulator_voltage);
+
+	END ELEMENT
+	
+END TEST -- TEST 1
+
+
+    
+TEST 2
+FAMILY nominal
+
+	COMMENT Test description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f4xxpwr-PwrMainRegulatorModeConfig-CB-LLR-002]
+	COMMENT The function configures power control register(PWR_CR) by writing 1 to bit  14 (Scale 1 mode)   
+	COMMENT and pwr_regulator_voltage is not equal to PWR_REGULATOR_VOLTAGE_SCALE2 
+	COMMENT Equivalence Class 2
+	COMMENT </TD>
+	ELEMENT
+
+		COMMENT  INPUT SECTION:
+
+			--assigning value to power regulator voltage as PWR_REGULATOR_VOLTAGE_SCALE1
+			VAR pwr_regulator_voltage,      init = PWR_REGULATOR_VOLTAGE_SCALE1 ,	ev = init
+
+		COMMENT  INPUT/OUTPUT SECTION:
+
+			--assigning value to CR bit of PWR.
+			VAR PWR->CR,                    init = 0x000001DF,                  	ev = 0x000041DF
+			
+		COMMENT OUTPUT SECTION:
+		
+			--None
+
+	-- Stub Calls :
+	SIMUL
+
+	--No stubs
+
+	END SIMUL
+
+		-- Calling the Unit Under Test :        
+		#PwrMainRegulatorModeConfig(pwr_regulator_voltage);
+
+	END ELEMENT
+	
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f4xxpwr-PwrMainRegulatorModeConfig-CB-LLR-001]
+	COMMENT The function configures power control register(PWR_CR) by writing 0 to bit  14 (Scale 2 mode) 
+	COMMENT and pwr_regulator_voltage is equal to PWR_REGULATOR_VOLTAGE_SCALE2 
+	COMMENT Equivalence Class 1
+	COMMENT </TD>
+	
+	ELEMENT
+
+		COMMENT  INPUT SECTION:
+
+			--assigning value to power regulator voltage as PWR_REGULATOR_VOLTAGE_SCALE2
+			VAR pwr_regulator_voltage,      init = PWR_REGULATOR_VOLTAGE_SCALE2 ,     	ev = init
+
+		COMMENT  INPUT/OUTPUT SECTION:
+
+			--assigning  a offset value of CR bit of PWR.   
+			VAR PWR->CR,                    init = 0x00004000,                  		ev = 0x00000000
+			
+		COMMENT OUTPUT SECTION:
+		
+			--None
+
+	-- Stub Calls :
+	SIMUL
+
+		--No stubs
+
+	END SIMUL
+
+		-- Calling the Unit Under Test :
+		#PwrMainRegulatorModeConfig(pwr_regulator_voltage);
+
+	END ELEMENT
+	
+END TEST -- TEST 3
+
+END SERVICE -- PwrMainRegulatorModeConfig
+

@@ -1,0 +1,574 @@
+HEADER hdudispfbspled ,Source Code Ver : 1.3 , TestScript Ver :1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Santosh Mithari
+--
+-- File Name           : hdudispfbspled.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : BSPLEDToggle
+--						 BSPLEDInit
+
+-- Version History     :
+--
+-- TEST-VERSION         TEST-DATE         TESTER NAME           MODIFICATIONS
+-- ------------        -----------        -----------           -------------
+--    1.1              30.10.2017        Santosh Mithari       Created the PTU file.
+--    1.2              10.11.2017        Santosh Mithari       Updated as per #PR100171
+--	  1.3              14.11.2017		 Santosh Mithari	   Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+##include "hdudispfresource.h"  
+##include "hdulibstm32f7xxhalconf.h"  
+##include "hdudispfbspled.h"  
+##include "hdulibstm32hallegacy.h" 
+##include "hdulibstm32f7xxhalgpio.h" 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	--None
+
+-- Declarations of the temporary variable
+
+	--temporary variables used in stub HalGpioInit.
+	#T_GPIO_INIT PTU_GPIO_Init;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name         : 	Santosh Mithari 
+	COMMENT
+	COMMENT File Name           : 	hdudispfbspled.ptu
+	COMMENT 
+	COMMENT Tested Functions    :  	BSPLEDToggle
+	COMMENT                         BSPLEDInit
+	COMMENT
+	COMMENT 
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT Assumption(s): 
+	COMMENT None
+	COMMENT
+	COMMENT Constraint(s):
+	COMMENT
+    COMMENT 1.Header file 'hdulibstm32f746xx.h' is modified for testing purpose.
+    COMMENT 
+    COMMENT	/*Commented for testing*/
+    COMMENT	/* #define RCC                 ((T_RCC *) RCC_BASE)*/
+    COMMENT
+    COMMENT	/*stubbing hardware address for the purpose of testing */
+    COMMENT	
+    COMMENT	T_RCC  PTU_RCC_BASE;
+    COMMENT
+    COMMENT	#define RCC                 ((T_RCC *) &PTU_RCC_BASE)	
+	COMMENT 
+	COMMENT 2. In function 'BSPLEDInit', the do-while loop within the macro 'LED1_CLK_ENABLE'
+	COMMENT can not coverd for 2 or more loop repetations as TRUE condition can not be achieved.
+	COMMENT
+	COMMENT 3.Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+ 	COMMENT warning #191-D: type qualifier is meaningless on cast type.
+ 	COMMENT
+ 	COMMENT 4.Warning "enumerated type mixed with another type" is obtained when   
+	COMMENT   '(enum T_ELED_NUM)type' is exercised with value "LED1+1" to test LLRs 
+	COMMENT "hdudispfbspled-BSPLEDToggle-DB-LLR-001" and  "hdudispfbspled-BSPLEDInit-DB-LLR-001" 
+	COMMENT  warning #188-D: enumerated type mixed with another type   
+	COMMENT
+	COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT
+	COMMENT Valid Class(es)
+	COMMENT Class 1
+	COMMENT In function 'BSPLEDInit','e_led_num' is equal LED1
+	COMMENT
+	COMMENT Class 2
+	COMMENT In function 'BSPLEDInit','e_led_num' is other than LED1
+	COMMENT 
+	COMMENT Class 3
+	COMMENT In function 'BSPLEDInit','LED1_CLK_ENABLE' macro is called.
+	COMMENT 
+	COMMENT Class 4
+	COMMENT In function 'BSPLEDInit','HalGpioInit' stub is called.
+	COMMENT
+	COMMENT Class 5
+	COMMENT In function 'BSPLEDToggle','e_led_num' is equal LED1
+	COMMENT
+	COMMENT Class 6
+	COMMENT In function 'BSPLEDToggle','e_led_num' is is other thanl LED1
+	COMMENT 
+	COMMENT Class 7
+	COMMENT In function 'BSPLEDToggle','HALGpioTogglePin' stub is called.
+	COMMENT
+	COMMENT Invalid class(es)
+	COMMENT None
+	COMMENT
+	COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdudispfbspled_c
+
+    	#void HALGpioTogglePin(T_GPIO _in *GPIOx, T_UINT16 _in GPIO_Pin);
+   	
+   		--Paramter 'GPIO_Init' made _no since it is verified through temporary variabel.
+    	#void HalGpioInit(T_GPIO _in *GPIOx, T_GPIO_INIT _no *GPIO_Init)
+    	#{
+    	#	PTU_GPIO_Init= *GPIO_Init;
+    	#}	
+
+	END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+--No special things that have to be done on the host to run the test.
+
+--ELSE
+
+--No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+--Environment of the file hdudispfbspled.c
+
+--ENVIRONMENT ENV_hdudispfbspled_c
+
+	--None
+
+--END ENVIRONMENT -- ENV_hdudispfbspled_c
+
+--USE ENV_hdudispfbspled_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service BSPLEDToggle
+--------------------------------------------------------------------------------
+SERVICE BSPLEDToggle
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_ELED_NUM e_led_num;
+
+ENVIRONMENT ENV_BSPLEDToggle
+
+	VAR e_led_num,		init = LED1,		ev = init
+
+END ENVIRONMENT -- ENV_BSPLEDToggle
+
+USE ENV_BSPLEDToggle   
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfbspled-BSPLEDToggle-DB-LLR-001]
+    COMMENT The function calls the function HALGpioTogglePin with parameters LED1_PORT and LED1_PIN, 
+    COMMENT when the value of e_led_num is equal to LED1.
+    COMMENT Equivalence Class 5,7
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Input Led Number
+			VAR e_led_num,		 		init = LED1,		ev = init
+
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+            --Toggles the specified GPIO pins
+			STUB HALGpioTogglePin(LED1_PORT, LED1_PIN)
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#BSPLEDToggle(e_led_num);
+
+    END ELEMENT
+
+END TEST -- TEST 1   
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfbspled-BSPLEDToggle-DB-LLR-001]
+    COMMENT The function does nothing when the value of e_led_num is other than LED1.
+    COMMENT Equivalence Class 6
+    COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Input Led Number
+			VAR e_led_num,						init = 1,		ev = init
+		
+        COMMENT OUTPUT SECTION:
+			
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+			--None
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#BSPLEDToggle(e_led_num);
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- BSPLEDToggle
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BSPLEDInit
+--------------------------------------------------------------------------------
+SERVICE BSPLEDInit
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_ELED_NUM e_led_num;
+
+ENVIRONMENT ENV_BSPLEDInit
+    
+    VAR e_led_num,		init = LED1,		ev = init
+  
+END ENVIRONMENT -- ENV_BSPLEDInit
+   
+USE ENV_BSPLEDInit
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfbspled-BSPLEDInit-DB-LLR-001]
+    COMMENT The function does the following when the value of e_led_num is equal to LED1:
+	COMMENT 1. Call the macro LED1_CLK_ENABLE.
+	COMMENT 2. Set the value of pin of led1_gpio_initstruct to LED1_PIN
+	COMMENT 3. Set the value of Mode of led1_gpio_initstruct to GPIO_MODE_OUTPUT_PP.
+	COMMENT 4. Set the value of Speed of led1_gpio_initstruct to GPIO_SPEED_FAST.
+	COMMENT 5. Set the value of Pull of led1_gpio_initstruct to GPIO_NOPULL.
+	COMMENT 6. Call the function HalGpioInit with parameters LED1_PORT and address of 
+	COMMENT led1_gpio_initstruct.
+	COMMENT (Nominal value is given to RCC->AHB1ENR)
+    COMMENT Equivalence Class 1,3,4
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Input Led Number
+			VAR e_led_num,							init = LED1,						ev = init
+
+        COMMENT OUTPUT SECTION:
+
+			--GPIO pins to be configured
+			VAR PTU_GPIO_Init.Pin, 					init = 1, 							ev = LED1_PIN
+
+			--operating mode for the selected pins
+			VAR PTU_GPIO_Init.Mode, 				init = 10, 							ev = GPIO_MODE_OUTPUT_PP
+
+			--operating output type for the selected pins
+			VAR PTU_GPIO_Init.Speed, 				init = 1, 							ev = GPIO_SPEED_FAST
+
+      		--speed for the selected pins
+      		VAR PTU_GPIO_Init.Pull,					init = 1,  							ev = GPIO_NOPULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--RCC AHB1 peripheral clock register
+        	VAR RCC->AHB1ENR,    					init =(T_UINT32)0x7EF00000, 		ev = (T_UINT32)0x7EF00002
+        	
+        -- Stub Calls:
+        SIMUL
+        
+        	--initializes the GPIO peripheral
+        	STUB HalGpioInit(LED1_PORT)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#BSPLEDInit(e_led_num);
+
+    END ELEMENT
+
+END TEST -- TEST 1   
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfbspled-BSPLEDInit-DB-LLR-001]
+    COMMENT The function does nothing when the value of e_led_num is other than LED1.
+    COMMENT Equivalence Class 2
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Input Led Number
+			VAR e_led_num,				init = 1,			ev = init
+		
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+			--None
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#BSPLEDInit(e_led_num);
+
+    END ELEMENT
+
+END TEST -- TEST 2   
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfbspled-BSPLEDInit-DB-LLR-001]
+    COMMENT The function does the following when the value of e_led_num is equal to LED1:
+	COMMENT 1. Call the macro LED1_CLK_ENABLE.
+	COMMENT 2. Set the value of pin of led1_gpio_initstruct to LED1_PIN
+	COMMENT 3. Set the value of Mode of led1_gpio_initstruct to GPIO_MODE_OUTPUT_PP.
+	COMMENT 4. Set the value of Speed of led1_gpio_initstruct to GPIO_SPEED_FAST.
+	COMMENT 5. Set the value of Pull of led1_gpio_initstruct to GPIO_NOPULL.
+	COMMENT 6. Call the function HalGpioInit with parameters LED1_PORT and address of 
+	COMMENT led1_gpio_initstruct.
+	COMMENT (Maximum value is assigned to RCC->AHB1ENR.)
+    COMMENT Equivalence Class 1,3,4
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Input Led Number
+			VAR e_led_num,							init = LED1,					ev = init
+
+        COMMENT OUTPUT SECTION:
+
+			--GPIO pins to be configured
+			VAR PTU_GPIO_Init.Pin, 					init = 1, 						ev = LED1_PIN
+
+			--operating mode for the selected pin
+			VAR PTU_GPIO_Init.Mode, 				init = 10, 						ev = GPIO_MODE_OUTPUT_PP
+
+			--operating output type for the selected pin
+			VAR PTU_GPIO_Init.Speed, 				init = 1, 						ev = GPIO_SPEED_FAST
+
+      		--speed for the selected pin 
+      		VAR PTU_GPIO_Init.Pull,					init = 1,  						ev = GPIO_NOPULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--RCC AHB1 peripheral clock register
+			VAR RCC->AHB1ENR,    					init =  (T_UINT32)0x7EF417FF, 	ev = (T_UINT32)0x7EF417FF
+       
+        -- Stub Calls:
+        SIMUL
+        
+        	--initializes the GPIO peripheral
+        	STUB HalGpioInit(LED1_PORT)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#BSPLEDInit(e_led_num);
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfbspled-BSPLEDInit-DB-LLR-001]
+    COMMENT The function does the following when the value of e_led_num is equal to LED1:
+	COMMENT 1. Call the macro LED1_CLK_ENABLE.
+	COMMENT 2. Set the value of pin of led1_gpio_initstruct to LED1_PIN
+	COMMENT 3. Set the value of Mode of led1_gpio_initstruct to GPIO_MODE_OUTPUT_PP.
+	COMMENT 4. Set the value of Speed of led1_gpio_initstruct to GPIO_SPEED_FAST.
+	COMMENT 5. Set the value of Pull of led1_gpio_initstruct to GPIO_NOPULL.
+	COMMENT 6. Call the function HalGpioInit with parameters LED1_PORT and address of 
+	COMMENT led1_gpio_initstruct.
+	COMMENT (Minimum value is assigned to RCC->AHB1ENR.)
+    COMMENT Equivalence Class 1,3,4
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Input Led Number
+			VAR e_led_num,							init = LED1,					ev = init
+
+        COMMENT OUTPUT SECTION:
+
+			--GPIO pins to be configured
+			VAR PTU_GPIO_Init.Pin, 					init = 1, 						ev = LED1_PIN
+
+			--operating mode for the selected pins
+			VAR PTU_GPIO_Init.Mode, 				init = 10, 						ev = GPIO_MODE_OUTPUT_PP
+
+			--operating output type for the selected pins
+			VAR PTU_GPIO_Init.Speed, 				init = 1, 						ev = GPIO_SPEED_FAST
+
+      		--speed for the selected pin 
+      		VAR PTU_GPIO_Init.Pull,					init = 1,  						ev = GPIO_NOPULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--RCC AHB1 peripheral clock register
+			VAR RCC->AHB1ENR,    					init = (T_UINT32) 0x00000000,  	ev = (T_UINT32)0x2
+        
+        -- Stub Calls:
+        SIMUL
+        
+        	--initializes the GPIO peripheral
+        	STUB HalGpioInit(LED1_PORT)
+            
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#BSPLEDInit(e_led_num);
+
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfbspled-BSPLEDInit-DB-LLR-001]
+    COMMENT The function does the following when the value of e_led_num is equal to LED1:
+	COMMENT 1. Call the macro LED1_CLK_ENABLE.
+	COMMENT 2. Set the value of pin of led1_gpio_initstruct to LED1_PIN
+	COMMENT 3. Set the value of Mode of led1_gpio_initstruct to GPIO_MODE_OUTPUT_PP.
+	COMMENT 4. Set the value of Speed of led1_gpio_initstruct to GPIO_SPEED_FAST.
+	COMMENT 5. Set the value of Pull of led1_gpio_initstruct to GPIO_NOPULL.
+	COMMENT 6. Call the function HalGpioInit with parameters LED1_PORT and address of 
+	COMMENT led1_gpio_initstruct.
+	COMMENT (Reset value is assigned to RCC->AHB1ENR.)
+    COMMENT Equivalence Class 1,3,4
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Input Led Number
+			VAR e_led_num,							init = LED1,					ev = init
+
+        COMMENT OUTPUT SECTION:
+
+			--GPIO pins to be configured
+			VAR PTU_GPIO_Init.Pin, 					init = 1, 						ev = LED1_PIN
+
+			--operating mode for the selected pins
+			VAR PTU_GPIO_Init.Mode, 				init = 10, 						ev = GPIO_MODE_OUTPUT_PP
+
+			--operating output type for the selected pins
+			VAR PTU_GPIO_Init.Speed, 				init = 1, 						ev = GPIO_SPEED_FAST
+
+      		--speed for the selected pin 
+      		VAR PTU_GPIO_Init.Pull,					init = 1,  						ev = GPIO_NOPULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--RCC AHB1 peripheral clock register
+			VAR RCC->AHB1ENR,    					init = (T_UINT32)0x00100000,  	ev =(T_UINT32)0x100002
+        
+        -- Stub Calls:
+        SIMUL
+        
+        	--initializes the GPIO peripheral
+        	STUB HalGpioInit(LED1_PORT)
+            
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#BSPLEDInit(e_led_num);
+
+    END ELEMENT
+
+END TEST -- TEST 5
+
+END SERVICE -- BSPLEDInit
+

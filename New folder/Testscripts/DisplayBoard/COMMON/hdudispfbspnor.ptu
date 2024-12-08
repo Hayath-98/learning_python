@@ -1,0 +1,1030 @@
+HEADER hdudispfbspnor,Source Code Ver :1.1,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Samhitha Prasad L C
+--
+-- File Name           : hdudispfbspnor.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : BspNorInit
+--                       BspNorMspInit
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME           MODIFICATIONS
+--  ------------        ---------       -----------           -------------
+--      1.1             30.10.2017      Samhitha Prasad L C   Created the ptu file.
+--      1.2 			11.11.2017		Samhitha Prasad L C	  Updated as per #PR100171
+--      1.3 		    14.11.2017	    Samhitha Prasad L C	  Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfbspnor.h" 
+##include "hdulibstm32f7xxhalfmc.h" 
+##include "hdulibstm32f7xxhalnor.h"  
+##include "hdulibstm32f7xxhalrccex.h" 
+##include "hdudispfucos.h"  
+##include "hdulibstm32f7xxhalgpio.h"
+##include "hdulibbasictypes.h"  
+##include "hdulibstm32hallegacy.h" 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	-- None
+	
+-- Declaration of temporary variable
+
+	-- This variable is created to verify parameter h_nor  of 'HalNorInit' function
+	#T_NOR_HANDLE_TYPE PTU_Nor_Handle;
+	
+	--  This variable is created to verify parameter Timing  of 'HalNorInit' function
+	#T_FMC_NORSRAM_TIMING PTU_timings;
+	
+	--  This variable is created to verify parameter ext_timing  of 'HalNorInit' function
+	#T_FMC_NORSRAM_TIMING PTU_ext_timing;
+	
+	--  This variable is created to verify parameter GPIO_Init of 'HalGpioInit' function
+	#T_GPIO_INIT PTU_gpio_init[10];
+	
+	-- This variable is created to verify PTU_gpio_init at different index. 
+	#T_UINT8 PTU_index;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Samhitha Prasad L C
+    COMMENT
+    COMMENT File Name        : hdudispfbspnor.ptu
+    COMMENT
+    COMMENT Tested Functions : BspNorMspInit
+    COMMENT                    BspNorInit
+    COMMENT                    
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1.Header file "hdulibstm32f746xx.h" is modified for testing purpose.
+    COMMENT The macro 'RCC' is modified for stubbing hardware address.
+    COMMENT  
+    COMMENT /*commented for  testing purpose */
+    COMMENT //#define RCC                 ((T_RCC *) RCC_BAS
+    COMMENT
+	COMMENT /* modified macro by stubbing hardware address for testing */
+    COMMENT 
+    COMMENT T_RCC PTU_RCC;
+    COMMENT #define RCC                 ((T_RCC *) &PTU_RCC)
+    COMMENT
+    COMMENT
+    COMMENT 2.In function 'BspNorMspInit',do while loop infollowing MACROs cannot be covered for 0 and 2 or more time
+    COMMENT since it is controlled by while(0)
+    COMMENT '__HAL_RCC_FMC_CLK_ENABLE'
+    COMMENT '__HAL_RCC_GPIOD_CLK_ENABLE'
+    COMMENT '__HAL_RCC_GPIOE_CLK_ENABLE'
+    COMMENT '__HAL_RCC_GPIOF_CLK_ENABLE'
+    COMMENT '__HAL_RCC_GPIOG_CLK_ENABLE'
+    COMMENT
+    COMMENT 3. Following Test script related warnings are observed during Target Execution for volatile
+    COMMENT keyword member/variable:
+	COMMENT warning #191-D: type qualifier is meaningless on cast type
+	COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In function 'BspNorInit','HalNorInit' returns HAL_OK.
+	COMMENT
+    COMMENT Class 2
+    COMMENT In function 'BspNorInit','HalNorInit' returns other than HAL_OK.    
+    COMMENT
+    COMMENT Class 3
+    COMMENT The function 'BspNorInit' calls 'BspNorMspInit'.
+    COMMENT
+    COMMENT Class 4
+    COMMENT The function 'BspNorMspInit' calls '__HAL_RCC_FMC_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 5
+    COMMENT The function 'BspNorMspInit' calls '__HAL_RCC_GPIOD_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 6
+    COMMENT The function 'BspNorMspInit' calls '__HAL_RCC_GPIOE_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 7
+    COMMENT The function 'BspNorMspInit' calls '__HAL_RCC_GPIOF_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 8
+    COMMENT The function 'BspNorMspInit' calls '__HAL_RCC_GPIOG_CLK_ENABLE' 
+    COMMENT
+    COMMENT Class 9
+    COMMENT The function 'BspNorMspInit' calls 'HalGpioInit'     
+    COMMENT
+    COMMENT Class 10
+    COMMENT The function 'BspNorMspInit' calls 'HALGpioWritePin'
+    COMMENT
+    COMMENT Invalid class(es)
+    COMMENT
+    COMMENT  None
+    COMMENT
+    COMMENT </ECD>
+    
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+	DEFINE STUB hdudispfbspnor_c
+	
+		 -- Sets or clears the selected data port bit
+		 #void HALGpioWritePin(T_GPIO _in *GPIOx, T_UINT16 _in GPIO_Pin, T_GPIO_PIN_STATE _in PinState); 
+
+		 -- parameter 'GPIO_Init' is made _no to very local structure.
+		 #void HalGpioInit(T_GPIO _in *GPIOx, T_GPIO_INIT _no *GPIO_Init)
+		 #{
+		 # PTU_gpio_init[PTU_index++] = *GPIO_Init;
+		 #}
+
+		 -- paramters 'h_nor', 'timing' and 'ext_timing' are made _no to verify the static variables.
+		 #T_HAL_STATUS HalNorInit(T_NOR_HANDLE_TYPE _no *h_nor, T_FMC_NORSRAM_TIMING _no *timing, T_FMC_NORSRAM_TIMING _no *ext_timing)
+		 #{
+		 #	 PTU_Nor_Handle = *h_nor;
+		 #	 PTU_timings = *timing;
+		 #	 PTU_ext_timing = *ext_timing;
+		 #}
+   		
+	END DEFINE
+ 
+ ELSE_SIMUL
+ 
+     -- No action defined as of now if the module is not simulated
+ 
+ END SIMUL
+ 
+ 
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Environment of the file hdudispfbspnor.c
+--ENVIRONMENT ENV_hdudispfbspnor_c
+--
+	--None
+
+--END ENVIRONMENT -- ENV_hdudispfbspnor_c
+
+--USE ENV_hdudispfbspnor_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BspNorInit
+--------------------------------------------------------------------------------
+SERVICE BspNorInit
+SERVICE_TYPE extern
+
+-- By function returned type declaration
+#T_UINT8 ret_BspNorInit;
+
+ENVIRONMENT ENV_BspNorInit
+VAR ret_BspNorInit,		init = 0,		ev = init
+END ENVIRONMENT -- ENV_BspNorInit
+USE ENV_BspNorInit
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfbspnor-BspNorInit-DB-LLR-001]
+	COMMENT The function configures members of NOR handle (i.e of structure type T_NOR_HANDLE_TYPE) as follows:
+	COMMENT 1.	Instance of NOR handle to FMC_NORSRAM_DEVICE.
+	COMMENT 2.	Extended of NOR handle to FMC_NORSRAM_EXTENDED_DEVICE.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorInit-DB-LLR-002]
+	COMMENT The function configures members of Timing (i.e of structure type T_FMC_NORSRAM_TIMING) as follows:
+	COMMENT 1.	AddressSetupTime of Timing to FIFTEEN.
+	COMMENT 2.	AddressHoldTime of Timing to ZERO.
+	COMMENT 3.	DataSetupTime of Timing to TWENTY.
+	COMMENT 4.	BusTurnAroundDuration of Timing to TEN.
+	COMMENT 5.	CLKDivision of Timing to TWO.
+	COMMENT 6.	DataLatency of Timing to ZERO.
+	COMMENT 7.	AccessMode of Timing to FMC_ACCESS_MODE_A.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorInit-DB-LLR-003]
+	COMMENT The function configures members of NOR handle (i.e of structure type T_NOR_HANDLE_TYPE) as follows:
+	COMMENT 1.	NSBank of Init of NOR handle to FMC_NORSRAM_BANK1.
+	COMMENT 2.	DataAddressMux of Init of NOR handle to FMC_DATA_ADDRESS_MUX_DISABLE.
+	COMMENT 3.	MemoryType of Init of NOR handle to FMC_MEMORY_TYPE_NOR.
+	COMMENT 4.	MemoryDataWidth of Init of NOR handle to NOR_MEMORY_WIDTH.
+	COMMENT 5.	BurstAccessMode of Init of NOR handle to NOR_BURSTACCESS.
+	COMMENT 6.	WaitSignalPolarity of Init of NOR handle to FMC_WAIT_SIGNAL_POLARITY_LOW.
+	COMMENT 7.	WaitSignalActive of Init of NOR handle to FMC_WAIT_TIMING_BEFORE_WS.
+	COMMENT 8.	WriteOperation of Init of NOR handle to FMC_WRITE_OPERATION_ENABLE.
+	COMMENT 9.	WaitSignal of Init of NOR handle to FMC_WAIT_SIGNAL_DISABLE.
+	COMMENT 10.	ExtendedMode of Init of NOR handle to FMC_EXTENDED_MODE_DISABLE.
+	COMMENT 11.	AsynchronousWait of Init of NOR handle to FMC_ASYNCHRONOUS_WAIT_DISABLE.
+	COMMENT 12.	WriteBurst of Init of NOR handle to NOR_WRITEBURST.
+	COMMENT 13.	ContinuousClock of Init of NOR handle to CONTINUOUSCLOCK_FEATURE.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorInit-DB-LLR-004]
+	COMMENT The function calls the function BspNorMspInit.
+	COMMENT Equivalence Class 3
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorInit-DB-LLR-005]
+	COMMENT The function returns the NOR status as NOR_STATUS_OK when return value of the function HalNorInit with
+	COMMENT reference to NOR handle and reference to Timing as 2nd and 3rd parameter  is equal to HAL_OK. 
+	COMMENT Equivalence Class 1
+	COMMENT
+	COMMENT
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    	
+    		--None
+    
+    
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			--None
+		
+		
+		COMMENT OUTPUT SECTION:
+			
+			-- RCC AHB3 peripheral clock register
+			VAR RCC->AHB3ENR,							init=0x2,					ev=0x3
+			
+			--  RCC AHB1 peripheral clock register
+			VAR RCC->AHB1ENR,							init=0x100000,				ev=0x100078
+			
+			-- return of the function
+			VAR ret_BspNorInit,							init = NOR_STATUS_ERROR,	ev = NOR_STATUS_OK
+			
+			-- temporary variable use for counting
+			VAR PTU_index,								init=0,						ev=5
+		
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Instance,				init=0x20,					ev=FMC_NORSRAM_DEVICE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Extended,				init=0x20,					ev=FMC_NORSRAM_EXTENDED_DEVICE
+			
+			-- verifying the static timing structure	
+			VAR PTU_timings.AddressSetupTime,			init=10,					ev=FIFTEEN
+			
+			-- verifying the static timing structure
+			VAR PTU_timings.AddressHoldTime,			init=10,					ev=ZERO
+			
+			-- verifying the static timing structure
+			VAR PTU_timings.DataSetupTime,				init=10,					ev=TWENTY
+			
+			-- verifying the static timing structure
+			VAR PTU_timings.BusTurnAroundDuration,		init=15,					ev=TEN
+			
+			-- verifying the static timing structure
+			VAR PTU_timings.CLKDivision,				init=10,					ev=TWO
+						
+			-- verifying the static timing structure
+			VAR PTU_timings.DataLatency,				init=10,					ev=ZERO
+						
+			-- verifying the static timing structure
+			VAR PTU_timings.AccessMode,					init=10,					ev=FMC_ACCESS_MODE_A
+			
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.AddressSetupTime,		init=10,					ev=FIFTEEN
+			
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.AddressHoldTime,			init=10,					ev=ZERO
+			    
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.DataSetupTime,			init=10,					ev=TWENTY
+			    
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.BusTurnAroundDuration,	init=15,					ev=TEN
+			
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.CLKDivision,				init=10,					ev=TWO
+						
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.DataLatency,				init=10,					ev=ZERO
+									
+			-- verifying the static timing structure			
+			VAR PTU_ext_timing.AccessMode,				init=10,					ev=FMC_ACCESS_MODE_A
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.NSBank,				init=10,					ev=FMC_NORSRAM_BANK1
+			
+			-- Verifying the static structure								 
+			VAR PTU_Nor_Handle.Init.DataAddressMux,		init=10,					ev=FMC_DATA_ADDRESS_MUX_DISABLE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.MemoryType,			init=10,					ev=FMC_MEMORY_TYPE_NOR
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.MemoryDataWidth,	init=10,					ev=NOR_MEMORY_WIDTH
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.BurstAccessMode,	init=10,					ev=NOR_BURSTACCESS
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.WaitSignalPolarity,	init=10,					ev=FMC_WAIT_SIGNAL_POLARITY_LOW
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.WaitSignalActive,	init=10,					ev=FMC_WAIT_TIMING_BEFORE_WS
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.WriteOperation,		init=10,					ev=FMC_WRITE_OPERATION_ENABLE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.WaitSignal,			init=10,					ev=FMC_WAIT_SIGNAL_DISABLE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.ExtendedMode,		init=10,					ev=FMC_EXTENDED_MODE_DISABLE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.AsynchronousWait,	init=10,					ev=FMC_ASYNCHRONOUS_WAIT_DISABLE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.WriteBurst,			init=10,					ev=NOR_WRITEBURST
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.ContinuousClock,	init=10,					ev=CONTINUOUSCLOCK_FEATURE
+			
+			-- Configuring gpio pin D
+			VAR PTU_gpio_init[0].Mode,					init=0x10,					ev=GPIO_MODE_AF_PP
+
+			VAR PTU_gpio_init[0].Pull,					init=0x5,					ev=GPIO_PULLUP		
+
+			VAR PTU_gpio_init[0].Speed,					init=0x6,					ev=GPIO_SPEED_HIGH			
+
+			VAR PTU_gpio_init[0].Alternate,				init=0xA,					ev=GPIO_AF12_FMC			
+
+			VAR PTU_gpio_init[0].Pin,					init=0,						ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | 
+			&																		   GPIO_PIN_5 | GPIO_PIN_6   | GPIO_PIN_7 |
+			&																		   GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
+			&																		   GPIO_PIN_11 |GPIO_PIN_12 | GPIO_PIN_13 |
+			&																		   GPIO_PIN_14 | GPIO_PIN_15			
+
+			-- Configuring gpio pin E
+			VAR  PTU_gpio_init[1].Pin,					init=0,						ev=GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | 
+			&																		   GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | 
+			&																		   GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | 
+			&																		   GPIO_PIN_11 |GPIO_PIN_12 | GPIO_PIN_13 | 
+			&																		   GPIO_PIN_14 | GPIO_PIN_15
+
+			-- Configuring gpio pin F
+			VAR  PTU_gpio_init[2].Pin,					init=0,						ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2| 		
+		    &                                   		                               GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5 | 
+		    &																		   GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |
+		 	&																		   GPIO_PIN_15		 
+
+		 	-- Configuring gpio pin G
+            VAR  PTU_gpio_init[3].Pin,					init=0,						ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2|		                                                                                   
+		    &                                   		                               GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5 | 
+		    &																		   GPIO_PIN_12 | GPIO_PIN_13	   
+
+		   -- Configuring gpio pin G			
+			VAR PTU_gpio_init[4].Pin,					init=0xA,					ev=GPIO_PIN_14 
+
+			VAR PTU_gpio_init[4].Mode,					init=0x10,					ev=GPIO_MODE_OUTPUT_PP			
+
+			VAR PTU_gpio_init[4].Pull,					init=0x5,					ev=GPIO_PULLDOWN			
+
+			VAR PTU_gpio_init[4].Speed,					init=0x6,					ev=GPIO_SPEED_HIGH
+
+		-- Stub calls                                                                                   
+		SIMUL																			   
+   			
+   			-- function to initializes the GPIO peripheral
+    		STUB HalGpioInit(GPIOD)
+       		STUB HalGpioInit(GPIOE)    		
+    		STUB HalGpioInit(GPIOF)    		
+    		STUB HalGpioInit(GPIOG)    		
+    		STUB HalGpioInit(GPIOG)
+    		
+			-- Sets or clears the selected data port bit
+    		STUB HALGpioWritePin(GPIOG, GPIO_PIN_14, GPIO_PIN_RESET)
+    		
+    		 -- function to performs the NOR memory Initialization sequence.    		
+    		STUB HalNorInit() HAL_OK
+    	
+    	END SIMUL
+    
+    -- Calling the unit under test
+    #ret_BspNorInit = BspNorInit();
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfbspnor-BspNorInit-DB-LLR-005]
+	COMMENT The function shall return the NOR status as NOR_STATUS_ERROR if return value of the function HalNorInit with 
+	COMMENT reference to NOR handle and reference to Timing as 2nd and 3rd parameter  is not equal to HAL_OK.
+	COMMENT Equivalence Class 2
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    	
+    		--None
+    
+    
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			--None
+		
+		
+		COMMENT OUTPUT SECTION:
+			
+			-- RCC AHB3 peripheral clock register
+			VAR RCC->AHB3ENR,							init=0x3,					ev=init
+			
+			
+			--  RCC AHB1 peripheral clock register
+			VAR RCC->AHB1ENR,							init=0x30,					ev=0x78
+			
+						
+			-- return of the function
+			VAR ret_BspNorInit,							init = NOR_STATUS_OK,		ev = NOR_STATUS_ERROR
+			
+			-- temporary variable use for counting
+			VAR PTU_index,								init=0,						ev=5
+		
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Instance,				init=0x20,					ev=FMC_NORSRAM_DEVICE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Extended,				init=0x20,					ev=FMC_NORSRAM_EXTENDED_DEVICE
+			
+			-- verifying the static timing structure	
+			VAR PTU_timings.AddressSetupTime,			init=10,					ev=FIFTEEN
+			
+			-- verifying the static timing structure
+			VAR PTU_timings.AddressHoldTime,			init=10,					ev=ZERO
+			
+			-- verifying the static timing structure
+			VAR PTU_timings.DataSetupTime,				init=10,					ev=TWENTY
+			
+			-- verifying the static timing structure
+			VAR PTU_timings.BusTurnAroundDuration,		init=15,					ev=TEN
+			
+			-- verifying the static timing structure
+			VAR PTU_timings.CLKDivision,				init=10,					ev=TWO
+						
+			-- verifying the static timing structure
+			VAR PTU_timings.DataLatency,				init=10,					ev=ZERO
+						
+			-- verifying the static timing structure
+			VAR PTU_timings.AccessMode,					init=10,					ev=FMC_ACCESS_MODE_A
+			
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.AddressSetupTime,		init=10,					ev=FIFTEEN
+			
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.AddressHoldTime,			init=10,					ev=ZERO
+			    
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.DataSetupTime,			init=10,					ev=TWENTY
+			    
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.BusTurnAroundDuration,	init=15,					ev=TEN
+			
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.CLKDivision,				init=10,					ev=TWO
+						
+			-- verifying the static timing structure
+			VAR PTU_ext_timing.DataLatency,				init=10,					ev=ZERO
+									
+			-- verifying the static timing structure			
+			VAR PTU_ext_timing.AccessMode,				init=10,					ev=FMC_ACCESS_MODE_A
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.NSBank,				init=10,					ev=FMC_NORSRAM_BANK1
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.DataAddressMux,		init=10,					ev=FMC_DATA_ADDRESS_MUX_DISABLE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.MemoryType,			init=10,					ev=FMC_MEMORY_TYPE_NOR
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.MemoryDataWidth,	init=10,					ev=NOR_MEMORY_WIDTH
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.BurstAccessMode,	init=10,					ev=NOR_BURSTACCESS
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.WaitSignalPolarity,	init=10,					ev=FMC_WAIT_SIGNAL_POLARITY_LOW
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.WaitSignalActive,	init=10,					ev=FMC_WAIT_TIMING_BEFORE_WS
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.WriteOperation,		init=10,					ev=FMC_WRITE_OPERATION_ENABLE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.WaitSignal,			init=10,					ev=FMC_WAIT_SIGNAL_DISABLE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.ExtendedMode,		init=10,					ev=FMC_EXTENDED_MODE_DISABLE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.AsynchronousWait,	init=10,					ev=FMC_ASYNCHRONOUS_WAIT_DISABLE
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.WriteBurst,			init=10,					ev=NOR_WRITEBURST
+			
+			-- Verifying the static structure
+			VAR PTU_Nor_Handle.Init.ContinuousClock,	init=10,					ev=CONTINUOUSCLOCK_FEATURE
+			
+			-- Configuring gpio pin D
+			VAR PTU_gpio_init[0].Mode,					init=0x10,					ev=GPIO_MODE_AF_PP
+
+			VAR PTU_gpio_init[0].Pull,					init=0x5,					ev=GPIO_PULLUP		
+
+			VAR PTU_gpio_init[0].Speed,					init=0x6,					ev=GPIO_SPEED_HIGH			
+
+			VAR PTU_gpio_init[0].Alternate,				init=0xA,					ev=GPIO_AF12_FMC			
+
+			VAR PTU_gpio_init[0].Pin,					init=0,						ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | 
+			&																		   GPIO_PIN_5 | GPIO_PIN_6   | GPIO_PIN_7 |
+			&																		   GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
+			&																		   GPIO_PIN_11 |GPIO_PIN_12 | GPIO_PIN_13 |
+			&																		   GPIO_PIN_14 | GPIO_PIN_15			
+
+			-- Configuring gpio pin E
+			VAR  PTU_gpio_init[1].Pin,					init=0,						ev=GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | 
+			&																		   GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | 
+			&																		   GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | 
+			&																		   GPIO_PIN_11 |GPIO_PIN_12 | GPIO_PIN_13 | 
+			&																		   GPIO_PIN_14 | GPIO_PIN_15
+
+			-- Configuring gpio pin F
+			VAR  PTU_gpio_init[2].Pin,					init=0,						ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2| 		
+		    &                                   		                               GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5 | 
+		    &																		   GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |
+		 	&																		   GPIO_PIN_15		 
+
+		 	-- Configuring gpio pin G
+            VAR  PTU_gpio_init[3].Pin,					init=0,						ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2|		                                                                                   
+		    &                                   		                               GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5 | 
+		    &																		   GPIO_PIN_12 | GPIO_PIN_13	   
+
+		   -- Configuring gpio pin G			
+			VAR PTU_gpio_init[4].Pin,					init=0xA,					ev=GPIO_PIN_14 
+
+			VAR PTU_gpio_init[4].Mode,					init=0x10,					ev=GPIO_MODE_OUTPUT_PP			
+
+			VAR PTU_gpio_init[4].Pull,					init=0x5,					ev=GPIO_PULLDOWN			
+
+			VAR PTU_gpio_init[4].Speed,					init=0x6,					ev=GPIO_SPEED_HIGH
+				      		                                                                           
+		-- Stub calls                                                                                   
+		SIMUL																			   
+   
+    		STUB HalGpioInit(GPIOD)
+    		
+    		STUB HalGpioInit(GPIOE)
+    		
+    		STUB HalGpioInit(GPIOF)
+    		
+    		STUB HalGpioInit(GPIOG)
+    		
+    		STUB HalGpioInit(GPIOG)
+    		
+    		STUB HALGpioWritePin(GPIOG, GPIO_PIN_14, GPIO_PIN_RESET)
+    		
+    		STUB HalNorInit() HAL_ERROR
+    	
+    	END SIMUL
+    
+    -- Calling the unit under test
+    #ret_BspNorInit = BspNorInit();
+    END ELEMENT
+
+END TEST -- TEST 2
+
+
+END SERVICE -- BspNorInit
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BspNorMspInit
+--------------------------------------------------------------------------------
+SERVICE BspNorMspInit
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfbspnor-BspNorMspInit-DB-LLR-001]
+	COMMENT The function calls the macro __HAL_RCC_FMC_CLK_ENABLE to enable FMC Clock.
+	COMMENT Nominal value is given for register
+	COMMENT Equivalence Class 4
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-002]
+	COMMENT The function calls the macro __HAL_RCC_GPIOD_CLK_ENABLE to enable GPIOD Clock.
+	COMMENT Equivalence Class 5
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-003]
+	COMMENT The function shall call the macro __HAL_RCC_GPIOE_CLK_ENABLE to enable GPIOE Clock.
+	COMMENT Equivalence Class 6
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-004]
+	COMMENT  The function calls the macro __HAL_RCC_GPIOF_CLK_ENABLE to enable GPIOF Clock
+	COMMENT Equivalence Class 7
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-005]
+	COMMENT The function calls the macro __HAL_RCC_GPIOG_CLK_ENABLE to enable GPIOG Clock.
+	COMMENT Equivalence Class 8
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-006]
+	COMMENT The function configures the members of GPIO i.e of structure type T_GPIO_INIT as follows.:
+	COMMENT 1. Set Mode of GPIO to GPIO_MODE_AF_PP.
+	COMMENT 2. Set Pull of GPIO to GPIO_PULLUP.
+	COMMENT 3. Set Speed of GPIO to GPIO_SPEED_HIGH.
+	COMMENT 4. Set Alternate of GPIO to GPIO_AF12_FMC.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-007]
+	COMMENT The function does the following to configure clock GPIOD.
+	COMMENT 1. Set Pin of GPIO to result of bitwise OR of GPIO_PIN_0,GPIO_PIN_1, GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_6, 
+	COMMENT GPIO_PIN_7 , GPIO_PIN_8 , GPIO_PIN_9 , GPIO_PIN_10 , GPIO_PIN_11, GPIO_PIN_12 , GPIO_PIN_13 , GPIO_PIN_14 
+	COMMENT and  GPIO_PIN_15.
+	COMMENT 2. Call the function HalGpioInit with GPIOD and reference to GPIO structure as its parameter.
+	COMMENT Equivalence Class 9
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-008]
+	COMMENT The function does the following to configure clock GPIOE.
+	COMMENT 1. Set Pin of GPIO to result of bitwise OR of GPIO_PIN_2, GPIO_PIN_3, GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_6,
+	COMMENT GPIO_PIN_7 , GPIO_PIN_8 , GPIO_PIN_9 , GPIO_PIN_10 , GPIO_PIN_11, GPIO_PIN_12 , GPIO_PIN_13 , GPIO_PIN_14 
+	COMMENT and  GPIO_PIN_15.
+	COMMENT 2. Call the function HalGpioInit with GPIOE and reference to GPIO structure as its parameter.
+	COMMENT Equivalence Class 9
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-009]
+	COMMENT The function does the following to configure clock GPIOF.
+	COMMENT 1. Set Pin of GPIO to result of bitwise OR of GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3, GPIO_PIN_4, 
+	COMMENT GPIO_PIN_5 , GPIO_PIN_12 , GPIO_PIN_13 , GPIO_PIN_14 and  GPIO_PIN_15.
+	COMMENT 2. Call the function HalGpioInit with GPIOF and reference to GPIO structure as its parameter.
+	COMMENT Equivalence Class 9
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-010]
+	COMMENT The function deso the following to configure clock GPIOG.
+	COMMENT 1. Set Pin of GPIO to result of bitwise OR of GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3, GPIO_PIN_4,
+	COMMENT GPIO_PIN_5 , GPIO_PIN_12 and GPIO_PIN_13.
+	COMMENT 2. Call the function HalGpioInit with GPIOG and reference to GPIO structure as its parameter.
+	COMMENT Equivalence Class 9
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-011]
+	COMMENT The function configures the members of GPIO i.e of structure type T_GPIO_INIT as follows.:
+	COMMENT 1. Set Pin of GPIO to GPIO_PIN_14.
+	COMMENT 2. Set Mode of GPIO to GPIO_MODE_OUTPUT_PP.
+	COMMENT 3. Set Pull of GPIO to GPIO_PULLDOWN.
+	COMMENT 4. Set Speed of GPIO to GPIO_SPEED_HIGH.
+	COMMENT 5. Call the function HalGpioInit with GPIOG and reference to GPIO structure as its parameter.
+	COMMENT Equivalence Class 9
+	COMMENT
+	COMMENT [hdudispfbspnor-BspNorMspInit-DB-LLR-012]
+	COMMENT The function calls the function HALGpioWritePin with GPIOG, GPIO_PIN_14 and  GPIO_PIN_RESET as its parameter.
+	COMMENT Equivalence Class 10
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    	
+    		--None
+    
+    
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			--None
+		
+		
+		COMMENT OUTPUT SECTION:
+			
+			-- RCC AHB3 peripheral clock register
+			VAR RCC->AHB3ENR,					init=0x2,						ev=0x3
+			
+			--  RCC AHB1 peripheral clock register
+			VAR RCC->AHB1ENR,					init=0x100,						ev=0x178
+			
+			-- temporary variable use for counting
+			VAR PTU_index,						init=0,							ev=5
+		
+			-- Configuring gpio pin D
+			VAR PTU_gpio_init[0].Mode,			init=0x10,						ev=GPIO_MODE_AF_PP
+			
+			VAR PTU_gpio_init[0].Pull,			init=0x5,						ev=GPIO_PULLUP		
+			
+			VAR PTU_gpio_init[0].Speed,			init=0x6,						ev=GPIO_SPEED_HIGH			
+			
+			VAR PTU_gpio_init[0].Alternate,		init=0xA,						ev=GPIO_AF12_FMC			
+			
+			VAR PTU_gpio_init[0].Pin,			init=0,							ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | 
+			&																	   GPIO_PIN_5 | GPIO_PIN_6   | GPIO_PIN_7 |
+			&																	   GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
+			&																	   GPIO_PIN_11 |GPIO_PIN_12 | GPIO_PIN_13 |
+			&																	   GPIO_PIN_14 | GPIO_PIN_15			
+			
+			-- Configuring gpio pin E
+			VAR  PTU_gpio_init[1].Pin,			init=0,							ev=GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | 
+			&																	   GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | 
+			&																	   GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | 
+			&																	   GPIO_PIN_11 |GPIO_PIN_12 | GPIO_PIN_13 | 
+			&																	   GPIO_PIN_14 | GPIO_PIN_15
+			
+			-- Configuring gpio pin F
+			VAR  PTU_gpio_init[2].Pin,			init=0,							ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2| 		
+		    &                                                                      GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5 | 
+		    &																	   GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |
+		 	&																	   GPIO_PIN_15		 
+		 
+		 	-- Configuring gpio pin G
+            VAR  PTU_gpio_init[3].Pin,			init=0,							ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2|		                                                                                   
+		    &                                                                      GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5 | 
+		    &																	   GPIO_PIN_12 | GPIO_PIN_13	   
+		   
+		   -- Configuring gpio pin G			
+			VAR PTU_gpio_init[4].Pin,			init=0xA,						ev=GPIO_PIN_14 
+			
+			VAR PTU_gpio_init[4].Mode,			init=0x10,						ev=GPIO_MODE_OUTPUT_PP			
+			
+			VAR PTU_gpio_init[4].Pull,			init=0x5,						ev=GPIO_PULLDOWN			
+			
+			VAR PTU_gpio_init[4].Speed,			init=0x6,						ev=GPIO_SPEED_HIGH
+				      		                                                                                   		        
+		-- Stub calls        
+		SIMUL																			   
+   
+    		STUB HalGpioInit(GPIOD)
+    		
+    		STUB HalGpioInit(GPIOE)
+    		
+    		STUB HalGpioInit(GPIOF)
+    		
+    		STUB HalGpioInit(GPIOG)
+    		
+    		STUB HalGpioInit(GPIOG)
+    		
+    		STUB HALGpioWritePin(GPIOG, GPIO_PIN_14, GPIO_PIN_RESET)
+    	
+    	END SIMUL
+    
+    -- Calling the unit under test
+    #BspNorMspInit();
+    END ELEMENT
+        
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfbspnor-BspNorMspInit-DB-LLR-001]
+	COMMENT The function calls the macro __HAL_RCC_FMC_CLK_ENABLE to enable FMC Clock.
+	COMMENT Maximum value is given for register
+	COMMENT Equivalence Class 4
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    	
+    		--None
+    
+    
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			--None
+		
+		
+		COMMENT OUTPUT SECTION:
+			
+			-- RCC AHB3 peripheral clock register
+			VAR RCC->AHB3ENR,					init=0x3,						ev=init
+			
+			--  RCC AHB1 peripheral clock register
+			VAR RCC->AHB1ENR,					init=0x71F417FF,				ev=init
+			
+			-- temporary variable use for counting
+			VAR PTU_index,						init=0,							ev=5
+		
+			-- Configuring gpio pin D
+			VAR PTU_gpio_init[0].Mode,			init=0x10,						ev=GPIO_MODE_AF_PP
+			
+			VAR PTU_gpio_init[0].Pull,			init=0x5,						ev=GPIO_PULLUP		
+			
+			VAR PTU_gpio_init[0].Speed,			init=0x6,						ev=GPIO_SPEED_HIGH			
+			
+			VAR PTU_gpio_init[0].Alternate,		init=0xA,						ev=GPIO_AF12_FMC			
+			
+			VAR PTU_gpio_init[0].Pin,			init=0,							ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | 
+			&																	   GPIO_PIN_5 | GPIO_PIN_6   | GPIO_PIN_7 |
+			&																	   GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
+			&																	   GPIO_PIN_11 |GPIO_PIN_12 | GPIO_PIN_13 |
+			&																	   GPIO_PIN_14 | GPIO_PIN_15			
+			
+			-- Configuring gpio pin E
+			VAR  PTU_gpio_init[1].Pin,			init=0,							ev=GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | 
+			&																	   GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | 
+			&																	   GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | 
+			&																	   GPIO_PIN_11 |GPIO_PIN_12 | GPIO_PIN_13 | 
+			&																	   GPIO_PIN_14 | GPIO_PIN_15
+			
+			-- Configuring gpio pin F
+			VAR  PTU_gpio_init[2].Pin,			init=0,							ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2| 		
+		    &                                                                      GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5 | 
+		    &																	   GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |
+		 	&																	   GPIO_PIN_15		 
+		 
+		 	-- Configuring gpio pin G
+            VAR  PTU_gpio_init[3].Pin,			init=0,							ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2|		                                                                                   
+		    &                                                                      GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5 | 
+		    &																	   GPIO_PIN_12 | GPIO_PIN_13	   
+		   
+		   -- Configuring gpio pin G			
+			VAR PTU_gpio_init[4].Pin,			init=0xA,						ev=GPIO_PIN_14 
+			
+			VAR PTU_gpio_init[4].Mode,			init=0x10,						ev=GPIO_MODE_OUTPUT_PP			
+			
+			VAR PTU_gpio_init[4].Pull,			init=0x5,						ev=GPIO_PULLDOWN			
+			
+			VAR PTU_gpio_init[4].Speed,			init=0x6,						ev=GPIO_SPEED_HIGH
+				      		                                                                               		        
+		-- Stub calls        
+		SIMUL																			   
+   
+    		STUB HalGpioInit(GPIOD)
+    		
+    		STUB HalGpioInit(GPIOE)
+    		
+    		STUB HalGpioInit(GPIOF)
+    		
+    		STUB HalGpioInit(GPIOG)
+    		
+    		STUB HalGpioInit(GPIOG)
+    		
+    		STUB HALGpioWritePin(GPIOG, GPIO_PIN_14, GPIO_PIN_RESET)
+    	
+    	END SIMUL
+    
+    -- Calling the unit under test
+    #BspNorMspInit();
+    END ELEMENT
+        
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfbspnor-BspNorMspInit-DB-LLR-001]
+	COMMENT The function calls the macro __HAL_RCC_FMC_CLK_ENABLE to enable FMC Clock.
+	COMMENT Reset value is given for register
+	COMMENT Equivalence Class 4
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    	
+    		--None
+    
+    
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			--None
+		
+		
+		COMMENT OUTPUT SECTION:
+			
+			-- RCC AHB3 peripheral clock register
+			VAR RCC->AHB3ENR,					init=0x0,						ev=0x1
+			
+			--  RCC AHB1 peripheral clock register
+			VAR RCC->AHB1ENR,					init=0x100000,					ev=0x100078
+			
+			-- temporary variable use for counting
+			VAR PTU_index,						init=0,							ev=5
+		
+			-- Configuring gpio pin D
+			VAR PTU_gpio_init[0].Mode,			init=0x10,						ev=GPIO_MODE_AF_PP
+			
+			VAR PTU_gpio_init[0].Pull,			init=0x5,						ev=GPIO_PULLUP		
+			
+			VAR PTU_gpio_init[0].Speed,			init=0x6,						ev=GPIO_SPEED_HIGH			
+			
+			VAR PTU_gpio_init[0].Alternate,		init=0xA,						ev=GPIO_AF12_FMC			
+			
+			VAR PTU_gpio_init[0].Pin,			init=0,							ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | 
+			&																	   GPIO_PIN_5 | GPIO_PIN_6   | GPIO_PIN_7 |
+			&																	   GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
+			&																	   GPIO_PIN_11 |GPIO_PIN_12 | GPIO_PIN_13 |
+			&																	   GPIO_PIN_14 | GPIO_PIN_15			
+			
+			-- Configuring gpio pin E
+			VAR  PTU_gpio_init[1].Pin,			init=0,							ev=GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | 
+			&																	   GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | 
+			&																	   GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | 
+			&																	   GPIO_PIN_11 |GPIO_PIN_12 | GPIO_PIN_13 | 
+			&																	   GPIO_PIN_14 | GPIO_PIN_15
+			
+			-- Configuring gpio pin F
+			VAR  PTU_gpio_init[2].Pin,			init=0,							ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2| 		
+		    &                                                                      GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5 | 
+		    &																	   GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |
+		 	&																	   GPIO_PIN_15		 
+		 
+		 	-- Configuring gpio pin G
+            VAR  PTU_gpio_init[3].Pin,			init=0,							ev=GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2|		                                                                                   
+		    &                                                                      GPIO_PIN_3 | GPIO_PIN_4| GPIO_PIN_5 | 
+		    &																	   GPIO_PIN_12 | GPIO_PIN_13	   
+		   
+		   -- Configuring gpio pin G			
+			VAR PTU_gpio_init[4].Pin,			init=0xA,						ev=GPIO_PIN_14 
+			
+			VAR PTU_gpio_init[4].Mode,			init=0x10,						ev=GPIO_MODE_OUTPUT_PP			
+			
+			VAR PTU_gpio_init[4].Pull,			init=0x5,						ev=GPIO_PULLDOWN			
+			
+			VAR PTU_gpio_init[4].Speed,			init=0x6,						ev=GPIO_SPEED_HIGH
+				      		                                                                                   		        
+		-- Stub calls        
+		SIMUL																			   
+   
+    		STUB HalGpioInit(GPIOD)
+    		
+    		STUB HalGpioInit(GPIOE)
+    		
+    		STUB HalGpioInit(GPIOF)
+    		
+    		STUB HalGpioInit(GPIOG)
+    		
+    		STUB HalGpioInit(GPIOG)
+    		
+    		STUB HALGpioWritePin(GPIOG, GPIO_PIN_14, GPIO_PIN_RESET)
+    	
+    	END SIMUL
+    
+    -- Calling the unit under test
+    #BspNorMspInit();
+    END ELEMENT
+        
+END TEST -- TEST 3
+
+END SERVICE -- BspNorMspInit
+
+

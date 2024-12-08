@@ -1,0 +1,1262 @@
+HEADER hdudispfpolygon1,Source Code Ver : 1.7,TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+-- Author Name          : Meena P
+--
+-- File Name            : hdudispfpolygon1_1.ptu
+--
+-- Test Creation Date   : 09.10.2017
+--
+-- Tested Functions     : PolygonDrawPoly
+--                        VScanLines
+--                        VProcessMagLine
+--                        SpFindLine
+-- 
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------       ---------       -----------        -------------
+--     1.1             09.10.2017      Meena P          Created the ptu file  
+--     1.2             10.11.2017      Meena P          Updated as per #PR100171  
+--     1.3             14.11.2017      Meena P          Updated as per #PR100171 
+--     1.4             27.07.2020      Swaroopa N       Updated as per #PR100267
+--     1.5             03.10.2020      Vignesh Sunil    Updated as per #PR100281
+-------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+##include "hdudispfdma2d.h"  
+##include "hdudispfpolygon1.h" 
+##include "hdudispfrterror.h"  
+##include "hdudispftext.h"     
+##include "hdudispfconfig.h"   
+##include "hdudispfwidgets.h"  
+##include "hdulibbasictypes.h" 
+##include "hdudispfpanel.h" 
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern T_CHAR glob_file_name[];
+
+    -- Variable Chooses the active edge list
+    #extern T_UINT8 U8_which_mag_line;
+    
+    -- Variable Scans min value
+    #extern T_INT32 S16_scan_xmin;
+    
+    -- Variable holds Active Edge list line1
+    #extern T_UINT8 U8_mag_line1[(   1024U +1)];
+    
+    -- Variable Scans max value
+    #extern T_INT32 S16_scan_xmax;
+    
+    -- Variable holds Active Edge list line2
+    #extern T_UINT8 U8_mag_line2[(   1024U +1)];
+    
+    -- Variable holds the panel width value
+    #T_INT16 S16_panel_width; 
+    
+    -- Variable holds Foreground frame buffer
+    #void *Vp_fgfb2;
+    
+    -- Variable holds the panel height value
+    #T_INT16 S16_panel_height; 
+    
+    -- Variable holds the orientation value
+    #T_ELANDSCAPEORPORTRIAT E_orientation;
+    
+
+-- Declarations of the temporary variables 
+
+-- Created to verify the 1st parameter of RterrWidget
+   # char PTU_pc_file_in_1[200];
+   # char PTU_pc_file_in_2[200];
+   # char PTU_pc_file_in_3[200];
+   # char PTU_pc_file_in_4[200];
+   # T_UINT8 PTU_temp, PTU_count;
+   
+-- Created to verify the 3rd parameter of RterrWidget
+   # char PTU_pc_message_in_1[200];
+   # char PTU_pc_message_in_2[200];
+   # char PTU_pc_message_in_3[200];
+   # char PTU_pc_message_in_4[200];
+   
+   
+-- Created to verify the 1st and 2nd parameters of Dma2dScanLineBlend
+   # T_UINT16 PTU_frame_data;
+   # T_UINT16 *PTU_frame_data_1;
+   # T_UINT8 PTU_scan_line;
+   # T_UINT8 *PTU_scan_line_1;
+   
+-- Created to verify Vp_fgfb2   
+   # T_UINT16 PTU_Vp_fgfb2[100];
+   
+--------------------------------------------------------------------------------
+
+BEGIN
+
+
+    COMMENT Author name      : Meena P
+    COMMENT
+    COMMENT File name        : hdudispfpolygon1_1.ptu
+    COMMENT
+    COMMENT Tested functions : PolygonDrawPoly
+    COMMENT                    VScanLines
+    COMMENT                    VProcessMagLine
+    COMMENT                    SpFindLine
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1. Test scripts are splitted into 1 to 7 due to static dependencies.
+    COMMENT
+    COMMENT 2. In function 'PolygonDrawPoly' the structure member 'ps_poly->s16Pts' cannot be exercised for minimum, maximum values 
+    COMMENT    due to memory constraints.
+    COMMENT
+    COMMENT 3. In function 'VAddEdges' while loop cannot be covered for 0th loop. Since it is controlled by a local variable 'ps_lw'
+    COMMENT    in the function 'VScanLines' which is acting as parameter 'ps_vert' in the function 'VAddEdges'. 
+    COMMENT
+    COMMENT 4. In function 'VProcessPairsHR' while loop cannot be covered for 0th loop. Since it is controlled by a local variable 'ps_this'.
+    COMMENT
+    COMMENT 5. In function 'VRemoveEdges' while loop cannot be covered for 1st loop. Since 'VRemoveEdges' is called twice. 
+    COMMENT
+    COMMENT 6. In function 'VScanLines' do-while loop cannot be covered for 1st loop. Since the value of 'S16_active_edges' is greater than 1.
+    COMMENT
+	COMMENT 7. Source file "hdudispfpolygon1.c" is modified for testing purpose to verify the file name
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT
+    COMMENT</AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'PolygonDrawPoly', the function 'VFreeVertList' is called.
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In function 'PolygonDrawPoly', the function 'VFreeEdgeList' is called.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function 'PolygonDrawPoly', the function 'VBuildVertList' is called.
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In function 'PolygonDrawPoly', the ps_poly is not equal to null.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'PolygonDrawPoly', the ps_poly is equal to null.
+    COMMENT 
+    COMMENT Class 6
+    COMMENT In function 'PolygonDrawPoly', the function 'VScanLines' is called.
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In function 'VBuildVertList', the function 'VInsertVert' is called.
+    COMMENT 
+    COMMENT Class 8
+    COMMENT In function 'VBuildVertList', the point_count is not equal to zero.
+    COMMENT 
+    COMMENT Class 9
+    COMMENT In function 'VBuildVertList', the point_count is equal to zero.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'VInsertVert', the function 'SpFindLine' is called.
+    COMMENT
+    COMMENT Class 11
+    COMMENT  In function 'VInsertVert', s32Y of ps_prev_p is greater than s32Y of ps_vert_p. 
+    COMMENT
+    COMMENT Class 12
+    COMMENT  In function 'VInsertVert', s32Y of ps_prev_p is less than s32Y of ps_vert_p. 
+    COMMENT
+    COMMENT Class 13
+    COMMENT  In function 'VInsertVert', s32Y of ps_prev_p is equal to s32Y of ps_vert_p.
+    COMMENT
+    COMMENT Class 14
+    COMMENT  In function 'VInsertVert', s32Y of ps_next_p is greater than s32Y of ps_vert_p.
+    COMMENT
+    COMMENT Class 15
+    COMMENT  In function 'VInsertVert', s32Y of ps_next_p is less than s32Y of ps_vert_p.
+    COMMENT
+    COMMENT Class 16
+    COMMENT  In function 'VInsertVert', s32Y of ps_next_p is equal to s32Y of ps_vert_p.
+    COMMENT
+    COMMENT Class 17
+    COMMENT  In function 'VInsertVert', the function 'PsAllocVert' is called.
+    COMMENT
+    COMMENT Class 18
+    COMMENT  In function 'VInsertVert', psNextV of ps lw is not equal to null.
+    COMMENT
+    COMMENT Class 19
+    COMMENT  In function 'VInsertVert', psNextV of ps lw is equal to null.
+    COMMENT
+    COMMENT Class 20
+    COMMENT  In function 'VInsertVert', s32X of sVertP of ps new vertical is less than s32X of sVertP of ps lw.
+    COMMENT
+    COMMENT Class 21
+    COMMENT  In function 'VInsertVert', s32X of sVertP of ps new vertical is greater than s32X of sVertP of ps lw.
+    COMMENT
+    COMMENT Class 22
+    COMMENT  In function 'VInsertVert', s32X of sVertP of ps new vertical is equal to s32X of sVertP of ps lw.
+    COMMENT
+    COMMENT Class 23
+    COMMENT  In function 'VInsertVert', psNextV of ps lw is not equal to ZERO.
+    COMMENT
+    COMMENT Class 24
+    COMMENT  In function 'VInsertVert', psNextV of ps lw is equal to ZERO.
+    COMMENT
+    COMMENT Class 26
+    COMMENT  In function 'SpFindLine', the function 'RterrWidget' is called.
+    COMMENT
+    COMMENT Class 27
+    COMMENT  In function 'SpFindLine', s16_scan_line is less than ZERO.
+    COMMENT
+    COMMENT Class 28
+    COMMENT  In function 'SpFindLine', s16_scan_line is greater than ZERO.
+    COMMENT
+    COMMENT Class 29
+    COMMENT  In function 'SpFindLine', s16_scan_line is equal to ZERO.
+    COMMENT
+    COMMENT Class 30
+    COMMENT  In function 'SpFindLine', s16_scan_line is greater than (S16_panel_height multiplied with MAG_FACTOR).
+    COMMENT
+    COMMENT Class 31
+    COMMENT  In function 'SpFindLine', s16_scan_line is less than (S16_panel_height multiplied with MAG_FACTOR).
+    COMMENT
+    COMMENT Class 32
+    COMMENT  In function 'SpFindLine', s16_scan_line is equal to (S16_panel_height multiplied with MAG_FACTOR).
+    COMMENT
+    COMMENT Class 34
+    COMMENT  In function 'SpFindLine', psNextL of ps lw is not equal to null.
+    COMMENT
+    COMMENT Class 35
+    COMMENT  In function 'SpFindLine', psNextL of ps lw is equal to null.
+    COMMENT
+    COMMENT Class 36
+    COMMENT  In function 'SpFindLine', s16SlineNum of ps lw is equal to s16_scan_line.
+    COMMENT
+    COMMENT Class 37
+    COMMENT  In function 'SpFindLine', s16SlineNum of ps lw is not equal to s16_scan_line.
+    COMMENT
+    COMMENT Class 38
+    COMMENT  In function 'SpFindLine', s16SlineNum of ps lw is greater than s16_scan_line.
+    COMMENT
+    COMMENT Class 39
+    COMMENT  In function 'SpFindLine', s16SlineNum of ps lw is less than s16_scan_line.
+    COMMENT
+    COMMENT Class 41
+    COMMENT  In function 'SpFindLine', the function 'PsAllocVert' is called.
+    COMMENT
+    COMMENT Class 42
+    COMMENT  In function 'SpFindLine', psNextL of ps lw is not eqaul to zero.
+    COMMENT
+    COMMENT Class 43
+    COMMENT  In function 'SpFindLine', psNextL of ps lw is eqaul to zero.
+    COMMENT
+    COMMENT Class 44
+    COMMENT  In function 'PsAllocVert', the function 'RterrWidget' is called.
+    COMMENT
+    COMMENT Class 45
+    COMMENT  In function 'PsAllocVert', next vertical equal to MAX_VERTICES multiplied with TWO.
+    COMMENT
+    COMMENT Class 46
+    COMMENT  In function 'PsAllocVert', next vertical not equal to MAX_VERTICES multiplied with TWO.
+    COMMENT
+    COMMENT Class 47
+    COMMENT  In function 'VScanLines', next scan line is equal to ZERO.
+    COMMENT
+    COMMENT Class 48
+    COMMENT  In function 'VScanLines', next scan line is not equal to ZERO.
+    COMMENT
+    COMMENT Class 49
+    COMMENT  In function 'VScanLines', active edges is not equal to ZERO.
+    COMMENT
+    COMMENT Class 50
+    COMMENT  In function 'VScanLines', active edges is equal to ZERO.
+    COMMENT
+    COMMENT Class 51
+    COMMENT  In function 'VScanLines', the function 'VCalculateIntersections' is called.
+    COMMENT
+    COMMENT Class 52
+    COMMENT  In function 'VScanLines', the function 'VAddEdges' is called.
+    COMMENT
+    COMMENT Class 53
+    COMMENT  In function 'VScanLines', Y Scan line is equal to s16SlineNum of next scan line.
+    COMMENT
+    COMMENT Class 54
+    COMMENT  In function 'VScanLines', Y Scan line is not equal to s16SlineNum of next scan line.
+    COMMENT
+    COMMENT Class 55
+    COMMENT  In function 'VScanLines', psNextL of next scan line is not equal to NULL.
+    COMMENT
+    COMMENT Class 56
+    COMMENT  In function 'VScanLines', psNextL of next scan line is equal to NULL.
+    COMMENT
+    COMMENT Class 57
+    COMMENT  In function 'VScanLines', the function 'VProcessPairsHR' is called.
+    COMMENT
+    COMMENT Class 58
+    COMMENT  In function 'VScanLines', the function 'VProcessMagLine' is called.
+    COMMENT
+    COMMENT Class 59
+    COMMENT  In function 'VRemoveEdges', ps this is not equal to null.
+    COMMENT
+    COMMENT Class 60
+    COMMENT  In function 'VRemoveEdges', ps this is equal to null.
+    COMMENT
+    COMMENT Class 61
+    COMMENT  In function 'VRemoveEdges', decremented s32Ylength of ps this is equal to ZERO.
+    COMMENT
+    COMMENT Class 62
+    COMMENT  In function 'VRemoveEdges', decremented s32Ylength of ps this is not equal to ZERO.
+    COMMENT
+    COMMENT Class 63
+    COMMENT  In function 'VRemoveEdges', psNextE of ps this is not equal to ZERO.
+    COMMENT
+    COMMENT Class 64
+    COMMENT  In function 'VRemoveEdges', psNextE of ps this is equal to ZERO.
+    COMMENT
+    COMMENT Class 65
+    COMMENT  In function 'VCalculateIntersections', psNextE of active edge list not equal to null. 
+    COMMENT
+    COMMENT Class 66
+    COMMENT  In function 'VCalculateIntersections', psNextE of active edge list is equal to null. 
+    COMMENT
+    COMMENT Class 67
+    COMMENT  In function 'VAddEdges', psNextV of ps_vert is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 68
+    COMMENT  In function 'VAddEdges', psNextV of ps_vert is equal to ZERO. 
+    COMMENT
+    COMMENT Class 69
+    COMMENT  In function 'VAddEdges', s32Y of sNextP of ps_vert is greater than s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 70
+    COMMENT  In function 'VAddEdges', s32Y of sNextP of ps_vert is less than s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 71
+    COMMENT  In function 'VAddEdges', s32Y of sNextP of ps_vert is equal to s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 72
+    COMMENT  In function 'VAddEdges', the function 'PsAllocEdge' is called. 
+    COMMENT
+    COMMENT Class 73
+    COMMENT  In function 'VAddEdges', the function 'VEdgeInit' is called. 
+    COMMENT
+    COMMENT Class 74
+    COMMENT  In function 'VAddEdges', the function 'VEdgeInsert' is called. 
+    COMMENT
+    COMMENT Class 75
+    COMMENT  In function 'VAddEdges', s32Y of sPrevP of ps_vert is greater than s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 76
+    COMMENT  In function 'VAddEdges', s32Y of sPrevP of ps_vert is less than s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 77
+    COMMENT  In function 'VAddEdges', s32Y of sPrevP of ps_vert is equal to s32Y of sVertP of ps_vert. 
+    COMMENT
+    COMMENT Class 78
+    COMMENT  In function 'VProcessPairsHR', active edges is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 79
+    COMMENT  In function 'VProcessPairsHR', active edges is equal to ZERO. 
+    COMMENT
+    COMMENT Class 80
+    COMMENT  In function 'VProcessPairsHR', the function 'RterrWidget' is called. 
+    COMMENT
+    COMMENT Class 81
+    COMMENT  In function 'VProcessPairsHR', active edges MOD TWO is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 82
+    COMMENT  In function 'VProcessPairsHR', active edges MOD TWO is equal to ZERO. 
+    COMMENT
+    COMMENT Class 83
+    COMMENT  In function 'VProcessPairsHR', U8_which_mag_line is equal to ZERO. 
+    COMMENT
+    COMMENT Class 84
+    COMMENT  In function 'VProcessPairsHR', U8_which_mag_line is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 85
+    COMMENT  In function 'VProcessPairsHR', ps this is not equal to ZERO.  
+    COMMENT
+    COMMENT Class 86
+    COMMENT  In function 'VProcessPairsHR', ps this is equal to ZERO. 
+    COMMENT
+    COMMENT Class 87
+    COMMENT  In function 'VProcessPairsHR', start scan X0 is less than end scan X1. 
+    COMMENT
+    COMMENT Class 88
+    COMMENT  In function 'VProcessPairsHR', start scan X0 is greater than end scan X1. 
+    COMMENT
+    COMMENT Class 89
+    COMMENT  In function 'VProcessPairsHR', start scan X0 is equal to end scan X1. 
+    COMMENT
+    COMMENT Class 90
+    COMMENT  In function 'VProcessPairsHR', start scan X0 MOD FOUR is equal to TRUE. 
+    COMMENT
+    COMMENT Class 91
+    COMMENT  In function 'VProcessPairsHR', start scan X0 MOD FOUR is not equal to TRUE. 
+    COMMENT
+    COMMENT Class 92
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is greater than SIXTEEN. 
+    COMMENT
+    COMMENT Class 93
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is less than SIXTEEN. 
+    COMMENT
+    COMMENT Class 94
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is equal to SIXTEEN. 
+    COMMENT
+    COMMENT Class 95
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is greater than EIGHT. 
+    COMMENT
+    COMMENT Class 96
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is less than EIGHT. 
+    COMMENT
+    COMMENT Class 97
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is equal to EIGHT. 
+    COMMENT
+    COMMENT Class 98
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is greater than FOUR. 
+    COMMENT
+    COMMENT Class 99
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is less than FOUR. 
+    COMMENT
+    COMMENT Class 100
+    COMMENT  In function 'VProcessPairsHR', the (end scan X1 minus start scan X0) is equal to FOUR. 
+    COMMENT
+    COMMENT Class 101
+    COMMENT  In function 'VProcessPairsHR', s16_scan_y MOD FOUR is equal to THREE. 
+    COMMENT
+    COMMENT Class 102
+    COMMENT  In function 'VProcessPairsHR', s16_scan_y MOD FOUR is not equal to THREE. 
+    COMMENT
+    COMMENT Class 103
+    COMMENT  In function 'VProcessPairsHR', the function 'VProcessMagLine' is called. 
+    COMMENT
+    COMMENT Class 104
+    COMMENT  In function 'VProcessMagLine', S16_scan_xmin is greater than S16_scan_xmax. 
+    COMMENT
+    COMMENT Class 105
+    COMMENT  In function 'VProcessMagLine', S16_scan_xmin is less than S16_scan_xmax. 
+    COMMENT
+    COMMENT Class 106
+    COMMENT  In function 'VProcessMagLine', S16_scan_xmin is equal to S16_scan_xmax. 
+    COMMENT
+    COMMENT Class 107
+    COMMENT  In function 'VProcessMagLine', U8_which_mag_line is equal to ZERO. 
+    COMMENT
+    COMMENT Class 108
+    COMMENT  In function 'VProcessMagLine', U8_which_mag_line is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 109
+    COMMENT  In function 'VProcessMagLine', the function 'Dma2dScanLineBlend' is called. 
+    COMMENT
+    COMMENT Class 110
+    COMMENT  In function 'PsAllocEdge', the function 'RterrWidget' is called. 
+    COMMENT
+    COMMENT Class 111
+    COMMENT  In function 'PsAllocEdge', next edge is equal to MAX_EDGES. 
+    COMMENT
+    COMMENT Class 112
+    COMMENT  In function 'PsAllocEdge', next edge is not equal to MAX_EDGES. 
+    COMMENT
+    COMMENT Class 113
+    COMMENT  In function 'VEdgeInit', s32YLength  of ps_edge not equal to zero. 
+    COMMENT
+    COMMENT Class 114
+    COMMENT  In function 'VEdgeInit', s32YLength  of ps_edge is equal to zero. 
+    COMMENT
+    COMMENT Class 115
+    COMMENT  In function 'VEdgeInit', s32Slope of ps_edge is less than ZERO. 
+    COMMENT
+    COMMENT Class 116
+    COMMENT  In function 'VEdgeInit', s32Slope of ps_edge is greater than ZERO. 
+    COMMENT
+    COMMENT Class 117
+    COMMENT  In function 'VEdgeInit', s32Slope of ps_edge is equal to ZERO. 
+    COMMENT
+    COMMENT Class 118
+    COMMENT  In function 'VEdgeInsert', the psNextE of ps lw is not equal to null. 
+    COMMENT
+    COMMENT Class 119
+    COMMENT  In function 'VEdgeInsert', the psNextE of ps lw is equal to null. 
+    COMMENT
+    COMMENT Class 120
+    COMMENT  In function 'VEdgeInsert', s32X of sFirstP of ps_this is equal to s32_x1 of ps lw. 
+    COMMENT
+    COMMENT Class 121
+    COMMENT  In function 'VEdgeInsert', s32X of sFirstP of ps_this is not equal to s32_x1 of ps lw. 
+    COMMENT
+    COMMENT Class 122
+    COMMENT  In function 'VEdgeInsert', s32Slope of ps_this is less than s32Slope of ps lw. 
+    COMMENT
+    COMMENT Class 123
+    COMMENT  In function 'VEdgeInsert', s32Slope of ps_this is greater than s32Slope of ps lw. 
+    COMMENT
+    COMMENT Class 124
+    COMMENT  In function 'VEdgeInsert', s32Slope of ps_this is equal to s32Slope of ps lw. 
+    COMMENT
+    COMMENT Class 125
+    COMMENT  In function 'VEdgeInsert', s32X of sFirstP of ps_this is less than s32_x1 of ps lw. 
+    COMMENT
+    COMMENT Class 126
+    COMMENT  In function 'VEdgeInsert', s32X of sFirstP of ps_this is greater than s32_x1 of ps lw. 
+    COMMENT
+    COMMENT Class 127
+    COMMENT  In function 'VEdgeInsert', s32X of sFirstP of ps_this is equal to s32_x1 of ps lw. 
+    COMMENT
+    COMMENT Class 128
+    COMMENT  In function 'VEdgeInsert', psNextE of ps lw is not equal to ZERO.  
+    COMMENT
+    COMMENT Class 129
+    COMMENT  In function 'VEdgeInsert', psNextE of ps lw is equal to ZERO. 
+    COMMENT
+    COMMENT Class 130
+    COMMENT  In function 'PolygonFillRect', the function 'PolygonFillRectTranslate' is called. 
+    COMMENT
+    COMMENT Class 131
+    COMMENT  In function 'PolygonFillRectTranslate', E_orientation is equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 132
+    COMMENT  In function 'PolygonFillRectTranslate', E_orientation is not equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 133
+    COMMENT  In function 'PolygonFillRectTranslate', u8_translate is equal to ZERO.
+    COMMENT
+    COMMENT Class 134
+    COMMENT  In function 'PolygonFillRectTranslate', u8_translate is not equal to ZERO.
+    COMMENT
+    COMMENT Class 135
+    COMMENT  In function 'PolygonFillRectTranslate', s16_ulx plus s16_width is greater than S16_panel_width .
+    COMMENT
+    COMMENT Class 136
+    COMMENT  In function 'PolygonFillRectTranslate', s16_ulx plus s16_width is less than S16_panel_width .
+    COMMENT
+    COMMENT Class 137
+    COMMENT  In function 'PolygonFillRectTranslate', s16_ulx plus s16_width is equal S16_panel_width .
+    COMMENT
+    COMMENT Class 138
+    COMMENT  In function 'PolygonFillRectTranslate', s16_uly plus s16_height is greater than S16_panel_height.
+    COMMENT
+    COMMENT Class 139
+    COMMENT  In function 'PolygonFillRectTranslate', s16_uly plus s16_height is less than S16_panel_height.
+    COMMENT
+    COMMENT Class 140
+    COMMENT  In function 'PolygonFillRectTranslate', s16_uly plus s16_height is equal to S16_panel_height.
+    COMMENT
+    COMMENT Class 141
+    COMMENT  In function 'PolygonFillRectTranslate', s16_width is equal to ZERO.
+    COMMENT
+    COMMENT Class 142
+    COMMENT  In function 'PolygonFillRectTranslate', s16_width is not equal to ZERO.
+    COMMENT
+    COMMENT Class 143
+    COMMENT  In function 'PolygonFillRectTranslate', s16_height is equal to ZERO. 
+    COMMENT
+    COMMENT Class 144
+    COMMENT  In function 'PolygonFillRectTranslate', s16_height is not equal to ZERO. 
+    COMMENT
+    COMMENT Class 145
+    COMMENT  In function 'PolygonFillRectTranslate', the function 'Dma2dFillBox' is called. 
+    COMMENT
+    COMMENT Class 146
+    COMMENT  In function 'PolygonFillRectNT', the function 'PolygonFillRectTranslate' is called. 
+    COMMENT
+    COMMENT Class 147
+    COMMENT  In function 'PolygonDrawFrame', E_orientation is equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 148
+    COMMENT  In function 'PolygonDrawFrame', E_orientation is not equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 149
+    COMMENT  In function 'PolygonDrawFrame', the function 'WidgetsRGB444ToRGB888' is called
+    COMMENT
+    COMMENT Class 150
+    COMMENT  In function 'PolygonDrawFrame', the function 'Dma2dFillBox' is called
+    COMMENT
+    COMMENT Class 153
+    COMMENT  In function 'VScanLines', the function 'VRemoveEdges' is called.
+    COMMENT 
+    COMMENT Invalid Class(es)
+    COMMENT
+    COMMENT Class 151
+    COMMENT In function 'VProcessMagLine', the Array size leads beyond the limit 
+    COMMENT   
+    COMMENT Class 152
+    COMMENT  In function 'PsAllocEdge',  the Array size leads beyond the limit 
+    COMMENT   
+    COMMENT Class 154
+    COMMENT  In function 'PsAllocVert',  the Array size leads beyond the limit 
+    COMMENT     
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+DEFINE STUB hdudispfpolygon1_c
+    #T_UINT32 WidgetsRGB444ToRGB888(T_EPENCOLOR _in e_pen_color); 
+    #void Dma2dFillBox(T_UINT16 _in u16_x_loc, T_UINT16 _in u16_y_loc, T_UINT16 _in width, T_UINT16 _in height, T_UINT32 _in u32_color); 
+
+    --To verify the parameters scan_line, frame_data made as _no
+    #void Dma2dScanLineBlend(void _no *scan_line, void _no *frame_data, T_UINT32 _in u32_width, T_UINT16 _in e_color)
+    #{
+    # 
+    # PTU_scan_line_1  = (T_UINT8*)scan_line;
+    # PTU_scan_line    =  *PTU_scan_line_1; //Verify value of scan_line
+    # PTU_frame_data_1 = (T_UINT16 *)frame_data;   
+    # PTU_frame_data   =  *PTU_frame_data_1;   //Verify value of frame_data
+    #}
+    
+    --To verify the parameters pc_file, pc_message made as _no
+    #void RterrWidget(char _no pc_file[200], T_INT32 _in s32_line_number, char _no pc_message[200])
+    #{
+    # PTU_count = PTU_count+1;
+    # if(PTU_count==1)                                   // First call of RterrWidget
+    # {
+    #  PTU_temp = 0;
+    #  while(pc_file[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_file_in_1[PTU_temp]= pc_file[PTU_temp];   //Verify pc_file path  
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_file_in_1[PTU_temp]= ZERO;
+    #
+    #  PTU_temp = 0;
+    #  while(pc_message[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_message_in_1[PTU_temp]= pc_message[PTU_temp];  //Verify pc_message
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_message_in_1[PTU_temp]= ZERO;
+    #
+    # }
+    #
+    # if(PTU_count==2)                                   // Second call of RterrWidget
+    # {
+    #  PTU_temp = 0;
+    #  while(pc_file[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_file_in_2[PTU_temp]= pc_file[PTU_temp];    //Verify pc_file path
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_file_in_2[PTU_temp]= ZERO;
+    #
+    #  PTU_temp = 0;
+    #  while(pc_message[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_message_in_2[PTU_temp]= pc_message[PTU_temp];  //Verify pc_message
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_message_in_2[PTU_temp]= ZERO;
+    #
+    # }
+    #
+    # if(PTU_count==3)                                   // Third call of RterrWidget
+    # {
+    #  PTU_temp = 0;
+    #  while(pc_file[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_file_in_3[PTU_temp]= pc_file[PTU_temp];    //Verify pc_file path
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_file_in_3[PTU_temp]= ZERO;
+    #
+    #  PTU_temp = 0;
+    #  while(pc_message[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_message_in_3[PTU_temp]= pc_message[PTU_temp];  //Verify pc_message
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_message_in_3[PTU_temp]= ZERO;
+    #
+    # }
+    #
+    # if(PTU_count==4)                                   // Fourth call of RterrWidget
+    # {
+    #  PTU_temp = 0;
+    #  while(pc_file[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_file_in_4[PTU_temp]= pc_file[PTU_temp];    //Verify pc_file path
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_file_in_4[PTU_temp]= ZERO;
+    #
+    #  PTU_temp = 0;
+    #  while(pc_message[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_message_in_4[PTU_temp]= pc_message[PTU_temp];  //Verify pc_message
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_message_in_4[PTU_temp]= ZERO;
+    #
+    # }
+    # 
+    #}
+END DEFINE
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+    
+END SIMUL      
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfpolygon1.c
+ENVIRONMENT ENV_hdudispfpolygon1_c
+
+  VAR U8_which_mag_line,    init = 0,                   ev = init
+  VAR S16_scan_xmin,        init = 0,                   ev = init
+  ARRAY U8_mag_line1,       init = { others => 0 },     ev = init
+  VAR S16_scan_xmax,        init = 0,                   ev = init
+  ARRAY U8_mag_line2,       init = { others => 0 },     ev = init
+  VAR Vp_fgfb2,             init = 0 ,                    ev = init
+  VAR S16_panel_width,      init = 0,                   ev = init
+  VAR S16_panel_height,     init = 0,                   ev = init
+  
+END ENVIRONMENT -- ENV_hdudispfpolygon1_c
+USE ENV_hdudispfpolygon1_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PolygonDrawPoly
+--------------------------------------------------------------------------------
+SERVICE PolygonDrawPoly
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_SPOLY ps_poly;
+    #T_EPENCOLOR e_color;
+    
+    --Local variable declarations to provide inputs for ps_poly
+    # T_SRECTPOINT PTU_psRP[10], PTU_psRP_1[10],PTU_psRP_2[10];
+    # T_SPOLARPOINT PTU_psPP[10], PTU_psPP_1[10],PTU_psPP_2[10];
+    # T_SPOLY PTU_psNext_1,PTU_psNext_2;
+
+    ENVIRONMENT ENV_PolygonDrawPoly
+        STRUCTURE ps_poly,      init = { s16Pts => 0, psRP => NIL, psPP => NIL, psNext => NIL },        ev = init
+        VAR e_color,            init = BLACK,                                                           ev = init
+    END ENVIRONMENT -- ENV_PolygonDrawPoly
+    USE ENV_PolygonDrawPoly
+
+    TEST 1
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-001]
+    COMMENT The function 'PolygonDrawPoly' Sets color to be displayed to e_color is DARK_BLUE.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-002]
+    COMMENT The function 'PolygonDrawPoly' loops for one time when ps_poly is equal to null and performs the following.
+    COMMENT  1.Calls the function VBuildVertList with parameter psRP of ps_poly and s16Pts of ps_poly to Build the list 
+    COMMENT    of vertices from the list of polygon points.
+    COMMENT  2.Sets ps_poly to psNext of ps_poly
+    COMMENT Equivalence Class 3, 5
+    COMMENT   
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-003]
+    COMMENT The function 'PolygonDrawPoly' calls the function VScanLines to fill the polygon.
+    COMMENT Equivalence Class 6
+    COMMENT   
+    COMMENT [hdudispfpolygon1-VScanLines-DB-LLR-003]
+    COMMENT The function 'VScanLines' calls the function VProcessMagLine with parameter Y Scan line minus ONE to add edge 
+    COMMENT members for a given scan line.
+    COMMENT Equivalence Class 58
+    COMMENT   
+    COMMENT [hdudispfpolygon1-VProcessMagLine-DB-LLR-004]
+    COMMENT The function 'VProcessMagLine' calls the function Dma2dScanLineBlend with parameter scan pointer, frame pointer, 
+    COMMENT width and color  to be displayed 
+    COMMENT Equivalence Class 109
+    COMMENT   
+    COMMENT [hdudispfpolygon1-SpFindLine-DB-LLR-001]
+    COMMENT The function 'SpFindLine' calls the function RterrWidget with parameter __FILE__ , __LINE__ and string 
+    COMMENT "Polly exceeds display size." when s16_scan_line is greater than ZERO and s16_scan_line is greater than  
+    COMMENT  S16_panel_height multiplied with MAG_FACTOR.
+    COMMENT Equivalence Class 26, 28, 30  
+    COMMENT   
+    COMMENT </TD> 
+    
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+        STRUCTURE ps_poly,          init = { s16Pts => 2, psRP => &PTU_psRP, 
+        &                                  psPP => &PTU_psPP, psNext => NIL },              ev= init
+
+        VAR PTU_psRP[0].s32X,       init=4,                                                 ev= init
+
+        VAR PTU_psRP[0].s32Y,       init=6,                                                 ev= init
+
+        VAR PTU_psRP[1].s32X,       init=5,                                                 ev= init
+
+        VAR PTU_psRP[1].s32Y,       init=7,                                                 ev= init
+
+        VAR PTU_psRP[2..9].s32X,    init=10,                                                ev= init
+
+        VAR PTU_psRP[2..9].s32Y,    init=20,                                                ev= init
+
+        VAR PTU_psPP[0..9].s32R,    init=30,                                                ev= init
+
+        VAR PTU_psPP[0..9].s32A,    init=40,                                                ev= init
+
+        VAR e_color,                init = DARK_BLUE,                                       ev= init
+
+        ARRAY U8_mag_line1,         init = {others=>5},                                     ev= init
+
+        ARRAY U8_mag_line2,         init = {others=>6},                                     ev= init
+
+        VAR Vp_fgfb2,               init = &PTU_Vp_fgfb2[0],                                ev= init
+        
+        ARRAY PTU_Vp_fgfb2,         init = {5=>13,others=>10},                              ev= init  
+
+        VAR S16_panel_width,        init = 4,                                               ev= init
+
+        VAR S16_panel_height,       init = 1,                                               ev= init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        VAR U8_which_mag_line,      init= 0,                                                ev= 1
+
+        VAR S16_scan_xmin,          init =4,                                                ev= 16
+
+        VAR S16_scan_xmax,          init= 5,                                                ev= 0
+
+        COMMENT OUTPUT SECTION:
+
+        VAR PTU_count,              init = 0,                                               ev= 1
+
+        VAR PTU_scan_line,          init=0,                                                 ev= 5
+
+        VAR PTU_frame_data,         init=0,                                                 ev= 13
+
+        VAR PTU_pc_file_in_1,       init="AA",                                              ev=glob_file_name
+
+        VAR PTU_pc_message_in_1,    init= "AAA",                                            ev="Polly exceeds display size."
+        
+        --Stub Calls:
+        SIMUL
+        
+                 STUB RterrWidget(195)      
+                 STUB Dma2dScanLineBlend(1,DARK_BLUE)
+                    
+        END SIMUL
+        
+        #PolygonDrawPoly(&ps_poly, e_color);
+        END ELEMENT
+
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-001]
+    COMMENT The function 'PolygonDrawPoly' Sets color to be displayed to e_color is CAS_WHITE.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-002]
+    COMMENT The function 'PolygonDrawPoly' loops for two times when ps_poly is not equal to null and performs the following.
+    COMMENT  1.Calls the function VBuildVertList with parameter psRP of ps_poly and s16Pts of ps_poly to Build the list 
+    COMMENT    of vertices from the list of polygon points.
+    COMMENT  2.Sets ps_poly to psNext of ps_poly
+    COMMENT Equivalence Class 3, 4
+    COMMENT   
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-003]
+    COMMENT The function 'PolygonDrawPoly' calls the function VScanLines to fill the polygon.
+    COMMENT Equivalence Class 6
+    COMMENT   
+    COMMENT [hdudispfpolygon1-VScanLines-DB-LLR-003]
+    COMMENT The function 'VScanLines' calls the function VProcessMagLine with parameter Y Scan line minus ONE to add edge 
+    COMMENT members for a given scan line.
+    COMMENT Equivalence Class 58
+    COMMENT   
+    COMMENT [hdudispfpolygon1-VProcessMagLine-DB-LLR-004]
+    COMMENT The function 'VProcessMagLine' calls the function Dma2dScanLineBlend with parameter scan pointer, frame pointer, 
+    COMMENT width and color  to be displayed 
+    COMMENT Equivalence Class 109
+    COMMENT   
+    COMMENT [hdudispfpolygon1-SpFindLine-DB-LLR-001]
+    COMMENT The function 'SpFindLine' calls the function RterrWidget with parameter __FILE__ , __LINE__ and string 
+    COMMENT "Polly exceeds display size." when s16_scan_line is greater than ZERO and s16_scan_line is greater than  
+    COMMENT  S16_panel_height multiplied with MAG_FACTOR.
+    COMMENT Equivalence Class 26, 28, 30
+    COMMENT   
+    COMMENT </TD> 
+        
+        ELEMENT
+            
+        COMMENT INPUT SECTION:
+        
+        STRUCTURE ps_poly,            init = { s16Pts => 2, psRP => &PTU_psRP, 
+        &                                  psPP => &PTU_psPP, psNext => &PTU_psNext_1 },       ev= init
+
+        STRUCTURE PTU_psNext_1,       init = { s16Pts => 5, psRP => &PTU_psRP_1, 
+        &                                  psPP => &PTU_psPP_1, psNext => NIL },               ev= init
+
+        VAR PTU_psRP[0..9].s32X,        init=8,                                                ev= init
+
+        VAR PTU_psRP[0].s32Y,           init=6,                                                ev= init
+        
+        VAR PTU_psRP[1..9].s32Y,        init=7,                                                ev= init
+
+        VAR PTU_psPP[0..9].s32R,        init=10,                                               ev= init
+
+        VAR PTU_psPP[0..9].s32A,        init=11,                                               ev= init
+
+        VAR PTU_psRP_1[0..9].s32X,      init=12,                                               ev= init
+
+        VAR PTU_psRP_1[0].s32Y,         init=13,                                               ev= init
+
+        VAR PTU_psRP_1[1..9].s32Y,      init=14,                                               ev= init
+
+        VAR PTU_psPP_1[0..9].s32R,      init=15,                                               ev= init
+
+        VAR PTU_psPP_1[0..9].s32A,      init=16,                                               ev= init
+    
+        VAR e_color,                    init = CAS_WHITE,                                      ev= init
+
+        ARRAY U8_mag_line1,             init = {others=>5},                                    ev= init
+
+        ARRAY U8_mag_line2,             init = {others=>6},                                    ev= init
+
+        VAR Vp_fgfb2,                   init = &PTU_Vp_fgfb2[0],                               ev= init
+        
+        ARRAY PTU_Vp_fgfb2,             init = {5=>13,others=>10},                             ev= init  
+
+        VAR S16_panel_width,            init = 4,                                              ev= init
+
+        VAR S16_panel_height,           init = 1,                                              ev= init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        VAR U8_which_mag_line,          init= 0,                                               ev= 1
+
+        VAR S16_scan_xmin,              init =4,                                               ev= 16
+
+        VAR S16_scan_xmax,              init= 5,                                               ev= 0
+        
+        COMMENT OUTPUT SECTION:
+        
+        VAR PTU_count,                  init = 0,                                              ev= 2
+
+        VAR PTU_scan_line,              init=0,                                                ev= 5
+
+        VAR PTU_frame_data,             init=0,                                                ev= 13
+
+        VAR PTU_pc_file_in_1,           init="AA",                                             ev=glob_file_name
+
+        VAR PTU_pc_message_in_1,        init= "AAA",                                           ev="Polly exceeds display size."
+
+        VAR PTU_pc_file_in_2,           init="AA",                                             ev=glob_file_name
+
+        VAR PTU_pc_message_in_2,        init= "AAA",                                           ev="Polly exceeds display size."
+        
+        --Stub Calls:
+        SIMUL
+        
+             STUB RterrWidget(195) 
+             STUB RterrWidget(195)     
+             STUB Dma2dScanLineBlend(2,CAS_WHITE)
+                    
+        END SIMUL
+        
+        #PolygonDrawPoly(&ps_poly, e_color);
+        END ELEMENT
+    END TEST -- TEST 2
+    
+    TEST 3
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-001]
+    COMMENT The function 'PolygonDrawPoly' Sets color to be displayed to e_color is BLACK.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-002]
+    COMMENT The function 'PolygonDrawPoly' loops for two times when ps_poly is not equal to null and performs the following.
+    COMMENT  1.Calls the function VBuildVertList with parameter psRP of ps_poly and s16Pts of ps_poly to Build the list 
+    COMMENT    of vertices from the list of polygon points.
+    COMMENT  2.Sets ps_poly to psNext of ps_poly
+    COMMENT Equivalence Class 3, 4
+    COMMENT   
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-003]
+    COMMENT The function 'PolygonDrawPoly' calls the function VScanLines to fill the polygon.
+    COMMENT Equivalence Class 6
+    COMMENT   
+    COMMENT [hdudispfpolygon1-VScanLines-DB-LLR-003]
+    COMMENT The function 'VScanLines' calls the function VProcessMagLine with parameter Y Scan line minus ONE to add edge 
+    COMMENT members for a given scan line.
+    COMMENT Equivalence Class 58
+    COMMENT   
+    COMMENT [hdudispfpolygon1-VProcessMagLine-DB-LLR-004]
+    COMMENT The function 'VProcessMagLine' calls the function Dma2dScanLineBlend with parameter scan pointer, frame pointer, 
+    COMMENT width and color  to be displayed 
+    COMMENT Equivalence Class 109
+    COMMENT   
+    COMMENT [hdudispfpolygon1-SpFindLine-DB-LLR-001]
+    COMMENT The function 'SpFindLine' calls the function RterrWidget with parameter __FILE__ , __LINE__ and string 
+    COMMENT "Polly exceeds display size." when s16_scan_line is greater than ZERO and s16_scan_line is greater than  
+    COMMENT  S16_panel_height multiplied with MAG_FACTOR.
+    COMMENT Equivalence Class 26, 28, 30
+    COMMENT   
+    COMMENT </TD> 
+        
+        ELEMENT
+            
+        COMMENT INPUT SECTION:
+        
+        STRUCTURE ps_poly,              init = { s16Pts => 2, psRP => &PTU_psRP, 
+        &                                  psPP => &PTU_psPP, psNext => &PTU_psNext_1 },       ev= init
+
+        STRUCTURE PTU_psNext_1,         init = { s16Pts => 5, psRP => &PTU_psRP_1, 
+        &                                  psPP => &PTU_psPP_1, psNext => NIL },               ev= init
+
+        VAR PTU_psRP[0..9].s32X,        init=8,                                                ev= init
+
+        VAR PTU_psRP[0].s32Y,           init=6,                                                ev= init
+        
+        VAR PTU_psRP[1..9].s32Y,        init=7,                                                ev= init
+
+        VAR PTU_psPP[0..9].s32R,        init=10,                                               ev= init
+
+        VAR PTU_psPP[0..9].s32A,        init=11,                                               ev= init
+
+        VAR PTU_psRP_1[0..9].s32X,      init=12,                                               ev= init
+
+        VAR PTU_psRP_1[0].s32Y,         init=13,                                               ev= init
+
+        VAR PTU_psRP_1[1..9].s32Y,      init=14,                                               ev= init
+
+        VAR PTU_psPP_1[0..9].s32R,      init=15,                                               ev= init
+
+        VAR PTU_psPP_1[0..9].s32A,      init=16,                                               ev= init
+    
+        VAR e_color,                    init = BLACK,                                          ev= init
+
+        ARRAY U8_mag_line1,             init = {others=>5},                                    ev= init
+
+        ARRAY U8_mag_line2,             init = {others=>6},                                    ev= init
+
+        VAR Vp_fgfb2,                   init = &PTU_Vp_fgfb2[0],                               ev= init
+        
+        ARRAY PTU_Vp_fgfb2,             init = {5=>13,others=>10},                             ev= init  
+
+        VAR S16_panel_width,            init = 4,                                              ev= init
+
+        VAR S16_panel_height,           init = 1,                                              ev= init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        VAR U8_which_mag_line,          init= 0,                                               ev= 1
+
+        VAR S16_scan_xmin,              init =4,                                               ev= 16
+
+        VAR S16_scan_xmax,              init= 5,                                               ev= 0
+        
+        COMMENT OUTPUT SECTION:
+        
+        VAR PTU_count,                  init = 0,                                              ev= 2
+
+        VAR PTU_scan_line,              init=0,                                                ev= 5
+
+        VAR PTU_frame_data,             init=0,                                                ev= 13
+
+        VAR PTU_pc_file_in_1,           init="AA",                                             ev=glob_file_name
+
+        VAR PTU_pc_message_in_1,        init= "AAA",                                           ev="Polly exceeds display size."
+
+        VAR PTU_pc_file_in_2,           init="AA",                                             ev=glob_file_name
+
+        VAR PTU_pc_message_in_2,        init= "AAA",                                           ev="Polly exceeds display size."
+        
+        --Stub Calls:
+        SIMUL
+        
+             STUB RterrWidget(195) 
+             STUB RterrWidget(195)     
+             STUB Dma2dScanLineBlend(2,BLACK)
+                    
+        END SIMUL
+        
+        #PolygonDrawPoly(&ps_poly, e_color);
+        END ELEMENT
+    END TEST -- TEST 3
+    
+    TEST 4
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-001]
+    COMMENT The function 'PolygonDrawPoly' Sets color to be displayed to e_color is BLACK.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-002]
+    COMMENT The function 'PolygonDrawPoly' loops for two or more times when ps_poly is not equal to null and performs the following.
+    COMMENT  1.Calls the function VBuildVertList with parameter psRP of ps_poly and s16Pts of ps_poly to Build the list 
+    COMMENT    of vertices from the list of polygon points.
+    COMMENT  2.Sets ps_poly to psNext of ps_poly
+    COMMENT Equivalence Class 3, 4
+    COMMENT   
+    COMMENT [hdudispfpolygon1-PolygonDrawPoly-DB-LLR-003]
+    COMMENT The function 'PolygonDrawPoly' calls the function VScanLines to fill the polygon.
+    COMMENT Equivalence Class 6
+    COMMENT   
+    COMMENT [hdudispfpolygon1-VScanLines-DB-LLR-003]
+    COMMENT The function 'VScanLines' calls the function VProcessMagLine with parameter Y Scan line minus ONE to add edge 
+    COMMENT members for a given scan line.
+    COMMENT Equivalence Class 58
+    COMMENT   
+    COMMENT [hdudispfpolygon1-VProcessMagLine-DB-LLR-004]
+    COMMENT The function 'VProcessMagLine' calls the function Dma2dScanLineBlend with parameter scan pointer, frame pointer, 
+    COMMENT width and color  to be displayed 
+    COMMENT Equivalence Class 109
+    COMMENT   
+    COMMENT [hdudispfpolygon1-SpFindLine-DB-LLR-001]
+    COMMENT The function 'SpFindLine' calls the function RterrWidget with parameter __FILE__ , __LINE__ and string 
+    COMMENT "Polly exceeds display size." when s16_scan_line is greater than ZERO and s16_scan_line is greater than  
+    COMMENT  S16_panel_height multiplied with MAG_FACTOR.
+    COMMENT Equivalence Class 26, 28, 30
+    COMMENT   
+    COMMENT </TD> 
+        
+        ELEMENT
+            
+        COMMENT INPUT SECTION:
+        
+        STRUCTURE ps_poly,              init = { s16Pts => 3, psRP => &PTU_psRP, 
+        &                                  psPP => &PTU_psPP, psNext => &PTU_psNext_1 },       ev= init
+
+        STRUCTURE PTU_psNext_1,         init = { s16Pts => 5, psRP => &PTU_psRP_1, 
+        &                                  psPP => &PTU_psPP_1, psNext => &PTU_psNext_2 },      ev= init
+        
+        STRUCTURE PTU_psNext_2,         init = { s16Pts => 5, psRP => &PTU_psRP_2, 
+        &                                  psPP => &PTU_psPP_2, psNext => NIL },      ev= init
+
+        VAR PTU_psRP[0..9].s32X,        init=8,                                                ev= init
+
+        VAR PTU_psRP[0].s32Y,           init=6,                                                ev= init
+        
+        VAR PTU_psRP[1].s32Y,           init=7,                                                ev= init
+        
+        VAR PTU_psRP[2].s32Y,           init=7,                                                ev= init
+        
+        VAR PTU_psRP[3..9].s32Y,        init=9,                                                ev= init
+
+        VAR PTU_psPP[0..9].s32R,        init=10,                                               ev= init
+
+        VAR PTU_psPP[0..9].s32A,        init=11,                                               ev= init
+
+        VAR PTU_psRP_1[0..9].s32X,      init=12,                                               ev= init
+
+        VAR PTU_psRP_1[0].s32Y,         init=14,                                               ev= init
+
+        VAR PTU_psRP_1[1..9].s32Y,      init=15,                                               ev= init
+        
+        VAR PTU_psRP_2[0..9].s32X,      init=17,                                               ev= init
+        
+        VAR PTU_psRP_2[0].s32Y,         init=18,                                               ev= init
+
+        VAR PTU_psRP_2[1..9].s32Y,      init=19,                                               ev= init
+
+        VAR PTU_psPP_1[0..9].s32R,      init=15,                                               ev= init
+
+        VAR PTU_psPP_1[0..9].s32A,      init=16,                                               ev= init
+
+        VAR PTU_psPP_2[0..9].s32R,      init=21,                                               ev= init
+
+        VAR PTU_psPP_2[0..9].s32A,      init=20,                                               ev= init
+    
+        VAR e_color,                    init = BLACK,                                          ev= init
+
+        ARRAY U8_mag_line1,             init = {others=>5},                                    ev= init
+
+        ARRAY U8_mag_line2,             init = {others=>6},                                    ev= init
+
+        VAR Vp_fgfb2,                   init = &PTU_Vp_fgfb2[0],                               ev= init
+        
+        ARRAY PTU_Vp_fgfb2,             init = {5=>13,others=>10},                             ev= init  
+
+        VAR S16_panel_width,            init = 4,                                              ev= init
+
+        VAR S16_panel_height,           init = 1,                                              ev= init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+    
+        VAR U8_which_mag_line,          init= 0,                                               ev= 1
+    
+        VAR S16_scan_xmin,              init =4,                                               ev= 16
+    
+        VAR S16_scan_xmax,              init= 5,                                               ev= 0
+        
+        COMMENT OUTPUT SECTION:
+        
+        VAR PTU_count,                  init = 0,                                              ev= 3
+
+        VAR PTU_scan_line,              init=0,                                                ev= 5
+
+        VAR PTU_frame_data,             init=0,                                                ev= 13
+
+        VAR PTU_pc_file_in_1,           init="AA",                                             ev=glob_file_name
+
+        VAR PTU_pc_message_in_1,        init= "AAA",                                           ev="Polly exceeds display size."
+
+        VAR PTU_pc_file_in_2,           init="AA",                                             ev=glob_file_name
+
+        VAR PTU_pc_message_in_2,        init= "AAA",                                           ev="Polly exceeds display size."
+        
+        
+        --Stub Calls:
+        SIMUL
+        
+             STUB RterrWidget(195) 
+             STUB RterrWidget(195)   
+             STUB RterrWidget(195)    
+             STUB Dma2dScanLineBlend(2,BLACK)
+                    
+        END SIMUL
+        
+        #PolygonDrawPoly(&ps_poly, e_color);
+        END ELEMENT
+    END TEST -- TEST 4
+
+END SERVICE -- PolygonDrawPoly
+
+

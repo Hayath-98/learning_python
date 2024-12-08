@@ -1,0 +1,2389 @@
+HEADER hdudispfforeground, Source Code Ver : 1.13, TestScript Ver : 1.7
+--------------------------------------------------------------------------------
+-- Author Name         : Neha Rai R
+--
+-- File Name           : hdudispfforeground_3.ptu
+--
+-- Test Creation Date  : 10.04.2018
+--
+-- Tested Functions    : ForegroundReDraw3
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE        TESTER NAME        MODIFICATIONS
+--  ------------        ---------        -----------        -------------
+--      1.4             10.04.2018       Neha Rai R         Created the PTU as per #PR100201
+--		1.5				12.08.2020		 Harshitha R	 Updated as per #PR100270
+--		1.6				05.10.2020		 Harshitha R	 Updated as per #PR100281
+--		1.7				28.04.2021		 VIGNESH SUNIL	 Updated as per #PR100338
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfcas.h"   	
+##include "hdudispfdma2.h"  		
+##include "hdudispfdma2d.h"   		
+##include "hdudispfgrapp.h"  		
+##include "hdudispfpbs.h"  			
+##include "hdudispfpwm.h"  			
+##include "hdudispftext.h"     		
+##include "hdudispftextbox.h" 		
+##include "hdudispftimer.h"   		
+##include "hdulibbasictypes.h"  	
+##include "hdudispfforeground.h"  	
+##include "hdudispfwidgets.h" 		
+##include "hdudispfpanel.h"   		
+##include "hdudispfrounddial.h" 	
+##include "hdudispfbargraphs.h" 	
+##include "hdudispfnumbox.h"  		
+##include "hdulibstm32f7xxhal.h" 	
+##include "hdudispfa429.h"  		
+##include "hdudispfmenu.h"  		
+##include "hdudispfpbit.h"  		
+##include "hdudispfpdidata.h" 	
+##include "hdudispfcarrotgraph.h" 
+##include "hdudispfpdicheck.h" 	
+
+##define MAX_TEXT_BOX   13U
+##define FLASH_ON_TIME   500
+##define FLASH_OFF_TIME  500
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern void AppDraw5(void);
+    #extern T_ETXFS Flash_state;
+    #extern T_INT8 S8_had_flash;
+    #extern void AppDraw(void);
+    #extern void AppDraw2(void);
+    #extern void AppDraw4(void);
+
+    #T_ACDT_STRUCT Auto_cool_down_tmr; 
+    #T_UINT16 Cas_label_start_idx; 		
+    #T_PARAM_TABLE Parameters[256]; 	
+    #T_BOOL Cas_data_recieved; 			
+    #T_BOOL Cas_wog_data_recieved;		
+    #T_UINT8 Page_number;				
+    #T_STEXTBOXDATA Prim_cool_down_pop_up_box; 
+    #T_STEXTBOXDATA *Top_menu[20]; 				
+    #T_UINT8 Splash_done; 						
+    #T_UINT16 Pbit_test_result;					
+    #T_BOOL Both_dau_fail;						
+    #T_CAS_MSG Cas_messages_setting; 			
+    #T_UINT8 Page_cas; 							
+    #void *Vp_fgfb2; 							
+    #T_LTDC_HANDLE Ltdc_handle; 	
+	#T_BOOL Demo_mode;    
+	#T_ELANDSCAPEORPORTRIAT E_orientation;
+	#T_BOOL Global_parameter_error;
+	#T_BOOL Offset_bool[NUMBEROFENGINES];
+	#T_STEXTBOXPDIDATA Ap_page_tbs[50];
+	#T_BOOL Gain_bool[NUMBEROFENGINES];
+	#T_EPAGE_NUM Page_num;
+	#T_BOOL Page_parameter_error[20];
+	#T_APPDATA_PANELSTRUCT *Appdata_appdata;
+	#T_BOOL Data_received;
+	#T_BOOL Bitmap_crc_check_bit[20];
+	#T_UINT8 Rd_cnt;
+	#T_UINT8 Nb_cnt;
+	#T_ROUNDDIALDEF Ap_page0_dials[30];
+	#T_SNUMBOXDEF Page_num_boxes[50];
+	#T_PAGE Page_settings;
+	#T_UINT8 Exceed_cnt;
+	#T_UINT16 Rd_parameter_occurrence[PARAMTR_MAX_VAL_FG];
+	#T_UINT8 Cg_cnt;
+	#T_CARROTGRAPHDEF Ap_page2_carrot[30];
+	#T_UINT16 Cg_parameter_occurrence[PARAMTR_MAX_VAL_FG];
+	#T_SBARGRAPHDEF Ap_page1_bar_graphs[30];
+	#T_UINT8 Bg_cnt;
+	#T_UINT16 Bg_parameter_occurrence[PARAMTR_MAX_VAL_FG];
+	#T_EXCEED_STRUCT Exceed_data[MAX_NUM_EXCE];
+	#T_UINT16 Nb_parameter_occurrence[PARAMTR_MAX_VAL];
+	#T_UINT8 Tb_cnt;
+	#T_UINT16 Tb_parameter_occurrence[PARAMTR_MAX_VAL];
+	#T_UINT8 Text_cnt;
+	#T_TEXT Page_txt[30];
+	#T_UINT16 Text_parameter_occurrence[PARAMTR_MAX_VAL_FG];
+	#T_BOOL Timer_flag;
+	#T_BOOL Caslocationset_parameters;
+    #T_BOOL Fuel_flow_select; 
+    #T_BOOL Md_engine_flag; 
+    #T_UINT8 Cmu_fuel_flow;	
+
+-- Declarations of the temporary variable
+
+    --Temporary variables to use in stub 'TimerReset'
+    #T_TIMER PTU_Flash_timer_Reset, PTU_Flash_timer_Reset_out ;
+    
+    --Temporary variables to use in stub 'Dma2dRgbToArgb4444'
+    #T_UINT16 PTU_Dma2dRgbToArgb4444;
+    
+	#T_UINT16 PTU_MemSet;
+	
+    --variable for stub call count
+    #T_UINT32 PTU_TimerReset_flag ,PTU_TimerInstall=0;    
+   
+	--Temporary variables to use in stub 'TimerInstall'
+    # T_TIMER PTU_Digital_timer_Install, PTU_Flash_timer_Install;
+
+	--Temporary variables to use in stub 'WidgetsRedX'
+    # T_SDISREGION  PTU_ps_dis_region;
+    # T_SPOLY  *PTU_pps_poly_red_x;
+    
+    --Temporary variable declared to for Ltdc_handle
+    #T_LTDC PTU_Ltdc_Instance;
+
+	--Temporary variable created to be used for testing purpose 
+	#T_UINT32 PTU_temp;    
+--------------------------------------------------------------------------------
+
+BEGIN
+       
+    COMMENT Author Name      :  Neha Rai R 
+    COMMENT
+    COMMENT File Name        :  hdudispfforeground_3.ptu
+    COMMENT
+    COMMENT Tested Functions :  ForegroundReDraw3
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+	COMMENT 1.Header file "hdudispftimer.h" is modified for testing purpose. The 'volatile' keyword is removed from parameter of function 
+	COMMENT 'TimerInstall' and 'TimerReset' declarations.
+	COMMENT
+    COMMENT 2.The testscript is split into 4 due to static dependency.
+	COMMENT </AC>
+	
+    COMMENT
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT    
+    COMMENT Class 1
+    COMMENT In function 'ForegroundClear', 'BargraphClear' is called.
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In function 'ForegroundClear', 'RoundDialClear' is called.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function 'ForegroundClear', 'TextClear' is called.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'ForegroundClear', 'NumboxClear' is called.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'ForegroundClear', 'PolygonsClear' is called.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In  function 'ForegroundReDraw1', foreground frame buffer is equal to ZERO. 
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'ForegroundReDraw1', foreground frame buffer is equal to ONE.
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'ForegroundReDraw1', foreground frame buffer is not equal to ZERO and ONE.    
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'ForegroundReDraw1', 'HalLtdcSetAddress' is called.    
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'ForegroundReDraw1', 'Dma2ClearForeground' is called.    
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'ForegroundReDraw2', 'TimerReset' is called.    
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'ForegroundReDraw2', U32_digital_timer is greater than DIGITAL_DELAY
+    COMMENT 
+    COMMENT Class 13
+    COMMENT In function 'ForegroundReDraw2', U32_digital_timer is equal to DIGITAL_DELAY
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'ForegroundReDraw2', U32_digital_timer is less than DIGITAL_DELAY  
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'ForegroundReDraw2', 'RoundDialUpdate' is called.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'ForegroundReDraw2', 'BargraphUpdate' is called.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'ForegroundReDraw2', 'NumboxUpdate' is called.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'ForegroundReDraw2', 'CasUpdate' is called.   
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'ForegroundReDraw2', Page_cas is equal to 1 
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'ForegroundReDraw2', Page_cas is not equal to 1   
+    COMMENT 
+    COMMENT Class 21
+    COMMENT In function 'ForegroundReDraw3', flash timer is greater than sum of FLASH_ON_TIME and FLASH_OFF_TIME
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'ForegroundReDraw3', flash timer is less than sum of FLASH_ON_TIME and FLASH_OFF_TIME 
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'ForegroundReDraw3', flash timer is equal to sum of FLASH_ON_TIME and FLASH_OFF_TIME 
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'ForegroundReDraw3', flash timer is lesser than FLASH_ON_TIME 
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'ForegroundReDraw3', flash timer is greater than FLASH_ON_TIME 
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'ForegroundReDraw3', 'TimerReset' is called.
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'ForegroundReDraw3', background is equal to ZERO 
+    COMMENT 
+    COMMENT Class 28
+    COMMENT In function 'ForegroundReDraw3', background is not equal to ZERO 
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'ForegroundReDraw3', 'PwmBlink' is called.
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'ForegroundReDraw3', 'LCDBackgroundOff' is called.
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'ForegroundReDraw3', 'Dma2dRgbToArgb4444' is called.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'ForegroundReDraw3', delay is equal to ZERO.
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'ForegroundReDraw3', delay is not equal to ZERO.    
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'ForegroundReDraw3', flash timer is equal to FLASH_ON_TIME     
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'ForegroundReDraw3', 'TextDraw' is called.    
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'ForegroundReDraw3', 'AppDraw1' is called.    
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'ForegroundReDraw3', 'AppDraw2' is called.        
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'ForegroundReDraw3', 'WidgetsRedX' is called.    
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'ForegroundReDraw3', 'TextBoxOff' is called.      
+    COMMENT    
+    COMMENT Class 41
+    COMMENT In function 'ForegroundReDraw3', Both_dau_fail is TRUE 
+    COMMENT
+    COMMENT Class 42
+    COMMENT In function 'ForegroundReDraw3', Both_dau_fail is FALSE  
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function 'ForegroundReDraw3', Pbit_test_result is not equal to ZERO
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'ForegroundReDraw3', Pbit_test_result is equal to ZERO
+    COMMENT    
+    COMMENT Class 45
+    COMMENT In function 'ForegroundReDraw3', Splash_done is not equal to ZERO 
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'ForegroundReDraw3', Splash_done is equal to ZERO 
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'ForegroundReDraw3', LCD off is equal to ZERO
+    COMMENT    
+    COMMENT Class 48
+    COMMENT In function 'ForegroundReDraw3', LCD off is greater than ZERO
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function 'ForegroundReDraw3', 'MenuReset ' is called.    
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function 'ForegroundReDraw3', 'RoundDialDraw' is called.    
+    COMMENT
+    COMMENT Class 51
+    COMMENT In function 'ForegroundReDraw3', 'BargraphDraw' is called.        
+    COMMENT
+    COMMENT Class 52
+    COMMENT In function 'ForegroundReDraw3', 'AppDraw4' is called.    
+    COMMENT
+    COMMENT Class 53
+    COMMENT In function 'ForegroundReDraw3', 'AppDraw5' is called.    
+    COMMENT
+    COMMENT Class 54
+    COMMENT In function 'ForegroundReDraw3', 'NumboxDraw' is called.  
+    COMMENT
+    COMMENT Class 55
+    COMMENT In function 'ForegroundReDraw3', 'AppDraw' is called.  
+    COMMENT
+    COMMENT Class 56
+    COMMENT In function 'ForegroundReDraw3', 'CasRedxInit' is called. 
+    COMMENT    
+    COMMENT Class 57
+    COMMENT In function 'ForegroundReDraw3', previous redx is greater than ONE  
+    COMMENT    
+    COMMENT Class 58
+    COMMENT In function 'ForegroundReDraw3', previous redx is equal to ONE  
+    COMMENT
+    COMMENT Class 59
+    COMMENT In function 'ForegroundReDraw3', previous redx is lesser than ONE  
+    COMMENT
+    COMMENT Class 60
+    COMMENT In function 'ForegroundReDraw3', Page_cas is equal to ONE 
+    COMMENT    
+    COMMENT Class 61
+    COMMENT In function 'ForegroundReDraw3', Page_cas is not equal to ONE 
+    COMMENT
+    COMMENT Class 62
+    COMMENT In function 'ForegroundReDraw3', Cas_wog_data_recieved is equal to FALSE 
+    COMMENT
+    COMMENT Class 63
+    COMMENT In function 'ForegroundReDraw3', Cas_wog_data_recieved is equal to TRUE 
+    COMMENT
+    COMMENT Class 64
+    COMMENT In function 'ForegroundReDraw3', Cas_data_recieved is equal to FALSE
+    COMMENT
+    COMMENT Class 65
+    COMMENT In function 'ForegroundReDraw3', Cas_data_recieved is equal to TRUE 
+    COMMENT
+    COMMENT Class 66
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx 
+    COMMENT as index is equal to PARAM_BAD
+    COMMENT
+    COMMENT Class 67
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx 
+    COMMENT as index is greater than PARAM_BAD
+    COMMENT
+    COMMENT Class 68
+    COMMENT In function 'ForegroundReDraw3',  Member stat of reading of Parameters with Cas_label_start_idx 
+    COMMENT as index is lesser to PARAM_BAD
+    COMMENT
+    COMMENT Class 69
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 1
+    COMMENT as index is equal to PARAM_BAD
+    COMMENT
+    COMMENT Class 70
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 1
+    COMMENT as index is greater than PARAM_BAD
+    COMMENT
+    COMMENT Class 71
+    COMMENT In function 'ForegroundReDraw3',  Member stat of reading of Parameters with Cas_label_start_idx plus 1
+    COMMENT as index is lesser than PARAM_BAD
+    COMMENT
+    COMMENT Class 72
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 2
+    COMMENT as index is equal to PARAM_BAD
+    COMMENT
+    COMMENT Class 73
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 2
+    COMMENT as index is greater than PARAM_BAD
+    COMMENT
+    COMMENT Class 74
+    COMMENT In function 'ForegroundReDraw3',  Member stat of reading of Parameters with Cas_label_start_idx plus 2
+    COMMENT as index is lesser than PARAM_BAD  
+    COMMENT
+    COMMENT Class 75
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 3
+    COMMENT as index is equal to PARAM_BAD
+    COMMENT
+    COMMENT Class 76
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 3
+    COMMENT as index is greater than PARAM_BAD
+    COMMENT
+    COMMENT Class 77
+    COMMENT In function 'ForegroundReDraw3',  Member stat of reading of Parameters with Cas_label_start_idx plus 3
+    COMMENT as index is lesser than PARAM_BAD 
+    COMMENT
+    COMMENT Class 78
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 4
+    COMMENT as index is equal to PARAM_BAD
+    COMMENT
+    COMMENT Class 79
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 4
+    COMMENT as index is greater than PARAM_BAD
+    COMMENT
+    COMMENT Class 80
+    COMMENT In function 'ForegroundReDraw3',  Member stat of reading of Parameters with Cas_label_start_idx plus 4
+    COMMENT as index is lesser than PARAM_BAD  
+    COMMENT
+    COMMENT Class 81
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 5
+    COMMENT as index is equal to PARAM_BAD
+    COMMENT
+    COMMENT Class 82
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 5
+    COMMENT as index is greater than PARAM_BAD
+    COMMENT
+    COMMENT Class 83
+    COMMENT In function 'ForegroundReDraw3', Member stat of reading of Parameters with Cas_label_start_idx plus 5
+    COMMENT as index is lesser than PARAM_BAD   
+    COMMENT
+    COMMENT Class 84
+    COMMENT In function 'ForegroundReDraw3', Member stat of wog_data of Auto_cool_down_tmr is greater than PARAM_BAD.
+    COMMENT
+    COMMENT Class 85
+    COMMENT In function 'ForegroundReDraw3', Member stat of wog_data of Auto_cool_down_tmr is equal to PARAM_BAD.
+    COMMENT
+    COMMENT Class 86
+    COMMENT In function 'ForegroundReDraw3', Member stat of wog_data of Auto_cool_down_tmr is lesser than PARAM_BAD.
+    COMMENT
+    COMMENT Class 89									
+    COMMENT In function 'ForegroundReDraw3', 'TextBoxDraw' is called.  
+    COMMENT    
+    COMMENT Class 90
+    COMMENT In function 'ForegroundReDraw3', 'LCDBackgroundOn' is called
+    COMMENT 
+    COMMENT Class 92
+	COMMENT In function 'ForegroundReDraw3', LCD off is lesser than ZERO
+    COMMENT
+    COMMENT Class 93
+    COMMENT In function 'ForegroundReDraw3', S8_had_flash is equal to FALSE
+    COMMENT 
+    COMMENT Class 94
+	COMMENT In function 'ForegroundReDraw3', S8_had_flash is equal to TRUE
+    COMMENT
+    COMMENT Class 95									
+    COMMENT In function 'ForegroundInit', 'TimerInstall' is called.  	
+    COMMENT 
+    COMMENT Class 96
+	COMMENT In function 'ForegroundReDraw3', Demo_mode is equal to TRUE
+    COMMENT 
+    COMMENT Class 97
+	COMMENT In function 'ForegroundReDraw3', Demo_mode is not equal to TRUE
+	COMMENT
+	COMMENT Class 98
+	COMMENT In function 'DisRedxInit' , E_orientation is equal to E_LAND_SCAPE
+	COMMENT
+	COMMENT Class 99
+	COMMENT In function 'DisRedxInit',E_orientation is not equal to E_LAND_SCAPE
+	COMMENT
+	COMMENT Class 100
+	COMMENT	In function 'ForegroundReDraw3',Global_parameter_error is set to TRUE
+	COMMENT
+	COMMENT Class 101
+	COMMENT	In function 'ForegroundReDraw3',Global_parameter_error is set to FALSE
+	COMMENT
+	COMMENT Class 102
+	COMMENT In function 'ForegroundReDraw3',Offset_bool is set to FALSE
+	COMMENT
+	COMMENT Class 103
+	COMMENT In function 'ForegroundReDraw3',Gain_bool is set to FALSE
+	COMMENT
+	COMMENT Class 104
+	COMMENT In function 'ForegroundReDraw3',TextDrawPDI is called
+	COMMENT
+	COMMENT Class 105
+	COMMENT In function 'ForegroundReDraw3','CarrotGraphDraw' is called
+	COMMENT	
+    COMMENT Class 106
+    COMMENT In function 'ForegroundClear', 'CarrotGraphClear' is called.
+    COMMENT
+    COMMENT Class 107
+    COMMENT In function 'ForegroundClear', 'TextBoxClear' is called.
+    COMMENT
+    COMMENT Class 108
+    COMMENT In function 'ForegroundReDraw2', 'CarrotGraphUpdate' is called
+    COMMENT
+    COMMENT Class 109
+    COMMENT In function 'ForegroundReDraw3', 'TextDrawPDI' is called
+    COMMENT
+    COMMENT Class 110
+    COMMENT In function 'ForegroundReDraw3', 'CasUpdate' is called
+    COMMENT
+    COMMENT Class 111
+    COMMENT In function 'ForegroundReDraw3', 'TextBoxPDIDraw' is called
+    COMMENT
+    COMMENT Class 112
+    COMMENT In function 'ForegroundClear', Exceed_cnt greater than 0.
+    COMMENT
+    COMMENT Class 113
+    COMMENT In function 'ForegroundClear', Rd_cnt greater than 0.
+    COMMENT
+    COMMENT Class 114
+    COMMENT In function 'ForegroundClear', Cg_cnt greater than 0.
+    COMMENT
+    COMMENT Class 115
+    COMMENT In function 'ForegroundClear', Bg_cnt greater than 0.
+    COMMENT
+    COMMENT Class 116
+    COMMENT In function 'ForegroundClear', Nb_cnt greater than 0.
+    COMMENT
+    COMMENT Class 117
+    COMMENT In function 'ForegroundClear', Tb_cnt greater than 0.
+    COMMENT
+    COMMENT Class 118
+    COMMENT In function 'ForegroundClear', Text_cnt greater than 0.
+    COMMENT
+    COMMENT Class 119
+    COMMENT In function 'ForegroundClear', Exceed_cnt is not greater than 0.
+    COMMENT
+    COMMENT Class 120
+    COMMENT In function 'ForegroundClear', Rd_cnt is not greater than 0.
+    COMMENT
+    COMMENT Class 121
+    COMMENT In function 'ForegroundClear', Cg_cnt is not  greater than 0.
+    COMMENT
+    COMMENT Class 122
+    COMMENT In function 'ForegroundClear', Bg_cnt is not greater than 0.
+    COMMENT
+    COMMENT Class 123
+    COMMENT In function 'ForegroundClear', Nb_cnt is not greater than 0.
+    COMMENT
+    COMMENT Class 124
+    COMMENT In function 'ForegroundClear', Tb_cnt is not greater than 0.
+    COMMENT
+    COMMENT Class 125
+    COMMENT In function 'ForegroundClear', Text_cnt is not greater than 0.
+    COMMENT
+    COMMENT Class 126
+    COMMENT In function 'ForegroundClear', 'MemSet' function is called.
+    COMMENT
+    COMMENT Class 127
+    COMMENT In function 'ForegroundReDraw3', 'Cmu_fuel_flow' equal to ONE 	
+    COMMENT
+    COMMENT Class 128
+    COMMENT In function 'ForegroundReDraw3', 'Md_engine_flag is equal to TRUE 	
+    COMMENT
+    COMMENT Class 129
+    COMMENT In function 'ForegroundReDraw3', 'Page_num is TWO
+    COMMENT
+    COMMENT Class 130
+    COMMENT In function 'ForegroundReDraw3', 'Fuel_flow_select is equal to ONE	
+    COMMENT
+    COMMENT Class 131
+    COMMENT In function 'ForegroundReDraw3', 'Cmu_fuel_flow' not equal to ONE 	
+    COMMENT
+    COMMENT Class 132
+    COMMENT In function 'ForegroundReDraw3', 'Md_engine_flag is equal to FALSE 	
+    COMMENT
+    COMMENT Class 133
+    COMMENT In function 'ForegroundReDraw3', 'Page_num is not TWO
+    COMMENT
+    COMMENT Class 134
+    COMMENT In function 'ForegroundReDraw3', 'Fuel_flow_select is not equal to ONE	
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT  None
+    COMMENT </ECD>	
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL			
+
+	DEFINE STUB hdudispfforeground_c
+
+        --In stub TimerInstall, 'timer' variable made as _no as static variable address cannot be expected.
+		#void TimerInstall(volatile T_TIMER _no *timer)
+		#{
+		#	PTU_TimerInstall++;
+		#   if(PTU_TimerInstall==1)
+		#   { 
+		#       PTU_Flash_timer_Install = *((T_TIMER *)timer);
+		#   }
+		#   else if(PTU_TimerInstall==2)
+		#   { 
+		#       PTU_Digital_timer_Install = *((T_TIMER *)timer);
+		#   }
+		#}
+		
+		#void LCDBackgroundOn(void); 			  
+
+		#void TextBoxDraw(void); 					
+
+		#void NumboxDraw(void); 					
+
+		#void BargraphDraw(void); 					
+
+		#void RoundDialDraw(void); 					
+
+		#void MenuReset(T_STEXTBOXDATA ** _in pps_items, T_EPAGE_NUM  _in page_num);
+
+		#void TextBoxOn(T_STEXTBOXDATA  _in *ps_this_box); 
+
+		#void TextBoxOff(T_STEXTBOXDATA  _in *ps_this_box);
+
+        --In stub WidgetsRedX, 'ps_dis_region' and 'pps_poly_red_x' variables are made as _no since static variable address cannot be expected.
+		#void WidgetsRedX(T_SDISREGION  _no *ps_dis_region, T_SPOLY  _no **pps_poly_red_x)
+		#{
+		# PTU_ps_dis_region = *(ps_dis_region);
+		# PTU_pps_poly_red_x = *(pps_poly_red_x);
+		--# PTU_pps_poly_red_x = *PTU_pps_poly_red_x_1;
+		#}
+
+		#void AppDraw1(void); 
+
+		#void TextDraw(void); 
+		
+		--In stub Dma2dRgbToArgb4444, 'bit_map' variable made as _no as static variable address cannot be expected.
+		#void Dma2dRgbToArgb4444(void  _no *bit_map, void _in *write_loc, T_UINT32 _in u32_width, T_UINT32  _in u32_height)
+		#{
+        #	 PTU_Dma2dRgbToArgb4444 = *((T_UINT16 *)bit_map);
+		#}
+
+		#void MemSet (void _no *p_dest, T_UINT16 _in val, T_UINT32 _in cnt)
+		#{
+		#		PTU_MemSet = *((T_UINT16 *)p_dest);
+		#}
+		
+		#void LCDBackgroundOff(void);
+
+		#void PwmBlink(void); 		
+
+		#void CasUpdate(void); 		
+
+		#void NumboxUpdate(void); 	
+
+		#void BargraphUpdate(void);	
+
+		#void RoundDialUpdate(void); 
+
+		--In stub TimerReset, 'timer' variable made as _no as static variable address cannot be expected.
+		#void TimerReset( T_TIMER  _no *timer)
+		#{
+		# 	if (PTU_TimerReset_flag == 1)
+		#	{
+		#   	PTU_Flash_timer_Reset_out = *timer;
+		#	}
+		#	else if(PTU_TimerReset_flag == 2)
+		#	{
+		# 		*timer = PTU_Flash_timer_Reset;
+		#	}
+		#}
+
+		#void Dma2ClearForeground(void _in *frame_buffer, T_UINT32 _in u32_size); 
+
+		#T_HAL_STATUS HalLtdcSetAddress(T_LTDC_HANDLE  _in *hltdc, T_UINT32  _in Address, T_UINT32  _in LayerIdx);
+
+		#void PolygonsClear(void); 
+
+		#void TextClear(void); 		
+
+		#void NumboxClear(void);	
+
+		#void RoundDialClear(void);
+
+		#void BargraphClear(void); 
+
+		#void CarrotGraphClear(void);
+		
+		#void TextBoxClear(T_STEXTBOXDATA *ps_this_box);
+		
+		#void CarrotGraphUpdate(void);
+		
+		#void CarrotGraphDraw(void);
+		
+		#void TextBoxPdiDraw(void);
+		
+		#void TextDrawPDI(void);
+		
+		#void CrcPages(T_EPAGE_NUM page_count);
+		
+        #void AppFuelFlowDraw(void);		
+
+	END DEFINE
+
+ELSE_SIMUL
+
+	--No action defined as of now if the module is not simulated
+   
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfforeground.c
+
+ENVIRONMENT ENV_hdudispfforeground_c
+
+			VAR Splash_done,    					init =0,      			  ev=init 
+			VAR Cmu_fuel_flow,    					init =0,      			  ev=init 
+			VAR Md_engine_flag,    					init =0,      			  ev=init 
+			VAR Page_num,    					init =0,      			  ev=init 
+			VAR Fuel_flow_select,    					init =0,      			  ev=init 
+
+END ENVIRONMENT -- ENV_hdudispfforeground_c
+
+--USE ENV_hdudispfforeground_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service ForegroundReDraw3
+--------------------------------------------------------------------------------
+SERVICE ForegroundReDraw3
+SERVICE_TYPE extern
+
+    -- By function returned type declaration for verifying setting of 'E_txt_flash'
+    #T_EFLASHSTATE ret_EGetFlashState;
+
+	-- Tested temporary variables declarations
+	#T_PARAM_READING PTU_wog_data;
+	#T_UINT32 PTU_i;
+   	#T_UINT16 pu16_src;
+
+TEST 21
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>     
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-004]
+    COMMENT The function 'ForegroundReDraw3' does the following when background is not equal to ZERO and delay is equal to ZERO.
+    COMMENT a)  Calls function 'TextDraw'.
+    COMMENT b)  Calls function 'AppDraw1'
+    COMMENT c)  Calls function 'AppDraw2' 
+	COMMENT d)	does the nothing
+	COMMENT when
+	COMMENT 1.	(Both_dau_fail is FALSE OR Pbit_test_result is not equal to ZERO) AND
+	COMMENT 2.	Splash_done is not equal to ZERO AND
+	COMMENT 3.	LCD off is ZERO
+	COMMENT 4.	Demo_mode is equal to TRUE
+	COMMENT MCDC(FTTTF) 
+    COMMENT Equivalence Class 28,32,35,36,37,42,43,47,96,105
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-009]
+    COMMENT The function  call the function AppFuelFlowDraw when 
+    COMMENT all the below conditions are satisfied :
+    COMMENT i) (Both_dau_fail is equal to false or Pbit_test_result is equal to zero) or
+    COMMENT ii) Splash_done is equal to zero or
+    COMMENT iii) LCD off is other than zero or
+    COMMENT iv)  Demo_mode is TRUE
+    COMMENT v) Splash_done is equal to one AND Cmu_fuel_flow is equal to ONE 
+    COMMENT AND Md_engine_flag is equal to TRUE AND Page_num is TWO AND 
+    COMMENT Fuel_flow_select is equal to ONE
+    COMMENT (MCDC TTTTT) 
+    COMMENT Equivalence Class 45,127,128,129,130
+    COMMENT
+    COMMENT </TD>
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = FALSE,				ev = init
+
+			--Holds CPU pbit test result value
+			VAR Pbit_test_result,					init = 1,					ev = init
+
+			--Holds value of slpash done
+			VAR Splash_done,						init = 1,					ev = init
+
+			--Holds the flash value
+			VAR S8_had_flash,						init = FALSE,				ev = init
+
+			--Holds value of Demo mode
+			VAR Demo_mode,							init = TRUE,				ev = init
+			
+			VAR Cmu_fuel_flow,						init = 1,					ev = init  		
+			
+			VAR Md_engine_flag,						init = TRUE,				ev = init  	
+			
+			VAR Page_num,						    init = TWO,					ev = init  
+			
+			VAR Fuel_flow_select,					init = 1,					ev = init  					
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+			--dispalys the text
+			STUB TextDraw()
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Draws the Round dial
+			STUB RoundDialDraw()
+
+			--Draws the bargraph
+			STUB BargraphDraw()
+
+			--Draws the number box
+			STUB NumboxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn()
+
+			--Displays CAS messages, exceedences,Cool down timer and Manual timer
+			STUB AppDraw1()
+
+			--Resets the given timer
+			STUB TimerReset()
+			
+			STUB TextBoxPdiDraw()
+		
+			STUB TextDrawPDI()
+			
+			STUB CarrotGraphDraw()
+			
+			STUB AppFuelFlowDraw()
+
+		END SIMUL   
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();
+
+	END ELEMENT
+
+END TEST -- TEST 21
+
+TEST 22
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-001]
+    COMMENT For 1st Element Block
+    COMMENT The function 'ForegroundReDraw3' calls 'TimerReset' with reference to flash timer as parameter 
+    COMMENT when flash timer is less than sum of FLASH_ON_TIME and FLASH_OFF_TIME.
+    COMMENT For 2nd Element Block
+    COMMENT The function 'ForegroundReDraw3' calls 'TimerReset' with reference to flash timer as parameter 
+    COMMENT when flash timer is greater to sum of FLASH_ON_TIME and FLASH_OFF_TIME.
+    COMMENT Equivalence Class 21,23,26
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-002]
+    COMMENT For 2nd Element Block
+    COMMENT The function 'ForegroundReDraw3' sets flash state to FLASH_STATE_OFF and text flash to FLASH_OFF,
+    COMMENT when flash timer is greater than FLASH_ON_TIME.
+    COMMENT Equivalence Class 25   
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-004]
+    COMMENT The function 'ForegroundReDraw3' does the following when background is not equal to ZERO and delay is equal to ZERO.
+    COMMENT a)  Calls function 'AppDraw2' 
+	COMMENT b)	does the nothing
+	COMMENT when
+	COMMENT 1.	Both_dau_fail is TRUE AND
+	COMMENT 2.	Splash_done is equal to ZERO 
+	COMMENT MCDC(TXFXX) 
+    COMMENT Equivalence Class 28,32,35,36,37,41,46,104
+    COMMENT
+	COMMENT     
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-006]
+    COMMENT For 1st Element Block
+	COMMENT The function 'ForegroundReDraw3' calls 'TimerReset' with reference to flash timer as parameter when S8_had_flash is equal to FALSE.
+    COMMENT For 2nd Element Block
+	COMMENT The function 'ForegroundReDraw3' does nothing when S8_had_flash is equal to TRUE.
+    COMMENT Equivalence Class 26,94,93
+    COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--holds flag value for TimerReset
+			VAR PTU_TimerReset_flag,			 	init = 2,					ev = init
+
+			--holds value of temprorary variable for stub 'TimerReset'
+			VAR PTU_Flash_timer_Reset,				init = (FLASH_ON_TIME +FLASH_OFF_TIME+1),				ev = init
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = TRUE,				ev = init				
+			
+			--Holds value of slpash done
+			VAR Splash_done,						init = ZERO,				ev = init
+           
+			--Holds the flash value
+           	VAR S8_had_flash,						init = FALSE,				ev = init
+			
+			VAR Page_num,							init = 5,					ev = init
+			
+			VAR Page_parameter_error[5],			init = TRUE,				ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--Holds the Flash state
+			VAR Flash_state,						init = FLASH_STATE_OFF ,		ev = FLASH_STATE_ON
+        
+        	--Holds the verified value of 'E_txt_flash'
+        	VAR ret_EGetFlashState,					init = FLASH_OFF ,			ev = FLASH_ON
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+
+			--Resets the given timer
+			STUB TimerReset()
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn()
+			STUB LCDBackgroundOn()
+
+
+			--Displays RedX in Gauge and numberbox place
+			STUB WidgetsRedX()
+		END SIMUL   
+     
+    -- Calling the function for verifying the setting of 'E_txt_flash'
+    #ret_EGetFlashState = EGetFlashState();
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();	
+
+	END ELEMENT
+
+	--Second Element Block
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--holds flag value for TimerReset
+			VAR PTU_TimerReset_flag,			 	init = 2,					ev = init
+
+			--holds value of temprorary variable for stub 'TimerReset'
+			VAR PTU_Flash_timer_Reset,				init = (FLASH_ON_TIME +FLASH_OFF_TIME+1),				ev = init
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = TRUE,				ev = init
+			
+			--Holds value of slpash done
+			VAR Splash_done,						init = ZERO,				ev = init
+           
+			--Holds the flash value
+           	VAR S8_had_flash,						init = TRUE,				ev = init
+
+ 			--holds the value of PDI CAS messages
+          	VAR Page_cas,							init = 1,					ev = init
+
+			--Holds CAS WOG data received status
+           	VAR Cas_wog_data_recieved,				init = TRUE,				ev = init
+
+			--Holds CAS label start index
+           	VAR Cas_label_start_idx,				init = 0,					ev = init
+           	
+			--Holds the value of status of channel of reading of parameters
+           	VAR Parameters[0].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[1].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[2].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[3].reading.stat,			init = RANGE_ERROR,			ev = init
+          	VAR	Parameters[4].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[5].reading.stat,			init = RANGE_ERROR,			ev = init
+
+			--Holds the cool down timer attributes(WOG data)
+           	VAR Auto_cool_down_tmr.wog_data,		init = &PTU_wog_data,		ev = init
+           	VAR PTU_wog_data.stat,					init = PARAM_OK,			ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--Holds the Flash state
+			VAR Flash_state,						init = FLASH_STATE_ON,		ev = FLASH_STATE_OFF
+        
+        	--Holds the verified value of 'E_txt_flash'
+        	VAR ret_EGetFlashState,					init = FLASH_OFF,			ev = FLASH_ON
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+
+			--Resets the given timer
+			STUB TimerReset()
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn()
+			STUB LCDBackgroundOn()
+
+			STUB WidgetsRedX()
+
+END SIMUL   
+     
+    -- Calling the function for verifying the setting of 'E_txt_flash'
+    #ret_EGetFlashState = EGetFlashState();
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();	
+
+	END ELEMENT
+
+END TEST -- TEST 22
+
+
+TEST 23
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-001]
+    COMMENT The function 'ForegroundReDraw3' does nothing when flash timer is less than sum of FLASH_ON_TIME and FLASH_OFF_TIME.
+    COMMENT Equivalence Class 22
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-002]
+    COMMENT The function 'ForegroundReDraw3' sets flash state to FLASH_STATE_ON and text flash to FLASH_ON,
+    COMMENT when flash timer is lesser than FLASH_ON_TIME,when variable Distex_init is FALSE,then it sets Distex_init to true 
+	COMMENT and call DisRedxInit function with Dis_red_x as its parameter.
+    COMMENT Equivalence Class 24
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-004]
+    COMMENT The function 'ForegroundReDraw3' does the following when background is not equal to ZERO and delay is equal to ZERO.
+    COMMENT a)  Calls function 'AppDraw2' 
+	COMMENT b)	does the following
+	COMMENT 	i)	calls the function 'WidgetsRedX' with parameter disRegion of red X structure and poly_red_x of red X structure
+	COMMENT 	ii) calls the function 'TextBoxOff' with reference to Prim_cool_down_pop_up_box as parameter to disable cool down timer. 
+	COMMENT 	iii)calls the function 'TextBoxOff' with parameter Top_menu with index as 0 to enable the text box 
+	COMMENT 	iv) calls the function 'TextBoxOff' with parameter Top_menu with index as 1 to enable the text box
+	COMMENT 	v) calls the function 'TextBoxOff' with parameter Top_menu with index as 4 to enable the text box
+	COMMENT 	vi)  calls the function 'TextBoxOff' with parameter Top_menu with index as 6 to enable the text box
+	COMMENT 	vii) calls the function 'TextBoxOff' with parameter Top_menu with index as 8 to enable the text box
+	COMMENT 	viii)Sets previous red x to ONE
+	COMMENT when
+	COMMENT 1.	Both_dau_fail is TRUE AND
+	COMMENT 2.	Splash_done is not equal to ZERO AND
+	COMMENT 3.	LCD off is ZERO
+	COMMENT 4.	Demo_mode is equal to TRUE
+	COMMENT	5.	Global_parameter_error is equal to TRUE
+	COMMENT MCDC(TXTTFT) 
+    COMMENT Equivalence Class 28,32,35,36,37,38,39,41,45,47,96,100,104
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-008]
+    COMMENT The function 'ForegroundReDraw3' does the following when background is equal to ZERO and when delay is equal to ZERO.
+	COMMENT 1. Calls function 'TextBoxDraw'
+	COMMENT 2. Calls function 'LCDBackgroundOn'
+	COMMENT 3. Does nothing when delay is ZERO AND LCD off is equal to ZERO
+	COMMENT 4. Sets LCD off to ZERO when delay is ZERO 
+	COMMENT (Point 4 verifies LCD off is set to ZERO in 'hdudispfforeground-ForegroundReDraw3-DB-LLR-004')
+    COMMENT Equivalence Class 27,32,89,90,47
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-006]
+	COMMENT The function 'ForegroundReDraw3' calls 'TimerReset' with reference to flash timer as parameter when S8_had_flash is equal to FALSE.
+    COMMENT Equivalence Class 26,93
+	COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-007]
+    COMMENT For 2nd Elemnt Block
+    COMMENT The function 'ForegroundReDraw3' does the following when background is equal to ZERO     
+    COMMENT 1)  Set poly_red_x of Dis_red_x to zero.
+	COMMENT 2)	Sets previous redx to zero and calls 'MenuReset' function with Top_menu and Page_number as parameters when
+	COMMENT     previous redx is equal to ONE  
+	COMMENT 3)	Calls function 'RoundDialDraw'
+	COMMENT 4)	Calls function 'BargraphDraw'
+	COMMENT 5)	Calls function 'AppDraw4'
+	COMMENT 6)	Calls function 'AppDraw5'
+	COMMENT 7)	Calls function 'NumboxDraw'
+	COMMENT 8)	Calls function 'AppDraw'
+	COMMENT 9) Calls function 'CarrotGraphDraw' and 'TextBoxPdiDraw'
+	COMMENT 10)	Calls function 'CasRedxInit' with reference to Cas_red_x as parameter and calls function 'WidgetsRedX' with reference 
+	COMMENT     to disRegion of Cas_red_x and reference to poly_red_x of Cas_red_x as parameters when all
+	COMMENT     of the below conditions are satisified  (MCDC TFTTTTTTTT) 
+	COMMENT a.	Page_cas is equal to ONE AND
+	COMMENT b.	Cas_wog_data_recieved is equal to FALSE AND
+	COMMENT c.	Cas_data_recieved is equal to TRUE OR
+	COMMENT d.	Result of the following conditions,
+	COMMENT 	i.	Member stat of reading of Parameters with Cas_label_start_idx as index is equal to PARAM_BAD AND
+	COMMENT 	ii.	Member stat of reading of Parameters with Cas_label_start_idx plus 1 as index equal to PARAM_BAD AND
+	COMMENT 	iii.Member stat of reading of Parameters with Cas_label_start_idx plus 2 as index equal to PARAM_BAD AND
+	COMMENT 	iv.	Member stat of reading of Parameters with Cas_label_start_idx plus 3 as index equal to PARAM_BAD AND
+	COMMENT 	v.	Member stat of reading of Parameters with Cas_label_start_idx plus 4 as index equal to PARAM_BAD AND
+	COMMENT 	vi.	Member stat of reading of Parameters with Cas_label_start_idx plus 5 as index equal to PARAM_BAD AND
+	COMMENT 	vii.Member stat of wog_data of Auto_cool_down_tmr is equal to PARAM_BAD.
+	COMMENT When
+	COMMENT i (Both_dau_fail is false or Pbit_test_result is equal to zero)
+	COMMENT (MCDC FFXX)
+	COMMENT In LLR [hdudispfforeground-DisRedxInit-DB-LLR-001] 
+	COMMENT When variable E_orientation is equal to E_LAND_SCAPE,then x_axis_size and y_axis_size is set to 
+	COMMENT PANEL_WIDTH and PANEL_HEIGHT respectively.then,
+	COMMENT a)	sets eRegionType of disRegion of dis_redx to E_REGION_TYPE_GAUGE
+	COMMENT b)	sets u16X0 of sDisLocCtr of disRegion of dis_redx to (x_axis_size divided by 2) subtracted with (SIDE_BB_WIDTH plus 8)
+	COMMENT c)	sets u16Y0 of sDisLocCtr of disRegion of dis_redx to (y_axis_size divided by 2) subtracted with (BOTTOM_BB_HEIGHT plus 10)
+	COMMENT d)	sets s32Width of disRegion of dis_redx to x_axis_size (Subtracte dby SIDE_BB_WIDTH  multiplied by 2) plus 8
+	COMMENT e)	sets s32Height of disRegion of dis_redx to y_axis_size (Subtracte dby BOTTOM_BB_HEIGHT  multiplied by 2) minus 1
+	COMMENT
+    COMMENT Equivalence Class 27,49,58,50,51,52,53,54,55,56,60,65,66,69,72,75,78,81,85,42,44,98,102,103
+    COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--holds flag value for TimerReset
+			VAR PTU_TimerReset_flag,			 	init = 2,					ev = init
+
+			--holds value of temprorary variable for stub 'TimerReset'
+			VAR PTU_Flash_timer_Reset,				init = 0,					ev = init
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = TRUE,				ev = init
+
+			--Holds value of slpash done
+			VAR Splash_done,						init = 1,					ev = init
+
+			--Holds the flash value
+           	VAR S8_had_flash,						init = FALSE,				ev = init
+
+			--Holds value of Demo mode
+			VAR Demo_mode,							init = TRUE,				ev = init
+
+			VAR E_orientation,						init = E_LAND_SCAPE,		ev = init
+			
+			VAR Global_parameter_error,				init = TRUE,				ev =init
+			
+			VAR Offset_bool[1],							init = FALSE,			ev = init
+			
+			VAR Gain_bool[1],						init = FALSE,				ev = init
+		COMMENT OUTPUT SECTION:
+
+			--Holds the Flash state
+			VAR Flash_state,						init = FLASH_STATE_OFF,		ev = FLASH_STATE_ON		
+        
+        	--Holds the verified value of 'E_txt_flash'
+        	VAR ret_EGetFlashState,					init = FLASH_ON,			ev =  FLASH_OFF
+
+			--Verifies calling of 'CasRedxInit'
+			STRUCTURE PTU_ps_dis_region,			init = {E_REGION_TYPE_NUMBER,{0,0},0,0,{0,0},E_TINY_FONT,0},
+			&										ev = {E_REGION_TYPE_GAUGE,{-12,-11},-32,-43,{0,0},E_NO_FONT,0}     
+
+			VAR PTU_pps_poly_red_x,					init = 1,					ev = 0		
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+
+			--Displays RedX in Gauge and numberbox place
+			STUB WidgetsRedX()
+
+			--Disables the text box
+			STUB TextBoxOff 1 =>(&Prim_cool_down_pop_up_box)
+			STUB TextBoxOff 2 =>(Top_menu[0])
+			STUB TextBoxOff 3 =>(Top_menu[1])
+			STUB TextBoxOff 4 =>(Top_menu[4])
+			STUB TextBoxOff 5 =>(Top_menu[6])
+			STUB TextBoxOff 6 =>(Top_menu[8])
+
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn()
+
+
+			--Resets the given timer
+			STUB TimerReset 1..2=>()
+
+			
+		END SIMUL   
+     
+    -- Calling the function for verifying the setting of 'E_txt_flash'
+    #ret_EGetFlashState = EGetFlashState();
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();
+
+	END ELEMENT
+
+	--Second Element Block
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--holds flag value for TimerReset
+			VAR PTU_TimerReset_flag,			 	init = 2,					ev = init
+
+			--holds value of temprorary variable for stub 'TimerReset'
+			VAR PTU_Flash_timer_Reset,				init = 0,					ev = init
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = FALSE,				ev = init
+
+			--Holds CPU pbit test result value
+			VAR Pbit_test_result,					init = ZERO,				ev = init
+			
+			--Holds value of slpash done
+			VAR Splash_done,						init = 1,					ev = init
+
+			--holds the value of PDI CAS messages
+           	VAR Page_cas,							init = 1,					ev = init
+
+			--Holds CAS WOG data received status
+           	VAR Cas_wog_data_recieved,				init = FALSE,				ev = init
+
+			--Holds CAS data received status
+           	VAR Cas_data_recieved,					init = TRUE,				ev = init
+           	
+			--Holds CAS label start index
+           	VAR Cas_label_start_idx,				init = 0,					ev = init
+           	
+			--Holds the value of status of channel of reading of parameters
+           	VAR Parameters[0].reading.stat,			init = PARAM_BAD,			ev = init
+           	VAR	Parameters[1].reading.stat,			init = PARAM_BAD,			ev = init
+           	VAR	Parameters[2].reading.stat,			init = PARAM_BAD,			ev = init
+           	VAR	Parameters[3].reading.stat,			init = PARAM_BAD,			ev = init
+          	VAR	Parameters[4].reading.stat,			init = PARAM_BAD,			ev = init
+           	VAR	Parameters[5].reading.stat,			init = PARAM_BAD,			ev = init
+
+			--Holds the cool down timer attributes(WOG data)
+           	VAR Auto_cool_down_tmr.wog_data,		init = &PTU_wog_data,		ev = init
+           	VAR PTU_wog_data.stat,					init = PARAM_BAD,			ev = init
+ 
+			--Holds the value of Page Number
+ 			VAR Page_number,						init = 1,					ev = init
+
+			VAR PTU_pps_poly_red_x,					init = 1,					ev = 0		
+ 
+		COMMENT OUTPUT SECTION:
+
+			--None        
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+
+
+			--Displays RedX in Gauge and numberbox place
+			STUB WidgetsRedX()
+
+			--Disables the text box
+			STUB TextBoxOff 1 =>(&Prim_cool_down_pop_up_box)
+			STUB TextBoxOff 2 =>(Top_menu[0])
+			STUB TextBoxOff 3 =>(Top_menu[1])
+			STUB TextBoxOff 4 =>(Top_menu[4])
+			STUB TextBoxOff 5 =>(Top_menu[6])
+			STUB TextBoxOff 6 =>(Top_menu[8])
+			
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn()
+
+
+			--Resets the given timer
+			STUB TimerReset()
+			
+	END SIMUL   
+     
+    -- Calling the function for verifying the setting of 'E_txt_flash'
+    #ret_EGetFlashState = EGetFlashState();
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();
+
+	END ELEMENT
+
+END TEST -- TEST 23
+
+TEST 24
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-001]
+    COMMENT For 1st Element Block
+    COMMENT The function 'ForegroundReDraw3' calls 'TimerReset' with reference to flash timer as parameter 
+    COMMENT when flash timer is less than sum of FLASH_ON_TIME and FLASH_OFF_TIME.
+    COMMENT For 2nd Element Block
+    COMMENT The function 'ForegroundReDraw3' calls 'TimerReset' with reference to flash timer as parameter 
+    COMMENT when flash timer is greater to sum of FLASH_ON_TIME and FLASH_OFF_TIME.
+    COMMENT Equivalence Class 21,23,26
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-002]
+    COMMENT For 2nd Element Block
+    COMMENT The function 'ForegroundReDraw3' sets flash state to FLASH_STATE_OFF and text flash to FLASH_OFF,
+    COMMENT when flash timer is greater than FLASH_ON_TIME.
+    COMMENT Equivalence Class 25   
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-004]
+    COMMENT The function 'ForegroundReDraw3' does the following when background is not equal to ZERO and delay is equal to ZERO.
+    COMMENT a)  Calls function 'AppDraw2' 
+	COMMENT b)	does the nothing
+	COMMENT when
+	COMMENT 1.	Both_dau_fail is TRUE AND
+	COMMENT 2.	Splash_done is equal to ZERO 
+	COMMENT 3.Global_parameter_error is TRUE
+	COMMENT MCDC(TXFXXT) 
+    COMMENT Equivalence Class 28,32,35,36,37,41,46,100,102,103,104
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-007]
+    COMMENT For 2nd Elemnt Block
+    COMMENT The function 'ForegroundReDraw3' does the following when background is equal to ZERO     
+    COMMENT 1)  Set poly_red_x of Dis_red_x to zero.
+	COMMENT 2)	Sets previous redx to zero and calls 'MenuReset' function with Top_menu and Page_number as parameters when
+	COMMENT     previous redx is equal to ONE  
+	COMMENT 3)	Calls function 'RoundDialDraw'
+	COMMENT 4)	Calls function 'BargraphDraw'
+	COMMENT 5)	Calls function 'AppDraw4'
+	COMMENT 6)	Calls function 'AppDraw5'
+	COMMENT 7)	Calls function 'NumboxDraw'
+	COMMENT 8)	Calls function 'AppDraw','CarrotGraphDraw'and 'TextBoxPdiDraw'
+	COMMENT 9)	Calls function 'CasRedxInit' with reference to Cas_red_x as parameter and calls function 'WidgetsRedX' with reference 
+	COMMENT     to disRegion of Cas_red_x and reference to poly_red_x of Cas_red_x as parameters when all
+	COMMENT     of the below conditions are satisified  (MCDC TFXTTTTTTF) 
+	COMMENT a.	Page_cas is equal to ONE AND
+	COMMENT b.	Cas_wog_data_recieved is equal to TRUE AND
+	COMMENT d.	Result of the following conditions,
+	COMMENT 	i.	Member stat of reading of Parameters with Cas_label_start_idx as index is greater than PARAM_BAD AND
+	COMMENT 	ii.	Member stat of reading of Parameters with Cas_label_start_idx plus 1 as index greater than PARAM_BAD AND
+	COMMENT 	iii.Member stat of reading of Parameters with Cas_label_start_idx plus 2 as index greater than PARAM_BAD AND
+	COMMENT 	iv.	Member stat of reading of Parameters with Cas_label_start_idx plus 3 as index greater than PARAM_BAD AND
+	COMMENT 	v.	Member stat of reading of Parameters with Cas_label_start_idx plus 4 as index greater than PARAM_BAD AND
+	COMMENT 	vi.	Member stat of reading of Parameters with Cas_label_start_idx plus 5 as index greater than PARAM_BAD AND
+	COMMENT 	vii.Member stat of wog_data of Auto_cool_down_tmr is less than PARAM_BAD.
+	COMMENT When
+	COMMENT i)	Both_dau_fail is other than false AND
+	COMMENT ii)	Splash_done is equal to zero  MCDC(TXFX) 
+    COMMENT Equivalence Class 27,49,58,50,51,52,53,54,55,56,60,65,67,70,73,76,79,82,86,48,63,46,41,105
+	COMMENT     
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-006]
+    COMMENT For 1st Element Block
+	COMMENT The function 'ForegroundReDraw3' calls 'TimerReset' with reference to flash timer as parameter when S8_had_flash is equal to FALSE.
+    COMMENT For 2nd Element Block
+	COMMENT The function 'ForegroundReDraw3' does nothing when S8_had_flash is equal to TRUE.
+    COMMENT Equivalence Class 26,94,93
+    COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--holds flag value for TimerReset
+			VAR PTU_TimerReset_flag,			 	init = 2,					ev = init
+
+			--holds value of temprorary variable for stub 'TimerReset'
+			VAR PTU_Flash_timer_Reset,				init = (FLASH_ON_TIME +FLASH_OFF_TIME+1),				ev = init
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = TRUE,				ev = init				
+			
+			--Holds value of slpash done
+			VAR Splash_done,						init = ZERO,				ev = init
+           
+			--Holds the flash value
+           	VAR S8_had_flash,						init = FALSE,				ev = init
+
+			VAR Global_parameter_error,				init = TRUE,				ev = init
+			
+			VAR Offset_bool[3],							init = FALSE,			ev = init
+			
+			VAR Gain_bool[3],						init = FALSE,				ev = init
+		COMMENT OUTPUT SECTION:
+
+			--Holds the Flash state
+			VAR Flash_state,						init = FLASH_STATE_OFF ,		ev = FLASH_STATE_ON
+        
+        	--Holds the verified value of 'E_txt_flash'
+        	VAR ret_EGetFlashState,					init = FLASH_OFF ,			ev = FLASH_ON
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+
+			--Resets the given timer
+			STUB TimerReset()
+
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn()
+			STUB LCDBackgroundOn()
+
+			STUB TextBoxOff 1 =>(&Prim_cool_down_pop_up_box)
+			STUB TextBoxOff 2 =>(Top_menu[0])
+			STUB TextBoxOff 3 =>(Top_menu[1])
+			STUB TextBoxOff 4 =>(Top_menu[4])
+			STUB TextBoxOff 5 =>(Top_menu[6])
+			STUB TextBoxOff 6 =>(Top_menu[8])
+
+
+			
+			--Displays RedX in Gauge and numberbox place
+			STUB WidgetsRedX()
+		END SIMUL   
+     
+    -- Calling the function for verifying the setting of 'E_txt_flash'
+    #ret_EGetFlashState = EGetFlashState();
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();	
+
+	END ELEMENT
+
+	--Second Element Block
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--holds flag value for TimerReset
+			VAR PTU_TimerReset_flag,			 	init = 2,					ev = init
+
+			--holds value of temprorary variable for stub 'TimerReset'
+			VAR PTU_Flash_timer_Reset,				init = (FLASH_ON_TIME +FLASH_OFF_TIME+1),				ev = init
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = TRUE,				ev = init
+			
+			--Holds value of slpash done
+			VAR Splash_done,						init = ZERO,				ev = init
+           
+			--Holds the flash value
+           	VAR S8_had_flash,						init = TRUE,				ev = init
+
+ 			--holds the value of PDI CAS messages
+          	VAR Page_cas,							init = 1,					ev = init
+
+			--Holds CAS WOG data received status
+           	VAR Cas_wog_data_recieved,				init = TRUE,				ev = init
+
+			--Holds CAS label start index
+           	VAR Cas_label_start_idx,				init = 0,					ev = init
+           	
+			--Holds the value of status of channel of reading of parameters
+           	VAR Parameters[0].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[1].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[2].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[3].reading.stat,			init = RANGE_ERROR,			ev = init
+          	VAR	Parameters[4].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[5].reading.stat,			init = RANGE_ERROR,			ev = init
+
+			--Holds the cool down timer attributes(WOG data)
+           	VAR Auto_cool_down_tmr.wog_data,		init = &PTU_wog_data,		ev = init
+           	VAR PTU_wog_data.stat,					init = PARAM_OK,			ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--Holds the Flash state
+			VAR Flash_state,						init = FLASH_STATE_ON,		ev = FLASH_STATE_OFF
+        
+        	--Holds the verified value of 'E_txt_flash'
+        	VAR ret_EGetFlashState,					init = FLASH_OFF,			ev = FLASH_ON
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+
+			--Resets the given timer
+			STUB TimerReset()
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn()
+			STUB LCDBackgroundOn()
+
+			STUB TextBoxOff 1 =>(&Prim_cool_down_pop_up_box)
+			STUB TextBoxOff 2 =>(Top_menu[0])
+			STUB TextBoxOff 3 =>(Top_menu[1])
+			STUB TextBoxOff 4 =>(Top_menu[4])
+			STUB TextBoxOff 5 =>(Top_menu[6])
+			STUB TextBoxOff 6 =>(Top_menu[8])
+
+			
+			STUB WidgetsRedX()
+			
+
+		END SIMUL   
+     
+    -- Calling the function for verifying the setting of 'E_txt_flash'
+    #ret_EGetFlashState = EGetFlashState();
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();	
+
+	END ELEMENT
+
+END TEST -- TEST 24
+
+TEST 25
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>     
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-004]
+    COMMENT The function 'ForegroundReDraw3' does the following when background is not equal to ZERO and delay is equal to ZERO.
+    COMMENT a)  Calls function 'AppDraw2' 
+	COMMENT b)	does the following
+	COMMENT 	i)	calls the function 'WidgetsRedX' with parameter disRegion of red X structure and poly_red_x of red X structure
+	COMMENT 	ii) calls the function 'TextBoxOff' with reference to Prim_cool_down_pop_up_box as parameter to disable cool down timer. 
+	COMMENT 	iii)calls the function 'TextBoxOff' with parameter Top_menu with index as 0 to enable the text box 
+	COMMENT 	iv) calls the function 'TextBoxOff' with parameter Top_menu with index as 1 to enable the text box
+	COMMENT 	v) calls the function 'TextBoxOff' with parameter Top_menu with index as 4 to enable the text box
+	COMMENT 	vi)  calls the function 'TextBoxOff' with parameter Top_menu with index as 6 to enable the text box
+	COMMENT 	vii) calls the function 'TextBoxOff' with parameter Top_menu with index as 8 to enable the text box
+	COMMENT 	viii)Sets previous red x to ONE
+	COMMENT when
+	COMMENT 1.	(Both_dau_fail is FALSE OR Pbit_test_result is not equal to ZERO) AND
+	COMMENT 2.	Splash_done is not equal to ZERO AND
+	COMMENT 3.	LCD off is ZERO
+	COMMENT 4.	Demo_mode is equal to TRUE
+	COMMENT 5.	Global_parameter_error is TRUE
+	COMMENT MCDC(FTTTFT) 
+    COMMENT Equivalence Class 28,32,35,36,37,38,39,42,43,45,47,96,100,102,103,104
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-008]
+    COMMENT The function 'ForegroundReDraw3' does the following when background is equal to ZERO and when delay is equal to ZERO.
+	COMMENT 1. Calls function 'TextBoxDraw'
+	COMMENT 2. Calls function 'LCDBackgroundOn'
+	COMMENT 3. Does nothing when delay is ZERO AND LCD off is equal to ZERO
+	COMMENT 4. Sets LCD off to ZERO when delay is ZERO 
+	COMMENT (Point 4 verifies LCD off is set to ZERO in 'hdudispfforeground-ForegroundReDraw3-DB-LLR-004')
+    COMMENT Equivalence Class 27,32,89,90,47    
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-006]
+	COMMENT The function 'ForegroundReDraw3' calls 'TimerReset' with reference to flash timer as parameter when S8_had_flash is equal to FALSE.
+    COMMENT Equivalence Class 26,93
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-007]
+    COMMENT For 2nd Elemnt Block
+    COMMENT The function 'ForegroundReDraw3' does the following when background is equal to ZERO     
+    COMMENT 1)  Set poly_red_x of Dis_red_x to zero.
+	COMMENT 2)	Sets previous redx to zero and calls 'MenuReset' function with Top_menu and Page_number as parameters when
+	COMMENT     previous redx is equal to ONE
+	COMMENT 3)	Calls function 'RoundDialDraw'
+	COMMENT 4)	Calls function 'BargraphDraw'
+	COMMENT 5)	Calls function 'AppDraw4'
+	COMMENT 6)	Calls function 'AppDraw5'
+	COMMENT 7)	Calls function 'NumboxDraw'
+	COMMENT 8)	Calls function 'AppDraw'
+	COMMENT 9) Calls function 'TextBoxPdiDraw' and 'CarrotGraphDraw'
+	COMMENT 10)	Calls function 'CasRedxInit' with reference to Cas_red_x as parameter and calls function 'WidgetsRedX' with reference 
+	COMMENT     to disRegion of Cas_red_x and reference to poly_red_x of Cas_red_x as parameters when all
+	COMMENT     of the below conditions are satisified  (MCDC TFXTTTTTTT) 
+	COMMENT a.	Page_cas is equal to ONE AND
+	COMMENT b.	Cas_wog_data_recieved is equal to TRUE AND
+	COMMENT d.	Result of the following conditions,
+	COMMENT 	i.	Member stat of reading of Parameters with Cas_label_start_idx as index is greater than PARAM_BAD AND
+	COMMENT 	ii.	Member stat of reading of Parameters with Cas_label_start_idx plus 1 as index is greater than PARAM_BAD AND
+	COMMENT 	iii.Member stat of reading of Parameters with Cas_label_start_idx plus 2 as index is greater than PARAM_BAD AND
+	COMMENT 	iv.	Member stat of reading of Parameters with Cas_label_start_idx plus 3 as index is greater than PARAM_BAD AND
+	COMMENT 	v.	Member stat of reading of Parameters with Cas_label_start_idx plus 4 as index is greater than PARAM_BAD AND
+	COMMENT 	vi.	Member stat of reading of Parameters with Cas_label_start_idx plus 5 as index is greater than PARAM_BAD AND
+	COMMENT 	vii.Member stat of wog_data of Auto_cool_down_tmr is greater than PARAM_BAD.
+	COMMENT When
+	COMMENT i)	(Both_dau_fail is false or Pbit_test_result is equal to zero) (MCDC FFXX)
+    COMMENT Equivalence Class 27,49,58,50,51,52,53,54,55,56,60,65,67,70,73,76,80,84,42,44,105
+    COMMENT </TD>
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = FALSE,				ev = init
+
+			--Holds CPU pbit test result value
+			VAR Pbit_test_result,					init = 1,					ev = init
+
+			--Holds value of slpash done
+			VAR Splash_done,						init = 1,					ev = init
+
+			--Holds the flash value
+			VAR S8_had_flash,						init = FALSE,				ev = init
+
+			--Holds value of Demo mode
+			VAR Demo_mode,							init = TRUE,				ev = init
+
+			VAR Global_parameter_error,				init = TRUE,			ev = init
+			
+			VAR Offset_bool[2],							init = FALSE,			ev = init
+			
+			VAR Gain_bool[2],						init = FALSE,				ev = init
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+
+			--Displays RedX in Gauge and numberbox place
+			STUB WidgetsRedX()
+
+			--Disables the text box
+			STUB TextBoxOff 1 =>(&Prim_cool_down_pop_up_box)
+			STUB TextBoxOff 2 =>(Top_menu[0])
+			STUB TextBoxOff 3 =>(Top_menu[1])
+			STUB TextBoxOff 4 =>(Top_menu[4])
+			STUB TextBoxOff 5 =>(Top_menu[6])
+			STUB TextBoxOff 6 =>(Top_menu[8])
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn()
+
+
+			--Resets the given timer
+			STUB TimerReset 1..2=>()
+			
+
+		END SIMUL   
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();
+
+	END ELEMENT
+
+	--Second Element Block
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--holds flag value for TimerReset
+			VAR PTU_TimerReset_flag,			 	init = 2,					ev = init
+
+			--holds value of temprorary variable for stub 'TimerReset'
+			VAR PTU_Flash_timer_Reset,				init = 0,					ev = init
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = FALSE,				ev = init
+
+			--Holds CPU pbit test result value
+			VAR Pbit_test_result,					init = ZERO,				ev = init
+			
+			--Holds value of slpash done
+			VAR Splash_done,						init = 1,					ev = init
+
+			--holds the value of PDI CAS messages
+           	VAR Page_cas,							init = 1,					ev = init
+
+			--Holds CAS WOG data received status
+           	VAR Cas_wog_data_recieved,				init = TRUE,				ev = init
+
+			--Holds CAS label start index
+           	VAR Cas_label_start_idx,				init = 0,					ev = init
+           	
+			--Holds the value of status of channel of reading of parameters
+           	VAR Parameters[0].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[1].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[2].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[3].reading.stat,			init = RANGE_ERROR,			ev = init
+          	VAR	Parameters[4].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[5].reading.stat,			init = RANGE_ERROR,			ev = init
+
+			--Holds the cool down timer attributes(WOG data)
+           	VAR Auto_cool_down_tmr.wog_data,		init = &PTU_wog_data,		ev = init
+           	VAR PTU_wog_data.stat,					init = RANGE_ERROR,			ev = init
+ 
+			--Holds the value of Page Number
+ 			VAR Page_number,						init = 1,					ev = init
+ 
+		COMMENT OUTPUT SECTION:
+
+			--None        
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+
+			--Displays RedX in Gauge and numberbox place
+			STUB WidgetsRedX()
+
+			--Draws the Round dial
+
+
+			STUB TextBoxOff 1 =>(&Prim_cool_down_pop_up_box)
+			STUB TextBoxOff 2 =>(Top_menu[0])
+			STUB TextBoxOff 3 =>(Top_menu[1])
+			STUB TextBoxOff 4 =>(Top_menu[4])
+			STUB TextBoxOff 5 =>(Top_menu[6])
+			STUB TextBoxOff 6 =>(Top_menu[8])
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn()
+
+
+			--Resets the given timer
+			STUB TimerReset 1..2=>()
+			
+
+
+		END SIMUL   
+     
+    -- Calling the function for verifying the setting of 'E_txt_flash'
+    #ret_EGetFlashState = EGetFlashState();
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();
+
+	END ELEMENT
+
+END TEST -- TEST 25
+
+
+TEST 26
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-003]	
+	COMMENT For 1st Element Block
+	COMMENT The function 'ForegroundReDraw3' does the following when background is not equal to ZERO
+	COMMENT a)	Calls function 'PwmBlink'
+	COMMENT b)	Calls function 'LCDBackgroundOff'
+	COMMENT c)	Calls function 'Dma2dRgbToArgb4444' with background,  BG_FB_ADDR, PANEL_WIDTH, PANEL_HEIGHT as parameters
+	COMMENT d)	Sets background to ZERO
+	COMMENT e)	Sets delay to FIVE
+	COMMENT f)	Sets LCD off to one
+	COMMENT g)	Sets poly_red_x of Cas redx to ZERO
+    COMMENT Equivalence Class 29,30,31,28
+	COMMENT
+	COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-004]
+	COMMENT For 2nd Element Block
+	COMMENT The function 'ForegroundReDraw3' does the following when background is equal to ZERO
+	COMMENT a)	Calls function 'TextDraw'
+	COMMENT b)	Calls function 'AppDraw1'
+	COMMENT c)	Calls function 'AppDraw2' 
+	COMMENT d)	does nothing
+	COMMENT when
+	COMMENT 1.	Both_dau_fail is FALSE OR Pbit_test_result is not equal to ZERO)AND
+	COMMENT 2.	Splash_done is not equal to ZERO AND
+	COMMENT 3.	LCD off is ZERO (MCDC FTTFXT)
+	COMMENT 4.  Global_parameter_error is set to TRUE
+    COMMENT Equivalence Class 29,30,31,28,42,43,45,47,100
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the value of static variable 'Pu16_back_ground'
+			VAR pu16_src,							init = 1,					ev = init
+			
+			VAR Global_parameter_error,				init = TRUE,				ev = init
+
+			VAR Data_received,						init = TRUE,				ev = init 
+        	
+			VAR Page_num,							init = 15,					ev = init
+
+			VAR Bitmap_crc_check_bit[15],			init = TRUE,				ev = init
+
+		COMMENT OUTPUT SECTION:        
+
+			--Verifies Pu16_back_ground parameter to function 'Dma2dRgbToArgb4444'
+			VAR PTU_Dma2dRgbToArgb4444,				init = 0,					ev = 1
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+			--Turns off the back light for 1/10 second.urns off the back light for 1/10 second.
+			STUB PwmBlink()
+
+			--Turns the background off
+			STUB LCDBackgroundOff()
+
+			--Copies an RGB565 bit map to the foreground.
+			STUB Dma2dRgbToArgb4444(BG_FB_ADDR, (T_UINT32)PANEL_WIDTH,(T_UINT32)PANEL_HEIGHT)
+
+			STUB TimerReset()
+			
+		END SIMUL   
+		
+	--Calling the service to set static variable 'Pu16_back_ground'
+	#ForegroundLoadBackground(&pu16_src);
+	
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();	
+
+	END ELEMENT
+
+	--Second Element Block
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = FALSE,				ev = init
+
+			--Holds CPU pbit test result value
+			VAR Pbit_test_result,					init = 1,					ev = init
+
+			--Holds value of slpash done
+			VAR Splash_done,						init = 1,					ev = init           			
+			
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+		-- Stub calls :
+		SIMUL
+
+			--dispalys the text
+			STUB TextDraw()
+
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			STUB TimerReset()
+			
+			STUB WidgetsRedX()
+
+			--Disables the text box
+			STUB TextBoxOff 1 =>(&Prim_cool_down_pop_up_box)
+			STUB TextBoxOff 2 =>(Top_menu[0])
+			STUB TextBoxOff 3 =>(Top_menu[1])
+			STUB TextBoxOff 4 =>(Top_menu[4])
+			STUB TextBoxOff 5 =>(Top_menu[6])
+			STUB TextBoxOff 6 =>(Top_menu[8])			
+			--Displays CAS messages, exceedences,Cool down timer and Manual timer
+			STUB AppDraw1()
+
+			--Turns off the back light for 1/10 second.urns off the back light for 1/10 second.
+			STUB PwmBlink()			
+
+		END SIMUL   	
+
+	-- Calling the Unit Under
+	#ForegroundReDraw3();
+
+	END ELEMENT	
+
+END TEST -- TEST 26
+
+TEST 27
+
+
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-003]	
+	COMMENT For 1st Element Block
+	COMMENT The function 'ForegroundReDraw3' does the following when background is not equal to ZERO
+	COMMENT a)	Calls function 'PwmBlink'
+	COMMENT b)	Calls function 'LCDBackgroundOff'
+	COMMENT c)	Calls function 'Dma2dRgbToArgb4444' with background,  BG_FB_ADDR, PANEL_WIDTH, PANEL_HEIGHT as parameters
+	COMMENT d)	Sets background to ZERO
+	COMMENT e)	Sets delay to FIVE
+	COMMENT f)	Sets LCD off to one
+	COMMENT g)	Sets poly_red_x of Cas redx to ZERO
+    COMMENT Equivalence Class 29,30,31,28
+	COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-004]
+	COMMENT For 2nd Element Block    
+    COMMENT The function 'ForegroundReDraw3' does the following when background is not equal to ZERO and delay is equal to ZERO.
+    COMMENT a)  Calls function 'TextDraw'.
+    COMMENT b)  Calls function 'AppDraw1'
+    COMMENT c)  Calls function 'AppDraw2'
+	COMMENT d)	does nothing
+	COMMENT when
+	COMMENT 1.	Both_dau_fail is TRUE AND
+	COMMENT 2.	Splash_done is not equal to ZERO AND
+	COMMENT 3.	LCD off is not ZERO
+	COMMENt 4.	Global_parameter_error is set to TRUE
+	COMMENT MCDC(TXTFXT) 
+    COMMENT Equivalence Class 28,32,35,36,37,38,39,41,45,48,100
+    COMMENT
+	COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-005]
+	COMMENT For 2nd Element Block
+	COMMENT The function 'ForegroundReDraw3' does the following when background is equal to ZERO AND delay not equal to zero
+	COMMENT a)	Calls function 'PwmBlink'.
+	COMMENT b)	Sets delay variable with delay variable subtracted by ONE.
+	COMMENT (This verifies the setting of delay to FIVE in 'hdudispfforeground-ForegroundReDraw3-DB-LLR-003')
+    COMMENT Equivalence Class 27,33,29
+	COMMENT
+ 	COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-008]
+	COMMENT For 3rd Element Block
+	COMMENT The function 'ForegroundReDraw3' does the following when background is equal to ZERO and if delay is equal to ZERO.
+	COMMENT 3. Does nothing when delay is ZERO AND LCD off is equal to ZERO.
+ 	COMMENT (This verifies the setting of delay variable with delay variable subtracted by ONE in 'hdudispfforeground-ForegroundReDraw3-DB-LLR-005')
+    COMMENT Equivalence Class 27,32,47
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the value of static variable 'Pu16_back_ground'
+			VAR pu16_src,							init = 1,					ev = init
+        	
+						VAR Global_parameter_error,				init = TRUE,				ev = init
+
+			
+		COMMENT OUTPUT SECTION:        
+
+			--Verifies Pu16_back_ground parameter to function 'Dma2dRgbToArgb4444'
+			VAR PTU_Dma2dRgbToArgb4444,				init = 0,					ev = 1
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+			--Turns off the back light for 1/10 second.urns off the back light for 1/10 second.
+			STUB PwmBlink()
+
+			--Turns the background off
+			STUB LCDBackgroundOff()
+
+			--Copies an RGB565 bit map to the foreground.
+			STUB Dma2dRgbToArgb4444(BG_FB_ADDR, (T_UINT32)PANEL_WIDTH,(T_UINT32)PANEL_HEIGHT)
+
+			STUB TimerReset()
+			
+		END SIMUL   
+		
+	--Calling the service to set static variable 'Pu16_back_ground'
+	#ForegroundLoadBackground(&pu16_src);
+	
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();	
+
+	END ELEMENT
+
+--	ELEMENT
+--
+--		COMMENT INPUT SECTION:
+--
+--			--Indicates display failure 
+--			VAR Both_dau_fail,						init = TRUE,				ev = init
+--
+--			--Holds CPU pbit test result value
+--			VAR Pbit_test_result,					init = 1,					ev = init
+--
+--			--Holds value of slpash done
+--			VAR Splash_done,						init = 1,					ev = init           		
+--			
+--		COMMENT OUTPUT SECTION:
+--
+--			--None
+--
+--		COMMENT INPUT/OUTPUT SECTION:
+--
+--			--None
+--			
+--		-- Stub calls :
+--		SIMUL
+--
+--			--Dispalys the text
+--			STUB TextDraw 		1..5 =>()
+--
+--
+--			--Draws the text box
+--			STUB TextBoxDraw	1..5 =>()
+--
+--			STUB TimerReset 1..5=> ()
+--			
+--			STUB WidgetsRedX 1..5=> ()
+--			
+--			--Disables the text box
+--			STUB TextBoxOff 1..5 =>(&Prim_cool_down_pop_up_box)
+--			STUB TextBoxOff 1..5 =>(Top_menu[0])
+--			STUB TextBoxOff 1..5 =>(Top_menu[4])
+--			STUB TextBoxOff 1..5 =>(Top_menu[6])
+--			STUB TextBoxOff 1..5 =>(Top_menu[8])
+--			
+--			
+--
+--			
+--			--Turns off the back light for 1/10 second.urns off the back light for 1/10 second.
+--			STUB PwmBlink 		1..5 =>()
+--
+--			--Displays CAS messages, exceedences,Cool down timer and Manual timer
+--			STUB AppDraw1 		1..5 =>()
+--
+--			STUB TextDrawPDI 1..5 =>()
+--			
+--
+--		END SIMUL   	
+--
+--	-- Calling the Unit Under Test for 5 times to decrement delay value:
+--	# for(PTU_i=0;PTU_i<5;PTU_i++)
+--	#{
+--	#	ForegroundReDraw3();
+--	#}
+--
+--	END ELEMENT	
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = TRUE,				ev = init
+
+			--Holds CPU pbit test result value
+			VAR Pbit_test_result,					init = 1,					ev = init
+
+			--Holds value of slpash done
+			VAR Splash_done,						init = 1,					ev = init
+			
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+		-- Stub calls :
+		SIMUL
+
+			--dispalys the text
+			STUB TextDraw()
+
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Disables the text box
+			STUB TextBoxOff 1 =>(&Prim_cool_down_pop_up_box)
+			STUB TextBoxOff 2 =>(Top_menu[0])
+			STUB TextBoxOff 3 =>(Top_menu[1])
+			STUB TextBoxOff 4 =>(Top_menu[4])
+			STUB TextBoxOff 5 =>(Top_menu[6])
+			STUB TextBoxOff 6 =>(Top_menu[8])
+			
+
+			--Displays CAS messages, exceedences,Cool down timer and Manual timer
+			STUB AppDraw1()
+
+			--Turns off the back light for 1/10 second.urns off the back light for 1/10 second.
+			STUB PwmBlink()
+			
+			STUB TimerReset()
+			
+			STUB WidgetsRedX()
+
+		END SIMUL   	
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();
+
+	END ELEMENT	
+	
+END TEST -- TEST 27
+
+
+TEST 28
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-002]
+    COMMENT For 2nd Element Block
+    COMMENT The function 'ForegroundReDraw3' sets flash state to FLASH_STATE_OFF and text flash to FLASH_OFF,
+    COMMENT when flash timer is equal to FLASH_ON_TIME.
+    COMMENT Equivalence Class 34        
+    COMMENT   
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-004]
+    COMMENT The function 'ForegroundReDraw3' does the following when background is not equal to ZERO and delay is equal to ZERO.
+    COMMENT a)  Calls function 'TextDraw'.
+    COMMENT b)  Calls function 'AppDraw1'
+    COMMENT c)  Calls function 'AppDraw2' 
+	COMMENT d)	does the nothing
+	COMMENT when
+	COMMENT 1.	(Both_dau_fail is FALSE OR Pbit_test_result is not equal to ZERO) AND
+	COMMENT 2.	Splash_done is equal to ZERO
+	COMMENT 3.	Global_parameter_error is TRUE
+	COMMENT MCDC(FTFXXXT) 
+    COMMENT Equivalence Class 28,32,35,36,37,42,43,46,101,104,100
+    COMMENT
+    COMMENT [hdudispfforeground-ForegroundReDraw3-DB-LLR-007]
+    COMMENT For 2nd Elemnt Block
+    COMMENT The function 'ForegroundReDraw3' does the following when background is equal to ZERO     
+    COMMENT 1)  Set poly_red_x of Dis_red_x to zero.
+	COMMENT 2)	Sets previous redx to zero and calls 'MenuReset' function with Top_menu and Page_number as parameters when
+	COMMENT     previous redx is equal to ONE  
+	COMMENT 3)	Calls function 'RoundDialDraw'
+	COMMENT 4)	Calls function 'BargraphDraw'
+	COMMENT 5)	Calls function 'AppDraw4'
+	COMMENT 6)	Calls function 'AppDraw5'
+	COMMENT 7)	Calls function 'NumboxDraw'
+	COMMENT 8)	Calls function 'AppDraw'
+	COMMENT 9) Calls function 'TextBoxPdiDraw' and 'CarrotGraphDraw'
+	COMMENT 9)	Calls function 'CasRedxInit' with reference to Cas_red_x as parameter and calls function 'WidgetsRedX' with reference 
+	COMMENT     to disRegion of Cas_red_x and reference to poly_red_x of Cas_red_x as parameters when all
+	COMMENT     of the below conditions are satisified  (MCDC TFXTTTTTFX) 
+	COMMENT a.	Page_cas is equal to ONE AND
+	COMMENT b.	Cas_wog_data_recieved is equal to TRUE AND
+	COMMENT d.	Result of the following conditions,
+	COMMENT 	i.	Member stat of reading of Parameters with Cas_label_start_idx as index is greater than PARAM_BAD AND
+	COMMENT 	ii.	Member stat of reading of Parameters with Cas_label_start_idx plus 1 as index greater than PARAM_BAD AND
+	COMMENT 	iii.Member stat of reading of Parameters with Cas_label_start_idx plus 2 as index greater than PARAM_BAD AND
+	COMMENT 	iv.	Member stat of reading of Parameters with Cas_label_start_idx plus 3 as index greater than PARAM_BAD AND
+	COMMENT 	v.	Member stat of reading of Parameters with Cas_label_start_idx plus 4 as index greater than PARAM_BAD AND
+	COMMENT 	vi.	Member stat of reading of Parameters with Cas_label_start_idx plus 5 as index less than PARAM_BAD
+	COMMENT When
+	COMMENT i)	(Both_dau_fail is false or Pbit_test_result is not equal to zero) AND
+	COMMENT ii)	Splash_done is equal to zero (MCDC FTFX) 
+    COMMENT Equivalence Class 27,49,58,50,51,52,53,54,55,56,60,65,67,70,73,76,80,46,41,105
+    COMMENT
+    COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--holds flag value for TimerReset
+			VAR PTU_TimerReset_flag,			 	init = 2,					ev = init
+
+			--holds value of temprorary variable for stub 'TimerReset'
+			VAR PTU_Flash_timer_Reset,				init = FLASH_ON_TIME,		ev = init
+			
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = FALSE,				ev = init
+
+			--Holds CPU pbit test result value
+			VAR Pbit_test_result,					init = 1,					ev = init
+			
+			--Holds value of slpash done
+			VAR Splash_done,						init = ZERO,				ev = init
+           
+			VAR Global_parameter_error,				init = TRUE,				ev = init
+
+		   
+			--Holds the flash value
+           VAR S8_had_flash,						init = FALSE,				ev = init
+
+		   
+		   
+		   	VAR Offset_bool[2],							init = FALSE,			ev = init
+			
+			VAR Gain_bool[2],						init = FALSE,				ev = init
+		COMMENT OUTPUT SECTION:
+
+			--Holds the Flash state
+			VAR Flash_state,						init = FLASH_STATE_OFF,		ev =  FLASH_STATE_ON
+        
+        	--Holds the verified value of 'E_txt_flash'
+        	VAR ret_EGetFlashState,					init = FLASH_OFF,			ev = FLASH_ON 
+
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+			--dispalys the text
+			STUB TextDraw()
+
+			--Resets the given timer
+			STUB TimerReset ()
+
+
+			--Disables the text box
+			STUB TextBoxOff 1 =>(&Prim_cool_down_pop_up_box)
+			STUB TextBoxOff 2 =>(Top_menu[0])
+			STUB TextBoxOff 3 =>(Top_menu[1])
+			STUB TextBoxOff 4 =>(Top_menu[4])
+			STUB TextBoxOff 5 =>(Top_menu[6])
+			STUB TextBoxOff 6 =>(Top_menu[8])
+			
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn ()
+			
+			STUB PwmBlink()
+
+			--Displays CAS messages, exceedences,Cool down timer and Manual timer
+			STUB AppDraw1()
+						
+			STUB WidgetsRedX()
+		END SIMUL   
+     
+    -- Calling the function for verifying the setting of 'E_txt_flash'
+    #ret_EGetFlashState = EGetFlashState();
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();	
+
+	END ELEMENT
+
+	--Second Element Block
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--holds flag value for TimerReset
+			VAR PTU_TimerReset_flag,			 	init = 2,					ev = init
+
+			--holds value of temprorary variable for stub 'TimerReset'
+			VAR PTU_Flash_timer_Reset,				init = FLASH_ON_TIME ,		ev = init
+			
+			--Indicates display failure 
+			VAR Both_dau_fail,						init = FALSE,				ev = init
+
+			--Holds CPU pbit test result value
+			VAR Pbit_test_result,					init = 1,					ev = init
+
+			--Holds value of slpash done
+			VAR Splash_done,						init = ZERO,				ev = init
+           
+			--Holds the flash value
+            VAR S8_had_flash,						init = TRUE,				ev = init
+
+ 			--holds the value of PDI CAS messages
+          	VAR Page_cas,							init = 1,					ev = init
+
+			--Holds CAS WOG data received status
+           	VAR Cas_wog_data_recieved,				init = TRUE,				ev = init
+
+			--Holds CAS label start index
+           	VAR Cas_label_start_idx,				init = 0,					ev = init
+           	
+			--Holds the value of status of channel of reading of parameters
+           	VAR Parameters[0].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[1].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[2].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[3].reading.stat,			init = RANGE_ERROR,			ev = init
+          	VAR	Parameters[4].reading.stat,			init = RANGE_ERROR,			ev = init
+           	VAR	Parameters[5].reading.stat,			init = PARAM_OK,			ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--Holds the Flash state
+			VAR Flash_state,						init = FLASH_STATE_ON,		ev = FLASH_STATE_OFF
+        
+        	--Holds the verified value of 'E_txt_flash'
+        	VAR ret_EGetFlashState,					init = FLASH_OFF,			ev = FLASH_ON 
+
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub calls :
+		SIMUL
+
+			--dispalys the text
+			STUB TextDraw()
+			
+			--Disables the text box
+			STUB TextBoxOff 1 =>(&Prim_cool_down_pop_up_box)
+			STUB TextBoxOff 2 =>(Top_menu[0])
+			STUB TextBoxOff 3 =>(Top_menu[1])
+			STUB TextBoxOff 4 =>(Top_menu[4])
+			STUB TextBoxOff 5 =>(Top_menu[6])
+			STUB TextBoxOff 6 =>(Top_menu[8])
+
+
+			--Draws the text box
+			STUB TextBoxDraw()
+
+			--Turns the background on
+			STUB LCDBackgroundOn ()
+			
+			STUB PwmBlink()
+
+
+			--Displays CAS messages, exceedences,Cool down timer and Manual timer
+			STUB AppDraw1()			
+			
+			STUB WidgetsRedX()
+		END SIMUL   
+     
+    -- Calling the function for verifying the setting of 'E_txt_flash'
+    #ret_EGetFlashState = EGetFlashState();
+
+	-- Calling the Unit Under Test :
+	#ForegroundReDraw3();	
+
+	END ELEMENT
+
+END TEST -- TEST 28
+
+
+
+END SERVICE -- ForegroundReDraw3
+
+
+
+
+
+
+

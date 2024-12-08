@@ -1,0 +1,1141 @@
+HEADER hdudispfpolygon2,Source Code Ver :1.13,TestScript Ver : 1.1
+--------------------------------------------------------------------------------
+-- Author Name         : Swaroopa N
+--
+-- File Name           : hdudispfpolygon2_3.ptu
+--
+-- Test Creation Date  : 27.07.2020
+--
+-- Tested Functions    : PolygonsAngle 
+--                       
+-- Version History             :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME           MODIFICATIONS
+--  ------------        ---------       -----------           -------------
+--      1.1             21.09.2020      Harshitha R    	 Created the ptu  as per #PR100281
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+##include "hdudispfarmmath.h"  
+##include "hdudispfrterror.h"   
+##include "hdudispfconfig.h"   
+##include "hdudispfpolygon2.h"  
+##include "hdudispfwidgets.h"   
+##include "hdulibbasictypes.h"  
+##include "hdudispfgrapp.h"
+##include "hdudispfpdidata.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    --Temporary variables created to test return value of PolygonsPsDuplicate
+    #T_SRECTPOINT PTU_psRP[100];
+    #T_SPOLARPOINT PTU_psPP[100];
+    #T_SRECTPOINT   PTU_sRP;
+    #T_SPOLARPOINT  PTU_sPP;
+    #extern T_CHAR glob_file_name[];
+    #T_POLYGRAPHDEF Ap_poly_graph[30];
+	#T_UINT8 Pg_cnt;
+	
+	--##define ZERO                        0U
+	##define FLOAT_ONE 					1.0f
+	##define FLOAT_TWO 					2.0f
+	##define NUMBER_OF_BITS 			32
+	##define DEC_TWO 					2
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Hemalatha S
+    COMMENT
+    COMMENT File name        : hdudispfpolygon2_2.ptu
+    COMMENT
+    COMMENT Tested functions :  PolygonsvPolarToRect 
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT 1) In function 'PolygonsPsPolyInit', while loop cannot be covered for 0 and 1 loop since s16_point_ctr is controlled by static values which are all greater than 0 and 1.
+    COMMENT 
+    COMMENT 2) In function 'VInitPolar', for loop cannot be covered for 0 and 1 loop since ps_poly->s16Pts is controlled by static values which are all greater than 0 and 1.
+    COMMENT 
+    COMMENT 3) Source file "hdudispfpolygon2.c" is modified for testing purpose to verify the file name
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT
+    COMMENT 4) PTUs are split into 2 to avoid static dependency.
+    COMMENT    
+    COMMENT 5) In function 'SquareRoot', for loop cannot be covered for 0 and 1 loop since loop_counter is controlled by constant 32.
+    COMMENT 
+    COMMENT</AC>
+    
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'PolygonsPsDuplicate', 'ps_poly_src' is equal to NULL.
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function 'PolygonsPsDuplicate', 'ps_poly_src' is not equal to NULL.
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'PolygonsPsDuplicate', the function 'PsAllocatePoly' is called.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'PsAllocatePoly', the function 'RterrWidget' is called .
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'PsAllocatePoly', s16_num_elements is less than THREE.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'PsAllocatePoly', s16_num_elements is greater than or equal to THREE.
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'PolygonsPsDuplicate', pointer counter less than s16Pts of ps_poly_src.
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'PolygonsPsDuplicate', pointer counter greater than or equal to s16Pts of ps_poly_src.
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'PsAllocatePoly', U32_polys_allocated greater than POLYS_AVAILABLE.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'PsAllocatePoly', U32_polys_allocated equal to POLYS_AVAILABLE.
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'PsAllocatePoly', U32_polys_allocated less than POLYS_AVAILABLE.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'PsAllocatePoly', AllocateElements is called.
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'PsAllocatePoly', ps_rec_points is NULL.
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'PsAllocatePoly', ps_rec_points is not NULL.
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'PsAllocatePoly', ps_pol_points is NULL.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'PsAllocatePoly', ps_pol_points is not NULL.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'AllocateElements', u32_num_elements is greater than POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'AllocateElements', u32_num_elements is lesser than POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'AllocateElements', u32_num_elements is equal to POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'AllocateElements', polygon elements allocated plus u32_num_elements is greater than POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'AllocateElements', polygon elements allocated plus u32_num_elements is less than POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'AllocateElements', polygon elements allocated plus u32_num_elements is equal to POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'PolygonsClear', the functions ClearElements and ClearPolys are called.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'PsGetShape', the function 'RterrWidget' is called .
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'PsGetShape', e_shape is equal to ENOSHAPE .
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'PsGetShape', e_shape is not equal to ENOSHAPE .
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'PsGetShape', e_shape is equal to EMAXSTOCKSHAPE .
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'PsGetShape', e_shape is greater than EMAXSTOCKSHAPE .
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'PsGetShape', e_shape is less than EMAXSTOCKSHAPE .
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'PsGetShape', e_shape is equal to ECAPRSHAPE .
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'PsGetShape', e_shape is not equal to ECAPRSHAPE .
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'PsGetShape', e_shape is equal to EREDXSHAPE .
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'PsGetShape', e_shape is not equal to EREDXSHAPE .
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'PsGetShape', e_shape is equal to ESTDPTRSHAPE .
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'PsGetShape', e_shape is not equal to ESTDPTRSHAPE .
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'PsGetShape', e_shape is equal to ESTDTIPSHAPE .
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'PsGetShape', e_shape is not equal to ESTDTIPSHAPE .
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'PsGetShape', e_shape is equal to EDIMONDPOINTSHAPE .
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'PsGetShape', e_shape is not equal to EDIMONDPOINTSHAPE .
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'PsGetShape', e_shape is equal to EDIMONDPOINTTIPSHAPE .
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'PsGetShape', e_shape is not equal to EDIMONDPOINTTIPSHAPE .
+    COMMENT
+    COMMENT Class 42
+    COMMENT In function 'PsGetShape', e_shape is equal to ECAPTSHAPE .
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function 'PsGetShape', e_shape is not equal to ECAPTSHAPE .
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'PsGetShape', e_shape is equal to ECAPESHAPE .
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function 'PsGetShape', e_shape is not equal to ECAPESHAPE.
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'PolygonsPsPolyInit', PsGetShape is called.
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'PolygonsPsPolyInit', PsAllocatePoly is called.
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function 'PolygonsPsPolyInit', VInitPolar is called.
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function 'PolygonsPsPolyInit', PolygonsvPolarToRect is called.
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function 'PolygonsPsPolyInit', ps_float_poly is NULL.
+    COMMENT
+    COMMENT Class 51
+    COMMENT In function 'PolygonsPsPolyInit', ps_float_poly is not NULL.
+    COMMENT
+    COMMENT Class 52
+    COMMENT In function 'VInitPolar', s32X of ps rectangle point is equal to ZERO.
+    COMMENT
+    COMMENT Class 53
+    COMMENT In function 'VInitPolar', s32X of ps rectangle point is not equal to ZERO.
+    COMMENT
+    COMMENT Class 54
+    COMMENT In function 'VInitPolar', s32Y of ps rectangle point is equal to ZERO.
+    COMMENT
+    COMMENT Class 55
+    COMMENT In function 'VInitPolar', s32Y of ps rectangle point is not equal to ZERO.
+    COMMENT
+    COMMENT Class 56
+    COMMENT In function 'VInitPolar', s32X of ps rectangle point is less than ZERO.
+    COMMENT
+    COMMENT Class 57
+    COMMENT In function 'VInitPolar', s32X of ps rectangle point is greater than ZERO.
+    COMMENT
+    COMMENT Class 58
+    COMMENT In function 'VInitPolar', s32Y of ps rectangle point is less than ZERO.
+    COMMENT
+    COMMENT Class 59
+    COMMENT In function 'VInitPolar', s32Y of ps rectangle point is greater than ZERO.
+    COMMENT
+    COMMENT Class 60
+    COMMENT In function "PolygonsvPolarToRect", ps_poly is equal to NULL
+    COMMENT 
+    COMMENT Class 61
+    COMMENT In function "PolygonsvPolarToRect", ps_poly is not equal to NULL
+    COMMENT 
+    COMMENT Class 62
+    COMMENT The function "PolygonsvPolarToRect", calls function "RterrWidget"
+    COMMENT 
+    COMMENT Class 63
+    COMMENT In function "PolygonsvPolarToRect", E_orientation is equal to E_PORTRAIT.
+    COMMENT 
+    COMMENT Class 64
+    COMMENT In function "PolygonsvPolarToRect", E_orientation is not equal to E_PORTRAIT.
+    COMMENT 
+    COMMENT Class 65
+    COMMENT In function "PolygonsvPolarToRect", pointer counter is less than s16Pts of ps_poly
+    COMMENT 
+    COMMENT Class 66
+    COMMENT In function "PolygonsvPolarToRect", pointer counter is equal to s16Pts of ps_poly
+    COMMENT 
+    COMMENT Class 67
+    COMMENT In function "PolygonsvPolarToRect", calls ArmCosQ15
+    COMMENT 
+    COMMENT Class 68
+    COMMENT In function "PolygonsvPolarToRect", calls ArmSinQ15
+    COMMENT 
+    COMMENT Class 69
+    COMMENT In function "InverseTangent", sign is equal to TRUE.   
+    COMMENT
+    COMMENT Class 70
+    COMMENT In function "InverseTangent", sign is not equal to TRUE.      
+    COMMENT
+    COMMENT Class 71
+    COMMENT In function "TangentFunc", calls the function 'ModulusFunc'   
+    COMMENT
+    COMMENT Class 72
+    COMMENT In function "TangentFunc", calls the function 'Tan32Func'
+    COMMENT
+    COMMENT Class 73
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_0.   
+    COMMENT
+    COMMENT Class 74
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_1.   
+    COMMENT
+    COMMENT Class 75
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_2.   
+    COMMENT
+    COMMENT Class 76
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_3.   
+    COMMENT
+    COMMENT Class 77
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_4.   
+    COMMENT
+    COMMENT Class 78
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_5.   
+    COMMENT
+    COMMENT Class 79
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_6.   
+    COMMENT
+    COMMENT Class 80
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_7.   
+    COMMENT
+    COMMENT Class 81
+    COMMENT In function "TangentFunc", ocatant value is other than OCTANT_VAL_0,OCTANT_VAL_1,OCTANT_VAL_2,OCTANT_VAL_03
+    COMMENT OCTANT_VAL_4,OCTANT_VAL_5,OCTANT_VAL_6 and OCTANT_VAL_7.     
+    COMMENT
+    COMMENT Class 82
+    COMMENT In function "InverseTangent", val is less than 0. 
+    COMMENT
+    COMMENT Class 83
+    COMMENT In function "InverseTangent", val is greater than 0.
+    COMMENT
+    COMMENT Class 84
+    COMMENT In function "InverseTangent", val is equal to 0.   
+    COMMENT
+    COMMENT Class 85
+    COMMENT In function "InverseTangent", val is less than 1.0.  
+    COMMENT
+    COMMENT Class 86
+    COMMENT In function "InverseTangent", val is greater than 1.0.   
+    COMMENT
+    COMMENT Class 87
+    COMMENT In function "InverseTangent", val is equal to 1.0.     
+    COMMENT
+    COMMENT Class 88
+    COMMENT In function "InverseTangent", val is lesser than the return value of TangentFunc.  
+    COMMENT
+    COMMENT Class 89
+    COMMENT In function "InverseTangent", val is greater than the return value of TangentFunc.   
+    COMMENT
+    COMMENT Class 90
+    COMMENT In function "InverseTangent", val is equal to return value of TangentFunc.   
+    COMMENT
+    COMMENT Class 91
+    COMMENT In function "InverseTangent", calls the function 'TangentFunc'.     
+    COMMENT
+    COMMENT Class 92
+    COMMENT In function "InverseTangent", region is equal to TRUE.   
+    COMMENT
+    COMMENT Class 93
+    COMMENT In function "InverseTangent", region is not equal to TRUE.
+    COMMENT
+    COMMENT Class 94
+    COMMENT In function "InverseTangent", complement is equal to TRUE.   
+    COMMENT
+    COMMENT Class 95
+    COMMENT In function "InverseTangent", complement is not equal to TRUE.  
+    COMMENT
+    COMMENT Class 96
+    COMMENT In function "SquareRoot", square is equal to 0.   
+    COMMENT
+    COMMENT Class 97
+    COMMENT In function "SquareRoot", square is lesser than 0.      
+    COMMENT    
+    COMMENT Class 98
+    COMMENT In function "SquareRoot", square is greater than 0.      
+    COMMENT
+    COMMENT Class 99
+    COMMENT In function "VInitPolar", function 'InverseTangent' is called.      
+    COMMENT
+    COMMENT Class 100
+    COMMENT In function "VInitPolar", function 'SquareRoot' is called.     
+    COMMENT
+    COMMENT Class 101
+    COMMENT In function 'PsGetShape', e_shape is equal to ENOSHAPE .
+    COMMENT
+    COMMENT Class 102
+    COMMENT In function 'PsGetShape', e_shape is greater than equal to EMAXSTOCKSHAPE .
+    COMMENT
+    COMMENT Class 103
+    COMMENT In function 'PsGetShape',e_shape is equal to polygon_shape of Ap_poly_graph with loop index value.
+    COMMENT
+    COMMENT Class 104
+    COMMENT In function 'PsGetShape', shape valid is not equal to VALID_SHAPE .
+    COMMENT
+	COMMENT Class 105
+    COMMENT In function 'PsGetShape', shape valid is equal to VALID_SHAPE.
+    COMMENT
+    COMMENT Class 106
+    COMMENT In function 'PsGetShape', calls function RterrWidget function .
+    COMMENT
+	COMMENT Class 107
+	COMMENT In function 'PolygonsAngle' rd_state is equal to TRUE.
+	COMMENT
+	COMMENT Class 108
+	COMMENT In function 'PolygonsAngle' rd_state is not equal to TRUE.	
+	COMMENT
+	COMMENT Class 19
+	COMMENT In function 'PolygonsAngle' pt_ctr is greater than ZERO.
+	COMMENT
+	COMMENT Class 110
+	COMMENT In function 'PolygonsAngle' pt_ctr is less than ZERO.
+	COMMENT
+	COMMENT Class 111
+	COMMENT In function 'PolygonsAngle' pt_ctr is equal to ZERO.
+	COMMENT 
+	COMMENT Class 112
+	COMMENT In function 'PolygonsAngle' end_rot is greater than start_rot.
+	COMMENT
+	COMMENT Class 113
+	COMMENT In function 'PolygonsAngle' end_rot is less than start_rot.
+	COMMENT
+	COMMENT Class 114
+	COMMENT In function 'PolygonsAngle' end_rot is equal to start_rot.
+	COMMENT 
+	COMMENT Class 115
+	COMMENT In function 'PolygonsAngle' updated_angle is greater than end_rot.
+	COMMENT
+	COMMENT Class 116
+	COMMENT In function 'PolygonsAngle' updated_angle is less than end_rot.
+	COMMENT
+	COMMENT Class 117
+	COMMENT In function 'PolygonsAngle' updated_angle is equal to end_rot.
+	COMMENT
+	COMMENT Class 118
+	COMMENT In function 'PolygonsAngle' E_orientation is equal to E_PORTRAIT.
+	COMMENT
+	COMMENT Class 119
+	COMMENT In function 'PolygonsAngle' E_orientation is not equal to E_PORTRAIT.
+	COMMENT
+	COMMENT Class 120
+	COMMENT In function 'PolygonsvPolarToRect' calls the function 'PolygonsAngle'.
+    COMMENT	
+    COMMENT Invalid Class(es)
+    COMMENT </ECD>
+
+----------------------------------------------------------------------------------
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+
+
+    DEFINE STUB hdudispfpolygon2_c 30
+    
+    	-- Created to verify the 1st parameter of RterrWidget
+        # char PTU_pc_file_in_1[200],PTU_pc_file_out_1[200];
+        # char PTU_pc_file_in_2[200],PTU_pc_file_out_2[200];
+    
+        -- Created to store count value for function RterrWidget
+        # T_UINT8 PTU_temp1,PTU_Count;
+    
+        -- Created to verify the 3rd parameter of RterrWidget
+        # char PTU_pc_message_in_1[200],PTU_pc_message_out_1[200];
+        # char PTU_pc_message_in_2[200],PTU_pc_message_out_2[200];
+        #T_Q15 ArmSinQ15(T_Q15 _in x); 
+        #T_Q15 ArmCosQ15(T_Q15 _in x); 
+        #T_INT16 S16_panel_height; 
+        #T_ELANDSCAPEORPORTRIAT E_orientation; 
+        --Parameter pc_file and pc_message are made as _no and is verified explicitly
+        #void RterrWidget(char _no pc_file[200], T_INT32 _in s32_line_number, char _no pc_message[200])
+        #{
+        # if(PTU_Count==0)
+        # {PTU_Count++;
+        #  PTU_temp1 = 0;
+        #  while(pc_file[PTU_temp1]!= ZERO)
+        #  {
+        #    PTU_pc_file_in_1[PTU_temp1]= pc_file[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #    PTU_pc_file_in_1[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(pc_message[PTU_temp1]!= ZERO)
+        #  {
+        #    PTU_pc_message_in_1[PTU_temp1]= pc_message[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #    PTU_pc_message_in_1[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(PTU_pc_file_out_1[PTU_temp1]!= ZERO)
+        #  {
+        #   pc_file[PTU_temp1]       = PTU_pc_file_out_1[PTU_temp1];
+        #   PTU_temp1 = PTU_temp1+1;
+        #  }
+        #   pc_file[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(PTU_pc_message_out_1[PTU_temp1]!= ZERO)
+        #  {
+        #    pc_message[PTU_temp1] = PTU_pc_message_out_1[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #   pc_message[PTU_temp1]= ZERO;
+        # }
+        # else
+        # {
+        #  PTU_temp1 = 0;
+        #  while(pc_file[PTU_temp1]!= ZERO)
+        #  {
+        #    PTU_pc_file_in_2[PTU_temp1]= pc_file[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #    PTU_pc_file_in_2[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(pc_message[PTU_temp1]!= ZERO)
+        #  {
+        #    PTU_pc_message_in_2[PTU_temp1]= pc_message[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #    PTU_pc_message_in_2[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(PTU_pc_file_out_2[PTU_temp1]!= ZERO)
+        #  {
+        #   pc_file[PTU_temp1]       = PTU_pc_file_out_2[PTU_temp1];
+        #   PTU_temp1 = PTU_temp1+1;
+        #  }
+        #   pc_file[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(PTU_pc_message_out_2[PTU_temp1]!= ZERO)
+        #  {
+        #    pc_message[PTU_temp1] = PTU_pc_message_out_2[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #   pc_message[PTU_temp1]= ZERO;
+        # }
+        #}
+        
+    END DEFINE
+    
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+--Environment of the hdudispfpolygon2.c
+
+--ENVIRONMENT ENV_hdudispfpolygon2_c
+
+    --None
+
+--END ENVIRONMENT -- ENV_hdudispfpolygon2_c
+
+--USE ENV_hdudispfpolygon2_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PolygonsvPolarToRect
+--------------------------------------------------------------------------------
+SERVICE PolygonsvPolarToRect
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+    #T_SPOLY ps_poly;
+    #T_INT32 s32_xoff;
+    #T_INT32 s32_yoff;
+    #T_UINT16 u16_len;
+    #T_INT32 u32_rot;
+    #T_INT32 u32_rot_rd;
+    #T_BOOL moving_rd;
+	#T_UINT16 PTU_i;
+    ENVIRONMENT ENV_PolygonsvPolarToRect
+    
+		STRUCTURE ps_poly,	init = { s16Pts => 0, psRP => NIL, psPP => NIL, psNext => NIL },		ev = init
+		
+		VAR s32_xoff,		init = 0,		ev = init
+		
+		VAR s32_yoff,		init = 0,		ev = init
+		
+		VAR u16_len,		init = 0,		ev = init
+		
+		VAR u32_rot,		init = 0,		ev = init
+
+       	VAR u32_rot_rd,		init = 0,		ev = init
+
+        VAR moving_rd,		init = FALSE,		ev = init
+		
+    END ENVIRONMENT -- ENV_PolygonsvPolarToRect
+    USE ENV_PolygonsvPolarToRect
+
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-001] 
+	COMMENT The function shall do following if rd_state is equal to TRUE,does nothing when pt_ctr is less than 0.
+	COMMENT Equivalence Class:107,110
+	COMMENT 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-002] 
+	COMMENT The function shall do following if rd_state is equal to TRUE
+	COMMENT •	Set angualr difference to (end_rot minus start_rot) divided by (noOfPts minus TWO) 
+	COMMENT •	Set updated angle to start_rot plus (pt_ctr multiplied with angular difference)
+	COMMENT when end_rot is equal to start_rot.
+	COMMENT Equivalence Class:107,114
+	COMMENT 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-003] 
+	COMMENT Does nothing when updated_angle is less than end_rot
+	COMMENT Equivalence Class:116
+	COMMENT 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-006] 
+	COMMENT Set round dial angle to round dial angle bitwise and with ANGLE_MASK. 
+	COMMENT Equivalence Class:None
+	COMMENT
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-007] 
+	COMMENT The function does the following If E_PORTRAIT is equal to E_orientation then,
+	COMMENT •	Set round dial angle to round dial angle minus ANGLE_SUBT.
+	COMMENT •	Set round dial angle to  round dial angle bitwise and with ANGLE_MASK. 
+	COMMENT Equivalence Class:118
+	COMMENT
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-008] 
+	COMMENT The function shall return round dial angle.
+	COMMENT Equivalence Class:None
+	COMMENT </TD>
+
+	ELEMENT
+
+	COMMENT INPUT SECTION:
+		STRUCTURE ps_poly,            	init = { s16Pts => 1, psRP => &PTU_psRP, 
+		&                                  psPP => &PTU_psPP, psNext => NIL },       ev= init
+
+		VAR PTU_psPP[0..1].s32A,		init = 2,						ev = init
+
+		VAR PTU_psPP[0..1].s32R,		init = 2,						ev = init
+
+		VAR s32_xoff,					init = 2,						ev = init
+
+		VAR s32_yoff,					init = 1,						ev = init
+
+		VAR u32_rot,					init = 0,						ev = init
+
+		VAR u32_rot_rd,					init = 0,						ev = init
+
+		VAR moving_rd,					init = TRUE,					ev = init
+
+		VAR E_orientation, 				init = E_PORTRAIT,				ev = init
+
+		VAR S16_panel_height,			init = 3,						ev = init
+
+		VAR u16_len,					init = 10000,					ev = init
+
+	COMMENT OUTPUT SECTION:
+
+		--None
+
+	COMMENT INPUT/OUTPUT SECTION:
+		
+		VAR PTU_psRP[0].s32Y,			init = 10,						ev = 12
+		
+		VAR PTU_psRP[0].s32X,			init = 0,						ev = 3
+
+	--Stub Calls:
+	SIMUL
+
+	   --Fast approximation to the trigonometric sine function for Q15 data
+	   STUB ArmSinQ15(24576)5
+	   STUB ArmSinQ15 2=>(24578)5
+	   STUB ArmCosQ15(24576)5
+	   STUB ArmCosQ15 2=>(24578)5
+
+	END SIMUL
+
+	--Calling the Unit Under Test :
+	#PolygonsvPolarToRect(&ps_poly, s32_xoff, s32_yoff, u16_len, u32_rot, u32_rot_rd, moving_rd);
+
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-001] 
+	COMMENT The function shall do following if rd_state is equal to TRUE,does nothing when pt_ctr is less than 0.
+	COMMENT Equivalence Class:107,
+	COMMENT 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-002] 
+	COMMENT The function shall do following if rd_state is equal to TRUE
+	COMMENT •	Set angualr difference to (end_rot minus start_rot) divided by (noOfPts minus TWO) 
+	COMMENT •	Set updated angle to start_rot plus (pt_ctr multiplied with angular difference)
+	COMMENT when end_rot is greater than start_rot.
+	COMMENT Equivalence Class:107,112
+	COMMENT 
+	COMMENT </TD>
+	ELEMENT
+
+	COMMENT INPUT SECTION:
+		STRUCTURE ps_poly,            	init = { s16Pts=>4, psRP => &PTU_psRP, 
+		&                                  psPP => &PTU_psPP, ps.Next => NIL },       ev= init
+
+		VAR PTU_psPP[0..1].s32A,		init = 2,						ev = init
+
+		VAR PTU_psPP[0..1].s32R,		init = 2,						ev = init
+
+		VAR s32_xoff,					init = 2,						ev = init
+
+		VAR s32_yoff,					init = 1,						ev = init
+
+		VAR u32_rot,					init = 254,						ev = init
+
+		VAR u32_rot_rd,					init = 2,						ev = init
+
+		VAR moving_rd,					init = TRUE,					ev = init
+
+		VAR E_orientation, 				init = E_PORTRAIT,				ev = init
+
+		VAR S16_panel_height,			init = 3,						ev = init
+
+		VAR u16_len,					init = 10000,					ev = init
+
+	COMMENT OUTPUT SECTION:
+
+		--None
+
+	COMMENT INPUT/OUTPUT SECTION:
+		
+		VAR PTU_psRP[0].s32Y,			init = 10,						ev = 12
+		
+		VAR PTU_psRP[0].s32X,			init = 0,						ev = 3
+
+	--Stub Calls:
+	SIMUL
+
+	   --Fast approximation to the trigonometric sine function for Q15 data
+	   STUB ArmSinQ15(24578)5
+	   STUB ArmSinQ15 2=>(24580)5
+	   STUB ArmSinQ15 3=>(24578)5
+	   STUB ArmSinQ15 4=>(24580)5
+	   STUB ArmSinQ15 5=>(24704)5
+	   STUB ArmSinQ15 6=>(24704)5
+	   STUB ArmSinQ15 7=>(24830)5
+	   STUB ArmSinQ15 8=>(24830)5
+
+	   STUB ArmCosQ15(24578)5
+	   STUB ArmCosQ15 2=>(24580)5
+	   STUB ArmCosQ15 3=>(24578)5
+	   STUB ArmCosQ15 4=>(24580)5
+	   STUB ArmCosQ15 5=>(24704)5
+	   STUB ArmCosQ15 6=>(24704)5
+	   STUB ArmCosQ15 7=>(24830)5
+	   STUB ArmCosQ15 8=>(24830)5
+
+
+	END SIMUL
+
+	--Calling the Unit Under Test :
+	#PolygonsvPolarToRect(&ps_poly, s32_xoff, s32_yoff, u16_len, u32_rot, u32_rot_rd, moving_rd);
+
+	END ELEMENT
+
+--	for(PTU_i=0; PTU_i < ps_poly->s16Pts; PTU_i++)
+--	
+--	#PolygonsvPolarToRect(&ps_poly, s32_xoff, s32_yoff, u16_len, u32_rot, u32_rot_rd, moving_rd);
+--
+--	
+--	ELEMENT
+--
+--	COMMENT INPUT SECTION:
+--		STRUCTURE ps_poly,            	init = { s16Pts=>40, psRP => &PTU_psRP, 
+--		&                                  psPP => &PTU_psPP, ps.Next => NIL },       ev= init
+--
+--		VAR PTU_psPP[0..1].s32A,		init = 2,						ev = init
+--
+--		VAR PTU_psPP[0..1].s32R,		init = 2,						ev = init
+--
+--		VAR s32_xoff,					init = 2,						ev = init
+--
+--		VAR s32_yoff,					init = 1,						ev = init
+--
+--		VAR u32_rot,					init = 254,						ev = init
+--
+--		VAR u32_rot_rd,					init = 2,						ev = init
+--
+--		VAR moving_rd,					init = TRUE,					ev = init
+--
+--		VAR E_orientation, 				init = E_PORTRAIT,				ev = init
+--
+--		VAR S16_panel_height,			init = 3,						ev = init
+--
+--		VAR u16_len,					init = 10000,					ev = init
+--
+--	COMMENT OUTPUT SECTION:
+--
+--		--None
+--
+--	COMMENT INPUT/OUTPUT SECTION:
+--		
+--		VAR PTU_psRP[0].s32Y,			init = 10,						ev = 12
+--		
+--		VAR PTU_psRP[0].s32X,			init = 0,						ev = 3
+--
+--	--Stub Calls:
+--	SIMUL
+--
+--	   --Fast approximation to the trigonometric sine function for Q15 data
+--	   STUB ArmSinQ15(24578)5
+--	   STUB ArmSinQ15 2=>(24580)5
+--	   STUB ArmSinQ15 3=>(24578)5
+--	   STUB ArmSinQ15 4=>(24580)5
+--	   STUB ArmSinQ15 5=>(24704)5
+--	   STUB ArmSinQ15 6=>(24704)5
+--	   STUB ArmSinQ15 7=>(24830)5
+--	   STUB ArmSinQ15 8=>(24830)5
+--
+--	   STUB ArmCosQ15(24578)5
+--	   STUB ArmCosQ15 2=>(24580)5
+--	   STUB ArmCosQ15 3=>(24578)5
+--	   STUB ArmCosQ15 4=>(24580)5
+--	   STUB ArmCosQ15 5=>(24704)5
+--	   STUB ArmCosQ15 6=>(24704)5
+--	   STUB ArmCosQ15 7=>(24830)5
+--	   STUB ArmCosQ15 8=>(24830)5
+--
+--
+--	END SIMUL
+--
+--	--Calling the Unit Under Test :
+--	#PolygonsvPolarToRect(&ps_poly, s32_xoff, s32_yoff, u16_len, u32_rot, u32_rot_rd, moving_rd);
+--
+--	END ELEMENT
+	
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-001] 
+	COMMENT The function shall do following if rd_state is equal to TRUE,does nothing when pt_ctr is less than 0.
+	COMMENT Equivalence Class:107
+	COMMENT 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-004] 
+	COMMENT The function shall do following if rd_state is equal to TRUE
+	COMMENT Does nothing when updated_angle is greater than end_rot
+	COMMENT Equivalence Class107,115
+	COMMENT 
+	COMMENT </TD>
+	ELEMENT
+
+	COMMENT INPUT SECTION:
+		STRUCTURE ps_poly,            	init = { s16Pts=>4, psRP => &PTU_psRP, 
+		&                                  psPP => &PTU_psPP, ps.Next => NIL },       ev= init
+
+		VAR PTU_psPP[0..1].s32A,		init = 2,						ev = init
+
+		VAR PTU_psPP[0..1].s32R,		init = 2,						ev = init
+
+		VAR s32_xoff,					init = 2,						ev = init
+
+		VAR s32_yoff,					init = 1,						ev = init
+
+		VAR u32_rot,					init = 2,						ev = init
+
+		VAR u32_rot_rd,					init = 254,						ev = init
+
+		VAR moving_rd,					init = TRUE,					ev = init
+
+		VAR E_orientation, 				init = E_PORTRAIT,				ev = init
+
+		VAR S16_panel_height,			init = 3,						ev = init
+
+		VAR u16_len,					init = 10000,					ev = init
+
+	COMMENT OUTPUT SECTION:
+
+		--None
+
+	COMMENT INPUT/OUTPUT SECTION:
+		
+		VAR PTU_psRP[0].s32Y,			init = 10,						ev = 12
+		
+		VAR PTU_psRP[0].s32X,			init = 0,						ev = 3
+
+	--Stub Calls:
+	SIMUL
+
+	   --Fast approximation to the trigonometric sine function for Q15 data
+	   STUB ArmSinQ15(24830)5
+	   STUB ArmSinQ15 2=>(24832)5
+	   STUB ArmSinQ15 3=>(24830)5
+	   STUB ArmSinQ15 4=>(24832)5
+	   STUB ArmSinQ15 5=>(24704)5
+	   STUB ArmSinQ15 6=>(24704)5
+	   STUB ArmSinQ15 7=>(24578)5
+	   STUB ArmSinQ15 8=>(24578)5
+
+	   
+	   STUB ArmCosQ15(24830)5
+	   STUB ArmCosQ15 2=>(24832)5
+	   STUB ArmCosQ15 3=>(24830)5
+	   STUB ArmCosQ15 4=>(24832)5
+	   STUB ArmCosQ15 5=>(24704)5
+	   STUB ArmCosQ15 6=>(24704)5
+	   STUB ArmCosQ15 7=>(24578)5
+	   STUB ArmCosQ15 8=>(24578)5
+
+
+	END SIMUL
+
+	--Calling the Unit Under Test :
+	#PolygonsvPolarToRect(&ps_poly, s32_xoff, s32_yoff, u16_len, u32_rot, u32_rot_rd, moving_rd);
+
+	END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-001] 
+	COMMENT The function shall do following if rd_state is equal to TRUE
+	COMMENT pt_ctr is decremented by ONE if pt_ctr is greater than ZERO. 
+	COMMENT Equivalence Class:107,
+	COMMENT 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-002] 
+	COMMENT if condition else covered  (end _rot < start_rot)
+	COMMENT Equivalence Class
+	COMMENT 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-004] 
+	COMMENT 
+	COMMENT </TD>
+	ELEMENT
+
+	COMMENT INPUT SECTION:
+		STRUCTURE ps_poly,            	init = { s16Pts=>4, psRP => &PTU_psRP, 
+		&                                  psPP => &PTU_psPP, ps.Next => NIL },       ev= init
+
+		VAR PTU_psPP[0..1].s32A,		init = 2,						ev = init
+
+		VAR PTU_psPP[0..1].s32R,		init = 2,						ev = init
+
+		VAR s32_xoff,					init = 2,						ev = init
+
+		VAR s32_yoff,					init = 1,						ev = init
+
+		VAR u32_rot,					init = 2,						ev = init
+
+		VAR u32_rot_rd,					init = 254,						ev = init
+
+		VAR moving_rd,					init = TRUE,					ev = init
+
+		VAR E_orientation, 				init = E_PORTRAIT,				ev = init
+
+		VAR S16_panel_height,			init = 3,						ev = init
+
+		VAR u16_len,					init = 10000,				ev = init
+
+	COMMENT OUTPUT SECTION:
+
+		--None
+
+	COMMENT INPUT/OUTPUT SECTION:
+		
+		VAR PTU_psRP[0].s32Y,			init = 10,						ev = 12
+		
+		VAR PTU_psRP[0].s32X,			init = 0,						ev = 3
+
+	--Stub Calls:
+	SIMUL
+
+	   --Fast approximation to the trigonometric sine function for Q15 data
+	   STUB ArmSinQ15(24830)5
+	   STUB ArmSinQ15 2=>(24832)5
+	   STUB ArmSinQ15 3=>(24830)5
+	   STUB ArmSinQ15 4=>(24832)5
+	   STUB ArmSinQ15 5=>(24704)5
+	   STUB ArmSinQ15 6=>(24704)5
+	   STUB ArmSinQ15 7=>(24578)5
+	   STUB ArmSinQ15 8=>(24578)5
+
+	   STUB ArmCosQ15(24830)5
+	   STUB ArmCosQ15 2=>(24832)5
+	   STUB ArmCosQ15 3=>(24830)5
+	   STUB ArmCosQ15 4=>(24832)5
+	   STUB ArmCosQ15 5=>(24704)5
+	   STUB ArmCosQ15 6=>(24704)5
+	   STUB ArmCosQ15 7=>(24578)5
+	   STUB ArmCosQ15 8=>(24578)5
+
+
+	END SIMUL
+
+	--Calling the Unit Under Test :
+	#PolygonsvPolarToRect(&ps_poly, s32_xoff, s32_yoff, u16_len, u32_rot, u32_rot_rd, moving_rd);
+
+	END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-005] 
+	COMMENT The function shall do following 
+	COMMENT •	Set updated angle to end_rot if rd_state is not equal to TRUE.
+	COMMENT •	Set rd angle to updated angle.
+	COMMENT Equivalence Class:108
+	COMMENT 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-006]
+	COMMENT Set round dial angle to round dial angle bitwise and with ANGLE_MASK.
+	COMMENT Equivalence Class :None
+	COMMENT 
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-007]
+	COMMENT Function does nothing when E_PORTRAIT is not equal to E_orientation
+	COMMENT Equivalence Class:119
+	COMMENT
+	COMMENT [hdudispfpolygon2-PolygonsAngle-DB-LLR-008]
+	COMMENT The function shall return round dial angle.
+	COMMENT Equivalence Class:None
+	COMMENT </TD>
+	
+	ELEMENT
+
+	COMMENT INPUT SECTION:
+		STRUCTURE ps_poly,            	init = { s16Pts=>4, psRP => &PTU_psRP, 
+		&                                  psPP => &PTU_psPP, ps.Next => NIL },       ev= init
+
+		VAR PTU_psPP[0..1].s32A,		init = 2,						ev = init
+
+		VAR PTU_psPP[0..1].s32R,		init = 2,						ev = init
+
+		VAR s32_xoff,					init = 2,						ev = init
+
+		VAR s32_yoff,					init = 1,						ev = init
+
+		VAR u32_rot,					init = 2,						ev = init
+
+		VAR u32_rot_rd,					init = 254,						ev = init
+
+		VAR moving_rd,					init = FALSE,					ev = init
+
+		VAR E_orientation, 				init = E_LAND_SCAPE,			ev = init
+
+		VAR S16_panel_height,			init = 3,						ev = init
+
+		VAR u16_len,					init = 10000,				ev = init
+
+	COMMENT OUTPUT SECTION:
+
+		--None
+
+	COMMENT INPUT/OUTPUT SECTION:
+		
+		VAR PTU_psRP[0].s32Y,			init = 10,						ev = 3
+		
+		VAR PTU_psRP[0].s32X,			init = 0,						ev = 4
+
+	--Stub Calls:
+	SIMUL
+
+	   --Fast approximation to the trigonometric sine function for Q15 data
+	   STUB ArmSinQ15(2)5
+	   STUB ArmSinQ15 2=>(4)5
+	   STUB ArmSinQ15 3=>(2)5
+	   STUB ArmSinQ15 4=>(4)5
+	   STUB ArmSinQ15 5=>(2)5
+	   STUB ArmSinQ15 6=>(2)5
+	   STUB ArmSinQ15 7=>(2)5
+	   STUB ArmSinQ15 8=>(2)5
+
+	   
+	   STUB ArmCosQ15(2)5
+	   STUB ArmCosQ15 2=>(4)5
+	   STUB ArmCosQ15 3=>(2)5
+	   STUB ArmCosQ15 4=>(4)5
+	   STUB ArmCosQ15 5=>(2)5
+	   STUB ArmCosQ15 6=>(2)5
+	   STUB ArmCosQ15 7=>(2)5
+	   STUB ArmCosQ15 8=>(2)5
+
+
+	END SIMUL
+
+	--Calling the Unit Under Test :
+	#PolygonsvPolarToRect(&ps_poly, s32_xoff, s32_yoff, u16_len, u32_rot, u32_rot_rd, moving_rd);
+
+	END ELEMENT
+
+END TEST -- TEST 5
+
+END SERVICE -- PolygonsvPolarToRect
+
+
+
+
+

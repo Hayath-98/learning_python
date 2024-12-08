@@ -1,0 +1,432 @@
+HEADER hdudispfpoller,Source Code Ver : 1.9, TestScript Ver :1.5
+--------------------------------------------------------------------------------
+-- Author Name         : Santosh Mithari
+--
+-- File Name           : hdudispfpoller.ptu
+--
+-- Test Creation Date  : 10.10.2017
+--
+-- Tested Functions    : PollerSignalTask
+--						 PollerInit
+--						 PollerTask
+--
+-- Version History     : 
+--
+-- TEST-VERSION         TEST-DATE         TESTER NAME           MODIFICATIONS
+-- ------------        -----------        -----------           -------------
+--    1.1               10.10.2017        Santosh Mithari       Created the PTU file.
+--    1.2               10.11.2017        Santosh Mithari       Updated as per #PR100171
+--	  1.3				27-07-2020		  Harshitha R 			Updated as per #PR100267
+--	  1.4				29-04-2021		 Vignesh Sunil 			Updated as per #PR100338
+--	  1.5				14-05-2021		 Vignesh Sunil 			Updated as per #PR100354
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+##include "hdudispfpbs.h"
+##include "hdudispfpoller.h" 
+##include "hdudispfpwm.h"
+##include "hdudispfresource.h"
+##include "hdudispfstandard.h"
+##include "hdudispfstmadc.h" 
+##include "hdudispftimer.h" 
+##include "hdudispfucos.h" 
+##include "hdulibbasictypes.h"
+##include "hdudispfoscpu.h"   
+##include "hdudispfcbit.h"    
+##include "hdudispfrtd.h"
+##include "hdudispflmsscu.h"  /* SCU rtd processing and error codes  */
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	--None
+
+-- Declarations of the temporary variable
+
+	--Variables used in stub OsSemPend
+	#T_OS_EVENT PTU_p_event;
+	#T_UBYTE PTU_error;
+	
+	--Variable used to verify return value from stub OsSemCreate
+	#T_OS_EVENT PTU_pevent;
+	
+	--Variable used in stub 'OsSemPost'	
+	#T_OS_EVENT  *PTU_param_event;
+	
+	--Variable to pass address to Sem_poller_task
+	#T_OS_EVENT *PTU_Sem_poller_task;
+	
+  
+--------------------------------------------------------------------------------
+BEGIN
+
+	COMMENT Author Name         : 	Santosh Mithari 
+	COMMENT
+	COMMENT File Name           : 	hdudispfpoller.ptu
+	COMMENT 
+	COMMENT Tested Functions    :  	PollerSignalTask
+	COMMENT							PollerInit
+	COMMENT							PollerTask
+	COMMENT
+	COMMENT 
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT 
+	COMMENT Assumption(s): 
+	COMMENT None
+	COMMENT
+	COMMENT Constraint(s):
+	COMMENT 1.Source file "hdudispfpoller.c" is modified for testing purpose.    
+    COMMENT The function 'PollerTask' is modified to break infinite loop.
+   	COMMENT
+    COMMENT  /*local variable declared for testing purpose*/
+	COMMENT	T_UINT16 PTU_count =0;
+	COMMENT	
+	COMMENT while (TRUE)
+	COMMENT { 
+	COMMENT	   /*Modified for testing purpose to terminate infinite loop*/
+	COMMENT   	 PTU_count++;
+	COMMENT   	if(PTU_count == 4)
+	COMMENT   	{
+	COMMENT 		 	break;
+	COMMENT   	}
+	COMMENT    	else
+	COMMENT    	{
+	COMMENT    	  	;
+	COMMENT     }
+    COMMENT  }	
+	COMMENT Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for 
+	COMMENT the FALSE part of while condition
+	COMMENT
+	COMMENT
+	COMMENT 2.In function 'PollerInit', for loop cannot be covered for 0 and 1 times, since it is
+	COMMENT   controlled by macro POLLER_TASK_STK_SIZE.
+	COMMENT
+	COMMENT Code Snippet -
+	COMMENT    for(u16_ctr=0; u16_ctr<POLLER_TASK_STK_SIZE; u16_ctr++)
+ 	COMMENT {
+ 	COMMENT    Poller_task_stk[u16_ctr] = STK_VAL;
+ 	COMMENT }
+ 	COMMENT
+	COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT
+	COMMENT Valid Class(es)
+	COMMENT Class 1
+	COMMENT In function  'PollerSignalTask', 'u16_tick_cntr' is greater than or equal to POLLER_TASK_TICKS.
+	COMMENT 
+	COMMENT Class 3
+	COMMENT In function  'PollerSignalTask', 'OsSemPost' function is called.
+	COMMENT
+	COMMENT Class 4
+	COMMENT In function  'PollerInit', 'OsSemCreate' function is called.
+	COMMENT
+	COMMENT Class 5
+	COMMENT In function  'PollerInit', 'OsTaskCreate' function is called.
+	COMMENT
+	COMMENT Class 6
+	COMMENT In function  'PollerInit', 'PollerTask' function is called.
+	COMMENT
+	COMMENT Class 7
+	COMMENT In function  'PollerTask', 'PwmInit' function is called.
+	COMMENT
+	COMMENT Class 8
+	COMMENT In function  'PollerTask', 'PbsInit' function is called.
+	COMMENT
+	COMMENT Class 9
+	COMMENT In function  'PollerTask', 'StmadcInit' function is called.
+	COMMENT
+	COMMENT Class 10
+	COMMENT In function  'PollerTask', 'OsSemPend' function is called.
+	COMMENT
+	COMMENT Class 11
+	COMMENT In function  'PollerTask', 'TimerDriver' function is called.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In function  'PollerTask', 'PbsDriver' function is called.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function  'PollerTask', 'StmadcDriver' function is called.
+	COMMENT
+	COMMENT Class 14
+	COMMENT In function  'PollerTask', 'PwmBackLightDriver' function is called.
+	COMMENT
+	COMMENT Class 15
+	COMMENT In function  'PollerTask', 'RTDWatchdog' function is called.
+	COMMENT
+	COMMENT
+	COMMENT Class 16
+	COMMENT In function  'PollerTask', 'ScuRTDWatchdog' function is called.
+	COMMENT
+	COMMENT Invalid Class(es)
+	COMMENT None
+	COMMENT
+	COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdudispfpoller_c
+	
+		
+    	-- Parameter 'task(void* pd)' made as _no since the address of local variable is passed 	
+    	#T_UBYTE OsTaskCreate(void _no (  *task)(void* pd), void _in *pdata, void _in *pstk, T_UBYTE _in prio)
+    	#{
+    	#	( *task)(pdata);
+    	#}
+    	
+    	#T_OS_EVENT* OsSemCreate(T_UWORD _in count);
+    	
+    	-- Parameter 'param_event' made as _no since the address of local variable is passed 	
+    	#T_UBYTE OsSemPost(T_OS_EVENT _in *param_event);
+    	
+    	#void PwmBackLightDriver(void); 
+    	
+    	#void StmadcDriver(void);
+    	
+    	#void PbsDriver(void); 
+    	
+    	#void TimerDriver(void); 
+    	
+    	--Parameters 'error' is made as _no since address of local veriable cannot be passed to stub
+    	#void OsSemPend(T_OS_EVENT _in *p_event, T_UWORD _in time_out, T_UBYTE _no *error)
+    	#{
+    	# 	PTU_error = *error;
+    	#}
+    	
+    	#void StmadcInit(void);
+    	
+    	#void PbsInit(void);
+    	
+    	#void PwmInit(void); 
+    	
+    	#void RTDWatchdog(void);
+		
+    #void ScuRTDWatchdog(void);		
+    	
+	END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfpoller.c
+ENVIRONMENT ENV_hdudispfpoller_c
+
+  VAR Sem_poller_task,		init = NIL,		ev = init
+  ARRAY Poller_task_stk,		init = { others => 0 },		ev = init
+  
+END ENVIRONMENT -- ENV_hdudispfpoller_c
+
+USE ENV_hdudispfpoller_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service PollerSignalTask
+--------------------------------------------------------------------------------
+SERVICE PollerSignalTask
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpoller-PollerSignalTask-DB-LLR-001]
+    COMMENT The function increments the local tick counter by 1
+    COMMENT Equivalence Class None.
+    COMMENT
+    COMMENT [hdudispfpoller-PollerSignalTask-DB-LLR-002]
+	COMMENT The function set the local tick counter to 0 and call OsSemPost with parameter 
+	COMMENT Sem_poller_task when local tick counter is greater than or equal to POLLER_TASK_TICKS
+    COMMENT Equivalence Class 1,3
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--Temporary variable initialised before usage
+			VAR PTU_Sem_poller_task,		init = NULL,								ev = init
+			
+			--stack for the poller task
+			VAR Sem_poller_task,			init = PTU_Sem_poller_task ,			ev = init
+		
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+            
+			--STUB OsSemPost() OS_NO_ERR
+			
+			STUB OsSemPost(Sem_poller_task) OS_NO_ERR
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	 #PollerSignalTask();
+     	 
+    END ELEMENT
+
+END TEST -- TEST 1   
+
+END SERVICE -- PollerSignalTask
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PollerInit
+--------------------------------------------------------------------------------
+SERVICE PollerInit
+SERVICE_TYPE extern
+
+    
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpoller-PollerInit-DB-LLR-001]
+    COMMENT The function calls OsSemCreate with parameter zero and set Sem_poller_task with the 
+    COMMENT return value of the OsSemCreate.
+    COMMENT Equivalence Class 4.
+    COMMENT
+    COMMENT [hdudispfpoller-PollerInit-DB-LLR-002]
+	COMMENT The function initialize Poller_task_stk from index 0 to POLLER_TASK_STK_SIZE 
+	COMMENT with 0xDEADDEAD pattern
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfpoller-PollerInit-DB-LLR-003]
+	COMMENT The function calls OsTaskCreate with parameters PollerTask, NULL, 
+	COMMENT address of Poller_task_stk and POLLER_TASK_PRIO
+    COMMENT Equivalence Class 5,6
+    COMMENT
+    COMMENT [hdudispfpoller-PollerTask-DB-LLR-001]
+    COMMENT The function adds zero to parameter p_data and store the result to p_data.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfpoller-PollerTask-DB-LLR-002]
+	COMMENT The function call PwmInit to Initialize the back light control
+    COMMENT Equivalence Class 7
+    COMMENT
+    COMMENT [hdudispfpoller-PollerTask-DB-LLR-003]
+ 	COMMENT The function call PbsInit to Initialize the push button controls
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hdudispfpoller-PollerTask-DB-LLR-004]
+ 	COMMENT The function shall call StmadcInit to Initialize the internal ADC
+    COMMENT Equivalence Class 9
+    COMMENT
+    COMMENT [hdudispfpoller-PollerTask-DB-LLR-005]
+ 	COMMENT The function loops forever and perform the following
+	COMMENT a)	Call OsSemPend with parameter Sem_poller_task, zero and address of error status to request semaphore
+	COMMENT b)  Call TimerDriver to initialise timer
+	COMMENT c)  Call RTDWatchdog to detect missing parameters
+	COMMENT d)  Call ScuRTDWatchdog to detect "MISSING" parameters
+	COMMENT	e)  Call PbsDriver to initialise push button driver
+	COMMENT	f)  Call StmadcDriver to initialise internal ADC driver
+	COMMENT	g)  Call PwmBackLightDriver to initialise back light driver.
+    COMMENT Equivalence Class 10,11,12,13,14,15
+    COMMENT
+    COMMENT </TD> 
+    
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--None
+	
+        COMMENT OUTPUT SECTION:
+
+			--Global array of type 'T_OS_STK'
+			ARRAY Poller_task_stk,			init = { others => 0x00 },			ev = {others => 0xDEADDEAD}
+																					
+			--stack for the poller task
+			VAR	Sem_poller_task,			init = 0x0,							ev = &PTU_pevent
+			
+			--Verifying the parameter made _no in stub 'OsSemPend'
+			VAR PTU_error,					init = 0x10,						ev = ZERO
+			
+				
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--None
+        
+        -- Stub Calls:
+        SIMUL
+        
+        	--Stubs called in function PollerInit
+ 			STUB OsSemCreate(ZERO) &PTU_pevent
+ 			
+			STUB OsTaskCreate(NULL, &Poller_task_stk[POLLER_TASK_STK_SIZE], POLLER_TASK_PRIO) OS_NO_ERR
+        	
+        	--Stubs called in function PollerTask		
+			STUB PwmInit()
+			
+			STUB PbsInit()
+			
+			STUB StmadcInit()
+			
+			STUB OsSemPend 1..4 => (&PTU_pevent, ZERO)
+			
+			STUB TimerDriver 1..4 => ()
+			
+			STUB PbsDriver 1..4 => ()
+		
+			STUB StmadcDriver 1..4 => ()
+      
+      		STUB PwmBackLightDriver 1..4 => ()
+      		
+      		STUB RTDWatchdog 1..4 => ()
+			
+      		STUB ScuRTDWatchdog 1..4 => ()
+			
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#PollerInit();
+
+    END ELEMENT
+
+END TEST -- TEST 1   
+
+END SERVICE -- PollerInit
+
+

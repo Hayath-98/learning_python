@@ -1,0 +1,646 @@
+HEADER hducommbarinc825,Source Code Ver : 1.6,TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+--
+-- Author Name         : Kavya M
+--
+-- File Name           : hducommbarinc825_5.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested CSUs         :A825Xmit
+--	 				    BufferCheck
+--	 				    XmitFromBuff
+--
+--
+-- Version History      :
+--
+--  TEST-VERSION        TEST-DATE               TESTER NAME         MODIFICATIONS
+--  ------------        ---------               -----------         -------------
+--  1.1                 30.10.2017              Kavya M      	Created the ptu file.
+--  1.2                 10.11.2017              Kavya M         Updated as per #PR100171
+--  1.3                 14.11.2017              Kavya M         Updated as per #PR100171
+--	1.4					17.08.2020				Harshitha R 	Updated as per #PR100267
+ 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+# #include "hducommbarinc825.h" 
+# #include "hdulibbasicfunc.h"  
+# #include "hducommbhw.h"       
+# #include "hducommbintr.h"     
+# #include "hducommfucos.h"     
+# #include "hdulibmisc.h"       
+# #include "hdulibstm32f4xx.h"  
+# #include "hdulibstm32f4xxcan.h"   
+# #include "hdulibstm32f4xxgpio.h"  
+# #include "hdulibstm32f4xxrcc.h"  
+
+
+##define A429_ACQUIRE 			0U
+##define BYTES_OF_PYLD          8U          /*payload size*/
+##define NSC_PULL              	49160U
+##define NSC_PULL_RESEND    	49168U
+##define NSC_JUMP_CNF_SWL      49172U
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+-- Declarations of the global variables of the tested file
+
+	--None
+	
+-- Declarations of the temporary variable
+
+--Temporary variables to hold nvic_init_struct
+#T_NVIC_INIT PTU_nvic_init_struct1,PTU_nvic_init_struct2;
+
+--Temporary variable to hold can_filter_init_struct
+#T_CAN_FILTER_INIT PTU_can_filter_init_structure;
+
+--Temporary variable to hold can_init_struct
+#T_CAN_INIT PTU_can_init_structure;
+
+--Temporary variable to hold gpio_init_struct
+#T_GPIO_TYPE_INIT PTU_gpio_init_structure;
+
+--Temporary variable to hold rx_message
+#T_CAN_RX_MSG PTU_rx_message;
+
+--variable for stub call count and loop
+#T_UINT16 PTU_stub_call,PTU_i,loop_index;
+
+--Temporary variable to hold tx_message
+#T_CAN_TX_MSG PTU_tx_message;
+
+-------------------------------------------------------------------------------
+
+BEGIN
+    COMMENT Author Name      : 	Kavya M
+    COMMENT
+    COMMENT File Name        : 	hducommbarinc825_5.ptu
+    COMMENT
+    COMMENT Tested Functions :  A825Xmit
+	COMMENT		 				BufferCheck
+	COMMENT		 				XmitFromBuff
+	COMMENT
+	COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s)
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s)
+    COMMENT 1.PTUs are split into 7,due to memory constraints and static dependency.
+	COMMENT    
+	COMMENT 2.Internal Service is enabled in PTU "hducommbarinc825_2.ptu" in order to test the below mentioned LLR
+	COMMENT hducommbarinc825-RxQueueInsert-CB-LLR-001
+	COMMENT
+    COMMENT </AC>  
+    COMMENT 
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)   
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function "A825GetMessage", parameter "e_channel" is set to NOC channel
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In function "A825GetMessage", parameter "e_channel" is set to NSC channel
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function "A825GetMessage", parameter "e_channel" is neither NOC nor NSC
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In function "A825Init", "NvicConfig" function is called
+    COMMENT 
+    COMMENT Class 5
+    COMMENT In function "A825Init", "CanConfig" function is called
+    COMMENT 
+    COMMENT Class 6
+    COMMENT In function "RxQueueRemove", number of messages in the Rx queue is ZERO   
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In function "RxQueueRemove", number of messages in the Rx queue is not ZERO   
+    COMMENT 
+    COMMENT Class 8
+    COMMENT The function "RxQueueRemove", returns A825_RX_QUEUE_EMPTY
+    COMMENT 
+    COMMENT Class 9
+    COMMENT The function "RxQueueRemove", calls CanItConfig function   
+    COMMENT 
+    COMMENT Class 10
+    COMMENT In function "RxQueueRemove", the next message to receive is in the message queue size range  
+    COMMENT 
+    COMMENT Class 11
+    COMMENT In function "RxQueueRemove", the next message to receive is not in the message queue size range  
+    COMMENT 
+    COMMENT Class 12
+    COMMENT In function "RxQueueRemove", lcc of ARINC 825 message is NOC  
+    COMMENT 
+    COMMENT Class 13
+    COMMENT In function "RxQueueRemove", lcc of ARINC 825 message is NSC  
+    COMMENT 
+    COMMENT Class 14
+    COMMENT In function "RxQueueRemove", u8PaySize of ARINC 825 message is equal to A825_PAYLOAD_SIZE
+    COMMENT 
+    COMMENT Class 15
+    COMMENT In function "RxQueueRemove", u8PaySize of ARINC 825 message is greater than A825_PAYLOAD_SIZE
+    COMMENT 
+    COMMENT Class 16
+    COMMENT In function "RxQueueRemove", u8PaySize of ARINC 825 message is lesser than A825_PAYLOAD_SIZE
+    COMMENT 
+    COMMENT Class 18
+    COMMENT The function "RxQueueRemove", returns A825_RX_OK
+    COMMENT 
+    COMMENT Class 19
+    COMMENT In function "CanConfig", "RccAhb1PeriphClockCmd" function is called
+    COMMENT 
+    COMMENT Class 20
+    COMMENT In function "CanConfig", "GpioPinAFConfig" function is called
+    COMMENT 
+    COMMENT Class 21
+    COMMENT In function "CanConfig", "GpioInit" function is called
+    COMMENT 
+    COMMENT Class 22
+    COMMENT In function "CanConfig", "RccApb1PeriphClockCmd" function is called
+    COMMENT 
+    COMMENT Class 23
+    COMMENT In function "CanConfig", "CanDeInit" function is called
+    COMMENT 
+    COMMENT Class 24
+    COMMENT In function "CanConfig", "CanInitBoot" function is called
+    COMMENT 
+    COMMENT Class 25
+    COMMENT In function "CanConfig", "CanFilterInit" function is called
+    COMMENT 
+    COMMENT Class 26
+    COMMENT In function "CanConfig", "CanItConfig" function is called
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function "NvicConfig", "IntrInstall" function is called with parameters INTR_CAN_1_RX_0 and ReceiveMessage
+    COMMENT 
+    COMMENT Class 28
+    COMMENT In function "NvicConfig", "NvicInit" function is called
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function "RxQueueInsert", RxCntr of ps_which_q is equal to CAN_R_Q_SIZE
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function "RxQueueInsert", RxCntr of ps_which_q is not equal to CAN_R_Q_SIZE
+    COMMENT
+    COMMENT Class 31
+    COMMENT The function "RxQueueInsert", returns A825_RX_OVERFLOW
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function "RxQueueInsert", RxTail of ps_which_q is equal to RxBuf of ps_which_q
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function "RxQueueInsert", RxTail of ps_which_q is not equal to RxBuf of ps_which_q
+    COMMENT
+    COMMENT Class 34
+    COMMENT The function "RxQueueInsert", returns A825_RX_OK
+    COMMENT 
+    COMMENT Class 35
+    COMMENT The function "ReceiveMessage", calls OsIntEnter function
+    COMMENT 
+    COMMENT Class 36
+    COMMENT The function "ReceiveMessage", calls CanReceive function
+    COMMENT 
+    COMMENT Class 37
+    COMMENT In function "ReceiveMessage", lcc is set to NOC channel
+    COMMENT 
+    COMMENT Class 38
+    COMMENT The function "ReceiveMessage", calls RxQueueInsert function
+    COMMENT 
+    COMMENT Class 39 
+    COMMENT In function "ReceiveMessage", lcc is set to NSC channel
+    COMMENT 
+    COMMENT Class 40
+    COMMENT In function "ReceiveMessage", lcc is not set to neither NOC nor NSC
+    COMMENT 
+    COMMENT Class 41
+    COMMENT In function "ReceiveMessage", return value of function RxQueueInsert is equal to A825_RX_OK
+    COMMENT 
+	COMMENT Class 42
+	COMMENT In function "ReceiveMessage", return value of function RxQueueInsert is not equal to A825_RX_OK
+	COMMENT 
+	COMMENT Class 43
+	COMMENT The function "ReceiveMessage", calls OsIntExit function
+	COMMENT 
+	COMMENT Class 45
+	COMMENT In function "A825Xmit", selected channel is NOC     
+	COMMENT
+	COMMENT Class 46
+	COMMENT The function "A825Xmit", calls BuildBroadcastExtId function
+	COMMENT
+	COMMENT Class 47
+	COMMENT In function "A825Xmit", selected channel is NSC     
+	COMMENT
+	COMMENT Class 48
+	COMMENT The function "A825Xmit", calls BuildPeerToPeerExtId function
+	COMMENT 
+	COMMENT Class 49
+	COMMENT The function "A825Xmit", returns A825_BAD_CHANNEL
+	COMMENT 
+	COMMENT Class 50
+	COMMENT In function "A825Xmit", number of bytes of payload is lesser than BYTES_OF_PYLD
+	COMMENT 
+	COMMENT Class 51
+	COMMENT In function "A825Xmit", number of bytes of payload is greater than BYTES_OF_PYLD
+	COMMENT 
+	COMMENT Class 52
+	COMMENT In function "A825Xmit", number of bytes of payload is equal to BYTES_OF_PYLD    
+	COMMENT 
+	COMMENT Class 53
+	COMMENT The function "A825Xmit", returns A825_BAD_PAYLOAD_SIZE
+	COMMENT 
+	COMMENT Class 54
+	COMMENT The function "A825Xmit", calls TxQueueInsert function
+	COMMENT 
+	COMMENT Class 55
+	COMMENT The function "BuildBroadcastExtId",  returns 29 bit CAN identifier.
+	COMMENT 
+	COMMENT Class 56
+	COMMENT The function "BuildPeerToPeerExtId",  returns 29 bit CAN identifier.
+	COMMENT 
+	COMMENT Class 57
+	COMMENT In function "BufferCheck", messages in the Tx queue (TxCntr of NOC transmit queue)is equal to DEC_ZERO
+	COMMENT
+	COMMENT Class 58
+	COMMENT In function "BufferCheck", messages in the Tx queue (TxCntr of NOC transmit queue)is not equal to DEC_ZERO 
+	COMMENT
+	COMMENT Class 59
+	COMMENT The function "BufferCheck", 'XmitFromBuff' is called.  
+	COMMENT
+	COMMENT Class 60
+	COMMENT In function "BufferCheck", return value of 'XmitFromBuff' function is equal to CAN_TXSTATUS_NOMAILBOX
+	COMMENT
+	COMMENT Class 61
+	COMMENT In function "BufferCheck", return value of 'XmitFromBuff' function is not equal to CAN_TXSTATUS_NOMAILBOX
+	COMMENT
+	COMMENT Class 62
+	COMMENT In function "BufferCheck",  messages in the Tx queue (TxCntr of NSC transmit queue) is equal to DEC_ZERO
+	COMMENT
+	COMMENT Class 63
+	COMMENT In function "BufferCheck",  messages in the Tx queue (TxCntr of NSC transmit queue) is not equal to DEC_ZERO 
+	COMMENT
+	COMMENT Class 65
+	COMMENT The function "BufferCheck", calls CanItConfig function
+	COMMENT 
+	COMMENT Class 66
+	COMMENT In function "XmitFromBuff", "CanTransmit" function is called
+	COMMENT 
+	COMMENT Class 67
+	COMMENT In function "XmitFromBuff", return value of 'CanTransmit' is equal to CAN_TXSTATUS_NOMAILBOX
+	COMMENT 
+	COMMENT Class 68
+	COMMENT In function "XmitFromBuff",return value of 'CanTransmit' is not equal to CAN_TXSTATUS_NOMAILBOX
+	COMMENT 
+	COMMENT Class 69
+	COMMENT In function "XmitFromBuff", The next CAN1 message to transmit is in the Transmit message Queue Size range 
+	COMMENT (TxBuf[CAN_X_Q_SIZE] of ps_which_q)
+	COMMENT 
+	COMMENT Class 70
+	COMMENT In function "XmitFromBuff", The next CAN1 message to transmit is not in the Transmit message Queue Size range 
+	COMMENT (TxBuf[CAN_X_Q_SIZE] of ps_which_q)
+	COMMENT 
+	COMMENT Class 71
+	COMMENT In function "XmitFromBuff", returns mail_box    
+	COMMENT
+	COMMENT Class 72
+	COMMENT The function "TxQueueInsert", calls CanItConfig
+	COMMENT
+	COMMENT Class 73
+	COMMENT In function "TxQueueInsert", tx_cntr of ps_which_q is equal to CAN_X_Q_SIZE
+	COMMENT
+	COMMENT Class 74
+	COMMENT In function "TxQueueInsert", tx_cntr of ps_which_q is not equal to CAN_X_Q_SIZE
+	COMMENT
+	COMMENT Class 75
+	COMMENT The function "TxQueueInsert", returns A825_XM_OVERFLOW.
+	COMMENT
+	COMMENT Class 76
+	COMMENT In function "TxQueueInsert", tx_tail of ps_which_q is equal to tx_buf of ps_which_q
+	COMMENT
+	COMMENT Class 77
+	COMMENT In function "TxQueueInsert", tx_tail of ps_which_q is not equal to tx_buf of ps_which_q
+	COMMENT
+	COMMENT Class 78
+	COMMENT The function "TxQueueInsert", calls BufferCheck function
+	COMMENT
+	COMMENT Class 79
+	COMMENT The function "TxQueueInsert", returns A825_XM_OK.
+	COMMENT
+	COMMENT Class 80 
+	COMMENT The function 'A825GetMessage',calls function 'RxQueueRemove'.
+	COMMENT 
+	COMMENT Class 81
+	COMMENT In function "A825Xmit", selected channel is other than 'NSC' and 'NOC'. 
+	COMMENT
+	COMMENT	Class 82
+	COMMENT the  function "ReceiveMessage", Calls 'A825GetMessage' . 
+	COMMENT
+	COMMENT Class 83 
+	COMMENT In The function 'ReceiveMessage' ,DOC id of the message is equal to A429_ACQUIRE.
+	COMMENT
+	COMMENT Class 84 
+	COMMENT In The function 'ReceiveMessage' ,DOC id of the message is not equal to A429_ACQUIRE.
+	COMMENT
+	COMMENT Class 85
+	COMMENT In The function 'ReceiveMessage' ,NSC_PULL is equal to the  extracted payload from  A825 message buffer.
+	COMMENT
+	COMMENT Class 86
+	COMMENT In The function 'ReceiveMessage' ,NSC_PULL is not equal to the  extracted payload from  A825 message buffer.
+    COMMENT
+	COMMENT Class 87
+	COMMENT In The function 'ReceiveMessage' ,NSC_JUMP_CNF_SWLV is equal to the  extracted payload from  A825 message buffer.
+	COMMENT
+	COMMENT Class 88
+	COMMENT In The function 'ReceiveMessage' ,NSC_JUMP_CNF_SWL is not equal to the  extracted payload from  A825 message buffer.		
+	COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT 
+    COMMENT Class 44
+    COMMENT The function "ReceiveMessage", Invalid Reference is passed to A825GetMessage parameter.
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hducommbarinc825_c
+    
+	--In stub CanTransmit, 'tx_message' variable made as _no because local varible address cannot be expected. 
+    #T_UINT8 CanTransmit(T_CAN_TYPE _in *can_x, T_CAN_TX_MSG _no *tx_message)
+    #{
+    #
+    #PTU_tx_message=*tx_message;
+    #}  
+
+    --In stub NvicInit, 'nvic_init_struct' variable made as _no because local variable address cannot be expected.
+	# void  NvicInit ( T_NVIC_INIT  _no *nvic_init_struct )
+	#{
+	#   if(PTU_stub_call==1)
+	#   { 
+	#       PTU_nvic_init_struct1 = *nvic_init_struct;
+	#   }
+	#   if(PTU_stub_call==2)
+	#   { 
+	#       PTU_nvic_init_struct2 = *nvic_init_struct;
+	#   }
+	# PTU_stub_call++;
+	#}
+
+	--In stub IntrInstall, 'intr_function'variable  made as _no because function cannot be expected.
+	# void  IntrInstall ( T_UINT8  _in   u8_index,T_INTR_FN  _no intr_function )
+	# {
+	# intr_function();
+	# }
+
+	--In stub CanFilterInit, 'can_filter_init_struct' variable made as _no because local varible address cannot be expected.
+	# void  CanFilterInit ( T_CAN_FILTER_INIT _no *can_filter_init_struct )
+	# {
+	#   PTU_can_filter_init_structure=*can_filter_init_struct;
+	# }
+
+	--In stub CanInitBoot, 'can_init_struct' variable made as _no because local varible address cannot be expected.    
+	# T_UINT8  CanInitBoot ( T_CAN_TYPE  _in   *can_x,T_CAN_INIT _no  *can_init_struct )
+	# {
+	#   PTU_can_init_structure=*can_init_struct;
+	# }
+
+	# void  CanDeInit ( T_CAN_TYPE  _in   *can_x );
+
+	# void  RccApb1PeriphClockCmd ( T_UINT32  _in   rcc_apb1_periph,T_FUNCTIONAL_STATE  _in   new_state );
+
+	--In stub GpioInit, 'gpio_init_struct' variable made as _no because local varible address cannot be expected.
+	# void  GpioInit ( T_GPIO_TYPE  _in   *gpio_x,T_GPIO_TYPE_INIT _no *gpio_init_struct )
+	# {
+	#   PTU_gpio_init_structure=*gpio_init_struct;
+	# }
+
+	# void  GpioPinAFConfig ( T_GPIO_TYPE  _in  *gpio_x,T_UINT16  _in  gpio_pinsource,T_UINT8  _in  gpio_af );
+
+	# void  RccAhb1PeriphClockCmd ( T_UINT32  _in   rcc_ahb1_periph,T_FUNCTIONAL_STATE  _in   new_state );
+
+	# void  OsIntExit ( void   );
+
+	--In stub CanReceive, 'rx_message' variable made as _no because local varible address cannot be expected.
+	# void  CanReceive ( T_CAN_TYPE  _in   *can_x,T_UINT8  _in   fifo_number,T_CAN_RX_MSG _no *rx_message )
+	# {
+	#   *rx_message=PTU_rx_message;
+	# }
+
+	# void  OsIntEnter ( void   );
+
+	# void  CanItConfig ( T_CAN_TYPE  _in   *can_x,T_UINT32  _in   can_it,T_FUNCTIONAL_STATE _in   new_state );
+
+    END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+   
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommbarinc825.c
+ENVIRONMENT ENV_hducommbarinc825_c
+  
+  VAR Maint_jump,		init = FALSE,		ev = init
+  
+  VAR Swl_jump,		init = FALSE,		ev = init  
+END ENVIRONMENT -- ENV_hducommbarinc825_c
+
+USE ENV_hducommbarinc825_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service A825Xmit
+--------------------------------------------------------------------------------
+SERVICE A825Xmit
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_A825_MESSAGE ps_xm;
+-- By function returned type declaration
+#T_A825_XMIT_RESULT ret_A825Xmit;
+
+ENVIRONMENT ENV_A825Xmit
+
+	STRUCTURE ps_xm,		init = { lcc => EEC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, doc => 0, rci => 0, spare => 0 } }, u8PaySize => 0, u8PayLoad => { others => 0 } },		ev = init
+	
+	VAR ret_A825Xmit,		init = A825_XM_OK,		ev = init
+	
+END ENVIRONMENT -- ENV_A825Xmit
+USE ENV_A825Xmit
+       
+TEST 8
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hducommbarinc825-A825Xmit-CB-LLR-002]
+	COMMENT The function locates Queue(NSC transmit queue) and builds the 29 bit ID by calling BuildPeerToPeerExtId with parameter pointer 
+	COMMENT to the ARINC 825 message(ps_xm) when
+	COMMENT a) selected channel is not NOC
+	COMMENT b) selected channel is NSC.
+	COMMENT Equivalence Class 53,54  
+	COMMENT
+	COMMENT [hducommbarinc825-BufferCheck-CB-LLR-004]
+	COMMENT The function returns when there is no mailbox free for transmission i.e the return value of the function XmitFromBuff 
+	COMMENT with parameter reference to NSC transmit queue is CAN_TXSTATUS_NOMAILBOX.
+	COMMENT Equivalence Class 66  
+	COMMENT 
+	COMMENT [hducommbarinc825-BufferCheck-CB-LLR-003]
+	COMMENT For ELEMENT block 2
+	COMMENT The function loops till number of messages in the Tx queue(tx_cntr of NSC transmit queue)is not equal to DEC_ZERO.
+	COMMENT while loop is coverred for two or more times.
+	COMMENT Equivalence Class 63
+	COMMENT 
+	COMMENT [hducommbarinc825-BufferCheck-CB-LLR-004]
+	COMMENT For ELEMENT block 2  
+	COMMENT The function does nothing when there is  mailbox free for transmission i.e the return value of the function XmitFromBuff 
+	COMMENT with parameter reference to NSC transmit queue is not CAN_TXSTATUS_NOMAILBOX.
+	COMMENT Equivalence Class 65
+	COMMENT 
+	COMMENT [hducommbarinc825-BufferCheck-CB-LLR-005]
+	COMMENT The function disables the Can Transmit Interrupt by calling CanItConfig function with parameters CAN1,CAN_IT_TME and DISABLE.
+	COMMENT Equivalence Class 67 
+	COMMENT 
+	COMMENT [hducommbarinc825-XmitFromBuff-CB-LLR-003]
+	COMMENT The function sets next message to transmit (tx_head of ps_which_q) to the Tx buffer(tx_buf of ps_which_q) when
+	COMMENT a) The next CAN1 message to transmit is in the Transmit message Queue Size range (tx_buf[CAN_X_Q_SIZE] of ps_which_q) 
+	COMMENT b) Result of the function CanTransmit is other than CAN_TXSTATUS_NOMAILBOX.
+	COMMENT Equivalence Class 71
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION 
+
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,     init = { lcc => NSC, sID => { PID => { cfid => 0, smt => 0, lcl => 0, pvt => 0, sfid => 0, sid => 0, rci => 0,
+			&        spare => 0 } }, u8PaySize => 5, u8PayLoad => { others => 0 } },      ev = init
+
+		COMMENT INPUT/OUTPUT SECTION
+
+			--None
+
+		COMMENT OUTPUT SECTION
+
+			--Temporary variable to hold tx_message structure members
+			STRUCTURE PTU_tx_message,     init = {StdId => 1,ExtId => 1 ,IDE => 1,RTR => 1,DLC => 1,Data=>{others=>0}}, 
+			&                       ev = {StdId => 0,ExtId => 0x10000000 ,IDE => CAN_ID_EXTENDED,RTR => CAN_RTR_DATA,
+			&                           DLC =>5,Data=>{others=>0}}  
+
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,    init = A825_BAD_PAYLOAD_SIZE,    ev = A825_XM_OK
+
+		--Stub Calls
+		SIMUL
+
+			--Disables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+			--Enables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+
+			--Transmits a CAN frame message
+			STUB CanTransmit (CAN1) 0x4
+
+		END SIMUL
+
+		--Calling Unit Under Test
+		#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+	
+	#for(PTU_i=0;PTU_i<118;PTU_i++)
+	#ret_A825Xmit = A825Xmit(&ps_xm);
+	--  To verify [hducommbarinc825-BufferCheck-CB-LLR-003] and [hducommbarinc825-CB-BufferCheck-LLR-004] 
+	--  To verify while loop in hducommbarinc825-BufferCheck-CB-LLR-003 Second element block is used .
+	
+	ELEMENT
+
+		COMMENT INPUT SECTION 
+
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,     init = { lcc => NSC, sID => { PID => { cfid => 0, smt => 0, lcl => 0, pvt => 0, sfid => 0, sid => 0, rci => 0,
+			&        spare => 0 } }, u8PaySize => 5, u8PayLoad => { others => 0 } },      ev = init
+
+		COMMENT INPUT/OUTPUT SECTION
+
+			--None
+			
+		COMMENT OUTPUT SECTION
+
+			--Temporary variable to hold tx_message structure members
+			STRUCTURE PTU_tx_message,     init = {StdId => 1,ExtId => 1 ,IDE => 1,RTR => 1,DLC => 1,Data=>{others=>0}}, 
+			&                       ev = {StdId => 0,ExtId => 0x10000000 ,IDE => CAN_ID_EXTENDED,RTR => CAN_RTR_DATA,
+			&                           DLC => 5,Data=>{others=>0}}  
+
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,    init = A825_BAD_PAYLOAD_SIZE,    ev = A825_XM_OK
+
+		--Stub Calls
+		SIMUL
+
+			--Disables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+			--Enables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+
+			--Transmits a CAN frame message
+			STUB CanTransmit 120=>(CAN1) 0x2
+
+			--Disables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+		END SIMUL
+
+		--Calling Unit Under Test
+		#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+
+END TEST -- TEST 8
+
+END SERVICE 

@@ -1,0 +1,542 @@
+HEADER hdudispftbase, Source Code Ver : 1.3, TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name          : Hemalatha S       
+--
+-- File Name            : hdudispftbase.ptu
+--
+-- Test Creation Date   : 30.10.2017
+--
+-- Tested Functions     : HalSystickCallback
+--
+-- Version History      :
+--
+--  TEST-VERSION        TEST-DATE               TESTER NAME        MODIFICATIONS
+--  ------------        ---------               -----------        -------------
+--     1.1              30.10.2017              Hemalatha S       Created the ptu file.
+--     1.2              11.11.2017              Hemalatha S       Updated as per #PR100171
+--     1.3              14.11.2017              Hemalatha S       Updated as per #PR100171
+--	   1.4 				10.04.2018				Bhanuprakash E	  Updated as per #PR100201
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/  
+
+##include "hdudispfdemo.h"
+##include "hdudispfa429.h" 
+##include "hdudispfinit.h"
+##include "hdudispfpoller.h"
+##include "hdudispfresource.h"
+##include "hdudispftbase.h" 
+##include "hdudispfucos.h"
+##include "hdulibbasictypes.h" 
+##include "hdudispfcbit.h"
+
+--Macros are made available in the PTU for testing purpose
+##define DEC_100 100U
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern volatile T_UINT16 U16_pcnt_idle;
+    #volatile T_ULONG Os_idle_ctr; 
+    #T_BOOL Init_b_done; 
+    #volatile T_INT32 Itm_rx_buffer;
+    
+--Temperory variable created for the function 'HalSystickCallback'
+
+    #T_UINT8 PTU_i;
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Hemalatha S
+    COMMENT
+    COMMENT File Name        : hdudispftbase.ptu
+    COMMENT
+    COMMENT Tested Functions : HalSystickCallback
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s)
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s)
+    COMMENT 
+    COMMENT 1. Following Test script related warnings are observed during Target Execution for volatile
+    COMMENT keyword member/variable:
+   	COMMENT	 	
+   	COMMENT	 		warning #191-D: type qualifier is meaningless on cast type
+    COMMENT 
+    COMMENT </AC> 
+    
+    COMMENT Equivalence Class
+    COMMENT <ECD> 
+    COMMENT
+    COMMENT Valid Class(es) 
+    COMMENT
+    COMMENT Class 1
+    COMMENT In function "HalSystickCallback", Init_b_done is FALSE
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In function "HalSystickCallback", Init_b_done is other than FALSE
+    COMMENT 
+    COMMENT Class 3
+    COMMENT The function "HalSystickCallback", calls "OsIntEnter" function
+    COMMENT 
+    COMMENT Class 4
+    COMMENT The function "HalSystickCallback", calls "OsTimeTick" function
+    COMMENT 
+    COMMENT Class 5
+    COMMENT The function "HalSystickCallback", calls "PollerSignalTask" function
+    COMMENT 
+    COMMENT Class 6
+    COMMENT The function "HalSystickCallback", calls "InitSignalTask" function
+    COMMENT 
+    COMMENT Class 7
+    COMMENT The function "HalSystickCallback", calls "CbitSignalTask" function
+    COMMENT 
+    COMMENT Class 8
+    COMMENT In function "HalSystickCallback", local counter is equal to ZERO
+    COMMENT 
+    COMMENT Class 9
+    COMMENT In function "HalSystickCallback", local counter is not equal to ZERO
+    COMMENT 
+    COMMENT Class 10
+    COMMENT The function "HalSystickCallback", calls "OsIntExit" function
+    COMMENT 
+    COMMENT Class 11
+    COMMENT The function "HalSystickCallback", calls "DemoSignalTask" function
+    COMMENT 
+    COMMENT Invalid Class(es)
+    COMMENT None
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+    --Stub is made to call 100 times to loop the function
+    DEFINE STUB hdudispftbase_c 100
+
+        #void OsIntExit(void);
+
+        #void CbitSignalTask(); 
+
+        #void InitSignalTask(void); 
+
+        #void PollerSignalTask(void);
+
+        #void OsTimeTick(void); 
+
+        #void OsIntEnter(void);
+ 
+		#void DemoSignalTask(void);
+
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+    -- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+    -- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispftbase.c
+
+ENVIRONMENT ENV_hdudispftbase_c
+
+  VAR U16_pcnt_idle,        init = 0,       ev = init
+  
+END ENVIRONMENT -- ENV_hdudispftbase_c
+
+USE ENV_hdudispftbase_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalSystickCallback
+--------------------------------------------------------------------------------
+SERVICE HalSystickCallback
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftbase-HalSystickCallback-DB-LLR-001]
+    COMMENT The function "HalSystickCallback", initialize the local counter to 100
+    COMMENT Equivalance Class None
+    COMMENT 
+    COMMENT [hdudispftbase-HalSystickCallback-DB-LLR-002]
+    COMMENT The function "HalSystickCallback", performs the following when the initialization has completed
+    COMMENT i.e. when Init_b_done is other than FALSE
+    COMMENT 1.  Calls "OsIntEnter" to enter interrupt service routine
+    COMMENT 2.  Calls "OsTimeTick" to update time tick
+    COMMENT 3.  Calls "PollerSignalTask" to signal poller task
+    COMMENT 4.  Calls "InitSignalTask" to signal init task
+    COMMENT 5.  Calls "CbitSignalTask" to signal CBIT task.
+    COMMENT 6.  Calls "DemoSignalTask" to signal DEMO task
+    COMMENT 7.  Decrement the local counter by 1
+    COMMENT 8.  Does the following when local counter is equal to ZERO
+    COMMENT     i.  Sets temporary OS idle counter to Os_idle_ctr
+    COMMENT     ii. Sets temporary OS idle counter to temporary OS idle counter multiply with DEC_100
+    COMMENT     iii.U16_pcnt_idle to temporary OS idle counter divide by IDLE_100PCNT
+    COMMENT     iv. sets Os_idle_ctr to zero.
+    COMMENT     v.  Set local counter to CTR_RESET
+    COMMENT 9.  Does the following when local counter is not equal to ZERO
+    COMMENT     - Calls "OsIntExit" to exit interrupt service routine
+    COMMENT This has been iterated for 100 times to set the local counter as ZERO.
+    COMMENT Equivalance Class 2,3,4,5,6,7,8,9,10,11
+    COMMENT </TD>
+
+    ELEMENT
+    
+		COMMENT INPUT SECTION:
+
+			--Holds initialization status
+			VAR Init_b_done,    init = TRUE,        ev = init
+    
+		COMMENT OUTPUT SECTION:
+
+			--None
+    
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--Used as a loop index
+			VAR PTU_i,          init = 0,       ev = 100
+
+			VAR Os_idle_ctr,    init = 1000,    ev = 0
+
+			VAR U16_pcnt_idle,  init = 5,       ev = 47
+
+		SIMUL
+
+			--To inform uC/OS on entering the ISR
+			STUB OsIntEnter 1..100 => ()
+
+			--To process Clock tick for the task or the ISR
+			STUB OsTimeTick 1..100 => ()
+
+			--To unlock poller task semaphore
+			STUB PollerSignalTask 1..100 => ()
+
+			--To unlock the init task semaphore
+			STUB InitSignalTask 1..100 => ()
+
+			--signals the CBIT task
+			STUB CbitSignalTask 1..100 => ()
+
+			--To perform interrupt level context switching
+			STUB OsIntExit 1..100 => ()
+			
+			--To DemoSignalTask
+			STUB DemoSignalTask 1..100 => ()
+
+		END SIMUL
+
+    --Calling the Unit Under Test :
+    --Function 'HalSystickCallback' is called 100 times to set local counter to ZERO
+    #for(PTU_i=0;PTU_i<=99;PTU_i++)
+    #HalSystickCallback();
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftbase-HalSystickCallback-DB-LLR-001]
+    COMMENT The function "HalSystickCallback", initialize the local counter to 100
+    COMMENT Equivalance Class None
+    COMMENT 
+    COMMENT [hdudispftbase-HalSystickCallback-DB-LLR-002]
+    COMMENT The function "HalSystickCallback", performs the following when the initialization has completed
+    COMMENT i.e. when Init_b_done is other than FALSE
+    COMMENT 1.  Calls "OsIntEnter" to enter interrupt service routine
+    COMMENT 2.  Calls "OsTimeTick" to update time tick
+    COMMENT 3.  Calls "PollerSignalTask" to signal poller task
+    COMMENT 4.  Calls "InitSignalTask" to signal init task
+    COMMENT 5.  Calls "CbitSignalTask" to signal CBIT task.
+    COMMENT 6.  Calls "DemoSignalTask" to signal DEMO task
+    COMMENT 7.  Decrement the local counter by 1
+    COMMENT 8.  Does the following when local counter is equal to ZERO
+    COMMENT     i.  Sets temporary OS idle counter to Os_idle_ctr(minimum value)
+    COMMENT     ii. Sets temporary OS idle counter to temporary OS idle counter multiply with DEC_100
+    COMMENT     iii.U16_pcnt_idle to temporary OS idle counter divide by IDLE_100PCNT
+    COMMENT     iv. sets Os_idle_ctr to zero.
+    COMMENT     v.  Set local counter to CTR_RESET
+    COMMENT 9.  Does the following when local counter is not equal to ZERO
+    COMMENT     - Calls "OsIntExit" to exit interrupt service routine
+    COMMENT In Element block 1, function has been iterated for 99 times until that local counter is not ZERO.
+    COMMENT In Element block 2, function has been iterated for 100th time to set the local counter as ZERO.
+    COMMENT Equivalance Class 2,3,4,5,6,7,8,9,10,11
+    COMMENT </TD>
+
+    ELEMENT
+    
+		COMMENT INPUT SECTION:
+
+			--Holds initialization status
+			VAR Init_b_done,    init = TRUE,        ev = init
+
+			VAR Os_idle_ctr,    init = 0,   		ev = init
+    
+		COMMENT OUTPUT SECTION:
+
+			--None
+    
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--Used as a loop index
+			VAR PTU_i,          init=0,         ev = 99
+
+		SIMUL
+
+			--To inform uC/OS on entering the ISR
+			STUB OsIntEnter 1..99 => ()
+
+			--To process Clock tick for the task or the ISR
+			STUB OsTimeTick 1..99 => ()
+
+			--To unlock poller task semaphore
+			STUB PollerSignalTask 1..99 => ()
+
+			--To unlock the init task semaphore
+			STUB InitSignalTask 1..99 => ()
+
+			--signals the CBIT task
+			STUB CbitSignalTask 1..99 => ()
+
+			--To perform interrupt level context switching
+			STUB OsIntExit 1..99 => ()
+
+			--To DemoSignalTask
+			STUB DemoSignalTask 1..99 => ()
+
+		END SIMUL
+
+    --Calling the Unit Under Test :
+    --Function 'HalSystickCallback' is called 99 times to set local counter to ZERO
+    #for(PTU_i=0;PTU_i<99;PTU_i++)
+    #HalSystickCallback();
+    
+    END ELEMENT
+    
+     ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds initialization status
+			VAR Init_b_done,    init = TRUE,    	ev = init
+
+			--Used as a loop index
+			
+			VAR PTU_i,          init= 0,        	ev = init
+
+			VAR Os_idle_ctr,    init = 0,   	 	ev = init
+			
+			VAR U16_pcnt_idle,  init = 0,       	ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+		SIMUL
+
+			--To inform uC/OS on entering the ISR
+			STUB OsIntEnter()
+
+			--To process Clock tick for the task or the ISR
+			STUB OsTimeTick()
+
+			--To unlock poller task semaphore
+			STUB PollerSignalTask()
+
+			--To unlock the init task semaphore
+			STUB InitSignalTask()
+
+			--signals the CBIT task
+			STUB CbitSignalTask()
+
+			--To perform interrupt level context switching
+			STUB OsIntExit()
+			
+			--To DemoSignalTask
+			STUB DemoSignalTask ()
+
+		END SIMUL
+
+	    --Calling the Unit Under Test :
+	    --Function 'HalSystickCallback' is called 100th time to set local counter to ZERO
+	    #HalSystickCallback();
+	    
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    ELEMENT
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftbase-HalSystickCallback-DB-LLR-003]
+    COMMENT The function "HalSystickCallback", does nothing when the initialization has not completed(Init_b_done is FALSE)
+    COMMENT Equivalance Class 1
+    COMMENT </TD>
+    
+    COMMENT INPUT SECTION:
+
+        --Holds initialization status
+        VAR Init_b_done,    init = FALSE,       ev = init
+    
+    COMMENT OUTPUT SECTION:
+    
+        --None
+    
+    COMMENT INPUT/OUTPUT SECTION:
+    
+        --None
+
+    SIMUL
+    
+        --None
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    #HalSystickCallback();
+    
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    ELEMENT
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftbase-HalSystickCallback-DB-LLR-002]
+    COMMENT The function "HalSystickCallback", performs the following when the initialization has completed
+    COMMENT i.e. when Init_b_done is other than FALSE
+    COMMENT 1.  Calls "OsIntEnter" to enter interrupt service routine
+    COMMENT 2.  Calls "OsTimeTick" to update time tick
+    COMMENT 3.  Calls "PollerSignalTask" to signal poller task
+    COMMENT 4.  Calls "InitSignalTask" to signal init task
+    COMMENT 5.  Calls "CbitSignalTask" to signal CBIT task.
+    COMMENT 6.  Calls "DemoSignalTask" to signal DEMO task
+    COMMENT 7.  Decrement the local counter by 1
+    COMMENT 8.  Does the following when local counter is equal to ZERO
+    COMMENT     i.  Sets temporary OS idle counter to Os_idle_ctr (maximum value)
+    COMMENT     ii. Sets temporary OS idle counter to temporary OS idle counter multiply with DEC_100
+    COMMENT     iii.U16_pcnt_idle (for the nominal value)to temporary OS idle counter divide by IDLE_100PCNT
+    COMMENT     iv. sets Os_idle_ctr to zero.
+    COMMENT     v.  Set local counter to CTR_RESET
+    COMMENT 9.  Does the following when local counter is not equal to ZERO
+    COMMENT     - Calls "OsIntExit" to exit interrupt service routine
+    COMMENT Equivalance Class 2,3,4,5,6,7,8,9,10,11
+    COMMENT </TD>
+    
+    COMMENT INPUT SECTION:
+
+        --Holds initialization status
+        VAR Init_b_done,    init = TRUE,        ev = init
+    
+    COMMENT OUTPUT SECTION:
+    
+        --None
+    
+    COMMENT INPUT/OUTPUT SECTION:
+    
+        --Used as a loop index
+        VAR PTU_i,          init=0,                 ev = DEC_100
+                        
+        VAR Os_idle_ctr,    init = (T_ULONG)0xFFFFFFFF,      
+        &											ev = 0
+        
+        VAR U16_pcnt_idle,  init = 5,               ev = 0
+    
+    SIMUL
+
+        --To inform uC/OS on entering the ISR
+        STUB OsIntEnter 1..100 => ()
+
+        --To process Clock tick for the task or the ISR
+        STUB OsTimeTick 1..100 => ()
+
+        --To unlock poller task semaphore
+        STUB PollerSignalTask 1..100 => ()
+
+        --To unlock the init task semaphore
+        STUB InitSignalTask 1..100 => ()
+
+        --signals the CBIT task
+        STUB CbitSignalTask 1..100 => ()
+
+        --To perform interrupt level context switching
+        STUB OsIntExit 1..100 => ()
+        
+			
+		--To DemoSignalTask
+		STUB DemoSignalTask 1..100 => ()
+
+    END SIMUL
+
+    --Calling the Unit Under Test :
+    --Function 'HalSystickCallback' is called 100 times to set local counter to ZERO
+    #for(PTU_i=0;PTU_i<=99;PTU_i++)
+    #HalSystickCallback();
+    
+    END ELEMENT
+
+END TEST -- TEST 4
+
+END SERVICE -- HalSystickCallback
+

@@ -1,0 +1,268 @@
+HEADER hdudispfwdog, Source Code Ver : 1.1 , TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name          : Swathi G
+--
+-- File Name            : hdudispfwdog.ptu
+--
+-- Test Creation Date   : 26.10.2017
+--
+-- Tested Functions     : WdogInit
+--                        WdogKickWatchDog
+--
+-- Version History      :
+--
+-- TEST-VERSION       TEST-DATE        TESTER NAME        MODIFICATIONS
+-- ------------       ---------        -----------        -------------
+-- 1.1                26.10.2017        Swathi G          Created the PTU file.
+-- 1.2                10.11.2017        Swathi G          Updated as per #PR100171.
+-- 1.3                14.11.2017        Swathi G          Updated as per #PR100171.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdudispfwdog.h" 
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern T_IWDG_HANDLE_TYPE Wdog_handle;
+    #T_IWDG_HANDLE_TYPE  *PTU_h_iwdg;
+    #T_IWDG_HANDLE_TYPE  *PTU_1_h_iwdg;
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Swathi G
+    COMMENT
+    COMMENT File Name        : hdudispfwdog.ptu
+    COMMENT
+    COMMENT Tested Functions : WdogInit
+    COMMENT                    WdogKickWatchDog
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT None
+    COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In Function WdogInit the Reload sturcture member of Init of Wdog_handle value is 
+    COMMENT greater than MAX_RELOAD_VALUE.
+    COMMENT
+    COMMENT Class 2
+    COMMENT In Function WdogInit the Reload sturcture member of Init of Wdog_handle value is not
+    COMMENT greater than MAX_RELOAD_VALUE.
+    COMMENT
+    COMMENT Class 3
+    COMMENT In Function WdogInit, the function 'HalIwdgInit' is called
+    COMMENT
+    COMMENT Class 4
+    COMMENT In Function WdogInit, the function 'HalIwdgRefresh' is called
+    COMMENT
+    COMMENT Class 5
+    COMMENT In Function WdogKickWatchDog, the function 'HalIwdgRefresh' is called.
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+DEFINE STUB hdudispfwdog_c
+    #T_HAL_STATUS HalIwdgRefresh(T_IWDG_HANDLE_TYPE _no *h_iwdg)
+    #{
+    #  PTU_h_iwdg = h_iwdg;
+    #}
+    #T_HAL_STATUS HalIwdgInit(T_IWDG_HANDLE_TYPE _no *h_iwdg)
+    #{
+    #  PTU_1_h_iwdg = h_iwdg;
+    #}
+END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfwdog.c
+--ENVIRONMENT ENV_hdudispfwdog_c
+
+--None                                    
+  
+--END ENVIRONMENT -- ENV_hdudispfwdog_c
+--USE ENV_hdudispfwdog_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service WdogKickWatchDog
+--------------------------------------------------------------------------------
+SERVICE WdogKickWatchDog
+SERVICE_TYPE extern
+
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfwdog-WdogKickWatchDog-DB-LLR-001]
+        COMMENT The Function WdogKickWatchDog calls the function HalIwdgRefresh with address of 
+        COMMENT Wdog_handle as input parameter to reload watchdog.
+        COMMENT Equivalence Class 5 
+        COMMENT </TD>
+        
+        ELEMENT
+
+            COMMENT INPUT SECTION:
+
+                --Holds the watchdog reload value
+                VAR Wdog_handle.Init.Reload,                    init = 200,        ev = init
+
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None
+                       
+            COMMENT OUTPUT SECTION:
+                
+                --obtains the watchdog reload value from stub native code
+                VAR PTU_h_iwdg->Init.Reload,                    init = 100,        ev = 200                
+                
+            -- Stub Calls :
+            SIMUL
+        
+               --STUB call to reload watchdog counter
+               STUB HalIwdgRefresh()HAL_OK
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test : 
+            #WdogKickWatchDog();
+        
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+END SERVICE -- WdogKickWatchDog
+
+--------------------------------------------------------------------------------
+-- Declaration of the service WdogInit
+--------------------------------------------------------------------------------
+SERVICE WdogInit
+SERVICE_TYPE extern
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfwdog-WdogInit-DB-LLR-001]
+        COMMENT The Function WdogInit calculate's Reload of Init of  Wdog_handle for the independent 
+        COMMENT watchdog timer as follows,the product of the watchdog timeout (WDOG_TIMEOUT_MS) and 
+        COMMENT watchdog frequency (WDOG_FREQ) scaled by the product of watchdog prescaler 
+        COMMENT (GET_PRESCALER_4_FOR_WD  left shift by WDOG_PRESCALER) and WATCHDOG_FREQ_KHZ_SCALE.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfwdog-WdogInit-DB-LLR-002]
+        COMMENT The Function WdogInit does nothing, when Reload of Init of  Wdog_handle is not
+        COMMENT greater than MAX_RELOAD_VALUE.
+        COMMENT Equivalence Class 2
+        COMMENT
+        COMMENT [hdudispfwdog-WdogInit-DB-LLR-003]
+        COMMENT The Function WdogInit does the following:
+        COMMENT 1.Set Prescaler of Init of  Wdog_handle to WDOG_PRESCALER.
+        COMMENT 2.Set Window of Init of  Wdog_handle to IWDG_WINR_WIN.
+        COMMENT Equivalence Class None
+        COMMENT	
+        COMMENT [hdudispfwdog-WdogInit-DB-LLR-004]
+        COMMENT The Function WdogInit call's the function HalIwdgInit with address of 
+        COMMENT Wdog_handle as its input parameter.
+        COMMENT Equivalence Class 3
+        COMMENT
+        COMMENT [hdudispfwdog-WdogInit-DB-LLR-005]
+        COMMENT The Function WdogInit call's the function HalIwdgRefresh with address of 
+        COMMENT Wdog_handle as its input parameter.
+        COMMENT Equivalence Class 4
+        COMMENT </TD>
+        
+        ELEMENT
+
+            COMMENT INPUT SECTION:
+
+                --None
+
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --Holds the watchdog reload value
+                VAR Wdog_handle.Init.Reload,                    init = 200,        ev = 1000
+                 
+                 --Holds the watchdog Prescaler value
+                VAR Wdog_handle.Init.Prescaler,                 init = 345,        ev = 4
+   
+                --Holds the watchdog Window value
+                VAR Wdog_handle.Init.Window,                    init = 1560,       ev = 0xfff
+       
+            COMMENT OUTPUT SECTION:
+                
+                --obtains the watchdog reload value from stub native code
+                VAR PTU_h_iwdg->Init.Reload,                    init = 45,         ev = 1000
+
+                --obtains the watchdog reload value from stub native code
+                VAR PTU_1_h_iwdg->Init.Reload,                  init = 89,         ev = 1000
+                
+            -- Stub Calls :
+            SIMUL
+   
+               --STUB call to Enable watchdog timer
+               STUB HalIwdgInit()HAL_OK
+                
+               --STUB call to reload watchdog counter
+               STUB HalIwdgRefresh()HAL_OK
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test : 
+            #WdogInit();
+
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+END SERVICE -- WdogInit

@@ -1,0 +1,497 @@
+HEADER hducommbintr, Source Code Ver : 1.2 , TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name      	: Santosh Mithari
+--
+-- File Name        	: hducommbintr_2.ptu
+--
+-- Test Creation Date  	: 30.10.2017
+--
+-- Tested Functions 	: ResetFunc
+--                     	  HardFault
+--			  			  MemManage
+--						  BusFault
+-- 						  SpuriousInterrupt
+--						  UsageFault
+--						  NonMaskable
+--
+-- Version History      :
+--
+-- TEST-VERSION   TEST-DATE    TESTER NAME       MODIFICATIONS
+-- ------------   ----------   -----------       -------------
+--    1.1         30.10.2017   Santosh Mithari   Created the PTU file by enabling internal service.	
+--    1.2         10.11.2017   Santosh Mithari   Updated as per #PR100171
+--    1.3         14.11.2017   Santosh Mithari   Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommbintr.c"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+	
+	-- None
+
+-- Declarations of the temporary variable of the tested file
+	
+	--dummy variable declared for execution
+	#T_UINT8 PTU_temp;
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      : Santosh Mithari
+    COMMENT
+    COMMENT File Name        : hducommbintr_1.ptu
+    COMMENT
+    COMMENT Tested Functions : IntrInstall
+    COMMENT                    IntrInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1.In function  'IntrInit', "for" loop cannot be covered for 0 and 1 time since 
+    COMMENT   it is controlled by ENUM INTR_MAX.
+    COMMENT
+    COMMENT 2.PTU has been split into 2 to test static functions by enabling internal services.
+    COMMENT
+    COMMENT 3.Internal Services is enabled in PTU 'hducommbintr_2.ptu' in order to test the 
+    COMMENT   following LLRs 
+    COMMENT "hducommbintr-ResetFunc-CB-LLR-001"
+    COMMENT "hducommbintr-HardFault-CB-LLR-001"
+    COMMENT "hducommbintr-MemManage-CB-LLR-001"
+    COMMENT "hducommbintr-BusFault-CB-LLR-001"
+    COMMENT "hducommbintr-SpuriousInterrupt-CB-LLR-001"
+    COMMENT "hducommbintr-UsageFault-CB-LLR-001"
+    COMMENT "hducommbintr-NonMaskable-CB-LLR-001"
+    COMMENT  which are implemented in static functions 'ResetFunc','HardFault','MemManage',
+    COMMENT 'BusFault','SpuriousInterrupt','UsageFault',and 'NonMaskable' respectively.
+    COMMENT
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+    COMMENT In the Function "IntrInstall", u8_index  is less than INTR_MAX
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In the Function "IntrInstall", u8_index  is equal to INTR_MAX
+    COMMENT
+    COMMENT Class 3
+    COMMENT In the Function "IntrInstall", u8_index  is greater than INTR_MAX
+    COMMENT
+    COMMENT Class 4
+    COMMENT In the Function "IntrInit", the Interrupt Vector Table in ROM with corresponding 
+    COMMENT index is not empty.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In the Function "IntrInit", the Interrupt Vector Table in ROM with corresponding 
+    COMMENT index is empty.
+    COMMENT
+    COMMENT Class 6
+    COMMENT The Function "ResetFunc" calls function 'Crt0TransferData'.
+    COMMENT
+	COMMENT Invalid Class(es)
+	COMMENT 
+    COMMENT Class 7
+    COMMENT In the Function "IntrInstall", invalid reference is passed to 'intr_function'.
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hducommbintr_c
+
+		#void Crt0TransferData(void); 
+
+	END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommbintr.c
+
+-- ENVIRONMENT ENV_hducommbintr_c
+
+	--None
+
+-- END ENVIRONMENT -- ENV_hducommbintr_c
+
+-- USE ENV_hducommbintr_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service ResetFunc
+--------------------------------------------------------------------------------
+SERVICE ResetFunc
+SERVICE_TYPE extern
+TEST 1
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-ResetFunc-CB-LLR-001]
+	COMMENT The function 'ResetFunc' calls 'Crt0TransferData' to run the Reset routine.
+	COMMENT Equivalence Class 6.
+	COMMENT </TD> 
+    
+	ELEMENT
+    
+		COMMENT INPUT SECTION:
+    
+			--None
+    
+		COMMENT OUTPUT SECTION:
+    
+			--None
+    
+		COMMENT	INPUT/OUTPUT SECTION:
+    
+			--None
+    
+		-- Stub Calls:
+   		SIMUL
+    
+			STUB Crt0TransferData()
+    
+		END SIMUL
+    
+		-- Calling the Unit Under Test :
+		#ResetFunc();
+    
+	END ELEMENT
+    
+END TEST -- TEST 1
+
+END SERVICE -- ResetFunc
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HardFault
+--------------------------------------------------------------------------------
+SERVICE HardFault
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+        
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-HardFault-CB-LLR-001]
+	COMMENT The function 'HardFault' does nothing.
+	COMMENT Equivalence Class None.
+	COMMENT </TD>
+        
+	ELEMENT
+        
+		COMMENT INPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT	INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#HardFault();
+        
+	END ELEMENT
+        
+END TEST -- TEST 1
+
+END SERVICE -- HardFault
+
+--------------------------------------------------------------------------------
+-- Declaration of the service MemManage
+--------------------------------------------------------------------------------
+SERVICE MemManage
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+        
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-MemManage-CB-LLR-001]
+	COMMENT The function 'MemManage' does nothing.
+	COMMENT Equivalence Class None.
+	COMMENT </TD>
+        
+	ELEMENT
+        
+		COMMENT INPUT SECTION:
+
+			--dummy variable initialised for execution
+			VAR PTU_temp, 		init = 0x10,			ev = init
+			
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT	INPUT/OUTPUT SECTION:
+
+			--None
+
+		 -- Stub Calls:
+		 SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#MemManage();
+
+	END ELEMENT
+        
+END TEST -- TEST 1
+
+END SERVICE -- MemManage
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BusFault
+--------------------------------------------------------------------------------
+SERVICE BusFault
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+        
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-BusFault-CB-LLR-001]
+	COMMENT The function 'BusFault' does nothing.
+	COMMENT Equivalence Class None.
+	COMMENT </TD>
+        
+	ELEMENT
+        
+		COMMENT INPUT SECTION:
+
+			--dummy variable initialised for execution
+			VAR PTU_temp, 		init = 0x10,			ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT	INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#BusFault();
+        
+	END ELEMENT
+        
+END TEST -- TEST 1
+
+END SERVICE -- BusFault
+
+--------------------------------------------------------------------------------
+-- Declaration of the service SpuriousInterrupt
+--------------------------------------------------------------------------------
+SERVICE SpuriousInterrupt
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+        
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-SpuriousInterrupt-CB-LLR-001]
+	COMMENT The function 'SpuriousInterrupt' does nothing.
+	COMMENT Equivalence Class None.
+	COMMENT </TD>
+        
+	ELEMENT
+        
+		COMMENT INPUT SECTION:
+
+			--dummy variable initialised for execution
+			VAR PTU_temp, 		init = 0x10,			ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT	INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#SpuriousInterrupt();
+
+	END ELEMENT
+        
+END TEST -- TEST 1
+
+END SERVICE -- SpuriousInterrupt
+
+--------------------------------------------------------------------------------
+-- Declaration of the service UsageFault
+--------------------------------------------------------------------------------
+SERVICE UsageFault
+SERVICE_TYPE extern
+    
+TEST 1
+FAMILY nominal
+        
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-UsageFault-CB-LLR-001]
+	COMMENT The function 'UsageFault' does nothing.  
+	COMMENT Equivalence Class None.
+	COMMENT </TD>
+        
+	ELEMENT
+        
+		COMMENT INPUT SECTION:
+
+			--dummy variable initialised for execution
+			VAR PTU_temp, 		init = 0x10,			ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT	INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL
+
+			--No stubs
+			
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#UsageFault();
+        
+	END ELEMENT
+        
+END TEST -- TEST 1    
+
+END SERVICE -- UsageFault
+
+--------------------------------------------------------------------------------
+-- Declaration of the service NonMaskable
+--------------------------------------------------------------------------------
+SERVICE NonMaskable
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+        
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-NonMaskable-CB-LLR-001]
+	COMMENT The function 'NonMaskable' does nothing.
+	COMMENT Equivalence Class None.
+	COMMENT </TD> 
+	
+	ELEMENT
+        
+		COMMENT INPUT SECTION:
+
+			--dummy variable initialised for execution
+			VAR PTU_temp, 		init = 0x10,			ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT	INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL
+
+			--No stubs
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#NonMaskable();
+
+	END ELEMENT
+        
+END TEST -- TEST 1
+
+END SERVICE -- NonMaskable

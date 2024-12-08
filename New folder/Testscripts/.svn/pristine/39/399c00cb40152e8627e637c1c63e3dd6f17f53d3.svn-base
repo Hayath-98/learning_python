@@ -1,0 +1,1683 @@
+HEADER hdudispfucos,Source Code Ver : 1.4,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         :  Swathi G 
+--
+-- File Name            : hdudispfucos_3.ptu 
+--
+-- Test Creation Date   : 15.10.2017
+--
+-- Tested Functions     : OsSemCreate
+--                        OsIntExit
+--                        OSSemPeek
+--                        OsSemAccept
+--
+-- Version History      :
+--
+--  TEST-VERSION        TEST-DATE           TESTER NAME        MODIFICATIONS
+--  ------------        ---------           -----------        -------------
+--  1.1                 15.10.2017          Swathi G      Created the PTU file.
+--  1.2                 10.11.2017          Swathi G      Updated as per #PR100171.
+--  1.3                 14.11.2017          Swathi G      Updated as per #PR100171.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdudispfucos.h"                 
+##include "hdulibbasictypes.h"          
+##include "hdudispfoscpu.h"              
+--------------------------------------------------------------------------------
+-- TESTED FILE DECLARATIONS
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    # T_OS_TCB  *Os_tcb_high_rdy;
+
+    # T_OS_TCB  *Os_tcb_cur;
+
+    # T_BOOLEAN  Os_running;
+
+    # T_UINT32 U32_critical_sr;
+
+    # T_OS_TCB  *Os_tcb_prio_tbl[64];
+
+    #volatile T_ULONG Os_idle_ctr;
+    
+	#T_INT16 OSSemPeek(T_OS_EVENT *p_event);
+	
+-- Declarations of the temporary variables
+
+    -- Temporary variable to hold Os_tcb_cur
+    # T_OS_TCB PTU_Os_tcb_cur; 
+    
+    -- Temporary variable to hold Os_tcb_high_rdy
+    # T_OS_TCB PTU_Os_tcb_high_rdy;
+
+    -- Temporary variable to hold Os_tcb_prio_tbl[64]
+    # T_OS_TCB PTU_Os_tcb_prio_tbl[64];
+    
+    -- Temporary variable to hold ret_OsSemCreate
+    # T_OS_EVENT PTU_ret_OsSemCreate;
+
+    -- Temporary variable to hold stck
+    # T_UINT32 PTU_Stack;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Swathi G
+    COMMENT
+    COMMENT File Name        : hdudispfucos_3.ptu 
+    COMMENT
+    COMMENT Tested Functions : OsSemCreate
+    COMMENT                    OsIntExit
+    COMMENT                    OSSemPeek
+    COMMENT                    OsSemAccept
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1'for' loops cannot be covered for '0' and '1' times since it is controlled by Macro in function 'OsInit'.  
+    COMMENT
+    COMMENT 2.Ptu's are split into 3 because of static dependency and memory constraint on Target.
+    COMMENT
+    COMMENT 3.Source file "hdudispfucos.c" is modified for testing LLR "hdudispfucos-OsTaskIdle-DB-LLR-001". 
+    COMMENT     The while(TRUE) is modified for terminating the infinite loop.
+    COMMENT
+    COMMENT         Snippet of code is added in function 'OsTaskIdle':
+    COMMENT
+    COMMENT         T_UINT8 PTU_counter =0 /*local variable declared for testing purpose*/
+    COMMENT
+    COMMENT         while(TRUE)
+    COMMENT         {
+    COMMENT             .................
+    COMMENT
+    COMMENT             /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT             PTU_counter = PTU_counter +1;
+    COMMENT             if(PTU_counter > 3)
+    COMMENT             {
+    COMMENT                                break;
+    COMMENT             } 
+    COMMENT             else
+    COMMENT             {
+    COMMENT                                ;/*nothing*/
+    COMMENT             }
+    COMMENT         }/*End of while loop*/
+    COMMENT     Hence while loop cannot be covered for 0 and 1 times and FALSE condition.
+    COMMENT
+    COMMENT 4.Source file "hdudispfucos.c" is modified for testing LLR "hdudispfucos-OsTimeTick-DB-LLR-001". 
+    COMMENT     The while(TRUE) is modified for terminating the infinite.
+    COMMENT     loop.
+    COMMENT
+    COMMENT         Snippet of code is added in function 'OsTimeTick':
+    COMMENT
+    COMMENT         T_UINT8 PTU_counter =0 /*local variable declared for testing purpose*/
+    COMMENT
+    COMMENT         while(...)
+    COMMENT         {
+    COMMENT             .................
+    COMMENT
+    COMMENT             /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT             PTU_counter++;
+    COMMENT             if(PTU_counter > 3)
+    COMMENT             {
+    COMMENT                                break;
+    COMMENT             } 
+    COMMENT             else
+    COMMENT             {
+    COMMENT                                ;/*nothing*/
+    COMMENT             }
+    COMMENT         }/*End of while loop*/
+    COMMENT     Hence while loop cannot be covered for 1 time.
+    COMMENT
+    COMMENT  5. Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+    COMMENT     warning #191-D: type qualifier is meaningless on cast type.
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT The function 'OsInit',calls the function 'OsTaskCreate'.
+    COMMENT
+    COMMENT Class 2
+    COMMENT The function 'OsInit',calls the function 'OsTaskIdle'.
+    COMMENT
+    COMMENT Class 3
+    COMMENT The function 'OsTaskIdle', Calls the funciton 'SaveStatusReg'
+    COMMENT
+    COMMENT Class 4
+    COMMENT The function 'OsStart',calls the funciton 'OsStartHighRdy' 
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'OsSched',the Interrupt nesting level OR Multitasking lock nesting level are ZERO. 
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'OsSched',the Interrupt nesting level OR Multitasking lock nesting level are not ZERO. 
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'OsSched',scheduled next 'Os_tcb_high_rdy' is not the current running task 'Os_tcb_cur'  
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'OsSched',scheduled next 'Os_tcb_high_rdy' is the current running task 'Os_tcb_cur' 
+    COMMENT
+    COMMENT Class 9
+    COMMENT The function 'OsIntEnter',Calls the function 'SaveStatusReg'
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'OsTcbInit',free TCB is obtained successfully from the free TCB list Os_tcb_free_list. 
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'OsTcbInit',free TCB is not obtained from the free TCB list Os_tcb_free_list.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'OsTcbInit',Pointer to doubly linked list of TCBs has valid data. 
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'OsTcbInit',Pointer to doubly linked list of TCBs has no valid data. 
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'OsIntExit', decremented Interrupt nesting level and Multitasking lock nesting level are ZERO.
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'OsIntExit', decremented Interrupt nesting level and Multitasking lock nesting level are not ZERO.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'OsIntExit',task to be next 'Os_tcb_high_rdy' is not the current running task 'Os_tcb_cur'.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'OsIntExit',task to be next 'Os_tcb_high_rdy' is the current running task 'Os_tcb_cur'.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'OsTimeDly',Clock ticks equal to 0
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'OsTimeDly',Clock ticks is greater than 0
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'OsTimeDly',current task is present in the ready list.
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'OsTimeDly',current task is not present in the ready list.
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'OsTimeTick',task priority for the TCB is not equal to OS_LOWEST_PRIO.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'OsTimeTick',task priority for the TCB is equal to OS_LOWEST_PRIO.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'OsTimeTick',Nbr ticks OSTCBDly for the TCB is not equal to 0
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'OsTimeTick',Nbr ticks OSTCBDly for the TCB is equal to 0
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'OsTimeTick',decremented OSTCBDly counter is equal to 0
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'OsTimeTick',decremented OSTCBDly counter is not equal to 0
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'OsTimeTick',task status OSTCBStat for the TCB is Suspended 
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'OsTimeTick',task status OSTCBStat for the TCB is not Suspended 
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'OsSemCreate',the free ECB pool is not empty.
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'OsSemCreate',the free ECB pool is empty.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'OsSemCreate',the reference to the selected ECB is not NULL.
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'OsSemCreate',the reference to the selected ECB is NULL.
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'OsSemPend',the event counter of the current TCB p_event is greater than ZERO
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'OsSemPend',the event counter of the current TCB p_event equal to ZERO
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'OsSemPend',current task is present in the ready list Os_rdy_tbl.
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'OsSemPend',current task is not present in the ready list Os_rdy_tbl.
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'OsSemPend',Task status OSTCBStat for the current running TCB Os_tcb_cur is pending on Semaphore(OS_STAT_SEM).
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'OsSemPend',Task status OSTCBStat for the current running TCB Os_tcb_cur is not pending on Semaphore(OS_STAT_SEM) 
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'OsSemPend',the current task waiting time is ZERO .
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'OsSemPend',the current task waiting time is not ZERO .
+    COMMENT
+    COMMENT Class 42
+    COMMENT In function 'OsSemPost', OSEventGrp of ECB p_event not equal to ZERO.
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function 'OsSemPost', OSEventGrp of ECB p_event equal to ZERO.
+    COMMENT
+    COMMENT Class 84
+    COMMENT In function 'OsSemPost',the list of task waiting for the event to occur in OSEventTbl is ZERO.
+    COMMENT
+    COMMENT Class 85
+    COMMENT In function 'OsSemPost',the list of task waiting for the event to occur in OSEventTbl is not ZERO.
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'OsSemPost',the task status OSTCBStat of the current task TCB is ready to run (i.e. OS_STAT_RDY).
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function 'OsSemPost',the task status OSTCBStat of the current task TCB is not ready to run (i.e. OS_STAT_RDY).
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'OsSemPost',os_event_cnt is less than MAX_SEMPHORE.
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'OsSemPost',os_event_cnt is equal to MAX_SEMPHORE.
+    COMMENT
+    COMMENT Class 48
+    COMMENT In the Function "OsTaskIdle",calls the function 'RestoreStatusReg'.
+    COMMENT
+    COMMENT Class 50 
+    COMMENT The the Function "OsSched", calls the function "SaveStatusReg".
+    COMMENT
+    COMMENT Class 51
+    COMMENT The the Function "OsSched", calls the function "RestoreStatusReg".
+    COMMENT
+    COMMENT Class 52 
+    COMMENT The Function "OsTcbInit",calls the function 'SaveStatusReg'.                      
+    COMMENT
+    COMMENT Class 53
+    COMMENT The Function "OsTcbInit",calls the function "RestoreStatusReg".
+    COMMENT 
+    COMMENT Class 54
+    COMMENT The Function "OsIntEnter",calls the function "RestoreStatusReg".
+    COMMENT 
+    COMMENT Class 55
+    COMMENT The Function "OsIntExit",calls the function 'SaveStatusReg'.
+    COMMENT 
+    COMMENT Class 56
+    COMMENT The Function "OsIntExit",calls the function 'OsIntCtxSw'.
+    COMMENT 
+    COMMENT Class 57
+    COMMENT The Function "OsIntExit", calls the function "RestoreStatusReg".
+    COMMENT
+    COMMENT Class 58
+    COMMENT The Function "OsTimeDly", calls the function "RestoreStatusReg".
+    COMMENT
+    COMMENT Class 59
+    COMMENT The Function "OsTimeDly", calls the function "OsSched"
+    COMMENT 
+    COMMENT Class 60
+    COMMENT The Function "OsTimeTick",calls the function 'SaveStatusReg'.
+    COMMENT 
+    COMMENT Class 61
+    COMMENT The Function "OsTimeTick", calls the function "RestoreStatusReg".
+    COMMENT 
+    COMMENT Class 62 
+    COMMENT The Function "OsSemCreate",calls the function 'SaveStatusReg'.
+    COMMENT 
+    COMMENT Class 63
+    COMMENT The Function "OsSemCreate",  calls the function "RestoreStatusReg".
+    COMMENT 
+    COMMENT Class 64
+    COMMENT The Function "OsSemPend", calls the function "SaveStatusReg".
+    COMMENT 
+    COMMENT Class 65
+    COMMENT The Function "OsSemPend",calls the function "RestoreStatusReg".
+    COMMENT 
+    COMMENT Class 66
+    COMMENT The Function "OsSemPend", calls the function "OsSched".
+    COMMENT
+    COMMENT Class 67
+    COMMENT The Function "OsSemPost", calls the function "SaveStatusReg"
+    COMMENT 
+    COMMENT Class 68
+    COMMENT The Function "OsSemPost",calls the function "RestoreStatusReg"
+    COMMENT
+    COMMENT Class 69
+    COMMENT The Function "OsSemPost",calls the function "OsSched"
+    COMMENT
+    COMMENT Class 70
+    COMMENT The Function "OsTimeDly", calls the function "SaveStatusReg".                    
+    COMMENT
+    COMMENT Class 71
+    COMMENT The function 'OsSched',calls the function "OsCtxSw"
+    COMMENT
+    COMMENT Class 76
+    COMMENT In function "OsSemAccept", the event counter value is greater than ZERO
+    COMMENT
+    COMMENT Class 77
+    COMMENT In function "OsSemAccept", the event counter value is not greater than ZERO
+    COMMENT
+    COMMENT Class 78
+    COMMENT The Function "OsSemAccept", calls the function "SaveStatusReg".                    
+    COMMENT
+    COMMENT Class 79
+    COMMENT The Function "OsSemAccept", calls the function "RestoreStatusReg".                    
+    COMMENT
+    COMMENT Class 80
+    COMMENT The Function "OSSemPeek", calls the function "RestoreStatusReg".                    
+    COMMENT
+    COMMENT Class 81
+    COMMENT The Function "OSSemPeek", calls the function "SaveStatusReg".                    
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT Class 72
+    COMMENT In function 'OsTcbInit',Invalid Reference is passed to stck parameter
+    COMMENT
+    COMMENT Class 73
+    COMMENT In function 'OsSemPost',Invalid Reference is passed to p_event parameter
+    COMMENT
+    COMMENT Class 74
+    COMMENT In function 'Ossempend',Invalid Reference is passed to p_event parameter 
+    COMMENT
+    COMMENT Class 75
+    COMMENT In function 'Ossempend',Invalid Reference is passed to error parameter
+    COMMENT
+    COMMENT Class 82
+    COMMENT In function 'OsSemAccept',Invalid Reference is passed to param_event parameter 
+    COMMENT
+    COMMENT Class 83
+    COMMENT In function 'OSSemPeek',Invalid Reference is passed to p_event parameter 
+    COMMENT 
+    COMMENT </ECD> 
+    
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hdudispfucos_c
+
+        # void  OsIntCtxSw ( void   );
+
+        # void  OsStartHighRdy ( void   );
+
+        # void  WdogKickWatchDog ( void   );
+
+        --In stub OsTaskCreate Ptr_task variable made as _no becuase static function address cannot be expected,
+        # T_UINT8  OsTaskCreate ( void _no (*Ptr_task)( void* double_ptr ),void _in *Ptr_data,void _no *Ptr_Stack,T_UINT8  _in  Task_prio )
+        #{
+        #   (*Ptr_task)(Ptr_data);
+        #}
+
+        #void OsCtxSw (void);
+
+        # void  RestoreStatusReg ( T_UINT32  _in U32_critical_sr );
+
+        # T_UINT32 SaveStatusReg(void);
+
+    END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+   
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfucos.c
+ENVIRONMENT ENV_hdudispfucos_c
+  VAR Os_tcb_high_rdy,                 init = NIL,         ev = init
+  VAR Os_int_nesting,                  init = 0,           ev = init
+  VAR Os_tcb_cur,                      init = NIL,         ev = init
+  VAR Os_idle_ctr,                     init = (T_ULONG)0,   ev = (T_ULONG)init
+  VAR Os_ctx_sw_ctr,                   init = 0,           ev = init
+  VAR Os_running,                      init = 0,           ev = init
+END ENVIRONMENT -- ENV_hdudispfucos_c
+USE ENV_hdudispfucos_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OsIntExit
+--------------------------------------------------------------------------------
+SERVICE OsIntExit
+SERVICE_TYPE extern
+
+-- Default Variables 
+
+ENVIRONMENT   ENV_OsIntExit
+
+    VAR U32_critical_sr,                        init = 0  ,             ev = init 
+
+    VAR Os_running,                             init = FALSE ,          ev = init 
+
+    VAR Os_tcb_cur,                             init = NULL ,           ev = init 
+
+    VAR Os_tcb_high_rdy,                        init = NULL ,           ev = init 
+
+    VAR Os_tcb_prio_tbl,                        init = { others =>NULL }  ,
+    &                                                                   ev = init  
+
+END ENVIRONMENT --ENV_OsIntExit
+
+USE ENV_OsIntExit
+
+TEST 1
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD> 
+    COMMENT  [hdudispfucos-OsIntExit-DB-LLR-001]
+    COMMENT  The function calls SaveStatusReg to disable interrupts before execution of the function
+    COMMENT  and decrement the Interrupt nesting level by one.
+    COMMENT   Equivalence class 55
+    COMMENT 
+    COMMENT  [hdudispfucos-OsIntExit-DB-LLR-002]
+    COMMENT  The function does nothing when the Interrupt nesting level(Os_int_nesting,which is pre-decremented) 
+    COMMENT  and Multitasking lock nesting level are not zero.
+    COMMENT   Equivalence class 15
+    COMMENT 
+    COMMENT  [hdudispfucos-OsIntExit-DB-LLR-004]
+    COMMENT  The function calls the RestoreStatusReg to restore the priority mask register after the 
+    COMMENT  highest priority task is ready to run and when ISR not complete ( i.e. Interrupt nesting level >0 ) and ISR
+    COMMENT  locked(i.e. Multitasking lock nesting level > 0).
+    COMMENT  In this test case Os_int_nesting is tested for minimum range value(0).
+    COMMENT   Equivalence class 57
+    COMMENT  </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:   
+
+            --None
+            
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                     init = 0        ,     ev = 10 
+            
+            --Holds the interrupt nesting level value
+            VAR Os_int_nesting,                      init = 0,             ev = init
+
+        COMMENT OUTPUT SECTION: 
+
+            --None
+            
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()10
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (10)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()10
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (10)
+
+        END SIMUL
+
+		 --The below function is called to increment the interrupt nesting level value
+		 #OsIntEnter();
+		 
+         -- Calling the Unit Under Test :
+         #OsIntExit( );
+
+    END ELEMENT
+   
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD> 
+    COMMENT  [hdudispfucos-OsIntExit-DB-LLR-002]
+    COMMENT  The function does the following when the ISR is complete and not locked i.e. check when 
+    COMMENT  Interrupt nesting level(Os_int_nesting,which is pre-decremented)  and Multitasking lock nesting level are zero.
+    COMMENT  - Determines the priority of the highest priority task that is ready to run from the priority resolution table
+    COMMENT  - Extracts the highest priority Indexed value from the Os_tcb_prio_tbl and set the 'Os_tcb_high_rdy'  to the highest
+    COMMENT    priority task ready to run from the 'Os_tcb_prio_tbl'.
+    COMMENT   Equivalence class 14
+    COMMENT
+    COMMENT  [hdudispfucos-OsIntExit-DB-LLR-003]
+    COMMENT  The function does nothing when the ISR is complete and not locked and the task to be 
+    COMMENT  run next 'Os_tcb_high_rdy' is the current running task 'Os_tcb_cur'
+    COMMENT  Equivalence class 17
+    COMMENT  </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:   
+
+            --Global variable holds Pointer to currently running TCB
+            VAR Os_tcb_cur,                                 init = PTU_Os_tcb_prio_tbl ,             ev = init 
+
+            --Global variable holds Table of pointers to all created TCBs
+            VAR Os_tcb_prio_tbl,                            init = { others =>PTU_Os_tcb_prio_tbl },      
+            &                                                                                        ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                            init = 0,                                ev = 10
+
+            --Global variable holds Pointer to highest prio TCB ready to run
+            VAR Os_tcb_high_rdy,                            init = &PTU_Os_tcb_high_rdy  ,           ev = Os_tcb_prio_tbl[1] 
+            
+            --Holds the interrupt nesting level value
+            VAR Os_int_nesting,                             init = 0,                                ev = init
+			            
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()10
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (10)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()10
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (10)
+
+        END SIMUL
+		
+		 --The below function is called to increment the interrupt nesting level value
+		 #OsIntEnter();
+		
+         -- Calling the Unit Under Test :
+         #OsIntExit( );
+
+   END ELEMENT
+   
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsIntExit-DB-LLR-003]
+    COMMENT The function performs the following operations when the ISR is complete and not locked and the task to be
+    COMMENT run next 'Os_tcb_high_rdy' is not the current running task 'Os_tcb_cur'
+    COMMENT a)Increments context switch counter
+    COMMENT b)Calls OsIntCtxSw to perform interrupt level context switch.
+    COMMENT In this test case variable Os_ctx_sw_ctr tested for minimum range value.
+    COMMENT Equivalence Class 14, 16, 56
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:   
+
+            --Global variable holds Pointer to currently running TCB
+            VAR Os_tcb_cur,                         init = &PTU_Os_tcb_cur,                         ev = init 
+
+            --Global variable holds Table of pointers to all created TCBs
+            VAR Os_tcb_prio_tbl,                    init = { others =>PTU_Os_tcb_prio_tbl },
+            &                                                                                       ev = init 
+            
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                    init = 0,                                       ev = 10
+
+            --Global variable holds Pointer to highest prio TCB ready to run
+            VAR Os_tcb_high_rdy,                    init = &PTU_Os_tcb_high_rdy,                    ev = Os_tcb_prio_tbl[0] 
+            
+            --Holds the interrupt nesting level value
+            VAR Os_int_nesting,                     init = 0,                                       ev = init
+			
+			--Holds the context switch counter value
+            VAR Os_ctx_sw_ctr,                      init = 0,                                       ev = 1
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()10
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (10)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()10
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (10)
+
+          --called to Perform a context switch
+            STUB OsIntCtxSw ()
+            
+        END SIMUL
+
+		--The below function is called to increment the interrupt nesting level value
+		#OsIntEnter();
+		
+        -- Calling the Unit Under Test :
+        #OsIntExit( );
+
+    END ELEMENT
+   
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD> 
+    COMMENT  [hdudispfucos-OsIntExit-DB-LLR-001]
+    COMMENT  The function calls SaveStatusReg to disable interrupts before execution of the function
+    COMMENT  and decrement the Interrupt nesting level by one .
+    COMMENT  In this test case Os_int_nesting is tested for maximum range value(255).
+    COMMENT   Equivalence class 55
+    COMMENT  </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:   
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                     init = 0,                     ev = 10 
+            
+            --Holds the interrupt nesting level value
+            VAR Os_int_nesting,                      init = 255,                   ev = 254
+
+        COMMENT OUTPUT SECTION: 
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()10
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (10)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #OsIntExit( );
+
+    END ELEMENT
+
+END TEST  -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD> 
+    COMMENT  [hdudispfucos-OsIntExit-DB-LLR-001]
+    COMMENT  The function calls SaveStatusReg to disable interrupts before execution of the function
+    COMMENT  and decrement the Interrupt nesting level by one .
+    COMMENT  In this test case Os_int_nesting is tested for nominal range value(128).
+    COMMENT   Equivalence class 55
+    COMMENT  </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:   
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                     init = 0,                   ev = 10 
+            
+            --Holds the interrupt nesting level value
+            VAR Os_int_nesting,                      init = 128,                   ev = 127
+            
+        COMMENT OUTPUT SECTION: 
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()10
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (10)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #OsIntExit( );
+
+    END ELEMENT
+   
+END TEST  -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD> 
+    COMMENT  [hdudispfucos-OsIntExit-DB-LLR-001]
+    COMMENT  The function calls SaveStatusReg to disable interrupts before execution of the function
+    COMMENT  and decrement the Interrupt nesting level by one .
+    COMMENT  In this test case Os_int_nesting is tested for maximum-1 range value(254).
+    COMMENT   Equivalence class 55
+    COMMENT  </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:   
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                     init = 0,                      ev = 10 
+            
+            --Holds the interrupt nesting level value
+            VAR Os_int_nesting,                      init = 254,                      ev = 253
+            
+        COMMENT OUTPUT SECTION: 
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()10
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (10)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #OsIntExit( );
+
+    END ELEMENT
+   
+END TEST  -- TEST 6
+
+END SERVICE --OsIntExit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OsSemCreate
+--------------------------------------------------------------------------------
+SERVICE OsSemCreate
+SERVICE_TYPE extern
+
+-- Tested UNIT Parameters declarations
+
+    # T_UWORD  count;
+
+-- Local variable declarations
+
+    --None
+
+-- Returned Type Declarations
+
+    # T_OS_EVENT * ret_OsSemCreate;
+
+-- Default Variables 
+
+ENVIRONMENT ENV_OsSemCreate
+
+    VAR count,                                      init = 0,                       ev = init 
+
+    VAR U32_critical_sr,                            init = 0,                       ev = init 
+
+    VAR Os_running,                                 init = FALSE,                   ev = init 
+
+    VAR Os_tcb_cur,                                 init = &PTU_Os_tcb_cur,          
+    &                                                                               ev = init 
+
+    VAR Os_tcb_high_rdy,                            init = &PTU_Os_tcb_high_rdy,        
+    &                                                                               ev = init 
+
+    VAR Os_tcb_prio_tbl,                            init = { others =>PTU_Os_tcb_prio_tbl },
+    &                                                                               ev = init 
+
+END ENVIRONMENT --ENV_OsSemCreate
+
+USE  ENV_OsSemCreate
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsSemCreate-DB-LLR-003]
+    COMMENT The function does nothing when the free ECB pool is empty.
+    COMMENT Equivalence Class 31
+    COMMENT
+    COMMENT [hdudispfucos-OsSemCreate-DB-LLR-005]
+    COMMENT The function return's ZERO when the reference to the selected ECB is NULL
+    COMMENT Equivalence Class 33
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR count,                              init = 0,                       ev = init 
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                    init = 0,                       ev = 100
+
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OsSemCreate,                    init = &PTU_ret_OsSemCreate,
+            &                                                                       ev = (T_OS_EVENT *)ZERO
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OsSemCreate = OsSemCreate(count);
+
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsSemCreate-DB-LLR-001]
+    COMMENT The function calls SaveStatusReg to disable interrupts.
+    COMMENT Equivalence Class 62
+    COMMENT
+    COMMENT [hdudispfucos-OsSemCreate-DB-LLR-002]
+    COMMENT The function obtains an ECB from free list of ECBs.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfucos-OsSemCreate-DB-LLR-003]
+    COMMENT The function sets the linked list of free ECB to point to next free list of ECB 
+    COMMENT (os_eventptr) when the free ECB pool is not empty.
+    COMMENT Equivalence Class 30
+    COMMENT 
+    COMMENT [hdudispfucos-OsSemCreate-DB-LLR-004]
+    COMMENT The function 'OsSemCreate' enble interrupts by calling RestoreStatusReg
+    COMMENT Equivalence Class 63
+    COMMENT
+    COMMENT [hdudispfucos-OsSemCreate-DB-LLR-005]
+    COMMENT  The function does the following when the reference to the selected ECB is not NULL,     
+    COMMENT  a. Sets the desired initial count (count) for the Semaphore into OSEventCnt of obtained ECB.
+    COMMENT  b. Clears the OSEventGrp and OSEventTbl of the obtained ECB to HEX2_ZERO
+    COMMENT  (as the Semaphore is being initialized there are no tasks waiting for it).
+    COMMENT  c. Returns with the reference to the obtained ECB
+    COMMENT In this test case count tested for minimum,minimum+1,nominal,maximum,maximum-1 values
+    COMMENT Equivalence Class 32
+    COMMENT </TD>
+
+    ELEMENT
+
+    --Address of PTU_Os_tcb_prio_tbl is assigned to 0th index(prio value) of Os_tcb_prio_tbl
+    #Os_tcb_prio_tbl[0] = PTU_Os_tcb_prio_tbl;
+    
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR count,                          init in {0,1,32768,65534,65535},            ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --holds Critical status register value returns from function SaveStatusReg
+            VAR U32_critical_sr,                init = 0,                                   ev = 100 
+
+        COMMENT OUTPUT SECTION:
+
+            --Global variable holds Pointer to highest prio TCB ready to run
+            VAR Os_tcb_high_rdy,                init = &PTU_Os_tcb_high_rdy,                ev = 0 
+
+            --Global variable holds Pointer to currently running TCB
+            VAR Os_tcb_cur,                     init = &PTU_Os_tcb_cur,                     ev = 0 
+
+            --Global variable holds Flag indicating that kernel is running
+            VAR Os_running,                     init = TRUE,                                ev = FALSE
+
+            --Global variable holds Table of pointers to all created TCBs
+            VAR Os_tcb_prio_tbl,                init = { others =>Os_tcb_prio_tbl[0] },
+            &                                                                               ev = { others =>0 } 
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OsSemCreate,                init = &PTU_ret_OsSemCreate,
+            &                                                                               ev = ret_OsSemCreate
+
+			--Holds the idle counter value
+            VAR Os_idle_ctr,                    init = (T_ULONG)0,                          ev = (T_ULONG)4
+			
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OsSemCreate->OSEventTbl,    init = { others =>10 },                     ev = { others =>0 }
+
+            VAR ret_OsSemCreate->OSEventCnt,    init = 0,                                   ev(count) in {0,1,32768,65534,65535}
+
+            VAR ret_OsSemCreate->OSEventGrp,    init = 1,                                   ev = 0
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to create OsTaskIdle
+            STUB OsTaskCreate (NULL,OS_LOWEST_PRIO)0
+                                    
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+            
+
+        END SIMUL
+
+        -- Called function for initialization purpose :
+        #OsInit();
+
+        -- Calling the Unit Under Test :
+        #ret_OsSemCreate = OsSemCreate(count);
+
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+END SERVICE --OsSemCreate
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OSSemPeek
+--------------------------------------------------------------------------------
+SERVICE OSSemPeek
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_OS_EVENT p_event;
+    -- By function returned type declaration
+    #T_INT16 ret_OSSemPeek;
+
+    ENVIRONMENT ENV_OSSemPeek
+    STRUCTURE p_event,                                         init = { OSEventGrp => 0, OSEventTbl => { others => 0 }, 
+    &                                                                OSEventCnt => 0, OSEventPtr => NIL },          ev = init
+    
+    VAR ret_OSSemPeek,                                         init = 0,                                            ev = init
+    END ENVIRONMENT -- ENV_OSSemPeek
+    USE ENV_OSSemPeek
+
+TEST 1
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OSSemPeek-DB-LLR-001]
+    COMMENT The function OSSemPeek shall does the following on entering an ISR.
+    COMMENT - Send a request to uC/OS to disable all the interrupt by calling the function SaveStatusReg.
+    COMMENT - Set counter to OSEventCnt of p_event
+    COMMENT - Send a request to uC/OS to restore the priority mask register by calling RestoreStatusReg.
+    COMMENT - Return counter value. (In this test case OSEventCnt value is minimum)
+    COMMENT Equivalence Class 80, 81
+    COMMENT </TD>
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR p_event.OSEventCnt,                          init = 0,            ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OSSemPeek,                               init = 100,          ev = 0
+
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OSSemPeek = OSSemPeek(&p_event);
+        END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OSSemPeek-DB-LLR-001]
+    COMMENT The function OSSemPeek shall does the following on entering an ISR.
+    COMMENT - Send a request to uC/OS to disable all the interrupt by calling the function SaveStatusReg.
+    COMMENT - Set counter to OSEventCnt of p_event
+    COMMENT - Send a request to uC/OS to restore the priority mask register by calling RestoreStatusReg.
+    COMMENT - Return counter value. (In this test case OSEventCnt value is minimum+1)
+    COMMENT Equivalence Class 80, 81
+    COMMENT </TD>
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR p_event.OSEventCnt,                          init = 1,            ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OSSemPeek,                               init = 100,          ev = 1
+
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OSSemPeek = OSSemPeek(&p_event);
+        END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OSSemPeek-DB-LLR-001]
+    COMMENT The function OSSemPeek shall does the following on entering an ISR.
+    COMMENT - Send a request to uC/OS to disable all the interrupt by calling the function SaveStatusReg.
+    COMMENT - Set counter to OSEventCnt of p_event
+    COMMENT - Send a request to uC/OS to restore the priority mask register by calling RestoreStatusReg.
+    COMMENT - Return counter value. (In this test case OSEventCnt value is nominal)
+    COMMENT Equivalence Class 80, 81
+    COMMENT </TD>
+
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR p_event.OSEventCnt,                          init = 16500,            ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OSSemPeek,                               init = 100,              ev = 16500
+
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OSSemPeek = OSSemPeek(&p_event);
+        END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OSSemPeek-DB-LLR-001]
+    COMMENT The function OSSemPeek shall does the following on entering an ISR.
+    COMMENT - Send a request to uC/OS to disable all the interrupt by calling the function SaveStatusReg.
+    COMMENT - Set counter to OSEventCnt of p_event
+    COMMENT - Send a request to uC/OS to restore the priority mask register by calling RestoreStatusReg.
+    COMMENT - Return counter value. (In this test case OSEventCnt value is maximum - 1)
+    COMMENT Equivalence Class 80, 81
+    COMMENT </TD>
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR p_event.OSEventCnt,                          init = 32766,            ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OSSemPeek,                               init = 100,              ev = 32766
+
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_OSSemPeek = OSSemPeek(&p_event);
+        END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OSSemPeek-DB-LLR-001]
+    COMMENT The function OSSemPeek shall does the following on entering an ISR.
+    COMMENT - Send a request to uC/OS to disable all the interrupt by calling the function SaveStatusReg.
+    COMMENT - Set counter to OSEventCnt of p_event
+    COMMENT - Send a request to uC/OS to restore the priority mask register by calling RestoreStatusReg.
+    COMMENT - Return counter value. (In this test case OSEventCnt value is maximum)
+    COMMENT Equivalence Class 80, 81
+    COMMENT </TD>
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR p_event.OSEventCnt,                          init = 32767,               ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OSSemPeek,                               init = 100,                 ev = 32767
+
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+
+         -- Calling the Unit Under Test :
+        #ret_OSSemPeek = OSSemPeek(&p_event);
+        END ELEMENT
+
+END TEST -- TEST 5
+
+--TEST 6
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfucos-OSSemPeek-DB-LLR-001]
+--    COMMENT This test case it to test OSSemPeek function with NULL input parameter
+--    COMMENT Equivalence Class 83
+--    COMMENT </TD>
+--
+--        ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--
+--            --None
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--
+--            --None 
+--
+--        COMMENT OUTPUT SECTION:
+--
+--            --None
+--
+--
+--        -- Stub Calls :
+--        SIMUL
+--
+--            --None
+--
+--        END SIMUL
+--
+--         -- Calling the Unit Under Test :
+--        #ret_OSSemPeek = OSSemPeek(NULL);
+--      
+--        END ELEMENT
+--
+--END TEST -- TEST 6
+
+END SERVICE -- OSSemPeek
+
+--------------------------------------------------------------------------------
+-- Declaration of the service OsSemAccept
+--------------------------------------------------------------------------------
+SERVICE OsSemAccept
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_OS_EVENT param_event;
+    -- By function returned type declaration
+    #T_INT16 ret_OsSemAccept;
+
+    ENVIRONMENT ENV_OsSemAccept
+    STRUCTURE param_event,                           init = { OSEventGrp => 0, OSEventTbl => { others => 0 },
+    &                                                    OSEventCnt => 0, OSEventPtr => NIL },                   ev = init
+    
+    VAR ret_OsSemAccept,                             init = 0,                                                   ev = init
+    END ENVIRONMENT -- ENV_OsSemAccept
+    USE ENV_OsSemAccept
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsSemAccept-DB-LLR-001]
+    COMMENT The function OsSemAccept call SaveStatusReg to disable interrupts.
+    COMMENT Equivalence Class 78
+    COMMENT
+    COMMENT [hdudispfucos-OsSemAccept-DB-LLR-002]
+    COMMENT The function OsSemAccept decrements OSEventCnt of param_event when 
+    COMMENT OSEventCnt of param_event is greater than zero.(tested for maximum value)
+    COMMENT Equivalence Class 76
+    COMMENT
+    COMMENT [hdudispfucos-OsSemAccept-DB-LLR-003]
+    COMMENT The function OsSemAccept enable all the interrupts by calling RestoreStatusReg.
+    COMMENT Equivalence Class 79
+    COMMENT
+    COMMENT [hdudispfucos-OsSemAccept-DB-LLR-004]
+    COMMENT The function OsSemAccept returns initial value of OSEventCnt of param_event.
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+      ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR param_event.OSEventCnt,                          init = 32767,                ev = 32766
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OsSemAccept,                                 init = 100,                  ev = 32767
+
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+        
+        -- Calling the Unit Under Test :
+        #ret_OsSemAccept = OsSemAccept(&param_event);
+        
+        END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsSemAccept-DB-LLR-002]
+    COMMENT The function OsSemAccept decrements OSEventCnt of param_event when 
+    COMMENT OSEventCnt of param_event is greater than zero.(tested for maximum-1 value)
+    COMMENT Equivalence Class 76
+    COMMENT </TD>
+
+      ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR param_event.OSEventCnt,                          init = 32766,            ev = 32765
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OsSemAccept,                                 init = 100,              ev = 32766
+
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+        
+        -- Calling the Unit Under Test :
+        #ret_OsSemAccept = OsSemAccept(&param_event);
+        
+        END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsSemAccept-DB-LLR-002]
+    COMMENT The function OsSemAccept decrements OSEventCnt of param_event when 
+    COMMENT OSEventCnt of param_event is greater than zero.(tested for nominal value)
+    COMMENT Equivalence Class 76
+    COMMENT </TD>
+
+      ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR param_event.OSEventCnt,                          init = 16500,            ev = 16499
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OsSemAccept,                                 init = 100,              ev = 16500
+
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+        
+        -- Calling the Unit Under Test :
+        #ret_OsSemAccept = OsSemAccept(&param_event);
+        
+        END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsSemAccept-DB-LLR-002]
+    COMMENT The function OsSemAccept decrements OSEventCnt of param_event when 
+    COMMENT OSEventCnt of param_event is greater than zero.(tested for minimum+1 value)
+    COMMENT Equivalence Class 76
+    COMMENT </TD>
+
+      ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR param_event.OSEventCnt,                          init = 1,            ev = 0
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OsSemAccept,                                 init = 100,          ev = 1
+
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+        
+        -- Calling the Unit Under Test :
+        #ret_OsSemAccept = OsSemAccept(&param_event);
+        
+        END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfucos-OsSemAccept-DB-LLR-002]
+    COMMENT The function OsSemAccept does nothing when OSEventCnt of param_event is not greater than zero.(tested for minimum value)
+    COMMENT Equivalence Class 77
+    COMMENT </TD>
+
+      ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds semaphore counter value
+            VAR param_event.OSEventCnt,                          init = 0,            ev = 0
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of function 'OsSemCreate'
+            VAR ret_OsSemAccept,                                 init = 100,          ev = 0
+
+
+        -- Stub Calls :
+        SIMUL
+
+            --called to disable interrupts
+            STUB SaveStatusReg ()100
+
+            --called to restore the prio mask register
+            STUB RestoreStatusReg (100)
+
+        END SIMUL
+        
+        -- Calling the Unit Under Test :
+        #ret_OsSemAccept = OsSemAccept(&param_event);
+        
+        END ELEMENT
+
+    END TEST -- TEST 5
+
+--TEST 6
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfucos-OsSemAccept-DB-LLR-001]
+--    COMMENT This test case it to test OsSemAccept function with NULL input parameter
+--    COMMENT Equivalence Class 82
+--    COMMENT </TD>
+--
+--        ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--
+--            --None
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--
+--            --None 
+--
+--        COMMENT OUTPUT SECTION:
+--
+--            --None
+--
+--
+--        -- Stub Calls :
+--        SIMUL
+--
+--            --None
+--
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test :
+--        #ret_OsSemAccept = OsSemAccept(NULL);
+--      
+--        END ELEMENT
+--
+--END TEST -- TEST 6
+
+END SERVICE -- OsSemAccept

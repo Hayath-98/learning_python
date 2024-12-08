@@ -1,0 +1,2244 @@
+HEADER hdudispfwidgets, Source Code Ver : 1.7 , TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+-- Author Name         : Priyanka N
+--
+-- File Name           : hdudispfwidgets.ptu
+--
+-- Test Creation Date  : 23.10.2017 
+--
+-- Tested Functions    : RedXGauge
+--                       RedXNumber
+--                       WidgetsRedX
+--                       WidgetsRGB444ToRGB888
+--			 			 WidgetsDotAddr
+--			 			 WidgetsUpdateRT
+--			 			 WidgetsNumUpdate
+--                  
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--  1.1                 23.10.2017      Priyanka N         Created the PTU file.
+--  1.2                 11.11.2017      Priyanka N         Updated as per #PR100171
+--  1.3                 14.11.2017      Priyanka N         Updated as per #PR100171
+--  1.4                 27.07.2020      Swaroopa N         Updated as per #PR100267
+--  1.5            		02.10.2020      Vignesh Sunil      Updated as per #PR100281
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdudispffonts.h"      /*Contains different font information*/
+##include "hdudispfpolygon1.h"    /*implements the "scan line" method polygon fill.*/
+##include "hdudispftext.h"       /*  Routines which maintain text display and updates */
+##include "hdudispfwidgets.h"    /* Contains routines for widget params */
+##include "hdudispfconfig.h"     /* contains page and color config information */
+##include "hdudispfbinascii.h"   /*Utility routines to convert binary to ascii base 10.*/
+##include "hdulibbasictypes.h"   /* Standard basic data type definitions */
+##include "hdudispfpanel.h"	/* Contains functions prototypes of panel.*/
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #T_UINT8 U8_update_digital;
+    #T_INT16 S16_panel_width;
+    #void *Vp_fgfb2;
+
+-- Declarations of the temporary variables of the tested file
+
+    -- Temporary variable created to verify the stub parameter of 'TextUpdate'
+    #T_PTEXT PTU_p_text;
+    
+    -- Temporary variable created to verify the stub parameter of 'PolygonDrawPoly'
+    # T_SPOLY *PTU_ps_poly_out;
+    
+    -- Temporary variable created to verify the stub parameter of 'TextDispString'
+    # T_INT8 *PTU_pc_string;
+	
+    --  Temporary variable created to pass as an address to function parameters
+    #T_UINT8 *PTU_pu8Text;
+    #T_SPOLY *PTU_T_SPOLY_1;
+    #T_SPOLY *PTU_T_SPOLY_2;
+    #T_SPOLY PTU_ret_val;
+	
+    -- Temporary variable created to verify the stub parameter of 'BinasByteFormatInfoBE'
+    #T_INT32 *PTU_src,PTU_src2;
+    #T_INT8 PTU_dest[200];
+    #T_CHAR PTU_dst[200];
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hdudispfwidgets.ptu
+    COMMENT
+    COMMENT Tested Functions : RedXGauge
+    COMMENT                    RedXNumber
+    COMMENT                    WidgetsRedX
+    COMMENT                    WidgetsRGB444ToRGB888
+    COMMENT                    WidgetsDotAddr
+    COMMENT            	       WidgetsUpdateRT
+    COMMENT		       		   WidgetsNumUpdate
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1. Following Test script related warning is observed during Target Execution for stub function return value:
+    COMMENT    warning #120-D: 
+    COMMENT    return value type does not match the function type
+    COMMENT    return(Attol_ptr_out->ret);
+	COMMENT
+    COMMENT	   warning #188-D: 
+    COMMENT    enumerated type mixed with another type
+    COMMENT    ps_dis_region.eRegionType = 100;
+    COMMENT  
+    COMMENT
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function "WidgetsDotAddr", returns foreground buffer address.
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function "WidgetsNumUpdate", calls the functino "TextUpdate".
+    COMMENT
+    COMMENT Class 3
+    COMMENT Function "WidgetsNumUpdate", calls the functino "BinasByteFormatInfoBE".
+    COMMENT
+    COMMENT Class 4
+    COMMENT Function "WidgetsRGB444ToRGB888", returns a value converted from RGB444 to RGB888
+    COMMENT 
+    COMMENT Class 5
+    COMMENT In function "WidgetsUpdateRT", s32Dig of ps_widget_parm is equal to r of ps_param.
+    COMMENT 
+    COMMENT Class 6
+    COMMENT In function "WidgetsUpdateRT", s32Dig of ps_widget_parm is not equal to r of ps_param.
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In function "WidgetsUpdateRT", s32ScalerStep of ps_widget_parm is greater than ZERO.    
+    COMMENT 
+    COMMENT Class 9
+    COMMENT In function "WidgetsUpdateRT", U8_update_digital is equal to ZERO
+    COMMENT 
+    COMMENT Class 10
+    COMMENT In function "WidgetsUpdateRT", U8_update_digital is not equal to ZERO
+    COMMENT 
+    COMMENT Class 11
+    COMMENT In function "WidgetsUpdateRT", eDIsDigStat of ps_widget_parm is equal to stat of ps_param
+    COMMENT 
+    COMMENT Class 12
+    COMMENT In function "WidgetsUpdateRT", eDIsDigStat of ps_widget_parm is not equal to stat of ps_param
+    COMMENT 
+    COMMENT Class 13
+    COMMENT In function "WidgetsUpdateRT", s32ScalerStep of ps_widget_parm is not greater than ZERO.
+    COMMENT 
+    COMMENT Class 15
+    COMMENT In function "WidgetsUpdateRT", temporary value is equal to ZERO.
+    COMMENT 
+    COMMENT Class 16
+    COMMENT In function "WidgetsUpdateRT", temporary value is not equal to ZERO.
+    COMMENT 
+    COMMENT Class 17
+    COMMENT Function "RedXGauge", calls the function "PolygonFillRect"
+    COMMENT 
+    COMMENT Class 18
+    COMMENT Function "RedXGauge", calls the function "PolygonDrawPoly"
+    COMMENT 
+    COMMENT Class 19
+    COMMENT Function "RedXGauge", calls the function "TextDispString"
+    COMMENT 
+    COMMENT Class 20
+    COMMENT In function "RedXGauge", content of pu8Text of ps_dis_region is not equal to ZERO
+    COMMENT 
+    COMMENT Class 21
+    COMMENT In function "RedXGauge", Content of pu8Text of ps_dis_region is equal to ZERO
+    COMMENT 
+    COMMENT Class 22
+    COMMENT In function "RedXGauge", Address of pu8Text of ps_dis_region is equal to ZERO
+    COMMENT 
+    COMMENT Class 23
+    COMMENT In function "WidgetsUpdateRT", s32ScalerStep of ps_widget_parm is equal to ZERO
+    COMMENT 
+    COMMENT Class 24
+    COMMENT In function "WidgetsUpdateRT", s32ScalerStep of ps_widget_parm is lesser than ZERO
+    COMMENT 
+    COMMENT Class 25
+    COMMENT In function "WidgetsUpdateRT", temporary value is greater than ZERO
+    COMMENT 
+    COMMENT Class 26
+    COMMENT In function "WidgetsUpdateRT", temporary value is lesser than ZERO
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function "WidgetsRedX", eRegionType of ps_dis_region is equal to E_REGION_TYPE_GAUGE
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function "WidgetsRedX", eRegionType of ps_dis_region is not equal to E_REGION_TYPE_GAUGE and is equal to E_REGION_TYPE_NUMBER
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function "WidgetsRedX", eRegionType of ps_dis_region is not equal to E_REGION_TYPE_GAUGE and is not equal to E_REGION_TYPE_NUMBER
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function "WidgetsRedX", content of pps_poly_red_x is equal to ZERO
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function "WidgetsRedX", content of pps_poly_red_x is not equal to ZERO
+    COMMENT 
+    COMMENT Class 32
+    COMMENT Function "WidgetsRedX", calls the function "PolygonsPsPolyInit"
+    COMMENT 
+    COMMENT Class 33
+    COMMENT Function "WidgetsRedX", calls the function "RedXGauge"
+    COMMENT 
+    COMMENT Class 34
+    COMMENT In function "WidgetsRedX", content of pps_poly_red_x is equal to NULL
+    COMMENT 
+    COMMENT Class 35
+    COMMENT In function "WidgetsRedX", content of pps_poly_red_x is not equal to NULL
+    COMMENT 
+    COMMENT Class 36
+    COMMENT Function "WidgetsRedX", calls the function "RedXNumber" which intern calls the function "PolygonDrawPoly"
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function "WidgetsNumUpdate", stat of param is equal to PARAM_WARNING.
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function "WidgetsNumUpdate", stat of param is equal to PARAM_CAUTION.
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function "WidgetsNumUpdate", stat of param is other than PARAM_WARNING , PARAM_CAUTION and PARAM_OK.
+    COMMENT 
+    COMMENT Class 40
+    COMMENT In function "WidgetsUpdateRT", scaler step is lesser than ZERO
+    COMMENT 
+    COMMENT Class 41
+    COMMENT In function "WidgetsUpdateRT", sum of s32Scaler of ps_widget_parm and  s32ScalerStep of ps_widget_parm is lesser than r of ps_param
+    COMMENT 
+    COMMENT Class 42
+    COMMENT In function "WidgetsUpdateRT", sum of s32Scaler of ps_widget_parm and  s32ScalerStep of ps_widget_parm is greater than r of ps_param
+    COMMENT 
+    COMMENT Class 43
+    COMMENT In function "WidgetsUpdateRT", sum of s32Scaler of ps_widget_parm and  s32ScalerStep of ps_widget_parm is equal to r of ps_param
+    COMMENT
+    COMMENT Invalid class(es)
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function "RedXGauge", invalid refernce passed as parameter to 'ps_dis_region'
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function "WidgetsDotAddr", invalid refernce passed as parameter to 'ptr_point'
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function "WidgetsNumUpdate", invalid refernce passed as parameter to 'param'
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function "WidgetsNumUpdate", invalid refernce passed as parameter to 'ps_widget_param'
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function "WidgetsUpdateRT", invalid refernce passed as parameter to 'ps_param'
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function "WidgetsUpdateRT", invalid refernce passed as parameter to 'ps_widget_parm'
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function "WidgetsRedX", invalid refernce passed as parameter to 'ps_dis_region'
+    COMMENT
+    COMMENT Class 51
+    COMMENT In function "WidgetsRedX", invalid refernce passed as parameter to 'pps_poly_red_x'
+    COMMENT
+    COMMENT Class 52
+    COMMENT In function "RedXGauge", invalid refernce passed as parameter to 'ps_red_x'
+	COMMENT
+	COMMENT Class 53
+    COMMENT In function "WidgetsNumUpdate", stat of param is equal to PARAM_OK.
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+
+SIMUL
+
+    DEFINE STUB hdudispfwidgets_c
+
+	-- Parameters 'src' and 'dest' are made as _no, since local variable address cannot expect
+        #T_INT8* BinasByteFormatInfoBE(void _no *src, T_UINT16 _in format, T_INT8 _no *dest[200])
+	#{ 
+	#PTU_src=src;
+	#PTU_src2=*PTU_src;
+	#PTU_dst[0]=dest[0];
+	#PTU_dst[1]=dest[1];
+	#PTU_dst[2]=dest[2];
+	#}
+		
+	-- Parameter 'p_text' is made as _no, since local variable address cannot expect
+	#void TextUpdate(T_PTEXT _no p_text, T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv)
+	# {
+	# PTU_p_text = p_text;
+	# }
+
+	#T_SPOLY* PolygonsPsPolyInit(T_ESTOCKSHAPE _in e_poly_shape, T_FLOAT _in fx_scale, T_INT16 _in s32_xoff, T_FLOAT _in fy_scale, T_INT16 _in s32_yoff, T_INT16 _in s32_rot);
+
+	-- Parameter 'pc_string' is made as _no, since local variable address cannot expect
+	#void TextDispString(T_INT8 _no *pc_string[200], T_UINT16 _in u16_x, T_UINT16 _in u16_y, T_ETXFONT _in e_tx_font, T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv, T_ETXALIGN _in e_tx_align)
+	# {
+	# PTU_pc_string = pc_string;
+	# }
+
+	-- Parameter 'ps_poly' is made as _no, since local variable address cannot expect
+	#void PolygonDrawPoly(T_SPOLY _no *ps_poly, T_EPENCOLOR _in e_color)
+	# {
+	# PTU_ps_poly_out = ps_poly;
+	# }
+
+	#void PolygonFillRect(T_INT16 _in s32_ulx, T_INT16 _in s32_uly, T_INT16 _in width, T_INT16 _in height, T_EPENCOLOR _in e_color);
+   
+   END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--Environment of the file hdudispfwidgets.c
+
+--ENVIRONMENT ENV_hdudispfwidgets_c
+
+--None
+
+--END ENVIRONMENT -- hdudispfwidgets_c
+
+--USE ENV_hdudispfwidgets_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RedXGauge
+--------------------------------------------------------------------------------
+SERVICE RedXGauge
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_SDISREGION ps_dis_region;
+    #T_SPOLY ps_red_x;
+
+    ENVIRONMENT ENV_RedXGauge
+	
+    -- Structure members are initialized before usage
+    STRUCTURE ps_dis_region,		init = { eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => { u16X0 => 100, u16Y0 => 100 }, s32Width => 100, s32Height => 100, sDisLocO => { u16X0 => 50, u16Y0 => 50 }, eTXFont => E_NO_FONT, pu8Text => NIL },		ev = init
+    
+    -- Structure members are initialized before usage
+    STRUCTURE ps_red_x,		init = { s16Pts => 0, psRP => NIL, psPP => NIL, psNext => NIL },		ev = init
+	
+    END ENVIRONMENT -- ENV_RedXGauge
+	
+    USE ENV_RedXGauge
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-RedXGauge-DB-LLR-001]
+    COMMENT The function calls the function PolygonFillRect with the below parameters.
+    COMMENT	1.Difference of u16X0 of sDisLocCtr of ps_dis_region and half of s32Width of ps_dis_region.
+    COMMENT	2. Difference of u16Y0 of sDisLocCtr of ps_dis_region and half of s32Height of ps_dis_region.
+    COMMENT	3. s32Width of ps_dis_region.
+    COMMENT	4. s32Height of ps_dis_region.
+    COMMENT	5. BLACK
+    COMMENT Equivalence Class 17
+    COMMENT
+    COMMENT [hdudispfwidgets-RedXGauge-DB-LLR-002]
+    COMMENT The function calls the function PolygonDrawPoly with ps_red_x and RED as its parameter.
+    COMMENT Equivalence Class 18
+    COMMENT
+    COMMENT [hdudispfwidgets-RedXGauge-DB-LLR-003]
+    COMMENT The function does the following.
+    COMMENT	1.Sets location x to sum of u16X0 of sDisLocCtr of ps_dis_region and u16X0 of sDisLocO of ps_dis_region.
+    COMMENT	2.Sets location y to sum of u16Y0 of sDisLocCtr of ps_dis_region and u16Y0 of sDisLocO of ps_dis_region.
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfwidgets-RedXGauge-DB-LLR-004]
+    COMMENT Function does nothing since address of pu8Text of ps_dis_region is equal to ZERO.
+    COMMENT Equivalence Class 22
+    COMMENT Note :  
+    COMMENT Variable Name is static/local , hence it is not expected in the Output section and the functionality of the requirement is verified implicitly.
+
+    COMMENT </TD>
+	
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+
+            -- Structure member initialized before usage
+            VAR ps_dis_region.pu8Text , 		init = ZERO , 		ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+		
+            -- Output value is expected as same as input value. 
+            VAR PTU_ps_poly_out, 			init = NULL , 		ev = &ps_red_x
+
+        SIMUL
+
+            -- Fills the rectangle with the specified color.
+            STUB PolygonFillRect(50,50,100,100,BLACK)
+
+            -- Build the list of vertices from the list of polygon points.
+            STUB PolygonDrawPoly((T_EPENCOLOR)RED)
+    
+        END SIMUL			
+
+	-- Calling the Unit Under Test :
+        #RedXGauge(&ps_dis_region, &ps_red_x);
+		
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-RedXGauge-DB-LLR-004]
+    COMMENT Function calls the function TextDispString with the below parameters
+    COMMENT - pu8Text of ps_dis_region
+    COMMENT - location x
+    COMMENT - location y 
+    COMMENT - eTXFont of ps_dis_region
+    COMMENT - LIGHT_RED
+    COMMENT - TX_NO_FLASH
+    COMMENT - V_NORMAL
+    COMMENT - ALIGN_CENTER when 1. address of pu8Text of ps_dis_region is not equal to ZERO
+    COMMENT and 2. Content of pu8Text of ps_dis_region is not equal to ZERO.
+    COMMENT Equivalence Class 19, 20
+    COMMENT </TD>
+	
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+
+	    -- Temporary variable 'PTU_pu8Text' is assigned with some value
+	    VAR PTU_pu8Text , 			init = ONE , 					ev = init
+
+	    -- structure member 'ps_dis_region.pu8Text' is assigned with ONE
+	    VAR ps_dis_region.pu8Text , 	init  = (T_UINT8*)&PTU_pu8Text , 		ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+
+		-- None
+            
+     COMMENT OUTPUT SECTION:
+
+            -- Output value is expected
+            VAR PTU_ps_poly_out, 		init = NULL , 					ev = &ps_red_x
+
+	       -- stub parameter of 'TextDispString' is initalzed and expected with the same value
+	       VAR PTU_pc_string , 		init = NULL , 					ev = (T_INT8*)ps_dis_region.pu8Text
+		
+        SIMUL
+		
+	    -- Fills the rectangle with the specified color.
+	    STUB PolygonFillRect(50,50,100,100,BLACK)
+
+	    -- Build the list of vertices from the list of polygon points.
+	    STUB PolygonDrawPoly((T_EPENCOLOR)RED)
+
+	    -- Display the string at specified location with specified parameters
+	    STUB TextDispString(150,150,E_NO_FONT,LIGHT_RED,TX_NO_FLASH,V_NORMAL,ALIGN_CENTER)
+
+	END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #RedXGauge(&ps_dis_region, &ps_red_x);
+		
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-RedXGauge-DB-LLR-004]
+    COMMENT Function does nothing when 1. address of pu8Text of ps_dis_region is not equal to ZERO
+    COMMENT and 2. Content of pu8Text of ps_dis_region is equal to ZERO.
+    COMMENT Equivalence Class 21
+    COMMENT </TD>
+		
+    ELEMENT
+        
+     COMMENT INPUT SECTION:
+
+            -- Temporary variable 'PTU_pu8Text' is assigned with some value
+            VAR PTU_pu8Text , 			init = ZERO , 				ev = init
+
+            -- structure member 'ps_dis_region.pu8Text' is assigned with ZERO
+            VAR ps_dis_region.pu8Text , 	init  = (T_UINT8*)&PTU_pu8Text , 	ev = init
+				
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+
+            -- Output value is expected
+            VAR PTU_ps_poly_out, 		init = NULL , 				ev = &ps_red_x
+
+        SIMUL		
+
+            -- Fills the rectangle with the specified color.
+	    STUB PolygonFillRect(50,50,100,100,BLACK)
+
+	    -- Build the list of vertices from the list of polygon points.
+	    STUB PolygonDrawPoly((T_EPENCOLOR)RED)
+    
+        END SIMUL
+		
+	-- Calling the Unit Under Test :
+        #RedXGauge(&ps_dis_region, &ps_red_x);
+    
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY robustness
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-RedXGauge-DB-LLR-002]
+    COMMENT The function calls the function PolygonDrawPoly with ps_red_x and RED as its parameter.
+    COMMENT ps_red_x is exercised by passing invalid refernce
+    COMMENT Equivalence Class 52,18
+    COMMENT </TD>
+	
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+
+	    -- Temporary variable 'PTU_pu8Text' is assigned with some value
+	    VAR PTU_pu8Text , 			init = ONE , 				ev = init
+
+	    -- structure member 'ps_dis_region.pu8Text' is assigned with ONE
+	    VAR ps_dis_region.pu8Text , 	init  = (T_UINT8*)&PTU_pu8Text , 	ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+
+		-- None
+            
+     COMMENT OUTPUT SECTION:
+
+            -- None
+		
+        SIMUL
+		
+            -- Fills the rectangle with the specified color.
+	    STUB PolygonFillRect(50,50,100,100,BLACK)
+
+	    -- Build the list of vertices from the list of polygon points.
+	    STUB PolygonDrawPoly((T_EPENCOLOR)RED)
+		
+	    -- Display the string at specified location with specified parameters
+	    STUB TextDispString(150,150,E_NO_FONT,LIGHT_RED,TX_NO_FLASH,V_NORMAL,ALIGN_CENTER)
+		
+	END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #RedXGauge(&ps_dis_region, NULL);
+		
+    END ELEMENT
+
+END TEST -- TEST 4
+
+--TEST 5
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfwidgets-RedXGauge-DB-LLR-004]
+--    COMMENT ps_dis_region is exercised by passing invalid refernce
+--    COMMENT Equivalence Class 44
+--    COMMENT </TD>
+--	
+--    ELEMENT
+--
+--     COMMENT INPUT SECTION:
+--	
+--	    -- None
+--
+--     COMMENT INPUT/OUTPUT SECTION:
+--
+--		-- None
+--            
+--     COMMENT OUTPUT SECTION:
+--
+--	    -- None
+--		
+--        SIMUL
+--		
+--            -- None
+--		
+--	END SIMUL
+--		
+--        -- Calling the Unit Under Test :
+--        #RedXGauge(NULL, &ps_red_x);
+--		
+--    END ELEMENT
+--
+--END TEST -- TEST 5
+
+END SERVICE -- RedXGauge
+
+--------------------------------------------------------------------------------
+-- Declaration of the service WidgetsDotAddr
+--------------------------------------------------------------------------------
+SERVICE WidgetsDotAddr
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_SDISLOC ptr_point;
+    
+    -- By function returned type declaration
+    #T_UINT32 ret_WidgetsDotAddr;
+
+    ENVIRONMENT ENV_WidgetsDotAddr
+    
+    -- Structure members are initialized before usage.
+    STRUCTURE ptr_point,		init = { u16X0 => 0, u16Y0 => 0 },		ev = init
+    
+    -- Default return value of function is 0
+    VAR ret_WidgetsDotAddr,		init = 0,		ev = init
+    
+    END ENVIRONMENT -- ENV_WidgetsDotAddr
+    
+    USE ENV_WidgetsDotAddr
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsDotAddr-DB-LLR-001]
+    COMMENT Function returns the foreground address which is calculated as below:
+    COMMENT Foreground address = COND1 + COND2 + COND3
+    COMMENT COND1 : Vp_fgfb2
+    COMMENT COND2 : Product of u16Y0 of ptr_point and twice of S16_panel_width
+    COMMENT COND3 : Twice of u16X0 of ptr_point
+    COMMENT Equivalence Class 1
+    COMMENT Note: Variables are exercised for nominal values.
+    COMMENT </TD>
+    
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+        
+            -- Gloabl variable 'Vp_fgfb2' is assigned with nominal value
+            VAR Vp_fgfb2 , 			init = 100 , 			ev = init 
+
+            -- Structure memeber 'ptr_point.u16Y0' is assigned with nominal value	  
+            VAR ptr_point.u16Y0 , 		init = 20 , 			ev =init
+
+            -- Gloabl variable 'ptr_point.u16X0' is assigned with nominal value
+            VAR ptr_point.u16X0 , 		init = 20 , 			ev =init
+
+            -- Gloabl variable 'S16_panel_width' is assigned with nominal value
+            VAR S16_panel_width, 		init = 30 , 			ev =init
+
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+
+	    -- Function returns computed value
+            VAR ret_WidgetsDotAddr , 		init = 200 , 			ev = 1340
+
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+        
+        -- Calling the Unit Under Test :
+        #ret_WidgetsDotAddr = WidgetsDotAddr(&ptr_point);
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsDotAddr-DB-LLR-001]
+    COMMENT Function returns the foreground address which is calculated as below:
+    COMMENT Foreground address = COND1 + COND2 + COND3
+    COMMENT COND1 : Vp_fgfb2
+    COMMENT COND2 : Product of u16Y0 of ptr_point and twice of S16_panel_width
+    COMMENT COND3 : Twice of u16X0 of ptr_point
+    COMMENT Equivalence Class 1
+    COMMENT Note: Variables are exercised for maximum values.
+    COMMENT </TD>
+    
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+
+            -- Gloabl variable 'Vp_fgfb2' is assigned with max value    
+            VAR Vp_fgfb2 , 				init = 65535 , 			ev = init 
+
+            -- Structure memeber 'ptr_point.u16Y0' is assigned with max value	  	  
+            VAR ptr_point.u16Y0 , 			init = (T_INT16)65535 , 	ev =init
+
+            -- Gloabl variable 'ptr_point.u16X0' is assigned with max value
+            VAR ptr_point.u16X0 , 			init = (T_INT16)65535 , 	ev =init
+
+            -- Gloabl variable 'S16_panel_width' is assigned with max value
+            VAR S16_panel_width, 			init = (T_INT16)65535 , 	ev =init
+
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+
+	    -- Function returns computed value
+            VAR ret_WidgetsDotAddr , init = 200 , ev = 65535
+            
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :		            
+        #ret_WidgetsDotAddr = WidgetsDotAddr(&ptr_point);
+        
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsDotAddr-DB-LLR-001]
+    COMMENT Function returns the foreground address which is calculated as below:
+    COMMENT Foreground address = COND1 + COND2 + COND3
+    COMMENT COND1 : Vp_fgfb2
+    COMMENT COND2 : Product of u16Y0 of ptr_point and twice of S16_panel_width
+    COMMENT COND3 : Twice of u16X0 of ptr_point
+    COMMENT Equivalence Class 1
+    COMMENT Note: Variables are exercised for minimum values.
+    COMMENT </TD>
+    
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+ 
+             -- Gloabl variable 'Vp_fgfb2' is assigned with min value
+            VAR Vp_fgfb2 , 			init = 0 , 			ev = init 
+
+            -- Structure memeber 'ptr_point.u16Y0' is assigned with min value	  
+            VAR ptr_point.u16Y0 , 		init = 0 , 			ev =init
+
+            -- Gloabl variable 'ptr_point.u16X0' is assigned with min value
+            VAR ptr_point.u16X0 , 		init = 0 , 			ev =init
+
+            -- Gloabl variable 'S16_panel_width' is assigned with min value
+            VAR S16_panel_width, 30 , 		init = 0 , 			ev =init
+
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+
+	    -- Function returns computed value
+            VAR ret_WidgetsDotAddr , 		init = 200 , 			ev = 0
+
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+ 
+         -- Calling the Unit Under Test :
+        #ret_WidgetsDotAddr = WidgetsDotAddr(&ptr_point);
+        
+    END ELEMENT
+
+END TEST -- TEST 3
+
+--TEST 4
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfwidgets-WidgetsDotAddr-DB-LLR-001]
+--    COMMENT Function does nothing when invalid reference is passed as a parameter.
+--    COMMENT Equivalence Class 45
+--    COMMENT </TD>
+--    
+--    ELEMENT
+--
+--     COMMENT INPUT SECTION:
+-- 
+--            -- None
+--
+--     COMMENT INPUT/OUTPUT SECTION:
+--        
+--            -- None
+--            
+--     COMMENT OUTPUT SECTION:
+--
+--            -- None
+--
+--        SIMUL
+--
+--            -- None
+--    
+--        END SIMUL
+-- 
+--         -- Calling the Unit Under Test :
+--        #ret_WidgetsDotAddr = WidgetsDotAddr(NULL);
+--        
+--    END ELEMENT
+--
+--END TEST -- TEST 4
+
+END SERVICE -- WidgetsDotAddr
+
+--------------------------------------------------------------------------------
+-- Declaration of the service WidgetsNumUpdate
+--------------------------------------------------------------------------------
+SERVICE WidgetsNumUpdate
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_PARAM_READING param;
+    #T_SWIDGETPARAM ps_widget_param;
+    #char  ac_dig_text[200];
+    #T_UINT16 u16_format;
+	#T_EPENCOLOR e_pen_color;
+
+    ENVIRONMENT ENV_WidgetsNumUpdate
+	
+    -- Structure members initialized before used
+    STRUCTURE param,			init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = init
+    
+    -- Structure members initialized before used
+    STRUCTURE ps_widget_param,		init = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => 100, s32Scaler => 0, s32ScalerStep => 0 },ev = init
+    
+    -- Parameter initialzed before used
+    VAR ac_dig_text,			init = "abc",							ev = init
+    
+    -- Parameter initialzed before used
+    VAR u16_format,			init = 0,							ev = init
+	
+    --VAR e_pen_color,			init = BLACK,							ev = init
+	
+    END ENVIRONMENT -- ENV_WidgetsNumUpdate
+	
+    USE ENV_WidgetsNumUpdate
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsNumUpdate-DB-LLR-003]
+    COMMENT Function calls the function TextUpdate with pText of ps_widget_param, WHITE, TX_NO_FLASH  and V_NORMAL as its parameters 
+    COMMENT when stat of param is NOT equal to PARAM_CAUTION and PARAM_WARNING.
+    COMMENT Equivalence Class 2, 39
+    COMMENT
+    COMMENT [hdudispfwidgets-WidgetsNumUpdate-DB-LLR-004]
+    COMMENT Function calls the function BinasByteFormatInfoBE with address of temporary variable that holds content of s32DisDig of ps_widget_param,
+    COMMENT	u16_format and ac_dig_text as its parameters.
+    COMMENT Equivalence Class 3
+    COMMENT </TD>
+
+    ELEMENT
+
+    COMMENT INPUT SECTION:
+		
+            -- Structure members initialized before used
+            STRUCTURE param,			init = { r => 0, stat => PARAM_ADVISORY, fread => 0.0 },		ev = init
+
+    	    -- Structure members initialized before used
+            STRUCTURE ps_widget_param,		init = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => 100, s32Scaler => 0, s32ScalerStep => 0 },ev = init
+
+			VAR e_pen_color,			init = WHITE,							ev = init
+			
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+		
+	    	-- Parameter 'p_text' of stub 'TextUpdate' updated with the value 'ps_widget_param->pText'
+	    	VAR PTU_p_text , init = 20 , ev = (T_PTEXT)ps_widget_param.pText
+
+		VAR PTU_src2,	init =1,		ev = 0
+		
+		VAR PTU_dst[0],	init ='d',		ev ='a'
+		VAR PTU_dst[1],	init ='d',		ev ='b'
+		VAR PTU_dst[2],	init ='d',		ev ='c'
+		
+		SIMUL
+					
+	    -- updates the text parameters.
+	    STUB TextUpdate(WHITE, 1, V_NORMAL)
+
+	    -- Converts a binary number to ascii.
+	    STUB BinasByteFormatInfoBE(0)(T_INT8*)0
+
+        END SIMUL
+		
+            -- Calling the Unit Under Test :
+            #WidgetsNumUpdate(&param, &ps_widget_param, ac_dig_text, u16_format, e_pen_color);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsNumUpdate-DB-LLR-001]
+    COMMENT Function calls the function TextUpdate with pText of ps_widget_param, LIGHT_RED, TX_FLASH  and V_REVERSE as its parameter 
+    COMMENT when stat of param is equal to PARAM_WARNING.
+    COMMENT Equivalence Class 2, 37
+    COMMENT
+    COMMENT [hdudispfwidgets-WidgetsNumUpdate-DB-LLR-004]
+    COMMENT Function calls the function BinasByteFormatInfoBE with address of temporary variable that holds content of s32DisDig of ps_widget_param,
+    COMMENT	u16_format and ac_dig_text as its parameters.
+    COMMENT Equivalence Class 3
+    COMMENT </TD>
+
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+
+	    -- Structure members initialized before used
+	    STRUCTURE param,			init = { r => 0, stat => PARAM_WARNING, fread => 0.0 },		ev = init
+
+	    -- Structure members initialized before used
+	    STRUCTURE ps_widget_param,		init = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => 100, s32Scaler => 0, s32ScalerStep => 0 },ev = init
+
+		VAR e_pen_color,			init = LIGHT_RED,							ev = init
+		
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+		
+	    -- Parameter 'p_text' of stub 'TextUpdate' updated with the value 'ps_widget_param->pText'
+	    VAR PTU_p_text , 			init = 20 , 							ev = (T_PTEXT)ps_widget_param.pText
+
+        SIMUL
+					
+	    -- updates the text parameters.
+	    STUB TextUpdate(LIGHT_RED, TX_FLASH, V_REVERSE)
+
+	    -- Converts a binary number to ascii.
+	    STUB BinasByteFormatInfoBE(u16_format)(T_INT8*)0
+
+        END SIMUL
+		
+            -- Calling the Unit Under Test :
+            #WidgetsNumUpdate(&param, &ps_widget_param, ac_dig_text, u16_format, e_pen_color);
+		
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsNumUpdate-DB-LLR-002]
+    COMMENT Function calls the call the function TextUpdate with pText of ps_widget_param, YELLOW, TX_NO_FLASH  and V_NORMAL as its parameter 
+    COMMENT when stat of param is PARAM_CAUTION
+    COMMENT Equivalence Class 2, 38
+    COMMENT
+    COMMENT [hdudispfwidgets-WidgetsNumUpdate-DB-LLR-004]
+    COMMENT Function calls the function BinasByteFormatInfoBE with address of temporary variable that holds content of s32DisDig of ps_widget_param,
+    COMMENT	u16_format and ac_dig_text as its parameters.
+    COMMENT Equivalence Class 3
+    COMMENT </TD>
+
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+	
+	    -- Structure members initialized before used
+	    STRUCTURE param,			init = { r => 0, stat => PARAM_CAUTION, fread => 0.0 },		ev = init
+
+	    -- Structure members initialized before used
+	    STRUCTURE ps_widget_param,		init = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => 100, s32Scaler => 0, s32ScalerStep => 0 },ev = init
+
+		VAR e_pen_color,			init = YELLOW,							ev = init
+		
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+
+	    -- Parameter 'p_text' of stub 'TextUpdate' updated with the value 'ps_widget_param->pText'
+	    VAR PTU_p_text , 			init = 20 , 							ev = (T_PTEXT)ps_widget_param.pText
+
+        SIMUL
+
+	    -- updates the text parameters.
+	    STUB TextUpdate(YELLOW, TX_NO_FLASH, 1)
+
+	    -- Converts a binary number to ascii.
+	    STUB BinasByteFormatInfoBE(u16_format)(T_INT8*)0
+
+        END SIMUL
+			
+        -- Calling the Unit Under Test :
+        #WidgetsNumUpdate(&param, &ps_widget_param, ac_dig_text, u16_format, e_pen_color);
+		
+    END ELEMENT
+
+END TEST -- TEST 3
+
+--TEST 4
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfwidgets-WidgetsNumUpdate-DB-LLR-001]
+--    COMMENT Function does nothing when parameter 'param' is passed as invalid reference
+--    COMMENT Equivalence Class 46
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--     COMMENT INPUT SECTION:
+--	
+--	    -- None
+--
+--     COMMENT INPUT/OUTPUT SECTION:
+--        
+--            -- None
+--            
+--     COMMENT OUTPUT SECTION:
+--
+--	    -- None
+--
+--        SIMUL
+--
+--	    -- None
+--
+--        END SIMUL
+--			
+--        -- Calling the Unit Under Test :
+--        #WidgetsNumUpdate(NULL, &ps_widget_param, ac_dig_text, u16_format, e_pen_color);
+--		
+--    END ELEMENT
+--
+--END TEST -- TEST 4
+
+--TEST 5
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfwidgets-WidgetsNumUpdate-DB-LLR-001]
+--    COMMENT Function does nothing when parameter 'ps_widget_param' is passed as invalid reference
+--    COMMENT Equivalence Class 47
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--     COMMENT INPUT SECTION:
+--	
+--	    -- None
+--
+--     COMMENT INPUT/OUTPUT SECTION:
+--        
+--            -- None
+--            
+--     COMMENT OUTPUT SECTION:
+--
+--	    -- None
+--
+--        SIMUL
+--
+--	    -- None
+--
+--        END SIMUL
+--			
+--        -- Calling the Unit Under Test :
+--        #WidgetsNumUpdate(&param, NULL, ac_dig_text, u16_format, e_pen_color);
+--		
+--    END ELEMENT
+--
+--END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsNumUpdate-DB-LLR-005]
+    COMMENT Function '' calls the function 'TextUpdate' with pText of ps_widget_param, WHITE, TX_NO_FLASH  and V_NORMAL as its parameter 
+    COMMENT when stat of param is PARAM_OK.
+    COMMENT Equivalence Class 2, 53
+    COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+	
+	    -- Structure members initialized before used
+	    STRUCTURE param,			init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = init
+
+	    -- Structure members initialized before used
+	    STRUCTURE ps_widget_param,		init = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => 100, s32Scaler => 0, s32ScalerStep => 0 },ev = init
+
+		VAR e_pen_color,			init = WHITE,							ev = init
+		
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+
+	    -- Parameter 'p_text' of stub 'TextUpdate' updated with the value 'ps_widget_param->pText'
+	    VAR PTU_p_text , 			init = 20 , 							ev = (T_PTEXT)ps_widget_param.pText
+
+        SIMUL
+
+	    -- updates the text parameters.
+	    STUB TextUpdate(WHITE, TX_NO_FLASH, V_NORMAL)
+
+	    -- Converts a binary number to ascii.
+	    STUB BinasByteFormatInfoBE(u16_format)(T_INT8*)0
+
+        END SIMUL
+			
+        -- Calling the Unit Under Test :
+        #WidgetsNumUpdate(&param, &ps_widget_param, ac_dig_text, u16_format, e_pen_color);
+		
+    END ELEMENT
+
+END TEST -- TEST 6
+
+END SERVICE -- WidgetsNumUpdate
+
+--------------------------------------------------------------------------------
+-- Declaration of the service WidgetsRGB444ToRGB888
+--------------------------------------------------------------------------------
+SERVICE WidgetsRGB444ToRGB888
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_EPENCOLOR e_pen_color;
+    -- By function returned type declaration
+    #T_UINT32 ret_WidgetsRGB444ToRGB888;
+
+    ENVIRONMENT ENV_WidgetsRGB444ToRGB888
+	
+    --Paremeter is initialzed before usage
+    VAR e_pen_color,				init = BLACK,		ev = init
+	
+    -- Default return value of function is 0
+    VAR ret_WidgetsRGB444ToRGB888,		init = 0,		ev = init
+	
+    END ENVIRONMENT -- ENV_WidgetsRGB444ToRGB888
+	
+    USE ENV_WidgetsRGB444ToRGB888
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsRGB444ToRGB888-DB-LLR-001]
+    COMMENT Function returns the converted color from the function.
+    COMMENT Converted color is obtained as follows.
+    COMMENT Color =  A<<SIXTEEN bitwise or C << EIGHT bitwise or B.
+    COMMENT 1. A = Extract bit 9 to 11 of e_pen_color and append 0 to the first four bytes.
+    COMMENT 2. B = Extract bit 5 to 8 from e_pen_color and append 0 to the first four bytes.
+    COMMENT 3. C = Extract bit 1 to 4 from e_pen_color and append 0 to the first four bytes.
+    COMMENT Equivalence Class 4
+    COMMENT Note: Parameter 'e_pen_color' is exercised for minimum value
+    COMMENT </TD>
+    
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+        
+            -- Parameter is of type enum, and is assigned with minimum value
+            VAR e_pen_color , 			init = BLACK , 			ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+
+	    -- Returns converted value
+	    VAR ret_WidgetsRGB444ToRGB888 , 	init = 100 , 			ev = EXTRACT_4_BYTE 
+
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+ 
+         -- Calling the Unit Under Test :
+        #ret_WidgetsRGB444ToRGB888 = WidgetsRGB444ToRGB888(e_pen_color);
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsRGB444ToRGB888-DB-LLR-001]
+    COMMENT Function returns the converted color from the function.
+    COMMENT Converted color is obtained as follows.
+    COMMENT Color =  A<<SIXTEEN bitwise or C << EIGHT bitwise or B.
+    COMMENT 1. A = Extract bit 9 to 11 of e_pen_color and append 0 to the first four bytes.
+    COMMENT 2. B = Extract bit 5 to 8 from e_pen_color and append 0 to the first four bytes.
+    COMMENT 3. C = Extract bit 1 to 4 from e_pen_color and append 0 to the first four bytes.
+    COMMENT Equivalence Class 4
+    COMMENT Note: Parameter 'e_pen_color' is exercised for nominal value
+    COMMENT </TD>
+    
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+        
+	    -- Parameter is of type enum, and is assigned with nomianl value
+	    VAR e_pen_color , 			init = GREEN , 		ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+
+	    -- Returns converted value
+            VAR ret_WidgetsRGB444ToRGB888 , 	init = 100 , 		ev = (T_UINT32)4278237952
+
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #ret_WidgetsRGB444ToRGB888 = WidgetsRGB444ToRGB888(e_pen_color);
+        
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsRGB444ToRGB888-DB-LLR-001]
+    COMMENT Function returns the converted color from the function.
+    COMMENT Converted color is obtained as follows.
+    COMMENT Color =  A<<SIXTEEN bitwise or C << EIGHT bitwise or B.
+    COMMENT 1. A = Extract bit 9 to 11 of e_pen_color and append 0 to the first four bytes.
+    COMMENT 2. B = Extract bit 5 to 8 from e_pen_color and append 0 to the first four bytes.
+    COMMENT 3. C = Extract bit 1 to 4 from e_pen_color and append 0 to the first four bytes.
+    COMMENT Equivalence Class 4
+    COMMENT Note: Parameter 'e_pen_color' is exercised for maximum value
+    COMMENT </TD>
+    
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+        
+            -- Parameter is of type enum, and is assigned with maximum value
+            VAR e_pen_color , 			init = CAS_WHITE , 			ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+     COMMENT OUTPUT SECTION:
+
+	    -- Returns converted value        
+            VAR ret_WidgetsRGB444ToRGB888 , 	init = 100 , 				ev = (T_UINT32)4294967295
+
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+
+            -- Calling the Unit Under Test :        
+            #ret_WidgetsRGB444ToRGB888 = WidgetsRGB444ToRGB888(e_pen_color);
+        
+    END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- WidgetsRGB444ToRGB888
+
+--------------------------------------------------------------------------------
+-- Declaration of the service WidgetsUpdateRT
+--------------------------------------------------------------------------------
+SERVICE WidgetsUpdateRT
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_PARAM_READING ps_param;
+    #T_SWIDGETPARAM ps_widget_parm;
+
+    ENVIRONMENT ENV_WidgetsUpdateRT
+	
+    -- Structure members are initialized before usage
+    STRUCTURE ps_param,			init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = init
+	
+    -- Structure members are initialized before usage
+    STRUCTURE ps_widget_parm,		init = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 0, s32ScalerStep => 0 },ev = init
+    
+    END ENVIRONMENT -- ENV_WidgetsUpdateRT
+    
+    USE ENV_WidgetsUpdateRT
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-001]
+    COMMENT Does nothing since s32Dig of ps_widget_parm is equal to r of ps_param.
+    COMMENT Equivalence class 5
+    COMMENT 
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-002]
+    COMMENT Function does the following when s32ScalerStep of ps_widget_parm is greater than ZERO and
+    COMMENT sum of s32Scaler of ps_widget_parm and s32ScalerStep of ps_widget_parm is greater than r of ps_param.
+    COMMENT 1.Sets s3Scaler of ps_widget_parm to r of ps_param.
+    COMMENT 2.Sets s32ScalerStep of ps_widget_parm to ZERO.
+    COMMENT Equivalence class 7, 23, 42
+    COMMENT 
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-004]
+    COMMENT Function sets s32Scaler of ps_widget_parm to sum of s32Scaler of ps_widget_parm and  s32ScalerStep of ps_widget_parm.
+    COMMENT Equivalence class None
+    COMMENT 
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-005]
+    COMMENT Function does nothing since U8_update_digital is ZERO and eDIsDigStat of ps_widget_parm is equal to stat of ps_param
+    COMMENT Equivalence class 9, 11
+    COMMENT </TD>
+
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+        
+            -- Structure members are initialized before usage
+            STRUCTURE ps_param,			init = { r => 0, stat => PARAM_OK, fread => 0.0 }, ev = init
+
+	    -- Global variables are initialized
+	    VAR U8_update_digital , 		init = ZERO ,  					   ev = init
+	    
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- Structure members are initialized and updated 
+            STRUCTURE ps_widget_parm,		init = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 10,
+		& s32ScalerStep => 10 },		       ev = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 0,
+		& s32ScalerStep => 0 }
+           
+     COMMENT OUTPUT SECTION:
+        
+            -- None
+
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+        
+        -- Calling the Unit Under Test :             
+        #WidgetsUpdateRT(&ps_param, &ps_widget_parm);
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-002]
+    COMMENT Function does nothing when s32ScalerStep of ps_widget_parm is lesser than ZERO
+    COMMENT Equivalence class 24
+    COMMENT
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-003]
+    COMMENT Function does the following when s32ScalerStep of ps_widget_parm is lesser than ZERO and
+    COMMENT and does following when sum of s32Scaler of ps_widget_parm and  s32ScalerStep of ps_widget_parm is lesser than r of ps_param.
+    COMMENT 1.Sets s32Scaler of ps_widget_parm to r of ps_param.
+    COMMENT 2.Sets s32ScalerStep of ps_widget_parm to ZERO.
+    COMMENT Equivalence class 13, 41, 40, 24
+    COMMENT 
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-005]
+    COMMENT Function does the following since U8_update_digital is not equal ZERO and eDIsDigStat of ps_widget_parm is equal to stat of ps_param
+    COMMENT 1. s32DisDig of ps_widget_parm is set to r of ps_param.
+    COMMENT 2.eDIsDigStat of ps_widget_parm is set to stat of ps_param.
+    COMMENT Equivalence class 10, 11
+    COMMENT </TD>
+    
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+
+	    -- Global variable is initialized        
+            VAR U8_update_digital , 			init = ONE , 							ev  = init 
+
+            -- Structure members are initialized before usage
+            STRUCTURE ps_param,				init = { r => 0, stat => PARAM_OK, fread => 0.0 },		ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+
+            -- Structure members are initialized and updated      
+            STRUCTURE ps_widget_parm,		init = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => -1,
+		& s32ScalerStep => -1 },		ev = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 0,
+		& s32ScalerStep => 0 }
+
+     COMMENT OUTPUT SECTION:
+
+            -- None
+
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #WidgetsUpdateRT(&ps_param, &ps_widget_parm);
+        
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-003]
+    COMMENT Function does the following when s32ScalerStep of ps_widget_parm is lesser than ZERO and 
+    COMMENT does nothing sum of s32Scaler of ps_widget_parm and  s32ScalerStep of ps_widget_parm is not lesser than r of ps_param.
+    COMMENT Equivalence class 13, 43, 24
+    COMMENT 
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-005]
+    COMMENT Function does the following since U8_update_digital is equal ZERO and eDIsDigStat of ps_widget_parm is not equal to stat of ps_param
+    COMMENT 1.s32DisDig of ps_widget_parm is set to r of ps_param.
+    COMMENT 2.eDIsDigStat of ps_widget_parm is set to stat of ps_param.
+    COMMENT Equivalence class 9, 12
+    COMMENT </TD>
+
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+  
+            -- Global variables are initialized  
+            VAR U8_update_digital , 			init = ZERO , ev  = init 
+
+            -- Structure members are initialized before usage
+            STRUCTURE ps_param,				init = { r => 0, stat => PARAM_WARNING, fread => 0.0 },		ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+
+            -- Structure members are initialized and updated        
+            STRUCTURE ps_widget_parm,			init = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 2,
+		& s32ScalerStep => -1 },		ev = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_WARNING, pText => NIL, s32Scaler => 1,
+		& s32ScalerStep => -1 }
+
+     COMMENT OUTPUT SECTION:
+
+            -- None
+
+        SIMUL
+
+            -- None
+    
+    	END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #WidgetsUpdateRT(&ps_param, &ps_widget_parm);
+        
+    END ELEMENT
+
+END TEST -- TEST 3
+
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-001]
+    COMMENT Function does the following when s32Dig of ps_widget_parm is not equal to r of ps_param.
+    COMMENT 1.Set s32Dig of ps_widget_parm to r of ps_param.
+    COMMENT 2.Set temporary value to difference to s32Dig of ps_widget_parm and s32Scaler of ps_widget_parm.
+    COMMENT 3.Does nothing when temporary value is equal to ZERO.
+    COMMENT 4.Sets s32ScalerStep of ps_widget_parm to temporary value.
+    COMMENT Equivalence class 6, 15, 23
+    COMMENT </TD>
+
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+  
+            -- Global variables are initialized  
+            VAR U8_update_digital , 		init = ZERO , 							ev  = init 
+
+            -- Structure members are initialized before usage	
+            STRUCTURE ps_param,			init = { r => 50, stat => PARAM_OK, fread => 0.0 },		ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+
+            -- Structure members are initialized and updated        
+            STRUCTURE ps_widget_parm,		init = { s32Dig => 0, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 50,
+		& s32ScalerStep => 0 },		ev = { s32Dig => 50, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 50,
+		& s32ScalerStep => 0 }
+
+     COMMENT OUTPUT SECTION:
+
+            -- None
+
+        SIMUL
+
+            -- None
+    
+    	END SIMUL
+
+        -- Calling the Unit Under Test :           
+        #WidgetsUpdateRT(&ps_param, &ps_widget_parm);
+        
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-001]
+    COMMENT Function does the following when s32Dig of ps_widget_parm is not equal to r of ps_param.
+    COMMENT 1.Set s32Dig of ps_widget_parm to r of ps_param.
+    COMMENT 2.Set temporary value to difference to s32Dig of ps_widget_parm and s32Scaler of ps_widget_parm.
+    COMMENT 3.Does the following when temporary value is not equal to ZERO.
+    COMMENT  a.Sets scaler step value to temporary value multiplied by FRAME_MS and divided by DIG_MS
+    COMMENT  b.Sets scaler step to ONE when temporary value is not equal to ZERO and scaler step is equal to ZERO and temporary value is greater than ZERO
+    COMMENT  d.Sets temporary value to scaler step.
+    COMMENT 4.Sets s32ScalerStep of ps_widget_parm to temporary value.
+    COMMENT Equivalence class 16, 23, 25
+    COMMENT </TD>
+
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+        
+            -- Global variables are initialized  
+            STRUCTURE ps_param,				init = { r => 50, stat => PARAM_OK, fread => 0.0 },		ev = init
+
+            -- Global variables are initialized  
+            VAR U8_update_digital , 			init = ZERO , 							ev  = init 
+
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- Structure members are initialized before usage	
+            STRUCTURE ps_widget_parm,			init = { s32Dig => 100, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 49,
+		& s32ScalerStep => 0 },			ev = { s32Dig => 50, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 50,
+		& s32ScalerStep => 1 }
+
+     COMMENT OUTPUT SECTION:
+
+            -- None
+
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :     	
+        #WidgetsUpdateRT(&ps_param, &ps_widget_parm);
+        
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-001]
+    COMMENT Function does the following when s32Dig of ps_widget_parm is not equal to r of ps_param.
+    COMMENT 1.Set s32Dig of ps_widget_parm to r of ps_param.
+    COMMENT 2.Set temporary value to difference to s32Dig of ps_widget_parm and s32Scaler of ps_widget_parm.
+    COMMENT 3.Does the following when temporary value is not equal to ZERO.
+    COMMENT  a.Sets scaler step value to temporary value multiplied by FRAME_MS and divided by DIG_MS
+    COMMENT  b.Sets scaler step to MINUS_ONE when temporary value is not equal to ZERO and scaler step is equal to ZERO 
+    COMMENT  d.Sets temporary value to scaler step.
+    COMMENT 4.Sets s32ScalerStep of ps_widget_parm to temporary value.
+    COMMENT Equivalence class 16, 23, 26, 40
+    COMMENT </TD>
+
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+        
+            -- Global variables are initialized  
+            STRUCTURE ps_param,			init = { r => -100, stat => PARAM_OK, fread => 0.0 },		ev = init
+
+            -- Global variables are initialized  
+            VAR U8_update_digital , 		init = ZERO , 							ev  = init 
+
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- Structure members are initialized before usage	
+            STRUCTURE ps_widget_parm,		init = { s32Dig => 100, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => -99,
+		& s32ScalerStep => 0 },		ev = { s32Dig => -100, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => -100,
+		& s32ScalerStep => -1 }
+
+     COMMENT OUTPUT SECTION:
+
+            -- None
+
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :     	
+        #WidgetsUpdateRT(&ps_param, &ps_widget_parm);
+        
+    END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-001]
+    COMMENT The function does the following when s32Dig of ps_widget_parm is not equal to r of ps_param.
+    COMMENT 1.Sets s32Dig of ps_widget_parm to r of ps_param.
+    COMMENT 2.Sets temporary value to difference to s32Dig of ps_widget_parm and s32Scaler of ps_widget_parm.
+    COMMENT 3.Does the following when temporary value is not equal to ZERO.
+    COMMENT	a.Sets scaler step value to temporary value multiplied by FRAME_MS and divided by DIG_MS
+    COMMENT	b.Does nothing since scaler step is not equal to ZERO 
+    COMMENT	d.Sets temporary value to scaler step.
+    COMMENT 4. Sets s32ScalerStep of ps_widget_parm to temporary value.
+    COMMENT Equivalence class 16, 24
+    COMMENT </TD>
+
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+        
+            -- Global variables are initialized  
+            STRUCTURE ps_param,				init = { r => 50, stat => PARAM_OK, fread => 0.0 },		ev = init
+
+            -- Global variables are initialized  
+            VAR U8_update_digital , 			init = ZERO , 							ev  = init 
+
+     COMMENT INPUT/OUTPUT SECTION:
+        
+            -- Structure members are initialized before usage	
+            STRUCTURE ps_widget_parm,			init = { s32Dig => 10, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 10,
+		& s32ScalerStep => 0 },			ev = { s32Dig => 50, s32DisDig => 0, eDIsDigStat => PARAM_OK, pText => NIL, s32Scaler => 42,
+		& s32ScalerStep => 32 }
+
+     COMMENT OUTPUT SECTION:
+
+            -- None
+
+        SIMUL
+
+            -- None
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :     	
+        #WidgetsUpdateRT(&ps_param, &ps_widget_parm);
+        
+    END ELEMENT
+
+END TEST -- TEST 7
+
+--TEST 8
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-001]
+--    COMMENT The function does nothing when invalid reference is passed as a parameter to 'ps_param'
+--    COMMENT Equivalence class 48
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--     COMMENT INPUT SECTION:
+--        
+--            -- None
+--
+--     COMMENT INPUT/OUTPUT SECTION:
+--        
+--            -- None
+--
+--     COMMENT OUTPUT SECTION:
+--
+--            -- None
+--
+--        SIMUL
+--
+--            -- None
+--    
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test :     	
+--        #WidgetsUpdateRT(NULL, &ps_widget_parm);
+--        
+--    END ELEMENT
+--
+--END TEST -- TEST 8
+
+--TEST 9
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfwidgets-WidgetsUpdateRT-DB-LLR-001]
+--    COMMENT The function does nothing when invalid reference is passed as a parameter to 'ps_widget_parm'
+--    COMMENT Equivalence class 49
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--     COMMENT INPUT SECTION:
+--        
+--            -- None
+--
+--     COMMENT INPUT/OUTPUT SECTION:
+--        
+--            -- None
+--
+--     COMMENT OUTPUT SECTION:
+--
+--            -- None
+--
+--        SIMUL
+--
+--            -- None
+--    
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test :     	
+--        #WidgetsUpdateRT(&ps_param, NULL);
+--        
+--    END ELEMENT
+--
+--END TEST -- TEST 9
+
+END SERVICE -- WidgetsUpdateRT
+
+--------------------------------------------------------------------------------
+-- Declaration of the service WidgetsRedX
+--------------------------------------------------------------------------------
+SERVICE WidgetsRedX
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_SDISREGION ps_dis_region;
+    #T_SPOLY *pps_poly_red_x;
+
+    ENVIRONMENT ENV_WidgetsRedX
+	
+    -- Structure members aee initialized before usage.
+    STRUCTURE ps_dis_region,		init = { eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => { u16X0 => 0, u16Y0 => 0 }, s32Width => 0, s32Height => 0, sDisLocO => { u16X0 => 0, u16Y0 => 0 }, eTXFont => E_NO_FONT, pu8Text => NIL },		ev = init
+
+    END ENVIRONMENT -- ENV_WidgetsRedX
+    
+    USE ENV_WidgetsRedX
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsRedX-DB-LLR-001]
+    COMMENT Function sets the content of pps_poly_red_x to return value of the function PolygonsPsPolyInit with the below parameters
+    COMMENT - EREDXSHAPE
+    COMMENT - s32Width of ps_dis_region
+    COMMENT - sum of return value of MAG with parameter u16X0 of sDisLocCtr of ps_dis_region and twice of s32Width of ps_dis_region.
+    COMMENT - s32Height of ps_dis_region.
+    COMMENT - MAG with parameter u16Y0 of sDisLocCtr of ps_dis_region 
+    COMMENT - 0
+    COMMENT when 
+    COMMENT 1. eRegionType of ps_dis_region is equal to E_REGION_TYPE_GAUGE
+    COMMENT 2.content of pps_poly_red_x is equal to ZERO
+    COMMENT Equivalence class 27, 30, 32
+    COMMENT
+    COMMENT [hdudispfwidgets-WidgetsRedX-DB-LLR-002]
+    COMMENT Function calls the function RedXGauge with ps_dis_region and content of pps_poly_red_x when  
+    COMMENT eRegionType of ps_dis_region is equal to E_REGION_TYPE_GAUGE.
+    COMMENT Equivalence class 27, 33
+    COMMENT </TD>
+	
+    ELEMENT
+		
+     COMMENT INPUT SECTION:
+		
+	    -- Structure member 'eRegionType' is initialized.
+	    VAR ps_dis_region.eRegionType , 		init = E_REGION_TYPE_GAUGE , 		ev = init
+    
+	    -- Temoraray variable is initialized with the value ZERO  
+	    VAR PTU_T_SPOLY_2, 				init = (T_SPOLY*)ZERO , 		ev = init
+
+	    -- Temoraray variable is initialized with the value of varaibale 'PTU_T_SPOLY_2'
+	    VAR PTU_T_SPOLY_1 , 			init = (T_SPOLY*)PTU_T_SPOLY_2 , 	ev = init
+
+	    -- Structure member 's32Width' is initialized.
+	    VAR ps_dis_region.s32Width , 		init = ONE ,	 			ev= init 
+
+	    -- Structure member 'sDisLocCtr.u16X0' is initialized.
+	    VAR ps_dis_region.sDisLocCtr.u16X0 , 	init  = ONE , 				ev = init
+
+	    -- Structure member 's32Height' is initialized.
+	    VAR ps_dis_region.s32Height , 		init = ONE , 				ev = init
+
+	    -- Structure member 'sDisLocCtr.u16Y0' is initialized.
+	    VAR ps_dis_region.sDisLocCtr.u16Y0 , 	init  = ONE , 				ev = init
+
+	    -- Structure member 'sDisLocO.u16X0' is initialized.
+	    VAR ps_dis_region.sDisLocO.u16X0 , 		init  = ONE , 				ev = init
+
+	    -- Structure member 'sDisLocO.u16Y0' is initialized.
+	    VAR ps_dis_region.sDisLocO.u16Y0 , 		init  = ONE , 				ev = init
+
+	    -- Temoraray variable is initialized with ZERO
+	    VAR PTU_pu8Text , 				init = ZERO , 				ev = init
+
+	    -- Structure member 'pu8Text' is assigned with the value ZERO.
+	    VAR ps_dis_region.pu8Text , 		init  = PTU_pu8Text , 			ev = init
+
+	    VAR PTU_ret_val , 				init =10 , 				ev = init
+		
+     COMMENT INPUT/OUTPUT SECTION:
+		
+	    -- Paraemeter is initailazed with the value of varaibale 'PTU_T_SPOLY_1'
+	    VAR pps_poly_red_x,				init = (T_SPOLY*)PTU_T_SPOLY_1,		ev = (T_SPOLY*)&PTU_ret_val
+
+     COMMENT OUTPUT SECTION:
+
+            -- None
+		
+        SIMUL
+
+	    -- Release the pool of PolyElements
+	    STUB PolygonsPsPolyInit(EREDXSHAPE,ONE,6,ONE,FOUR,0)(T_SPOLY*)&PTU_ret_val
+
+	    -- Fills the rectangle with the specified color.
+	    STUB PolygonFillRect(ONE,ONE,ONE,ONE,BLACK)
+
+	    -- Build the list of vertices from the list of polygon points.
+	    STUB PolygonDrawPoly(RED)
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :     	
+        #WidgetsRedX(&ps_dis_region, &pps_poly_red_x);
+	  
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsRedX-DB-LLR-001]
+    COMMENT Function does nothing
+    COMMENT	when 
+    COMMENT	1. eRegionType of ps_dis_region is equal to E_REGION_TYPE_GAUGE
+    COMMENT	2.content of pps_poly_red_x is not equal to ZERO
+    COMMENT Equivalence class 27 , 31, 35
+    COMMENT </TD>
+	
+    ELEMENT
+		
+     COMMENT INPUT SECTION:
+
+	    -- Structure member 'eRegionType' is initialized.
+	    VAR ps_dis_region.eRegionType , 		init = E_REGION_TYPE_GAUGE , 		ev = init
+
+	    -- Temoraray variable is initialized with the value ONE  
+	    VAR PTU_T_SPOLY_2, 				init = (T_SPOLY*)ONE , 			ev = init
+
+	    -- Temoraray variable is initialized with the value of varaibale 'PTU_T_SPOLY_2'
+	    VAR PTU_T_SPOLY_1 , 			init = (T_SPOLY*)PTU_T_SPOLY_2 , 	ev = init
+		
+	    -- Paraemeter is initailazed with the value of varaibale 'PTU_T_SPOLY_1'
+	    VAR pps_poly_red_x,				init = PTU_T_SPOLY_1,			ev = init
+		
+	    -- Structure member 's32Width' is initialized.
+	    VAR ps_dis_region.s32Width , 		init = ONE , 				ev= init 
+
+	    -- Structure member 'sDisLocCtr.u16X0' is initialized.
+	    VAR ps_dis_region.sDisLocCtr.u16X0 , 	init  = ONE , 				ev = init
+
+	    -- Structure member 's32Height' is initialized.
+	    VAR ps_dis_region.s32Height , 		init = ONE , 				ev = init
+	
+	    -- Structure member 'sDisLocCtr.u16Y0' is initialized.
+	    VAR ps_dis_region.sDisLocCtr.u16Y0 , 	init  = ONE , 				ev = init
+
+	    -- Structure member 'sDisLocO.u16X0' is initialized.
+	    VAR ps_dis_region.sDisLocO.u16X0 , 		init  = ONE , 				ev = init
+
+	    -- Structure member 'sDisLocO.u16Y0' is initialized.
+	    VAR ps_dis_region.sDisLocO.u16Y0 , 		init  = ONE , 				ev = init
+
+	    -- Temoraray variable is initialized with ZERO
+	    VAR PTU_pu8Text , 				init = ZERO , 				ev = init
+
+	    -- Structure member 'pu8Text' is assigned with the value ZERO.
+	    VAR ps_dis_region.pu8Text , 		init  = PTU_pu8Text , 			ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+     COMMENT OUTPUT SECTION:
+
+            -- None
+
+        SIMUL
+
+	    -- Fills the rectangle with the specified color.
+	    STUB PolygonFillRect(ONE,ONE,ONE,ONE,BLACK)
+
+	    -- Build the list of vertices from the list of polygon points.
+	    STUB PolygonDrawPoly(RED)
+
+        END SIMUL
+
+	-- Calling the Unit Under Test :  
+        #WidgetsRedX(&ps_dis_region, &pps_poly_red_x);
+		
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsRedX-DB-LLR-003]
+    COMMENT The function sets the content of pps_poly_red_x to return value of the function PolygonsPsPolyInit with the below parameters
+    COMMENT - EREDXSHAPE
+    COMMENT - s32Width of ps_dis_region
+    COMMENT - MAG with parameter u16X0 of sDisLocCtr of ps_dis_region and  s32Width of ps_dis_region.
+    COMMENT - SCALING_VAL_RED
+    COMMENT - MAG with parameter u16Y0 of sDisLocCtr of ps_dis_region 
+    COMMENT - 0
+    COMMENT when 
+    COMMENT 1. eRegionType of ps_dis_region is equal to E_REGION_TYPE_NUMBER
+    COMMENT 2.content of pps_poly_red_x is equal to NULL
+    COMMENT Equivalence class 28, 34
+    COMMENT
+    COMMENT [hdudispfwidgets-WidgetsRedX-DB-LLR-004]
+    COMMENT The function calls the function RedXNumber with content of pps_poly_red_x when eRegionType of ps_dis_region is equal to E_REGION_TYPE_NUMBER.
+    COMMENT Equivalence class 28, 36
+    COMMENT
+    COMMENT [hdudispfwidgets-RedXNumber-DB-LLR-001]
+    COMMENT The function calls the function PolygonDrawPoly with ps_red_bar and RED as its parameter.
+    COMMENT Equivalence class 36
+    COMMENT </TD>
+	
+    ELEMENT
+	
+     COMMENT INPUT SECTION:
+		
+	    -- Structure member 'eRegionType' is initialized.
+	    VAR ps_dis_region.eRegionType , 			init = E_REGION_TYPE_NUMBER , 		ev = init
+
+	    -- Temoraray variable is initialized with the value ZERO 
+	    VAR PTU_T_SPOLY_2, 					init = (T_SPOLY*)NULL , 		ev = init
+
+	    -- Temoraray variable is initialized with the value of varaibale 'PTU_T_SPOLY_2'
+	    VAR PTU_T_SPOLY_1 , 				init = (T_SPOLY*)PTU_T_SPOLY_2 , 	ev = init
+
+	    -- Structure member 's32Width' is initialized.
+	    VAR ps_dis_region.s32Width , 			init = 2 , 				ev= init 
+
+	    -- Structure member 'sDisLocCtr.u16X0' is initialized.
+	    VAR ps_dis_region.sDisLocCtr.u16X0 , 		init  = 1 , 				ev = init
+
+	    -- Structure member 'sDisLocCtr.u16Y0' is initialized.
+	    VAR ps_dis_region.sDisLocCtr.u16Y0 , 		init  = 2 , 				ev = init
+
+     COMMENT INPUT/OUTPUT SECTION:
+
+	    -- Paraemeter is initailazed with the value of varaibale 'PTU_T_SPOLY_1'
+	    VAR pps_poly_red_x,					init = PTU_T_SPOLY_1,			ev = (T_SPOLY*)&PTU_ret_val
+
+     COMMENT OUTPUT SECTION:
+
+            -- None
+			
+	SIMUL
+
+	    -- Release the pool of PolyElements
+	    STUB PolygonsPsPolyInit(EREDXSHAPE,2,9,3.0f,8,0)(T_SPOLY*)&PTU_ret_val
+
+	    -- Build the list of vertices from the list of polygon points.
+	    STUB PolygonDrawPoly(RED)
+
+	END SIMUL
+
+	-- Calling the Unit Under Test :  
+	#WidgetsRedX(&ps_dis_region, &pps_poly_red_x);
+		
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsRedX-DB-LLR-003]
+    COMMENT Function does nothing
+    COMMENT when 
+    COMMENT 1. eRegionType of ps_dis_region is equal to E_REGION_TYPE_NUMBER
+    COMMENT 2.content of pps_poly_red_x is not equal to NULL
+    COMMENT Equivalence class 28, 31
+    COMMENT </TD>
+	
+    ELEMENT
+	
+     COMMENT INPUT SECTION:
+		
+            -- Structure member 'eRegionType' is initialized.
+	    VAR ps_dis_region.eRegionType , 		init = E_REGION_TYPE_NUMBER , 		ev = init
+
+	    -- Temoraray variable is initialized with the value ZERO 
+	    VAR PTU_T_SPOLY_2, 				init = (T_SPOLY*)ONE , 			ev = init
+    
+	    -- Temoraray variable is initialized with the value of varaibale 'PTU_T_SPOLY_2'
+	    VAR PTU_T_SPOLY_1 , 			init = PTU_T_SPOLY_2 , 			ev = init
+		
+	    -- Paraemeter is initailazed with the value of varaibale 'PTU_T_SPOLY_1'
+	    VAR pps_poly_red_x,				init = PTU_T_SPOLY_1,			ev = init
+		
+     COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+     COMMENT OUTPUT SECTION:
+
+            -- None
+
+        SIMUL
+
+            -- Build the list of vertices from the list of polygon points.
+            STUB PolygonDrawPoly(RED)
+
+	END SIMUL
+
+    	-- Calling the Unit Under Test :  
+	#WidgetsRedX(&ps_dis_region, &pps_poly_red_x);
+			
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfwidgets-WidgetsRedX-DB-LLR-002]
+    COMMENT Function does nothing when
+    COMMENT eRegionType of ps_dis_region is not equal to E_REGION_TYPE_NUMBER,E_REGION_TYPE_GAUGE
+    COMMENT Equivalence class 29
+    COMMENT </TD>
+	
+    ELEMENT
+
+     COMMENT INPUT SECTION:
+		
+            -- Structure member 'eRegionType' is initialized.
+	    VAR ps_dis_region.eRegionType , 		init = 100 , 		ev = init
+
+    COMMENT INPUT/OUTPUT SECTION:
+	    --None
+
+     COMMENT OUTPUT SECTION:
+	    --None
+			
+	SIMUL
+		  
+	    --None
+
+	END SIMUL
+
+	-- Calling the Unit Under Test :  
+	#WidgetsRedX(&ps_dis_region, &pps_poly_red_x);
+	
+    END ELEMENT
+
+END TEST -- TEST 7
+	
+--TEST 8
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfwidgets-WidgetsRedX-DB-LLR-001]
+--    COMMENT Function does nothing when
+--    COMMENT eRegionType of ps_dis_region is passed with invalid reference.
+--    COMMENT Equivalence class 50
+--    COMMENT </TD>
+--	
+--    ELEMENT
+--
+--     COMMENT INPUT SECTION:
+--		
+--            -- None
+--
+--    COMMENT INPUT/OUTPUT SECTION:
+--	    --None
+--
+--     COMMENT OUTPUT SECTION:
+--	    --None
+--			
+--	SIMUL
+--		  
+--	    --None
+--
+--	END SIMUL
+--
+--	-- Calling the Unit Under Test :  
+--	#WidgetsRedX(NULL, &pps_poly_red_x);
+--	
+--    END ELEMENT
+--
+--END TEST -- TEST 8
+
+--TEST 9
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfwidgets-WidgetsRedX-DB-LLR-001]
+--    COMMENT Function does nothing when
+--    COMMENT pps_poly_red_x is passed with invalid reference.
+--    COMMENT Equivalence class 51
+--    COMMENT </TD>
+--	
+--    ELEMENT
+--
+--     COMMENT INPUT SECTION:
+--
+--        --Structure member 'eRegionType' is initialized.
+--	    VAR ps_dis_region.eRegionType , 		init = E_REGION_TYPE_NUMBER , 		ev = init
+--
+--    COMMENT INPUT/OUTPUT SECTION:
+--	    --None
+--
+--     COMMENT OUTPUT SECTION:
+--	    --None
+--			
+--	SIMUL
+--		  
+--	    --None
+--
+--	END SIMUL
+--
+--	-- Calling the Unit Under Test :  
+--	#WidgetsRedX(&ps_dis_region, NULL);
+--	
+--    END ELEMENT
+--
+--END TEST -- TEST 9
+
+END SERVICE -- WidgetsRedX
+
+
+
+
+

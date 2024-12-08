@@ -1,0 +1,894 @@
+HEADER hdudispfinit,Source Code Ver : 1.9,TestScript Ver : 1.6
+--------------------------------------------------------------------------------
+-- Author Name          : Pallavi V N
+--
+-- File Name            : hdudispfinit.ptu
+--
+-- Test Creation Date   : 17.10.2017
+--
+-- Tested Functions     : InitInit
+--                        InitSignalTask
+--                        InitTask
+-- 
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------       ---------       -----------        -------------
+--     1.1             17.10.2017      Pallavi V N        Created the ptu file 
+--     1.2             10.11.2017      Pallavi V N        Updated as per #PR100171 
+--	   1.3			   10.04.2018	   Akshay R k		  Updated as per #PR100201
+--	   1.4			   27.07.2020	   Vignesh Sunil	  Updated as per #PR100267
+--	   1.5			   03.10.2020	   Vignesh Sunil	  Updated as per #PR100281
+--	   1.6			   29.04.2021	   Vignesh Sunil	  Updated as per #PR100338
+-------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/ 
+
+##include "hdudispfdemo.h"     /* Contains prototype for demo */
+##include "hdudispfa429.h"       /* defines the drivers and labels of the a429 */
+##include "hdudispfapp.h"        /* contains Engine Information System application */
+##include "hdudispfinit.h"       /* Contains functions prototypes of initialization function.*/
+##include "hdudispfpoller.h"     /* Engine Information System poller. */
+##include "hdudispfresource.h"   /* provides central location to use On Chip Peripherals*/
+##include "hdudispfucos.h"       /* uC/OS routines for the real-time kernel */
+##include "hdudispfforeground.h" /* contains the routines for foreground layer of the display */
+##include "hdudispfarinc825.h"   /* Define the structure for an ARINC 825 Message. */
+##include "hdudispfa825comm.h"   /* Routines for arinc 825 communication */
+##include "hdudispfrtd.h"        /* Provide mapping for all A825 incoming parameters */
+##include "hdudispfbspled.h"    /* contains LED init and and toggling functions */
+##include "hdulibbasictypes.h" /* Contains basic header definations */
+
+#/* updated as per PR 100083 */
+##include "hdudispfdauprofile.h" /* defines the constants for ARINC 825  Message Traffic.*/
+##include "hdudispfglobalsettings.h" /* Contains prototype to read and write data to NVRAM*/
+##include "hdudispfwdog.h"            /* Watch dog timer declarations */
+##include "hdudispfcbit.h"      /* contains prototypes for CBIT test. */ 
+##include "hdudispflmsscu.h"  /* SCU rtd processing and error codes  */
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+    -- Declarations of the global variables of the tested file
+     
+        #T_EIU Active_eiu; 
+        #T_UINT8 Du_position; 
+        #T_UINT32 Can1_msg_cntr;
+	#T_CONFIG_STRUCT Config_data; 	
+    
+    -- Declaration of local variables
+    
+        --This variable is created to verify parameter param_event of 'OsSemPost' function.
+        #T_OS_EVENT PTU_param_event_in;
+        #T_OS_EVENT PTU_param_event_out;
+        --This variable is created to verify return value of 'OsSemCreate' function.
+        #T_OS_EVENT PTU_OsSemCreate_return;
+        --This variable is created to verify parameter error of 'OsSemPend' function.
+        #T_UBYTE PTU_error;
+        --This variable is created to verify parameter ps_xm of 'A8251Xmit' function.
+        #T_A825_MESSAGE PTU_ps_xm;
+        
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Pallavi V N
+    COMMENT
+    COMMENT File name        : hdudispfinit.ptu
+    COMMENT
+    COMMENT Tested functions : InitInit
+    COMMENT                    InitSignalTask
+    COMMENT                    InitTask
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1) In function 'InitInit', for loop cannot be covered for 0 and 1 time 
+    COMMENT    since it is controlled by MACRO INIT_TASK_STK_SIZE.
+    COMMENT
+    COMMENT 2)Source file "hdudispfinit.c" is modified for testing purpose.
+    COMMENT   The while(TRUE)
+    COMMENT   is modified for terminating the infinite loop.Hence while loop cannot be covered for 0 and 1 times
+    COMMENT
+    COMMENT 3)Warning "enumerated type mixed with another type" is obtained when parameter  
+    COMMENT   return value of "A8251Xmit" function  
+    COMMENT   is exercised with value "A825_XM_NOT_IMPLEMENTED+1" to test LLR "hdudispfinit-InitTask-DB-LLR-007" 
+    COMMENT   in PTU "hdudispfinit.ptu" 
+    COMMENT
+    COMMENT</AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function "InitSignalTask" local tick counter is equal to INIT_TASK_TICKS
+    COMMENT  
+    COMMENT Class 2
+    COMMENT In function "InitSignalTask" local tick counter is greater than INIT_TASK_TICKS
+    COMMENT  
+    COMMENT Class 3
+    COMMENT In function "InitSignalTask" local tick counter is less than INIT_TASK_TICKS
+    COMMENT  
+    COMMENT Class 4
+    COMMENT In function "InitSignalTask" 'OsSemPost' function is called.
+    COMMENT   
+    COMMENT Class 5
+    COMMENT In function "InitInit" 'OsSemCreate' function is called.
+    COMMENT   
+    COMMENT Class 6
+    COMMENT In function "InitInit" 'OsTaskCreate' function is called.
+    COMMENT   
+    COMMENT Class 7
+    COMMENT In function "InitTask" 'RTDInit' function is called.
+    COMMENT  
+    COMMENT Class 8
+    COMMENT In function "InitTask" 'AppInit' function is called.
+    COMMENT  
+    COMMENT Class 9
+    COMMENT In function "InitTask" 'PollerInit' function is called.
+    COMMENT  
+    COMMENT Class 10
+    COMMENT In function "InitTask" 'ITInterrupsInit' function is called.
+    COMMENT  
+    COMMENT Class 11
+    COMMENT In function "InitTask" 'BSPLEDInit' function is called.
+    COMMENT  
+    COMMENT Class 12
+    COMMENT In function "InitTask" 'CbitInit' function is called.
+    COMMENT  
+    COMMENT Class 13
+    COMMENT In function "InitTask" 'OsSemPend' function is called.
+    COMMENT 
+    COMMENT Class 14
+    COMMENT In function "InitTask" 'BSPLEDToggle' function is called.
+    COMMENT 
+    COMMENT Class 15
+    COMMENT In function "InitTask", macro 'INIT_NSC_REQUEST' is called. 
+    COMMENT 
+    COMMENT Class 16
+    COMMENT In function "InitTask", 'WdogInit' function is called. 
+    COMMENT 
+    COMMENT Class 17
+    COMMENT In function "InitTask", 'WdogKickWatchDog' function is called. 
+    COMMENT 
+    COMMENT Class 18
+    COMMENT In function "InitTask", toggle bit is not equal to zero. 
+    COMMENT 
+    COMMENT Class 19
+    COMMENT In function "InitTask", toggle bit is equal to zero.    
+    COMMENT   
+    COMMENT Class 20
+    COMMENT In function "InitTask", 'DemoInit' function is called.   
+    COMMENT 
+    COMMENT Class 21    
+    COMMENT In function "InitTask", eng_sdi of Config_data is lessthan ONE
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function "InitTask", eng_sdi of Config_data is equal to ONE
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function "InitTask", eng_sdi of Config_data is greaterthan ONE
+    COMMENT   
+    COMMENT Class 24
+    COMMENT In function "InitTask" 'ScuRTDInit' function is called.
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT  
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+DEFINE STUB hdudispfinit_c
+    -- Parameter *task is made _no since address of static function cannot be expected
+    #T_UINT8 OsTaskCreate(void  _no ( *  task)(void* pd), void * _in pdata, void * _in pstk, T_UINT8  _in prio)
+    #{
+    # (*task)(pdata);
+    #}
+    
+    #T_OS_EVENT* OsSemCreate(T_UWORD _in count); 
+    -- Parameter *param_event is made _no and is verified explicitly
+    #T_UBYTE OsSemPost(T_OS_EVENT _no *param_event)
+    #{
+    #   PTU_param_event_in = *param_event;
+    #   *param_event = PTU_param_event_out;
+    #}
+    
+    -- Parameter *ps_xm is made _no and is verified explicitly
+    #T_A825_XMITRESULT A8251Xmit(T_A825_MESSAGE _no *ps_xm)
+    #{
+    # PTU_ps_xm = *ps_xm;
+    #}
+    
+    #void BSPLEDToggle(T_ELED_NUM _in e_led_num); 
+    -- Parameter *error is made _no and is verified explicitly
+    #void OsSemPend(T_OS_EVENT _in *p_event, T_UWORD _in time_out, T_UBYTE _no *error)
+    #{
+    #   *error = PTU_error;
+    #}
+    
+    #void CbitInit(); 
+    #void BSPLEDInit(T_ELED_NUM _in e_led_num); 
+    #void ITInterrupsInit(void);       
+    #void PollerInit(void);            
+    #void AppInit(void);               
+    #void RTDInit(void);  
+    #void WdogKickWatchDog(void); 
+    #void WdogInit(void);   
+	#void DemoInit(void);
+    #void ScuRTDInit(void);	
+END DEFINE
+
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfinit.c
+ENVIRONMENT ENV_hdudispfinit_c
+
+  VAR Init_b_done,          init = FALSE,               ev = init
+  ARRAY Init_task_stk,      init = { others => 0 },     ev = init
+  
+END ENVIRONMENT -- ENV_hdudispfinit_c
+USE ENV_hdudispfinit_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service InitSignalTask
+--------------------------------------------------------------------------------
+SERVICE InitSignalTask
+SERVICE_TYPE extern
+    
+    --Local variable declaration:
+    -- Dummy variable created for empty element block
+    #T_INT32 PTU_temp;  
+    -- Temporary varibale created for handling loop
+    #T_INT32 PTU_i;
+
+    TEST 1
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfinit-InitSignalTask-DB-LLR-001]
+    COMMENT The function 'InitSignalTask' increment the local tick counter by ONE.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfinit-InitSignalTask-DB-LLR-003]
+    COMMENT The function 'InitSignalTask' does nothing when local tick counter is less than INIT_TASK_TICKS.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT </TD>    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        VAR PTU_temp,                   init = 10,              ev = init   
+            
+        COMMENT OUTPUT SECTION:
+        --None 
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None 
+        
+        COMMENT Stub Calls:
+        SIMUL   
+        --None
+        
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:        
+        #InitSignalTask();
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfinit-InitSignalTask-DB-LLR-001]
+    COMMENT The function 'InitSignalTask' increment the local tick counter by ONE.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfinit-InitSignalTask-DB-LLR-003]
+    COMMENT The function 'InitSignalTask' does nothing when local tick counter is less than INIT_TASK_TICKS.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT </TD>    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        VAR PTU_temp,                   init = 10,              ev = init   
+            
+        COMMENT OUTPUT SECTION:
+        --None 
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        --None 
+        
+        COMMENT Stub Calls:
+        SIMUL  
+        --None 
+        
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:  
+        -- FUT is called more than once to satisfy the condition u16_tick_cntr >= INIT_TASK_TICKS (less than)
+        #for (PTU_i = 0; PTU_i<498; PTU_i++)
+        #InitSignalTask();
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+    TEST 3
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfinit-InitSignalTask-DB-LLR-001]
+    COMMENT The function 'InitSignalTask' increment the local tick counter by ONE.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfinit-InitSignalTask-DB-LLR-002]
+    COMMENT The function 'InitSignalTask' sets the local tick counter to ZERO and 
+    COMMENT calls OsSemPost with parameter Sem_init_task when local tick counter 
+    COMMENT is greater than or equal to INIT_TASK_TICKS
+    COMMENT Equivalence Class 1,4
+    COMMENT
+    COMMENT Note:Variable Name "Sem_init_task" is static, hence it is not expected in the Output section and 
+    COMMENT the functionality of the requirement is verified implicitly.
+    COMMENT
+    COMMENT </TD>    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        VAR PTU_temp,                   init = 10,              ev = init 
+        VAR PTU_OsSemCreate_return,     init = {5},             ev = {3}  
+        VAR Active_eiu,                 init = EIU1,            ev = init
+        VAR Du_position,                init = 0,               ev = init
+	VAR Config_data.eng_sdi,		init = ZERO,			ev = init
+        
+        COMMENT OUTPUT SECTION:
+        VAR Init_b_done,                init = FALSE,           ev = TRUE 
+        VAR PTU_ps_xm.sID.PID.sid,      init = GATEWAY_SID,     ev = MULTICAST_SID
+        VAR PTU_ps_xm.u8PaySize,        init = 2,               ev = SIX
+        VAR PTU_ps_xm.sID.PID.rci,      init = 1,               ev = 0
+        VAR PTU_ps_xm.u8PayLoad,        init = {others =>15},   
+        &                                                       ev = {0 => 0x07, 1 => 0xC0, 2 => 125, others => 0}
+        ARRAY Init_task_stk,            init = { others => 0 }, ev = { others => 0xdeaddead }
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        VAR PTU_param_event_in,         init = {10},             ev = {5}
+        VAR PTU_param_event_out,        init = {3},              ev = init
+        VAR Can1_msg_cntr,              init = 0,                ev = 4
+        
+        COMMENT Stub Calls:
+        SIMUL  
+        
+            STUB OsSemPost()0
+            
+            --Dont care stubs
+            
+            STUB OsSemCreate(0)&PTU_OsSemCreate_return
+            STUB OsTaskCreate(ZERO,&Init_task_stk[INIT_TASK_STK_SIZE],INIT_TASK_PRIO)10
+            STUB WdogInit()
+            STUB RTDInit()
+            STUB WdogKickWatchDog()
+            STUB AppInit()
+            STUB WdogKickWatchDog()
+            STUB PollerInit()
+            STUB WdogKickWatchDog()
+            STUB ITInterrupsInit()
+            STUB WdogKickWatchDog()
+            STUB BSPLEDInit(LED1)
+            STUB WdogKickWatchDog()
+			STUB DemoInit()
+			STUB ScuRTDInit()
+			STUB WdogKickWatchDog()
+            STUB CbitInit()
+            STUB WdogKickWatchDog()
+            STUB OsSemPend 1..4 => (&PTU_OsSemCreate_return,0)
+            STUB WdogKickWatchDog 8..12 =>()
+            STUB BSPLEDToggle 1..4 => (LED1)   
+            STUB A8251Xmit 1..2 =>()A825_XM_OK
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:  
+        -- To obtain the address for Sem_init_task
+        #InitInit();
+        -- FUT is called more than once to satisfy the condition u16_tick_cntr >= INIT_TASK_TICKS (equal to)
+        #InitSignalTask();
+        END ELEMENT
+
+    END TEST -- TEST 3
+
+END SERVICE -- InitSignalTask
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service InitInit
+--------------------------------------------------------------------------------
+SERVICE InitInit
+SERVICE_TYPE extern
+
+    TEST 1
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfinit-InitInit-DB-LLR-001]
+    COMMENT The function 'InitInit' calls OsSemCreate with parameter ZERO and sets 
+    COMMENT Sem_init_task with the return value of the OsSemCreate
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdudispfinit-InitInit-DB-LLR-002]
+    COMMENT The function 'InitInit' initializes all the members of Init_task_stk 
+    COMMENT to STK_DEF_VAL and calls OsTaskCreate with parameters InitTask, 
+    COMMENT ZERO, address of Init_task_stk and INIT_TASK_PRIO
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-009]
+    COMMENT The function 'InitTask' performs the following:
+    COMMENT - calls macro INIT_NSC_REQUEST with arinc 825 message 
+    COMMENT as parameter to initialize a Node Service Channel message to its default values.
+    COMMENT - sets sid of PID of sID of arinc 825 message to MULTICAST_SID.
+    COMMENT - sets u8PaySize of arinc 825 message to SIX
+    COMMENT Equivalence Class 15
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-010]
+    COMMENT The function 'InitTask' calls WdogInit to initialize watch dog timer.
+    COMMENT Equivalence Class 16
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-001]
+    COMMENT The function perform the following :
+    COMMENT 1. call RTDInit to initialise Arinc 825 parameters
+    COMMENT 2. call the function WdogKickWatchDog to reload the watch dog timer
+    COMMENT 3. call the function ScuRTDInit initialize RTD coming off the A429 bus from LMS SCU
+    COMMENT 4. call the function WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 7, 17 , 24
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-002]
+    COMMENT The function 'InitTask' calls AppInit to initialise Application Task
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 8, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-003]
+    COMMENT The function 'InitTask' calls PollerInit to initialise Poller Task
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 9, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-004]
+    COMMENT The function 'InitTask' calls ITInterrupsInit to initialise Graphic Display Interupt
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 10, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-005]
+    COMMENT The function 'InitTask' calls BSPLEDInit to initialise the LED
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 11, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-008]
+    COMMENT The function 'InitTask' calls CbitInit to initialize the Cbit
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 12, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-006]
+    COMMENT The function 'InitTask' sets Init_b_done to TRUE
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-007]
+    COMMENT The function 'InitTask' performs the following:
+    COMMENT - Calls OsSemPend with parameters Sem_init_task, 0 and ddress of local T_UINT8 variable.
+    COMMENT - Calls BSPLEDToggle to toggle the LED
+    COMMENT - Call WdogKickWatchDog to reload the watch dog timer
+    COMMENT - increments Can1_msg_cntr(exercised for minimum value) by one
+    COMMENT - sets toggle bit to (toggle bit plus ONE) bitwise AND with ONE
+    COMMENT - when toggle bit is not equal to zero perform the following:
+    COMMENT    - sets rci of PID of sID of arinc 825 meassage to 1st and 2nd bit of Du_position(exercised for minimum value)
+    COMMENT    - sets u8PayLoad of arinc 825 meassage to NSC_SEND_A429
+    COMMENT	when eng_sdi of Config_data set to ZERO
+    COMMENT    - sets u8PayLoad of arinc 825 meassage of index two to A429_DATA_FORMAT_EIU_SEL bitwise 
+    COMMENT      OR with ((Du_position bitwise AND with THREE) left shifted by EIGHT) bitwise OR  
+    COMMENT       with (Active_eiu(exercised for EIU1) left shifted by TEN)
+    COMMENT    - transmits the arinc 825 message by calling the function A8251Xmit with reference to 
+    COMMENT       arinc 825 meassage as parameter
+    COMMENT Equivalence Class 13, 14, 17, 18, 19,21
+    COMMENT
+    COMMENT Note:Variable Names "Sem_init_task" and "toggle" are static, hence it is not expected in the Output section and 
+    COMMENT the functionality of the requirement is verified implicitly.
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-011]
+    COMMENT The function 'InitTask' calls DemoInit to initialise the Demo mode 
+	COMMENT and call the function WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 17,20
+    COMMENT
+    COMMENT </TD>  
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        VAR PTU_OsSemCreate_return,     init = {15},                ev = init 
+        VAR Active_eiu,                 init = EIU1,                ev = init
+        VAR Du_position,                init = 0,                   ev = init 
+	VAR Config_data.eng_sdi,		init = ZERO,			ev = init		
+            
+        COMMENT OUTPUT SECTION:
+        VAR Init_b_done,                init = FALSE,               ev = TRUE         
+        VAR PTU_error,                  init = 51,                  ev = init 
+        VAR PTU_ps_xm.sID.PID.sid,      init = GATEWAY_SID,         ev = MULTICAST_SID
+        VAR PTU_ps_xm.u8PaySize,        init = 2,                   ev = SIX
+        VAR PTU_ps_xm.sID.PID.rci,      init = 1,                   ev = 0
+        VAR PTU_ps_xm.u8PayLoad,        init = {others =>15},   
+        &                                                           ev = {0 => 0x07, 1 => 0xC0, 2 => 125, others => 0}
+        ARRAY Init_task_stk,            init = { others => 0 },     ev = { others => 0xdeaddead }
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        VAR Can1_msg_cntr,              init = 0,                   ev = 4
+        
+        COMMENT Stub Calls:
+        SIMUL   
+            
+            STUB OsSemCreate(ZERO)&PTU_OsSemCreate_return
+            STUB OsTaskCreate(ZERO,&Init_task_stk[INIT_TASK_STK_SIZE],INIT_TASK_PRIO)0
+            STUB WdogInit()
+            STUB RTDInit()
+            STUB WdogKickWatchDog()
+            STUB AppInit()
+            STUB WdogKickWatchDog()
+            STUB PollerInit()
+            STUB WdogKickWatchDog()
+            STUB ITInterrupsInit()
+            STUB WdogKickWatchDog()
+            STUB BSPLEDInit(LED1)
+            STUB WdogKickWatchDog()
+			STUB DemoInit()
+			STUB ScuRTDInit()
+			STUB WdogKickWatchDog()
+            STUB CbitInit()
+            STUB WdogKickWatchDog()
+            STUB OsSemPend 1..4 => (&PTU_OsSemCreate_return,0)
+            STUB WdogKickWatchDog 8..12 =>()
+            STUB BSPLEDToggle 1..4 => (LED1)
+            STUB A8251Xmit 1..2 =>()A825_BAD_CHANNEL
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:
+        #InitInit();
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfinit-InitInit-DB-LLR-001]
+    COMMENT The function 'InitInit' calls OsSemCreate with parameter ZERO and sets 
+    COMMENT Sem_init_task with the return value of the OsSemCreate
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdudispfinit-InitInit-DB-LLR-002]
+    COMMENT The function 'InitInit' initializes all the members of Init_task_stk 
+    COMMENT to STK_DEF_VAL and calls OsTaskCreate with parameters InitTask, 
+    COMMENT ZERO, address of Init_task_stk and INIT_TASK_PRIO
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-009]
+    COMMENT The function 'InitTask' performs the following:
+    COMMENT - calls macro INIT_NSC_REQUEST with arinc 825 message 
+    COMMENT as parameter to initialize a Node Service Channel message to its default values.
+    COMMENT - sets sid of PID of sID of arinc 825 message to MULTICAST_SID.
+    COMMENT - sets u8PaySize of arinc 825 message to SIX
+    COMMENT Equivalence Class 15
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-010]
+    COMMENT The function 'InitTask' calls WdogInit to initialize watch dog timer.
+    COMMENT Equivalence Class 16
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-001]
+    COMMENT The function perform the following :
+    COMMENT 1. call RTDInit to initialise Arinc 825 parameters
+    COMMENT 2. call the function WdogKickWatchDog to reload the watch dog timer
+    COMMENT 3. call the function ScuRTDInit initialize RTD coming off the A429 bus from LMS SCU
+    COMMENT 4. call the function WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 7, 17 , 24
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-002]
+    COMMENT The function 'InitTask' calls AppInit to initialise Application Task
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 8, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-003]
+    COMMENT The function 'InitTask' calls PollerInit to initialise Poller Task
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 9, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-004]
+    COMMENT The function 'InitTask' calls ITInterrupsInit to initialise Graphic Display Interupt
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 10, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-005]
+    COMMENT The function 'InitTask' calls BSPLEDInit to initialise the LED
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 11, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-008]
+    COMMENT The function 'InitTask' calls CbitInit to initialize the Cbit
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 12, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-006]
+    COMMENT The function 'InitTask' sets Init_b_done to TRUE
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-007]
+    COMMENT The function 'InitTask' performs the following:
+    COMMENT - Calls OsSemPend with parameters Sem_init_task, 0 and ddress of local T_UINT8 variable.
+    COMMENT - Calls BSPLEDToggle to toggle the LED
+    COMMENT - Call WdogKickWatchDog to reload the watch dog timer
+    COMMENT - increments Can1_msg_cntr(exercised for nominal value) by one
+    COMMENT - sets toggle bit to (toggle bit plus ONE) bitwise AND with ONE
+    COMMENT - when toggle bit is not equal to zero perform the following:
+    COMMENT    - sets rci of PID of sID of arinc 825 meassage to 1st and 2nd bit of Du_position(exercised for nominal value)
+    COMMENT    - sets u8PayLoad of arinc 825 meassage to NSC_SEND_A429
+    COMMENT	when eng_sdi of Config_data set to ONE
+    COMMENT    - sets u8PayLoad of arinc 825 meassage of index two to A429_DATA_FORMAT_EIU_SEL bitwise 
+    COMMENT      OR with ((ZERO bitwise AND with THREE) left shifted by EIGHT) bitwise OR  
+    COMMENT       with (Active_eiu(exercised for EIU1) left shifted by TEN)
+    COMMENT    - transmits the arinc 825 message by calling the function A8251Xmit with reference to 
+    COMMENT       arinc 825 meassage as parameter
+    COMMENT Equivalence Class 13, 14, 17, 18, 19,22
+    COMMENT
+    COMMENT Note:Variable Names "Sem_init_task" and "toggle" are static, hence it is not expected in the Output section and 
+    COMMENT the functionality of the requirement is verified implicitly.
+    COMMENT
+    COMMENT </TD>  
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        VAR PTU_OsSemCreate_return,     init = {15},                ev = init 
+        VAR Active_eiu,                 init = EIU2,                ev = init
+        VAR Du_position,                init = 1,                   ev = init 
+    	VAR Config_data.eng_sdi,		init = ONE,			ev = init		
+            
+        COMMENT OUTPUT SECTION:
+        VAR Init_b_done,                init = FALSE,               ev = TRUE         
+        VAR PTU_error,                  init = 51,                  ev = init 
+        VAR PTU_ps_xm.sID.PID.sid,      init = GATEWAY_SID,         ev = MULTICAST_SID
+        VAR PTU_ps_xm.u8PaySize,        init = 2,                   ev = SIX
+        VAR PTU_ps_xm.sID.PID.rci,      init = 0,                   ev = 1
+        VAR PTU_ps_xm.u8PayLoad,        init = {others =>15},   
+        &                                                           ev = {0 => 0x07, 1 => 0xC0, 2 => 0x7D, 3 => 0x4, others => 0}
+        ARRAY Init_task_stk,            init = { others => 0 },     ev = { others => 0xdeaddead }
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        VAR Can1_msg_cntr,              init = 580,                   ev = 584
+        
+        COMMENT Stub Calls:
+        SIMUL   
+            
+            STUB OsSemCreate(ZERO)&PTU_OsSemCreate_return
+            STUB OsTaskCreate(ZERO,&Init_task_stk[INIT_TASK_STK_SIZE],INIT_TASK_PRIO)255
+            STUB WdogInit()
+            STUB RTDInit()
+            STUB WdogKickWatchDog()
+            STUB AppInit()
+            STUB WdogKickWatchDog()
+            STUB PollerInit()
+            STUB WdogKickWatchDog()
+            STUB ITInterrupsInit()
+            STUB WdogKickWatchDog()
+            STUB BSPLEDInit(LED1)
+            STUB WdogKickWatchDog()
+			STUB DemoInit()
+			STUB ScuRTDInit()
+			STUB WdogKickWatchDog()
+            STUB CbitInit()
+            STUB WdogKickWatchDog()
+            STUB OsSemPend 1..4 => (&PTU_OsSemCreate_return,0)
+            STUB WdogKickWatchDog 8..12 =>()
+            STUB BSPLEDToggle 1..4 => (LED1)
+            STUB A8251Xmit 1..2 =>()A825_XM_NOT_IMPLEMENTED
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:
+        #InitInit();
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+    TEST 3
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfinit-InitInit-DB-LLR-001]
+    COMMENT The function 'InitInit' calls OsSemCreate with parameter ZERO and sets 
+    COMMENT Sem_init_task with the return value of the OsSemCreate
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdudispfinit-InitInit-DB-LLR-002]
+    COMMENT The function 'InitInit' initializes all the members of Init_task_stk 
+    COMMENT to STK_DEF_VAL and calls OsTaskCreate with parameters InitTask, 
+    COMMENT ZERO, address of Init_task_stk and INIT_TASK_PRIO
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-009]
+    COMMENT The function 'InitTask' performs the following:
+    COMMENT - calls macro INIT_NSC_REQUEST with arinc 825 message 
+    COMMENT as parameter to initialize a Node Service Channel message to its default values.
+    COMMENT - sets sid of PID of sID of arinc 825 message to MULTICAST_SID.
+    COMMENT - sets u8PaySize of arinc 825 message to SIX
+    COMMENT Equivalence Class 15
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-010]
+    COMMENT The function 'InitTask' calls WdogInit to initialize watch dog timer.
+    COMMENT Equivalence Class 16
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-001]
+    COMMENT The function perform the following :
+    COMMENT 1. call RTDInit to initialise Arinc 825 parameters
+    COMMENT 2. call the function WdogKickWatchDog to reload the watch dog timer
+    COMMENT 3. call the function ScuRTDInit initialize RTD coming off the A429 bus from LMS SCU
+    COMMENT 4. call the function WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 7, 17, 24
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-002]
+    COMMENT The function 'InitTask' calls AppInit to initialise Application Task
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 8, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-003]
+    COMMENT The function 'InitTask' calls PollerInit to initialise Poller Task
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 9, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-004]
+    COMMENT The function 'InitTask' calls ITInterrupsInit to initialise Graphic Display Interupt
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 10, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-005]
+    COMMENT The function 'InitTask' calls BSPLEDInit to initialise the LED
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 11, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-006]
+    COMMENT The function 'InitTask' calls CbitInit to initialize the Cbit
+    COMMENT and calls WdogKickWatchDog to reload the watch dog timer.
+    COMMENT Equivalence Class 12, 17
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-006]
+    COMMENT The function 'InitTask' sets Init_b_done to TRUE
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfinit-InitTask-DB-LLR-007]
+    COMMENT The function 'InitTask' performs the following:
+    COMMENT - Calls OsSemPend with parameters Sem_init_task, 0 and ddress of local T_UINT8 variable.
+    COMMENT - Calls BSPLEDToggle to toggle the LED
+    COMMENT - Call WdogKickWatchDog to reload the watch dog timer
+    COMMENT - increments Can1_msg_cntr(exercised for maximum value) by one
+    COMMENT - sets toggle bit to (toggle bit plus ONE) bitwise AND with ONE
+    COMMENT - when toggle bit is not equal to zero perform the following:
+    COMMENT    - sets rci of PID of sID of arinc 825 meassage to 1st and 2nd bit of Du_position(exercised for maximum value)
+    COMMENT    - sets u8PayLoad of arinc 825 meassage to NSC_SEND_A429
+    COMMENT	when eng_sdi of Config_data set to TWO
+    COMMENT    - sets u8PayLoad of arinc 825 meassage of index two to A429_DATA_FORMAT_EIU_SEL bitwise 
+    COMMENT      OR with ((Du_position bitwise AND with THREE) left shifted by EIGHT) bitwise OR  
+    COMMENT       with (Active_eiu(exercised for EIU1) left shifted by TEN)
+    COMMENT    - transmits the arinc 825 message by calling the function A8251Xmit with reference to 
+    COMMENT       arinc 825 meassage as parameter
+    COMMENT Equivalence Class 13, 14, 17, 18, 19, 23
+    COMMENT
+    COMMENT Note:Variable Names "Sem_init_task" and "toggle" are static, hence it is not expected in the Output section and 
+    COMMENT the functionality of the requirement is verified implicitly.
+    COMMENT
+    COMMENT </TD>  
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+        VAR PTU_OsSemCreate_return,     init = {15},                ev = init 
+        VAR Active_eiu,                 init = EIU2,                ev = init
+        VAR Du_position,                init = 3,                   ev = init 
+	VAR Config_data.eng_sdi,	init = TWO,			ev = init		
+            
+        COMMENT OUTPUT SECTION:
+        VAR Init_b_done,                init = FALSE,               ev = TRUE         
+        VAR PTU_error,                  init = 51,                  ev = init 
+        VAR PTU_ps_xm.sID.PID.sid,      init = GATEWAY_SID,         ev = MULTICAST_SID
+        VAR PTU_ps_xm.u8PaySize,        init = 2,                   ev = SIX
+        VAR PTU_ps_xm.sID.PID.rci,      init = 0,                   ev = 3
+        VAR PTU_ps_xm.u8PayLoad,        init = {others =>15},   
+        &                                                           ev = {0 => 0x07, 1 => 0xC0, 2 => 0x7D, 3 => 0x7, others => 0}
+        ARRAY Init_task_stk,            init = { others => 0 },     ev = { others => 0xdeaddead }
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        VAR Can1_msg_cntr,              init = 4294967295,                   ev = 3
+        
+        COMMENT Stub Calls:
+        SIMUL   
+            
+            STUB OsSemCreate(ZERO)&PTU_OsSemCreate_return
+            STUB OsTaskCreate(ZERO,&Init_task_stk[INIT_TASK_STK_SIZE],INIT_TASK_PRIO)0
+            STUB WdogInit()
+            STUB RTDInit()
+            STUB WdogKickWatchDog()
+            STUB AppInit()
+            STUB WdogKickWatchDog()
+            STUB PollerInit()
+            STUB WdogKickWatchDog()
+            STUB ITInterrupsInit()
+            STUB WdogKickWatchDog()
+            STUB BSPLEDInit(LED1)
+            STUB WdogKickWatchDog()
+			STUB DemoInit()
+			STUB ScuRTDInit()
+			STUB WdogKickWatchDog()
+            STUB CbitInit()
+            STUB WdogKickWatchDog()
+            STUB OsSemPend 1..4 => (&PTU_OsSemCreate_return,0)
+            STUB WdogKickWatchDog 8..12 =>()
+            STUB BSPLEDToggle 1..4 => (LED1)
+            STUB A8251Xmit 1..2 =>()A825_XM_NOT_IMPLEMENTED+1
+            
+        END SIMUL
+        
+        COMMENT Calling the Unit Under Test:
+        #InitInit();
+        END ELEMENT
+
+    END TEST -- TEST 3
+    
+END SERVICE -- InitInit
+
+

@@ -1,0 +1,685 @@
+HEADER hdulibstm32f7xxhal,Source Code Ver : 1.4 ,TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name         : Anusha V
+--
+-- File Name           : hdulibstm32f7xxhal_2.ptu
+--
+-- Test Creation Date  : 30.10.2017 
+--
+-- Tested Functions    : HalInit
+--						 HALInitTick
+--						 HalIncTick
+--						 HalDelay                      
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE           TESTER NAME        MODIFICATIONS
+-- ------------        ---------           -----------        -------------
+--    1.1              30.10.2017          Anusha V           Created the ptu file
+--	  1.2			   11.11.2017          Anusha V           Updated as per #PR100171
+--	  1.3			   14.11.2017          Anusha V           Updated as per #PR100171	
+--	  1.4			   03.10.2020          Harshitha R        Updated as per PR#100281	
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibstm32f7xxhal.h"        
+##include "hdulibbasictypes.h"          
+##include "hdulibcorecm7.h"             
+##include "hdulibstm32f7xxhalcortex.h"  
+##include "hdulibstm32f7xxhaldef.h"     
+##include "hdulibstm32f7xxhalflash.h"   
+##include "hdulibstm32f7xxhalconf.h"    
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	#T_UINT32 System_core_clock;
+	
+-- Declarations of temporary variables of the tested file
+
+	--Temporary variable created to be used in HALGetTick
+	#T_UINT32 PTU_temp;
+	
+--------------------------------------------------------------------------------
+
+BEGIN
+	COMMENT  Author Name         : Anusha V
+	COMMENT 
+	COMMENT  File Name           : hdulibstm32f7xxhal_2.ptu
+	COMMENT 
+	COMMENT  Tested Functions    : HalInit
+	COMMENT						   HALInitTick
+	COMMENT						   HalIncTick
+	COMMENT						   HalDelay    
+	COMMENT 	
+	COMMENT  Assumptions and Constraints
+	COMMENT  <AC>
+	COMMENT
+	COMMENT  Assumption(s):
+	COMMENT  None
+	COMMENT 
+	COMMENT  Constraint(s):
+	COMMENT  1.PTU has been split into 2 due to static dependency.
+	COMMENT  
+	COMMENT  2.Header file "hdulibstm32f746xx.h" is modified for testing purpose. 
+	COMMENT    The macro 'FLASH' is modified for stubbing hardware address.  
+    COMMENT  /*Commented for testing purpose*/
+    COMMENT  /*#define FLASH               ((T_FLASH *) FLASH_R_BASE)*/
+    COMMENT  
+    COMMENT  /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT  T_FLASH      PTU_FLASH;
+    COMMENT  #define FLASH               ((T_FLASH *) &PTU_FLASH)
+    COMMENT
+    COMMENT  3.Source file "hdulibstm32f7xxhal.c" is modified for testing purpose 
+    COMMENT 
+    COMMENT  Snippet of code is added in function 'hdulibstm32f7xxhal.c':
+    COMMENT 
+    COMMENT  /*local variable declared for testing purpose*/
+    COMMENT    T_UINT16 PTU_count =0;
+    COMMENT
+    COMMENT   while((HALGetTick() - tick_start) < delay)
+    COMMENT   {
+    COMMENT	   /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT	      PTU_count++;
+    COMMENT	      if(PTU_count == 4)
+    COMMENT	      {
+    COMMENT	          break;
+    COMMENT	      }
+    COMMENT	      else
+    COMMENT	      {
+    COMMENT	        /*nothing*/
+    COMMENT       }
+    COMMENT   }
+    COMMENT  
+    COMMENT  The above modifications are done to terminate the infinite loop and also the above while loop can not be covered for 
+    COMMENT  1 time as we are using the condition PTU_count == 4.
+    COMMENT  
+	COMMENT  4.Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+	COMMENT  warning #191-D: type qualifier is meaningless on cast type
+    COMMENT  </AC>
+    
+	COMMENT  Equivalence Class Description
+	COMMENT  <ECD>
+	COMMENT
+	COMMENT  Valid Class(es)
+	COMMENT  Class 1
+	COMMENT  In the Function 'HalInit','__HAL_FLASH_ART_ENABLE'is called.
+	COMMENT
+	COMMENT  Class 2
+	COMMENT  In the Function 'HalInit','HALNvicSetPriorityGrouping'is called.
+	COMMENT
+	COMMENT	 Class 3
+	COMMENT	 In the Function 'HalInit','HALInitTick' is called.
+	COMMENT
+    COMMENT  Class 5
+	COMMENT  In the Function 'HALInitTick','HALSysTickConfig' is called.
+	COMMENT
+	COMMENT  Class 6
+	COMMENT  In the Function 'HALInitTick','HalNvicSetPriority' is called.
+	COMMENT
+	COMMENT  Class 7
+	COMMENT  In the Function 'HALDelay','HALGetTick' is called.
+	COMMENT
+	COMMENT  Class 8
+	COMMENT  In the Function 'HALDelay', result of subtraction of return value of the function call
+	COMMENT  HALGetTick and timer tick is less than delay.
+	COMMENT  
+	COMMENT  Class 9
+	COMMENT  In the Function 'HALDelay', result of subtraction of return value of the function call
+	COMMENT  HALGetTick and timer tick is greater than delay.
+    COMMENT	
+    COMMENT  Class 10
+    COMMENT  In the Function 'HALDelay', result of subtraction of return value of the function call
+	COMMENT  HALGetTick and timer tick is equal to delay.
+	COMMENT
+	COMMENT	 Class 11
+	COMMENT  In the Function 'HalInit',ART_ACCLERATOR_ENABLE is equal to ZERO
+	COMMENT
+	COMMENT	 Class 12
+	COMMENT  In the Function 'HalInit',ART_ACCLERATOR_ENABLE is not equal to ZERO
+	COMMENT
+	COMMENT  Invalid Class(es)
+	COMMENT  None
+    COMMENT  </ECD>
+    
+----------------------------------------------------------------------------------
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdulibstm32f7xxhal_c
+	
+		#void HalNvicSetPriority(T_IRQN_TYPE _in IRQn, T_UINT32 _in PreemptPriority, T_UINT32 _in SubPriority);
+
+		#T_UINT32 HALSysTickConfig(T_UINT32 _in TicksNumb); 
+    
+		#void HALNvicSetPriorityGrouping(T_UINT32 _in PriorityGroup); 
+		
+    END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL 
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdulibstm32f7xxhal.c
+
+--ENVIRONMENT ENV_hdulibstm32f7xxhal_c
+
+    --None
+
+--END ENVIRONMENT -- hdulibstm32f7xxhal_c
+
+--USE hdulibstm32f7xxhal_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalInit
+--------------------------------------------------------------------------------
+SERVICE HalInit
+SERVICE_TYPE extern
+
+-- By function returned type declaration
+#T_HAL_STATUS ret_HalInit;
+#T_UINT32 tick_priority;
+
+ENVIRONMENT ENV_HalInit
+
+    VAR ret_HalInit,					init = HAL_OK,				ev = init
+    
+    VAR tick_priority,					init = 0,					ev = init
+    
+END ENVIRONMENT -- ENV_HalInit
+
+USE ENV_HalInit
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT  <TD> 
+	COMMENT  [hdulibstm32f7xxhal-HalInit-DB-LLR-001]
+	COMMENT  The function calls the macro '__HAL_FLASH_ART_ENABLE' when ART_ACCLERATOR_ENABLE is not equal to ZERO.
+	COMMENT  Equivalence Class 1,11
+	COMMENT
+	COMMENT  [hdulibstm32f7xxhal-HalInit-DB-LLR-002],
+	COMMENT  The function Sets Interrupt Group Priority by calling 'HALNvicSetPriorityGrouping' with parameter NVIC_PRIORITYGROUP_4   
+	COMMENT  Equivalence Class 2 
+	COMMENT
+	COMMENT  [hdulibstm32f7xxhal-HalInit-DB-LLR-003]
+	COMMENT  The function calls ' HALInitTick' with parameter TICK_INT_PRIORITY
+	COMMENT  Equivalence Class 3
+	COMMENT
+	COMMENT  [hdulibstm32f7xxhal-HalInit-DB-LLR-005]
+	COMMENT  The function returns HAL_OK as status.
+	COMMENT	 Equivalence Class None
+	COMMENT  </TD>
+	
+	ELEMENT
+		COMMENT INPUT SECTION:
+		
+			--specifies the priority
+			VAR tick_priority,						init = 0x0FU,						ev = init
+			
+			--Number of ticks between two interrupts   .
+			VAR System_core_clock,					init = 0x0,							ev = init
+		   
+		COMMENT OUTPUT SECTION:
+			
+			--returns function status
+			VAR ret_HalInit,  						init = HAL_ERROR, 					ev = HAL_OK
+		   
+		COMMENT INPUT/OUTPUT SECTION:
+		   
+			--NONE
+		   		
+		SIMUL
+			-- Stubs called in function HalInit
+			
+			--Set Interrupt Group Priority 
+		   	STUB HALNvicSetPriorityGrouping(NVIC_PRIORITYGROUP_4)
+		   	
+		   	--sets the priority of an interrupt. 
+		   	STUB HalNvicSetPriority(SYSTICK_IRQN,TICK_INT_PRIORITY,ZERO)
+		   	
+		   	--Initializes the System Timer and its interrupt 
+		   	STUB HALSysTickConfig(System_core_clock/1000)0
+		   		
+		END SIMUL
+		--calling the unit under test
+		#ret_HalInit = HalInit();
+			
+	END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- HalInit
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HALInitTick
+--------------------------------------------------------------------------------
+SERVICE HALInitTick
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT32 tick_priority;
+
+-- By function returned type declaration
+#T_HAL_STATUS ret_HALInitTick;
+
+ENVIRONMENT ENV_HALInitTick
+
+    VAR tick_priority,								init = 0,						ev = init
+    
+    VAR ret_HALInitTick,							init = HAL_OK,					ev = init
+    
+END ENVIRONMENT -- ENV_HALInitTick
+
+USE ENV_HALInitTick
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT  <TD> 
+	COMMENT  [hdulibstm32f7xxhal-HALInitTick-DB-LLR-001]
+	COMMENT  The function calls 'HALSysTickConfig' to initialize the System Timer and its interrupt
+	COMMENT  with minimum data range of System_core_clock .
+	COMMENT	 Equivalence Class 5
+	COMMENT
+	COMMENT	 [hdulibstm32f7xxhal-HALInitTick-DB-LLR-002]
+	COMMENT  The function calls 'HalNvicSetPriority' to set the priority of an interrupt with minimum data 
+	COMMENT  range of tick_priority
+	COMMENT	 Equivalence Class 6
+	COMMENT
+	COMMENT [hdulibstm32f7xxhal-HALInitTick-DB-LLR-003]
+	COMMENT The function returns with the status HAL_OK.
+	COMMENT	 Equivalence Class None
+	COMMENT  </TD>
+		  
+	ELEMENT
+			COMMENT INPUT SECTION:
+				--specifies the priority
+				VAR tick_priority,							init = 0x0U,					ev = init
+							
+				--Number of ticks between two interrupts.
+				VAR System_core_clock,						init = 0x0U,					ev = init
+		  
+			COMMENT OUTPUT SECTION:
+			
+				--returns function status
+				VAR ret_HALInitTick,						init = HAL_ERROR,				ev = HAL_OK
+		  
+			COMMENT INPUT/OUTPUT SECTION:
+		  
+				--NONE
+			SIMUL
+             
+				--Initializes the System Timer and its interrup
+				STUB HALSysTickConfig(System_core_clock/1000)0
+
+				--To set the priority of an interrupt
+				STUB HalNvicSetPriority(SYSTICK_IRQN, tick_priority,ZERO)
+             
+			END SIMUL
+
+			--calling the unit under test
+			#ret_HALInitTick = HALInitTick(tick_priority);
+            END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+	COMMENT Test Description
+	COMMENT  <TD> 
+	COMMENT  [hdulibstm32f7xxhal-HALInitTick-DB-LLR-001]
+	COMMENT  The function calls 'HALSysTickConfig' to initialize the System Timer and its interrupt
+	COMMENT  with maximum data range of System_core_clock .
+	COMMENT	 Equivalence Class 5
+	COMMENT
+	COMMENT	 [hdulibstm32f7xxhal-HALInitTick-DB-LLR-002]
+	COMMENT  The function calls 'HalNvicSetPriority' to set the priority of an interrupt with maximum data 
+	COMMENT  range of tick_priority
+	COMMENT	 Equivalence Class 6
+	COMMENT  </TD>
+		  
+	ELEMENT
+			COMMENT INPUT SECTION:
+				--specifies the priority
+				VAR tick_priority,						init = 0xFFFFFFFFU,					ev = init
+							
+				--Number of ticks between two interrupts.
+				VAR System_core_clock,					init = 0xFFFFFFFFU,					ev = init
+		        
+			COMMENT OUTPUT SECTION:
+			
+		  		--returns function status
+				VAR ret_HALInitTick,					init =HAL_ERROR,					ev = HAL_OK
+		  
+			COMMENT INPUT/OUTPUT SECTION:
+		  
+				--NONE
+			SIMUL
+             
+				--Initializes the System Timer and its interrup
+              
+				STUB HALSysTickConfig(System_core_clock/1000)0xFFFFFFFFU
+
+				--To set the priority of an interrupt
+            
+				STUB HalNvicSetPriority(SYSTICK_IRQN, tick_priority,ZERO)
+             
+			END SIMUL
+
+			--calling the unit under test
+        	#ret_HALInitTick = HALInitTick(tick_priority);
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT  <TD> 
+	COMMENT  [hdulibstm32f7xxhal-HALInitTick-DB-LLR-001]
+	COMMENT  The function calls 'HALSysTickConfig' to initialize the System Timer and its interrupt
+	COMMENT  with nominal data range of System_core_clock .
+	COMMENT	 Equivalence Class 5
+	COMMENT
+	COMMENT	 [hdulibstm32f7xxhal-HALInitTick-DB-LLR-002]
+	COMMENT  The function calls 'HalNvicSetPriority' to set the priority of an interrupt with nominal data 
+	COMMENT  range of tick_priority
+	COMMENT	 Equivalence Class 6
+	COMMENT  </TD>
+		  
+	ELEMENT
+			COMMENT INPUT SECTION:
+				--Specifies the priority
+				VAR tick_priority,					init =0x7FFFFFFFU,				ev = init
+		           
+		        --Number of ticks between two interrupts
+				VAR System_core_clock,				init = 0x7FFFFFFFU,	    		ev = init
+				
+			COMMENT OUTPUT SECTION:
+			
+				--returns function status
+				VAR ret_HALInitTick,				init =HAL_ERROR,				ev = HAL_OK
+		  
+			COMMENT INPUT/OUTPUT SECTION:
+		  
+				--NONE
+			SIMUL
+             
+				--Initializes the System Timer and its interrup
+              
+				STUB HALSysTickConfig(System_core_clock/1000)0xFFFFFFFFU
+
+				--To set the priority of an interrupt
+            
+				STUB HalNvicSetPriority(SYSTICK_IRQN, tick_priority,ZERO)
+             
+			END SIMUL
+
+			--calling the unit under test
+        	#ret_HALInitTick = HALInitTick(tick_priority);
+    END ELEMENT
+
+END TEST -- TEST 3
+END SERVICE -- HALInitTick
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalDelay
+--------------------------------------------------------------------------------
+SERVICE HalDelay
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    # volatile  T_UINT32 delay;
+
+    ENVIRONMENT ENV_HalDelay
+    VAR delay,		init = 0,		ev = init
+    END ENVIRONMENT -- ENV_HalDelay
+    USE ENV_HalDelay
+
+TEST 1
+FAMILY nominal
+COMMENT <TD>
+    COMMENT [hdulibstm32f7xxhal-HalDelay-DB-LLR-001]
+	COMMENT The function calls 'HALGetTick' to.provide time tick value in millisecond.
+	COMMENT  Equivalence Class 7
+	COMMENT
+	COMMENT [hdulibstm32f7xxhal-HalDelay-DB-LLR-002]
+	COMMENT  The function sets result of subtraction of return value of the function call HALGetTick and 
+	COMMENT  timer tick is less than delay.
+	COMMENT  Equivalence Class 8
+	COMMENT  Variable delay is been exercised for maximum value of its data range.
+	COMMENT  </TD>
+	
+	ELEMENT
+		COMMENT INPUT SECTION:
+			
+			--specifies the delay time length
+			VAR delay,							init =  4294967295,						ev = init
+		   		  
+		COMMENT OUTPUT SECTION:
+			--None 
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			--None
+		
+		--Stub Calls:
+		SIMUL
+		
+			--None
+				
+		END SIMUL
+		
+        --calling the unit under test         
+        #HalDelay(delay);
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+--TEST 2
+--FAMILY nominal
+--       COMMENT <TD>
+--   	COMMENT [hdulibstm32f7xxhal-HalDelay-DB-LLR-002]
+--   	COMMENT  The function sets result of subtraction of return value of the function call HALGetTick and 
+--   	COMMENT  timer tick is greater than delay.
+--   	COMMENT  Variable delay is been exercised for minimum - 1 value of its data range.
+--   	COMMENT  Equivalence Class 9
+--	COMMENT  </TD>
+--	
+--	ELEMENT
+--		COMMENT INPUT SECTION:
+--			
+--			--specifies the delay time length
+--			VAR delay,							init = -1,								ev = init
+--		   		  
+--		COMMENT OUTPUT SECTION:
+--			--None 
+--
+--		COMMENT INPUT/OUTPUT SECTION:
+--			--None
+--		
+--		Stub Calls:
+--		SIMUL
+--		
+--			--None
+--				
+--		END SIMUL
+--        --calling the unit under test         
+--        #HalDelay(delay);
+--    END ELEMENT
+--
+--END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+       COMMENT <TD>
+   	COMMENT [hdulibstm32f7xxhal-HalDelay-DB-LLR-002]
+   	COMMENT  The function sets result of subtraction of return value of the function call HALGetTick and 
+   	COMMENT  timer tick is equal to delay.
+   	COMMENT  Equivalence Class 10
+	COMMENT  </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+			
+			--specifies the delay time length
+			VAR delay,								init = 0,						ev = init
+		   		  
+		COMMENT OUTPUT SECTION:
+			--None 
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			--None
+		
+        --calling the unit under test         
+        #HalDelay(delay);
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+       COMMENT <TD>
+   COMMENT [hdulibstm32f7xxhal-HalDelay-DB-LLR-002]
+   	COMMENT  The function sets result of subtraction of return value of the function call HALGetTick and 
+   	COMMENT  timer tick is less than delay.
+   	COMMENT  Variable delay is been exercised for minimum+1 value of its data range.
+   	COMMENT  Equivalence Class 8
+   	
+	COMMENT  </TD>
+	
+	ELEMENT
+		COMMENT INPUT SECTION:
+			
+			--specifies the delay time length
+			VAR delay,								init = 1,							ev = init
+		   		  
+		COMMENT OUTPUT SECTION:
+			--None 
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			--None
+		
+        --calling the unit under test         
+        #HalDelay(delay);
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+       COMMENT <TD>
+   COMMENT [hdulibstm32f7xxhal-HalDelay-DB-LLR-002]
+   	COMMENT  The function sets result of subtraction of return value of the function call HALGetTick and 
+   	COMMENT  timer tick is less than delay.
+   	COMMENT  Variable delay is been exercised for nominal value of its data range.
+   	COMMENT  Equivalence Class 8
+   	
+	COMMENT  </TD>
+	
+	ELEMENT
+		COMMENT INPUT SECTION:
+			
+			--specifies the delay time length
+			VAR delay,								init = 2147483647,					ev = init
+		   		  
+		COMMENT OUTPUT SECTION:
+			--None 
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			--None
+		
+        --calling the unit under test         
+        #HalDelay(delay);
+    END ELEMENT
+
+END TEST -- TEST 5
+
+
+
+END SERVICE -- HalDelay
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalIncTick
+--------------------------------------------------------------------------------
+SERVICE HalIncTick
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhal-HalIncTick-DB-LLR-001]
+	COMMENT The function increments the timer tick by one which is used as application time base..
+	COMMENT  Equivalence Class none
+	COMMENT  </TD>
+	
+	ELEMENT
+        
+		COMMENT INPUT SECTION:
+		
+			--Temp variable added as there is no elements in the 
+			VAR PTU_temp, 						 init=0,					   ev=init
+				
+		COMMENT OUTPUT SECTION:
+			--None
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			--NONE
+			
+	    --calling the unit under test             
+        #HalIncTick();
+    END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- HalIncTick
+

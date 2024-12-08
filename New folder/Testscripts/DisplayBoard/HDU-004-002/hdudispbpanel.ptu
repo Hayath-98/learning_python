@@ -1,0 +1,864 @@
+HEADER hdudispbpanel, Source Code Ver : 1.6, TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+--
+-- Author Name         : Priyanka N
+--
+-- File Name           : hdudispbpanel.ptu
+--
+-- Test Creation Date  : 12.09.2017 
+--
+-- Tested Functions    : ErrorHandler
+--                       BspLcdSetPenColor
+--              	 	 LcdConfig
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--      1.1             12.09.2017       Priyanka N        Created the PTU file.
+--      1.2             11.11.2017       Priyanka N        Updated as per #PR100171
+--      1.3             14.11.2017       Priyanka N        Updated as per #PR100171
+--      1.4             12.04.2018       Akshay R k        Updated as per #PR100201
+--		1.5 			28.07.2020		 Harshitha R	   Updated as per #PR100267
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibstm32f7xxhal.h"            /* Header files for HAL driver*/
+##include "hdudispbpanel.h"                 /* Contains functions prototypes of hdudispbpanel*/
+##include "hdulibbasictypes.h"              /* Basic data types.*/
+##include "hdulibstm32f7xxhalltdc.h"        /* Header file of LTDC HAL module.*/
+##include "hdudispbboot.h"                  /* Contains functions prototypes of hdudispbboot.*/
+##include "hdulibstm32f746xx.h"             /* CMSIS Cortex-M7 Device Peripheral Access Layer */
+##include "hdulibstm32f7xxhaldef.h"         /* Contains the HAL defination module */
+##include "hdudispbappdata.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern T_LTDC_HANDLE Ltdc_handle;
+    #extern T_LTDC_LAYERCFG Player_cfg1;
+	#T_APPDATA_APPDATA_BOOT *Appdata_appdata_boot;
+
+    
+-- Declarations of the temporary variables
+
+    -- Temporary variables created to handle stub parameter 'pCLUT'
+    #T_UINT32 PTU_Out_pCLUT[16],PTU_In_pCLUT[16];
+    
+    -- Temporary variables created for loop usage
+    #T_UINT32 PTU_i;
+    
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hdudispbpanel.ptu
+    COMMENT
+    COMMENT Tested Functions : ErrorHandler
+    COMMENT                    BspLcdSetPenColor
+    COMMENT                    LcdConfig
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT 1. Snippet of code is added in function 'ErrorHandler' to terminate infinite loop
+    COMMENT while(ONE)
+    COMMENT {
+    COMMENT T_UINT16 PTU_count =0; /*local variable declared for testing purpose*/
+    COMMENT 
+    COMMENT    /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT    PTU_count++;
+    COMMENT    if(PTU_count == 4)
+    COMMENT    {
+    COMMENT         break;
+    COMMENT    } 
+    COMMENT    else
+    COMMENT    {
+    COMMENT         /*nothing*/
+    COMMENT    }
+    COMMENT }   
+    COMMENT Hence while loop cannot be tested for 0 and 1 times and FALSE condition cannot be achieved.
+    COMMENT 
+    COMMENT 2. Below Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+    COMMENT warning #191-D: type qualifier is meaningless on cast type
+	COMMENT
+	COMMENT 3. Header file "hdulibstm32f746xx.h" is modified for testing purpose. The macro 'LTDC' is modified for 
+    COMMENT stubbing hardware address.
+	COMMENT 
+	COMMENT /*Commented for testing purpose*/
+	COMMENT /* #define LTDC                ((T_LTDC *)LTDC_BASE) */
+	COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT T_LTDC PTU_LTDC;
+	COMMENT #define LTDC               ((T_LTDC *)&PTU_LTDC)
+	COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function "ErrorHandler" loops infinitely.
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function "LcdConfig", calls the function "HalLtdcInit"
+    COMMENT
+    COMMENT Class 3
+    COMMENT Function "LcdConfig", calls the function "HalLtdcConfigLayer"
+    COMMENT 
+    COMMENT Class 4
+    COMMENT Function "LcdConfig", calls the function "ErrorHandler"
+    COMMENT 
+    COMMENT Class 5
+    COMMENT Function "LcdConfig", calls the function "HalLtdcConfigClut"
+    COMMENT 
+    COMMENT Class 6
+    COMMENT Function "LcdConfig", calls the function "HalLtdcEnableClut"
+    COMMENT
+    COMMENT Class 7
+    COMMENT Function "BspLcdSetPenColor", sets the color of the displayed text
+    COMMENT 
+    COMMENT Class 8
+    COMMENT Function "LcdConfig", calls the macro "__HAL_LTDC_ENABLE_IT"
+    COMMENT
+    COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT </ECD>
+        
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+     DEFINE STUB hdudispbpanel_c
+
+           #T_HAL_STATUS HalLtdcEnableClut(T_LTDC_HANDLE *hltdc, T_UINT32 _in LayerIdx);
+        
+           -- Parameter 'pCLUT' is made as _no since static variable is passing as parameter to stub "HalLtdcConfigClut"
+           #T_HAL_STATUS HalLtdcConfigClut(T_LTDC_HANDLE *hltdc, T_UINT32 _no *pCLUT, T_UINT32 _in CLUTSize, T_UINT32 _in LayerIdx)
+           #{
+           #    for(PTU_i=0;PTU_i<CLUTSize;PTU_i++)
+           #  {
+           #    PTU_Out_pCLUT[PTU_i] = pCLUT[PTU_i];
+           #    pCLUT[PTU_i] = PTU_In_pCLUT[PTU_i];
+           #  }
+           # }
+        
+           #T_HAL_STATUS HalLtdcConfigLayer(T_LTDC_HANDLE *hltdc, T_LTDC_LAYERCFG *pLayerCfg, T_UINT32 _in LayerIdx);
+           #T_HAL_STATUS HalLtdcInit(T_LTDC_HANDLE *hltdc); 
+        
+     END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file
+
+ENVIRONMENT ENV_hdudispbpanel_c
+
+  STRUCTURE Ltdc_handle,        init = { Instance => NIL, Init => { HSPolarity => 0, VSPolarity => 0, DEPolarity => 0, PCPolarity
+  &                             => 0, HorizontalSync => 0, VerticalSync => 0, AccumulatedHBP => 0, AccumulatedVBP => 0, AccumulatedActiveW
+  &                             => 0, AccumulatedActiveH => 0, TotalWidth => 0, TotalHeigh => 0, Backcolor => { Blue => 0, Green 
+  &                             => 0, Red => 0, Reserved => 0 } }, LayerCfg => { others => { WindowX0 => 0, WindowX1 => 0, WindowY0 
+  &                             => 0 , WindowY1 => 0, PixelFormat => 0, Alpha => 0, Alpha0 => 0, BlendingFactor1 => 0, BlendingFactor2
+  &                             => 0, FBStartAdress => 0, ImageWidth => 0, ImageHeight => 0, Backcolor => { Blue => 0, Green => 0, Red 
+  &                             => 0, Reserved => 0 } } }, Lock => HAL_UNLOCKED, State => HAL_LTDC_STATE_RESET, ErrorCode => 0 },       ev = init
+  
+  STRUCTURE Player_cfg1,        init = { WindowX0 => 0, WindowX1 => 0, WindowY0 => 0, WindowY1 => 0, PixelFormat => 0, Alpha => 0, Alpha0 
+  &                             => 0, BlendingFactor1 => 0, BlendingFactor2 => 0, FBStartAdress => 0, ImageWidth => 0, ImageHeight 
+  &                             =>0, Backcolor => { Blue => 0, Green => 0, Red => 0, Reserved => 0 } },     ev = init
+
+  -- 'Pen_color' initialized before usage
+  VAR Pen_color,                init = BLACK_BPC,                              ev = init
+ 
+END ENVIRONMENT -- ENV_hdudispbpanel_c
+
+USE ENV_hdudispbpanel_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BspLcdSetPenColor
+--------------------------------------------------------------------------------
+SERVICE BspLcdSetPenColor
+SERVICE_TYPE extern
+
+    -- Holds the display color
+    #T_EPEN_COLOR color;
+
+    ENVIRONMENT ENV_BspLcdSetPenColor
+    
+    -- Initialized before usage
+    VAR color,      init = BLACK_BPC,       ev = init
+    
+    END ENVIRONMENT -- ENV_BspLcdSetPenColor
+    
+    USE ENV_BspLcdSetPenColor
+
+TEST 1
+FAMILY nominal
+
+      COMMENT Test Description 
+      COMMENT <TD>
+      COMMENT
+      COMMENT [hdudispbpanel-BspLcdSetPenColor-DB-LLR-001]
+      COMMENT Function sets Pen_color to Most significant bits of Pen_color bitwise OR color.
+      COMMENT    color is exercised for 'WHITE_BPC'
+      COMMENT   Equivalence class 7
+      COMMENT
+      COMMENT </TD>
+    
+      ELEMENT
+        
+        COMMENT INPUT SECTION:
+                
+            -- Parameter 'color' is set with 'WHITE_BPC'
+            VAR color,      init = WHITE_BPC,       ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+        
+            -- Global variable 'Pen_color' is updated as 'WHITE_BPC'
+            VAR Pen_color , init = BLACK_BPC,   ev = WHITE_BPC
+        
+        -- Stub calls :
+        SIMUL
+        
+            -- None
+            
+        END SIMUL
+         
+            -- Calling the Unit Under Test :
+            #BspLcdSetPenColor(color);
+        
+      END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+      COMMENT Test Description 
+      COMMENT <TD>
+      COMMENT
+      COMMENT [hdudispbpanel-BspLcdSetPenColor-DB-LLR-001]
+      COMMENT Function sets Pen_color to Most significant bits of Pen_color bitwise OR color.
+      COMMENT    color is exercised for 'DARK_BLUE_BPC'
+      COMMENT Equivalence class 7
+      COMMENT
+      COMMENT </TD>
+    
+      ELEMENT
+        
+        COMMENT INPUT SECTION:
+     
+            -- Parameter 'color' is set with 'DARK_BLUE_BPC'     
+            VAR color,      init = DARK_BLUE_BPC,       ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+        
+            -- Global variable 'Pen_color' is updated as 'DARK_BLUE_BPC'
+            VAR Pen_color , init = WHITE_BPC,   ev = DARK_BLUE_BPC
+        
+        -- Stub calls :
+        SIMUL
+        
+            -- None
+            
+        END SIMUL
+         
+            -- Calling the Unit Under Test :
+            #BspLcdSetPenColor(color);
+        
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+      COMMENT Test Description 
+      COMMENT <TD>
+      COMMENT
+      COMMENT [hdudispbpanel-BspLcdSetPenColor-DB-LLR-001]
+      COMMENT Function sets Pen_color to Most significant bits of Pen_color bitwise OR color.
+      COMMENT    color is exercised for 'BLACK_BPC'
+      COMMENT Equivalence class 7
+      COMMENT
+      COMMENT </TD>
+    
+      ELEMENT
+        
+        COMMENT INPUT SECTION:
+     
+            -- Parameter 'color' is set with 'DARK_BLUE_BPC'     
+            VAR color,      init = BLACK_BPC,       ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- None
+            
+        COMMENT OUTPUT SECTION:
+        
+            -- Global variable 'Pen_color' is updated as 'DARK_BLUE_BPC'
+            VAR Pen_color , init = WHITE_BPC,   ev = BLACK_BPC
+        
+        -- Stub calls :
+        SIMUL
+        
+            -- None
+            
+        END SIMUL
+         
+            -- Calling the Unit Under Test :
+            #BspLcdSetPenColor(color);
+        
+        END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- BspLcdSetPenColor
+
+--------------------------------------------------------------------------------
+-- Declaration of the service LcdConfig
+--------------------------------------------------------------------------------
+SERVICE LcdConfig
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+      COMMENT Test Description 
+      COMMENT <TD>
+      COMMENT
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-001]
+      COMMENT Function does the following:
+      COMMENT 1.Sets HSPolarity of Init of Ltdc_handle to LTDC_HSPOLARITY_AL.
+      COMMENT 2.Sets VSPolarity of Init of Ltdc_handle to LTDC_VSPOLARITY_AL.
+      COMMENT 3.Sets DEPolarity of Init of Ltdc_handle to LTDC_DEPOLARITY_AL.
+      COMMENT 4.Sets PCPolarity of Init of Ltdc_handle to LTDC_PCPOLARITY_IPC.
+      COMMENT Equivalence Class None
+      COMMENT   
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-002]
+      COMMENT Function does the following:
+      COMMENT 1.Sets HorizontalSync of Init of Ltdc_handle to difference of PANEL_HSYNC and ONE.
+      COMMENT 2.Sets VerticalSync of Init of Ltdc_handle to difference of PANEL_VSYNC and ONE.
+      COMMENT 3.Sets AccumulatedHBP of Init of Ltdc_handle to sum of PANEL_HSYNC and PANEL_HBP subtracted with ONE.
+      COMMENT 4.Sets AccumulatedVBP of Init of Ltdc_handle to sum of PANEL_VSYNC and PANEL_VBP subtracted with ONE.
+      COMMENT 5.Sets AccumulatedActiveH of Init of Ltdc_handle to sum of PANEL_HEIGHT, 
+      COMMENT       PANEL_VSYNC and PANEL_VBP subtracted with ONE.
+      COMMENT 6.Sets AccumulatedActiveW of Init of Ltdc_handle to sum of PANEL_WIDTH, PANEL_HSYNC and 
+      COMMENT       PANEL_HBP subtracted with ONE.
+      COMMENT 7.Sets TotalHeigh of Init of Ltdc_handle to sum of PANEL_HEIGHT, PANEL_VSYNC, PANEL_VBP
+      COMMENT       and PANEL_VFP subtracted with ONE.
+      COMMENT 8.Sets TotalWidth of Init of Ltdc_handle to sum of PANEL_WIDTH, PANEL_HSYNC,
+      COMMENT       PANEL_HBP and PANEL_HFP subtracted with ONE.
+      COMMENT Equivalence Class None
+      COMMENT   
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-003]
+      COMMENT Function does the following to configure R,G,B component values for LCD background color:
+      COMMENT 1.Sets Blue of Backcolor of Init of Ltdc_handle to ZERO.
+      COMMENT 2.Sets Green of Backcolor of Init of Ltdc_handle to ZERO.
+      COMMENT 3.Sets Red of Backcolor of Init of Ltdc_handle to ZERO.
+      COMMENT 4.Sets Instance of Ltdc_handle to LTDC.
+      COMMENT Equivalence Class None
+      COMMENT
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-004]
+      COMMENT Function does the following to do window configuration:
+      COMMENT 1.Sets WindowX0 of Player_cfg1 to ZERO.
+      COMMENT 2.Sets WindowX1 of Player_cfg1 to PANEL_WIDTH.
+      COMMENT 3.Sets WindowY0 of Player_cfg1 to ZERO.
+      COMMENT 4.Sets WindowY1 of Player_cfg1 to PANEL_HEIGHT.
+      COMMENT Equivalence Class None
+      COMMENT
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-005]
+      COMMENT Function does the following:
+      COMMENT 1.Sets PixelFormat of Player_cfg1 to FOREGROUND_PIXEL_FORMAT.
+      COMMENT 2.Sets FBStartAdress of Player_cfg1 to FB_ADDR.
+      COMMENT 3.Sets Alpha of Player_cfg1 to TWOHUNDRED_FIFTY_FIVE.
+      COMMENT 4.Sets Alpha0 of Player_cfg1 to TWOHUNDRED_FIFTY_FIVE.
+      COMMENT 5.Sets Blue of Backcolor of Player_cfg1 to ZERO.
+      COMMENT 6.Sets Green of Backcolor of Player_cfg1 to ZERO
+      COMMENT 7.Sets Red of Backcolor of Player_cfg1 to TWOHUNDRED_FIFTY_FIVE.
+      COMMENT Equivalence Class None
+      COMMENT
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-006]
+      COMMENT Function does the following to configure blending factors:
+      COMMENT 1.Sets BlendingFactor1 of Player_cfg1 to LTDC_BLENDING_FACTOR1_PAXCA.
+      COMMENT 2.Sets BlendingFactor2 of Player_cfg1 to LTDC_BLENDING_FACTOR2_PAXCA.
+      COMMENT Equivalence Class None
+      COMMENT
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-007]
+      COMMENT Function does the following to configure the number of lines and number of pixels per line:
+      COMMENT 1. Sets ImageWidth of Player_cfg1 to PANEL_WIDTH.
+      COMMENT 2. Sets ImageHeight of Player_cfg1 to PANEL_HEIGHT.
+      COMMENT Equivalence Class None
+      COMMENT
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-008]
+      COMMENT Function does nothing when return value of the function 
+      COMMENT   HalLtdcInit with reference to Ltdc_handle is equal to HAL_OK.
+      COMMENT Equivalence Class 2
+      COMMENT   
+      COMMENT [hdudispbpanel-ErrorHandler-DB-LLR-001]
+      COMMENT Function loops infinitely.
+      COMMENT Equivalence Class 1,4
+      COMMENT
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-009]
+      COMMENT Function calls the function __HAL_LTDC_ENABLE_IT with reference to Ltdc_handle and LTDC_IT_LI as its parameter.
+      COMMENT Equivalence Class 8
+      COMMENT   
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-010]  
+      COMMENT Function does nothing when return value of the function HalLtdcConfigLayer with 
+      COMMENT   reference to Ltdc_handle, reference of Player_cfg1 and ONE is equal to  HAL_OK else.
+      COMMENT Equivalence Class 3
+      COMMENT   
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-011]
+      COMMENT Function calls the function HalLtdcConfigClut with reference to Ltdc_handle, Color_lookup_table, 
+      COMMENT   SIXTEEN and ONE as its parameter.
+      COMMENT Equivalence Class 5
+      COMMENT   
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-012]
+      COMMENT Function calls the function HalLtdcEnableClut with reference to Ltdc_handle, Color_lookup_table, 
+      COMMENT   SIXTEEN and ONE as its parameter.
+      COMMENT Equivalence Class 6
+      COMMENT
+      COMMENT </TD>
+      
+      ELEMENT
+                        
+      COMMENT INPUT SECTION:
+        
+		VAR Appdata_appdata_boot->PanelStruct.PanelHSync,		init = 130,				ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelVSync,		init = 10,			ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelHBP,		init = 30,			ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelVbp,		init = 10,			ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelHeight,		init = 480,			ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelWidth,		init = 800,			ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelVfp,		init = 20,			ev = init
+
+		VAR Appdata_appdata_boot->PanelStruct.PanelHFP,		init = 10,			ev = init
+
+
+
+
+      COMMENT INPUT/OUTPUT SECTION:
+
+      -- Input values  are set to variable 'PTU_In_pCLUT'
+      VAR PTU_In_pCLUT[0],              init = ((T_UINT32)0x00000),         ev = init
+      VAR PTU_In_pCLUT[1],              init = ((T_UINT32)0x800000),        ev = init
+      VAR PTU_In_pCLUT[2],              init = ((T_UINT32)0xff0000),        ev = init
+      VAR PTU_In_pCLUT[3],              init = ((T_UINT32)0xff00ff),        ev = init
+      VAR PTU_In_pCLUT[4],              init = ((T_UINT32)0x00ffff),        ev = init
+      VAR PTU_In_pCLUT[5],              init = ((T_UINT32)0x008000),        ev = init
+      VAR PTU_In_pCLUT[6],              init = ((T_UINT32)0x00ff00),        ev = init
+      VAR PTU_In_pCLUT[7],              init = ((T_UINT32)0x00ffff),        ev = init
+      VAR PTU_In_pCLUT[8],              init = ((T_UINT32)0x000080),        ev = init
+      VAR PTU_In_pCLUT[9],              init = ((T_UINT32)0x800080),        ev = init
+      VAR PTU_In_pCLUT[10],             init = ((T_UINT32)0x0000ff),        ev = init
+      VAR PTU_In_pCLUT[11],             init = ((T_UINT32)0xc0c0c0),        ev = init
+      VAR PTU_In_pCLUT[12],             init = ((T_UINT32)0x808080),        ev = init
+      VAR PTU_In_pCLUT[13],             init = ((T_UINT32)0x808000),        ev = init
+      VAR PTU_In_pCLUT[14],             init = ((T_UINT32)0xffff00),        ev = init
+      VAR PTU_In_pCLUT[15],             init = ((T_UINT32)0xffffff),        ev = init
+
+      -- Values passed at 'PTU_In_pCLUT' are expected as output through variable 'PTU_Out_pCLUT'
+      VAR PTU_Out_pCLUT[0],             init = 10 ,             ev = ((T_UINT32)0x00000)
+      VAR PTU_Out_pCLUT[1],             init = 10 ,             ev = ((T_UINT32)0x800000)
+      VAR PTU_Out_pCLUT[2],             init = 10 ,             ev = ((T_UINT32)0xff0000)
+      VAR PTU_Out_pCLUT[3],             init = 10 ,             ev = ((T_UINT32)0xff00ff)
+      VAR PTU_Out_pCLUT[4],             init = 10 ,             ev = ((T_UINT32)0x00ffff)
+      VAR PTU_Out_pCLUT[5],             init = 10 ,             ev = ((T_UINT32)0x008000)
+      VAR PTU_Out_pCLUT[6],             init = 10 ,             ev = ((T_UINT32)0x00ff00)
+      VAR PTU_Out_pCLUT[7],             init = 10 ,             ev = ((T_UINT32)0x00ffff)
+      VAR PTU_Out_pCLUT[8],             init = 10 ,             ev = ((T_UINT32)0x000080)  
+      VAR PTU_Out_pCLUT[9],             init = 10 ,             ev = ((T_UINT32)0x800080)
+      VAR PTU_Out_pCLUT[10],                init = 10 ,             ev = ((T_UINT32)0x0000ff)
+      VAR PTU_Out_pCLUT[11],                init = 10 ,             ev = ((T_UINT32)0xc0c0c0)
+      VAR PTU_Out_pCLUT[12],                init = 10 ,             ev = ((T_UINT32)0x808080)     
+      VAR PTU_Out_pCLUT[13],                init = 10 ,             ev = ((T_UINT32)0x808000)     
+      VAR PTU_Out_pCLUT[14],                init = 10 ,             ev = ((T_UINT32)0xffff00)     
+      VAR PTU_Out_pCLUT[15],                init = 10 ,             ev = ((T_UINT32)0xffffff)
+                                  
+      COMMENT OUTPUT SECTION:
+              
+      -- horizontal synchronization polarity updated as active low
+      VAR Ltdc_handle.Init.HSPolarity,      init = 10 ,                 ev = LTDC_HSPOLARITY_AL
+
+      -- Vertical synchronization polarity updated as active low
+      VAR Ltdc_handle.Init.VSPolarity,      init = 10 ,                 ev = LTDC_VSPOLARITY_AL
+
+      -- Data enable polarity updated as active low 
+      VAR Ltdc_handle.Init.DEPolarity,      init= 10 ,                  ev = LTDC_DEPOLARITY_AL
+
+      -- Pixel clock polarity updated as input pixel clock
+      VAR Ltdc_handle.Init.PCPolarity,          init = 20 ,                 ev = LTDC_PCPOLARITY_IPC
+
+      -- Expected 'HorizontalSync of Init of Ltdc_handle' as difference of PANEL_HSYNC and ONE.
+      VAR Ltdc_handle.Init.HorizontalSync,      init = 130 ,                ev = 129
+
+      -- Expected 'VerticalSync of Init of Ltdc_handle' as difference of PANEL_VSYNC and ONE.
+      VAR Ltdc_handle.Init.VerticalSync,        init = 10 ,                 ev = 9
+
+      -- Expected 'AccumulatedHBP of Init of Ltdc_handle' as sum of PANEL_HSYNC and PANEL_HBP subtracted with ONE.
+      VAR Ltdc_handle.Init.AccumulatedHBP,      init = 160 ,                ev = 159
+
+      -- Expected 'AccumulatedVBP of Init of Ltdc_handle' as sum of PANEL_VSYNC and PANEL_VBP subtracted with ONE.
+      VAR Ltdc_handle.Init.AccumulatedVBP,      init = 20 ,                 ev = 19
+
+      -- Expected 'AccumulatedActiveH of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC
+      --    and PANEL_VBP subtracted with ONE.
+      VAR Ltdc_handle.Init.AccumulatedActiveH,  init = 500 ,                ev = 499
+
+      -- Expected 'AccumulatedActiveW of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC and 
+      --    PANEL_HBP subtracted with ONE.
+      VAR Ltdc_handle.Init.AccumulatedActiveW,  init  = 960 ,               ev = 959
+
+      -- Expected 'TotalHeigh of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC, PANEL_VBP and
+      --    PANEL_VFP subtracted with ONE.
+      VAR Ltdc_handle.Init.TotalHeigh,      init = 520 ,                ev = 519
+
+      -- Expected 'TotalWidth of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC, PANEL_HBP and
+      --    PANEL_HFP subtracted with ONE.
+      VAR Ltdc_handle.Init.TotalWidth,      init = 970 ,                ev = 969
+
+      -- Expected 'Blue of Backcolor of Init of Ltdc_handle' as ZERO.
+      VAR Ltdc_handle.Init.Backcolor.Blue,      init = ONE ,                ev = ZERO 
+
+      -- Expected 'Green of Backcolor of Init of Ltdc_handle' as ZERO.
+      VAR Ltdc_handle.Init.Backcolor.Green,     init = ONE ,                ev = ZERO 
+
+      -- Expected 'Red of Backcolor of Init of Ltdc_handle' as ZERO.
+      VAR Ltdc_handle.Init.Backcolor.Red,       init = ONE ,                ev = ZERO 
+
+      -- Expected 'WindowX0 of Player_cfg1' as ZERO.
+      VAR Player_cfg1.WindowX0,             init = ONE ,                ev = ZERO 
+
+      -- Expected 'WindowX1 of Player_cfg1' as PANEL_WIDTH.
+      VAR Player_cfg1.WindowX1,             init = PANEL_HEIGHT ,           ev = PANEL_WIDTH
+
+      -- Expected 'WindowY0 of Player_cfg1' as ZERO.
+      VAR Player_cfg1.WindowY0,             init = ONE ,                ev = ZERO 
+
+      -- Expected 'WindowY1 of Player_cfg1' as PANEL_HEIGHT.
+      VAR Player_cfg1.WindowY1,             init = PANEL_WIDTH ,            ev = PANEL_HEIGHT
+
+      -- Expected 'PixelFormat of Player_cfg1' as FOREGROUND_PIXEL_FORMAT.
+      VAR Player_cfg1.PixelFormat,          init = PANEL_WIDTH ,            ev = FOREGROUND_PIXEL_FORMAT
+
+      -- Expected 'FBStartAdress of Player_cfg1' as FB_ADDR.
+      VAR Player_cfg1.FBStartAdress,        init = 10 ,                 ev = (T_UINT32)FB_ADDR 
+
+      -- Expected 'Alpha of Player_cfg1' as TWOHUNDRED_FIFTY_FIVE.
+      VAR Player_cfg1.Alpha,            init = 100 ,                ev = TWOHUNDRED_FIFTY_FIVE
+
+      -- Expected 'Alpha0 of Player_cfg1' as TWOHUNDRED_FIFTY_FIVE.
+      VAR Player_cfg1.Alpha0,           init = 100 ,                ev = TWOHUNDRED_FIFTY_FIVE
+
+      -- Expected 'Blue of Backcolor of Player_cfg1' as ZERO.
+      VAR Player_cfg1.Backcolor.Blue,       init = ONE ,                ev = ZERO 
+
+      -- Expected 'Green of Backcolor of Player_cfg1' as ZERO
+      VAR Player_cfg1.Backcolor.Green,      init = ONE ,                ev = ZERO 
+
+      -- Expected 'Red of Backcolor of Player_cfg1' as TWOHUNDRED_FIFTY_FIVE.
+      VAR Player_cfg1.Backcolor.Red,        init = 100 ,                ev = TWOHUNDRED_FIFTY_FIVE
+
+      -- Expected 'BlendingFactor1 of Player_cfg1' as LTDC_BLENDING_FACTOR1_PAXCA.
+      VAR Player_cfg1.BlendingFactor1,      init = 100 ,                ev = LTDC_BLENDING_FACTOR1_PAXCA
+
+      -- Expected 'BlendingFactor2 of Player_cfg1' as LTDC_BLENDING_FACTOR2_PAXCA.
+      VAR Player_cfg1.BlendingFactor2,      init = 100 ,                ev = LTDC_BLENDING_FACTOR2_PAXCA
+
+      -- Expected 'ImageWidth of Player_cfg1' as PANEL_WIDTH.
+      VAR Player_cfg1.ImageWidth,           init = PANEL_HEIGHT ,           ev = PANEL_WIDTH
+
+      -- Expected 'ImageHeight of Player_cfg1' as PANEL_HEIGHT.
+      VAR Player_cfg1.ImageHeight,          init = PANEL_WIDTH ,            ev = PANEL_HEIGHT
+
+      -- Expected 'Instance of Ltdc_handle' as LTDC.
+      VAR Ltdc_handle.Instance,             init =0x10 ,                ev =LTDC
+        
+      -- Stub calls :
+      SIMUL
+        
+        -- To Initialize the LTDC
+        STUB HalLtdcInit(&Ltdc_handle)HAL_OK
+        
+        -- To configure the LTDC Layer
+        STUB HalLtdcConfigLayer(&Ltdc_handle,&Player_cfg1,ONE)HAL_OK
+        
+        -- To Load the color lookup table.
+        STUB HalLtdcConfigClut(&Ltdc_handle,SIXTEEN,ONE)HAL_OK
+        
+        -- To enable the color lookup table.
+        STUB HalLtdcEnableClut(&Ltdc_handle,ONE)HAL_OK
+        
+      END SIMUL   
+        
+    -- Calling the Unit Under Test :
+        #LcdConfig();
+        
+      END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+      COMMENT Test Description 
+      COMMENT <TD>
+      COMMENT
+      COMMENT
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-008]
+      COMMENT   Function calls the function ErrorHandler when return value of the function 
+      COMMENT       HalLtdcInit with reference to Ltdc_handle is not equal to  HAL_OK.
+      COMMENT Equivalence Class 2, 4
+      COMMENT   
+      COMMENT [hdudispbpanel-LcdConfig-DB-LLR-010]  
+      COMMENT   Function calls the function ErrorHandler when return value of the function HalLtdcConfigLayer with 
+      COMMENT       reference to Ltdc_handle, reference of Player_cfg1 and ONE is not equal to  HAL_OK.
+      COMMENT Equivalence Class 3, 4
+      COMMENT
+      COMMENT </TD>
+    
+      ELEMENT
+                        
+      COMMENT INPUT SECTION:
+        
+		VAR Appdata_appdata_boot->PanelStruct.PanelHSync,		init = 130,				ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelVSync,		init = 10,			ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelHBP,		init = 30,			ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelVbp,		init = 10,			ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelHeight,		init = 480,			ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelWidth,		init = 800,			ev = init
+		
+		VAR Appdata_appdata_boot->PanelStruct.PanelVfp,		init = 20,			ev = init
+
+		VAR Appdata_appdata_boot->PanelStruct.PanelHFP,		init = 10,			ev = init        
+      COMMENT INPUT/OUTPUT SECTION:
+
+      -- Input values  are set to variable 'PTU_In_pCLUT'
+      VAR PTU_In_pCLUT[0],              init = ((T_UINT32)0x00000),         ev = init
+      VAR PTU_In_pCLUT[1],              init = ((T_UINT32)0x800000),        ev = init
+      VAR PTU_In_pCLUT[2],              init = ((T_UINT32)0xff0000),        ev = init
+      VAR PTU_In_pCLUT[3],              init = ((T_UINT32)0xff00ff),        ev = init
+      VAR PTU_In_pCLUT[4],              init = ((T_UINT32)0x00ffff),        ev = init
+      VAR PTU_In_pCLUT[5],              init = ((T_UINT32)0x008000),        ev = init
+      VAR PTU_In_pCLUT[6],              init = ((T_UINT32)0x00ff00),        ev = init
+      VAR PTU_In_pCLUT[7],              init = ((T_UINT32)0x00ffff),        ev = init
+      VAR PTU_In_pCLUT[8],              init = ((T_UINT32)0x000080),        ev = init
+      VAR PTU_In_pCLUT[9],              init = ((T_UINT32)0x800080),        ev = init
+      VAR PTU_In_pCLUT[10],             init = ((T_UINT32)0x0000ff),        ev = init
+      VAR PTU_In_pCLUT[11],             init = ((T_UINT32)0xc0c0c0),        ev = init
+      VAR PTU_In_pCLUT[12],             init = ((T_UINT32)0x808080),        ev = init
+      VAR PTU_In_pCLUT[13],             init = ((T_UINT32)0x808000),        ev = init
+      VAR PTU_In_pCLUT[14],             init = ((T_UINT32)0xffff00),        ev = init
+      VAR PTU_In_pCLUT[15],             init = ((T_UINT32)0xffffff),        ev = init
+
+      -- Values passed at 'PTU_In_pCLUT' are expected as output through variable 'PTU_Out_pCLUT'
+      VAR PTU_Out_pCLUT[0],             init = 10 ,             ev = ((T_UINT32)0x00000)
+      VAR PTU_Out_pCLUT[1],             init = 10 ,             ev = ((T_UINT32)0x800000)
+      VAR PTU_Out_pCLUT[2],             init = 10 ,             ev = ((T_UINT32)0xff0000)
+      VAR PTU_Out_pCLUT[3],             init = 10 ,             ev = ((T_UINT32)0xff00ff)
+      VAR PTU_Out_pCLUT[4],             init = 10 ,             ev = ((T_UINT32)0x00ffff)
+      VAR PTU_Out_pCLUT[5],             init = 10 ,             ev = ((T_UINT32)0x008000)
+      VAR PTU_Out_pCLUT[6],             init = 10 ,             ev = ((T_UINT32)0x00ff00)
+      VAR PTU_Out_pCLUT[7],             init = 10 ,             ev = ((T_UINT32)0x00ffff)
+      VAR PTU_Out_pCLUT[8],             init = 10 ,             ev = ((T_UINT32)0x000080)  
+      VAR PTU_Out_pCLUT[9],             init = 10 ,             ev = ((T_UINT32)0x800080)
+      VAR PTU_Out_pCLUT[10],                init = 10 ,             ev = ((T_UINT32)0x0000ff)
+      VAR PTU_Out_pCLUT[11],                init = 10 ,             ev = ((T_UINT32)0xc0c0c0)
+      VAR PTU_Out_pCLUT[12],                init = 10 ,             ev = ((T_UINT32)0x808080)     
+      VAR PTU_Out_pCLUT[13],                init = 10 ,             ev = ((T_UINT32)0x808000)     
+      VAR PTU_Out_pCLUT[14],                init = 10 ,             ev = ((T_UINT32)0xffff00)     
+      VAR PTU_Out_pCLUT[15],                init = 10 ,             ev = ((T_UINT32)0xffffff)
+          
+      COMMENT OUTPUT SECTION:
+      
+      -- horizontal synchronization polarity updated as active low
+      VAR Ltdc_handle.Init.HSPolarity,          init = 10 ,             ev = LTDC_HSPOLARITY_AL
+
+      -- Vertical synchronization polarity updated as active low
+      VAR Ltdc_handle.Init.VSPolarity,          init = 10 ,             ev = LTDC_VSPOLARITY_AL
+
+      -- Data enable polarity updated as active low 
+      VAR Ltdc_handle.Init.DEPolarity,          init= 10 ,          ev = LTDC_DEPOLARITY_AL
+
+      -- Pixel clock polarity updated as input pixel clock
+      VAR Ltdc_handle.Init.PCPolarity,              init = 20 ,             ev = LTDC_PCPOLARITY_IPC
+
+      -- Expected 'HorizontalSync of Init of Ltdc_handle' as difference of PANEL_HSYNC and ONE.
+      VAR Ltdc_handle.Init.HorizontalSync,          init = 130 ,            ev = 129
+
+      -- Expected 'VerticalSync of Init of Ltdc_handle' as difference of PANEL_VSYNC and ONE.
+      VAR Ltdc_handle.Init.VerticalSync,            init = 10 ,             ev = 9
+
+      -- Expected 'AccumulatedHBP of Init of Ltdc_handle' as sum of PANEL_HSYNC and PANEL_HBP subtracted with ONE.
+      VAR Ltdc_handle.Init.AccumulatedHBP,          init = 160 ,            ev = 159
+
+      -- Expected 'AccumulatedVBP of Init of Ltdc_handle' as sum of PANEL_VSYNC and PANEL_VBP subtracted with ONE.
+      VAR Ltdc_handle.Init.AccumulatedVBP,          init = 20 ,             ev = 19
+
+      -- Expected 'AccumulatedActiveH of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC
+      --    and PANEL_VBP subtracted with ONE.
+      VAR Ltdc_handle.Init.AccumulatedActiveH,      init = 500 ,            ev = 499
+
+      -- Expected 'AccumulatedActiveW of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC and 
+      --    PANEL_HBP subtracted with ONE.
+      VAR Ltdc_handle.Init.AccumulatedActiveW,      init  = 960 ,           ev = 959
+
+      -- Expected 'TotalHeigh of Init of Ltdc_handle' as sum of PANEL_HEIGHT, PANEL_VSYNC, PANEL_VBP and
+      --    PANEL_VFP subtracted with ONE.
+      VAR Ltdc_handle.Init.TotalHeigh,          init = 520 ,            ev = 519
+
+      -- Expected 'TotalWidth of Init of Ltdc_handle' as sum of PANEL_WIDTH, PANEL_HSYNC, PANEL_HBP and
+      --    PANEL_HFP subtracted with ONE.
+      VAR Ltdc_handle.Init.TotalWidth,          init = 970 ,            ev = 969
+
+      -- Expected 'Blue of Backcolor of Init of Ltdc_handle' as ZERO.
+      VAR Ltdc_handle.Init.Backcolor.Blue,          init = ONE ,            ev = ZERO 
+
+      -- Expected 'Green of Backcolor of Init of Ltdc_handle' as ZERO.
+      VAR Ltdc_handle.Init.Backcolor.Green,         init = ONE ,            ev = ZERO 
+
+      -- Expected 'Red of Backcolor of Init of Ltdc_handle' as ZERO.
+      VAR Ltdc_handle.Init.Backcolor.Red,           init = ONE ,            ev = ZERO 
+
+      -- Expected 'WindowX0 of Player_cfg1' as ZERO.
+      VAR Player_cfg1.WindowX0,                 init = ONE ,            ev = ZERO 
+
+      -- Expected 'WindowX1 of Player_cfg1' as PANEL_WIDTH.
+      VAR Player_cfg1.WindowX1,                 init = PANEL_HEIGHT ,       ev = PANEL_WIDTH
+
+      -- Expected 'WindowY0 of Player_cfg1' as ZERO.
+      VAR Player_cfg1.WindowY0,                 init = ONE ,            ev = ZERO 
+
+      -- Expected 'WindowY1 of Player_cfg1' as PANEL_HEIGHT.
+      VAR Player_cfg1.WindowY1,                 init = PANEL_WIDTH ,        ev = PANEL_HEIGHT
+
+      -- Expected 'PixelFormat of Player_cfg1' as FOREGROUND_PIXEL_FORMAT.
+      VAR Player_cfg1.PixelFormat,              init = PANEL_WIDTH ,        ev = FOREGROUND_PIXEL_FORMAT
+
+      -- Expected 'FBStartAdress of Player_cfg1' as FB_ADDR.
+      VAR Player_cfg1.FBStartAdress,            init = 10 ,             ev = (T_UINT32)FB_ADDR 
+
+      -- Expected 'Alpha of Player_cfg1' as TWOHUNDRED_FIFTY_FIVE.
+      VAR Player_cfg1.Alpha,                init = 100 ,            ev = TWOHUNDRED_FIFTY_FIVE
+
+      -- Expected 'Alpha0 of Player_cfg1' as TWOHUNDRED_FIFTY_FIVE.
+      VAR Player_cfg1.Alpha0,               init = 100 ,            ev = TWOHUNDRED_FIFTY_FIVE
+
+      -- Expected 'Blue of Backcolor of Player_cfg1' as ZERO.
+      VAR Player_cfg1.Backcolor.Blue,           init = ONE ,            ev = ZERO 
+
+      -- Expected 'Green of Backcolor of Player_cfg1' as ZERO
+      VAR Player_cfg1.Backcolor.Green,          init = ONE ,            ev = ZERO 
+
+      -- Expected 'Red of Backcolor of Player_cfg1' as TWOHUNDRED_FIFTY_FIVE.
+      VAR Player_cfg1.Backcolor.Red,            init = 100 ,            ev = TWOHUNDRED_FIFTY_FIVE
+
+      -- Expected 'BlendingFactor1 of Player_cfg1' as LTDC_BLENDING_FACTOR1_PAXCA.
+      VAR Player_cfg1.BlendingFactor1,          init = 100 ,            ev = LTDC_BLENDING_FACTOR1_PAXCA
+
+      -- Expected 'BlendingFactor2 of Player_cfg1' as LTDC_BLENDING_FACTOR2_PAXCA.
+      VAR Player_cfg1.BlendingFactor2,          init = 100 ,            ev = LTDC_BLENDING_FACTOR2_PAXCA
+
+      -- Expected 'ImageWidth of Player_cfg1' as PANEL_WIDTH.
+      VAR Player_cfg1.ImageWidth,               init = PANEL_HEIGHT ,       ev = PANEL_WIDTH
+
+      -- Expected 'ImageHeight of Player_cfg1' as PANEL_HEIGHT.
+      VAR Player_cfg1.ImageHeight,              init = PANEL_WIDTH ,        ev = PANEL_HEIGHT
+
+      -- Expected 'Instance of Ltdc_handle' as LTDC.
+      VAR Ltdc_handle.Instance,                 init =0x10 ,            ev =LTDC
+      
+      -- Stub calls :
+      SIMUL
+
+      -- To Initialize the LTDC
+      STUB HalLtdcInit(&Ltdc_handle)HAL_ERROR
+          
+      -- To configure the LTDC Layer
+      STUB HalLtdcConfigLayer(&Ltdc_handle,&Player_cfg1,ONE)HAL_ERROR
+          
+      -- To Load the color lookup table.
+      STUB HalLtdcConfigClut(&Ltdc_handle,SIXTEEN, ONE)HAL_OK
+          
+      -- To enable the color lookup table.        
+      STUB HalLtdcEnableClut(&Ltdc_handle,ONE)HAL_OK
+      
+      END SIMUL   
+      
+      -- Calling the Unit Under Test :
+      #LcdConfig();
+        
+      END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- LcdConfig
+
+

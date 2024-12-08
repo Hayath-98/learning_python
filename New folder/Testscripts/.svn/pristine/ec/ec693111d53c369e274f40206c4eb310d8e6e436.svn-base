@@ -1,0 +1,938 @@
+HEADER hducommfa429 , Source Code Ver : 1.9 , TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name          :   Akshay Kanagali
+--                          Santosh Mithari
+--
+-- File Name            :   hducommfa429_1.ptu
+--
+-- Test Creation Date   :   30.10.2017
+--
+-- Tested Functions     :   A429Init
+--                          TransmitArinc429
+--                          A429Task
+--                          ProcessArincWord
+--                          ReceiveArinc429
+--                          InitChannels
+--                          InitTimingA429
+--                                            
+-- Version History      :
+--
+-- TEST-VERSION         TEST-DATE         TESTER NAME           MODIFICATIONS
+-- ------------        -----------        -----------           -------------
+--    1.1              30.10.2017         Akshay Kanagali       Created the PTU file
+--                                        Santosh Mithari                           
+--    1.2              10.11.2017         Akshay Kanagali       Updated as per #PR100171
+--                                        Santosh Mithari
+--    1.3              14.11.2017         Akshay Kanagali       Updated as per #PR100171
+--                                        Santosh Mithari  
+--    1.4              10.04.2018         Hemalatha S           Updated as per #PR100201
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hducommfa429.h"                
+##include "hducommfarinc825.h"            
+##include "hducommfhw.h"                  
+##include "hducommfoscfg.h"               
+##include "hducommftbase.h"               
+##include "hdulibbasicfunc.h"             
+##include "hdulibstm32f4xxfsmc.h"         
+##include "hducommfucos.h"                
+##include "hducommfdauprofile.h"     
+##include "hducommfapp.h"        
+##include "hducommfwdog.h"     
+
+##define A429_LOOP_ERR_VAL      0x40
+##define MS_HIGH                1U
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #T_UINT8 App_active_transmit; 
+
+-- Declarations of the temporary variables of the tested file
+
+    --variable used in stub FsmcNorSramInit
+    #T_FSMC_NORSRAM_INIT PTU_fsmc_norsraminit_struct;
+    #T_FSMC_NORSRAM_TIMING_INIT PTU_fsmc_write_timing_struct,PTU_fsmc_readwrite_timing_struct;
+    
+    --Variable used in stub OsSemPend
+    #T_OS_EVENT *PTU_ps_semaphore2;
+    #T_UBYTE PTU_error;
+    
+    --Variable used in stub TbaseTaskSignaling
+    #T_OS_EVENT *PTU_ps_semaphore1;
+     
+    -- Variable used in stub OsSemCreate
+    #T_OS_EVENT PTU_Sem_a429_task;
+    
+    --Variable used in stub HwMemcpy
+    #T_UINT8 PTU_p_dest[30][8],PTU_p_src[8];
+    #T_UINT8 PTU_loop_1,PTU_loop_2=0;
+    
+    --Variable used in stub HwMemset
+    #T_UINT8 PTU_mem_p_dest[8],PTU_mem_p_dest_prev[8];
+    #T_UINT8 PTU_loop;
+    
+    --Variable used in stub A825Xmit
+    #T_UINT8 PTU2_index=0;
+    #T_A825_MESSAGE PTU_A825Xmit[65];
+    
+    --variable used in stub OsTaskCreate
+    #T_OS_STK *PTU_pt_os;
+    
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      :  Akshay Kanagali
+    COMMENT                     Santosh Mithari
+    COMMENT
+    COMMENT File Name        :  hducommfa429_1.ptu
+    COMMENT
+    COMMENT Tested Functions :  A429Init                                            
+    COMMENT                     InitChannels
+    COMMENT                     InitTimingA429
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1.Source file "hducommfa429.c" is modified for testing purpose. The do-while loop is modified 
+    COMMENT   for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'ReceiveArinc429'.
+    COMMENT 
+    COMMENT     T_UINT16 PTU_count =0 /*local variable declared for testing purpose*/
+    COMMENT
+    COMMENT do
+    COMMENT {
+    COMMENT         .................
+    COMMENT      /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT 
+    COMMENT         PTU_count++;
+    COMMENT         if(PTU_count == 4)
+    COMMENT         {
+    COMMENT             PTU_count=0;
+    COMMENT             break;
+    COMMENT         }
+    COMMENT         else
+    COMMENT         {
+    COMMENT           ;  /*nothing*/
+    COMMENT         }
+    COMMENT      
+    COMMENT }while (u16_status & (A429_STATUS_RX1_MASK | A429_STATUS_RX2_MASK));
+    COMMENT
+    COMMENT In this case 'PTU_count' is set to zero since do-while loop is present within 'for' loop,
+    COMMENT For each 'for' loop counter do-while loop is executed for 4 times
+    COMMENT Hence while loop cannot be tested for 0 and 1 times.
+    COMMENT 
+    COMMENT 2.Source file "hducommfa429.c" is modified for testing purpose. The while(TRUE) is modified 
+    COMMENT for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'A429Task'.
+    COMMENT 
+    COMMENT     T_UINT16 PTU_count =0 /*local variable declared for testing purpose*/
+    COMMENT
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT         .................
+    COMMENT         /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT             PTU_count++;
+    COMMENT              if(PTU_count == 4)
+    COMMENT             {
+    COMMENT                 break;
+    COMMENT             }
+    COMMENT             else
+    COMMENT             {
+    COMMENT                 /*nothing*/
+    COMMENT             }     
+    COMMENT }/*End of while loop*/
+    COMMENT Hence while loop can not be coverd for 0 and 1 times.
+    COMMENT
+    COMMENT 3.Source file "hducommfa429.c" is modified for testing purpose. The while(TRUE) 
+    COMMENT is modified for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'ProcessArincWord'.
+    COMMENT
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT             ...........
+    COMMENT     /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT     PTU_count++;
+    COMMENT     if(PTU_count == 4)
+    COMMENT     {
+    COMMENT
+    COMMENT             break;
+    COMMENT     }
+    COMMENT     else
+    COMMENT     {
+    COMMENT         /*nothing*/
+    COMMENT     }
+    COMMENT }
+    COMMENT
+    COMMENT 4.Header file 'hducommfa429.h' is modified for testing purpose.
+    COMMENT     
+    COMMENT     /*Commented for testing purpose*/
+    COMMENT     /*#define A429_BASE_ADDR                     0x60000000U*/
+    COMMENT     
+    COMMENT     /*Modified for stubbing hardware address */
+    COMMENT     T_SINT16 PTU_A429_BASE_ADDR[3000];
+    COMMENT     #define A429_BASE_ADDR                       &PTU_A429_BASE_ADDR[0]
+    COMMENT
+    COMMENT 5.'for' loops cannot be covered for 'zero' and 'one' times since it is controlled by 
+    COMMENT    local variable and Macros 'A429_IC_COUNT' and 'DEC_ZERO' in following functions 
+    COMMENT    'A429Task' , 'ReceiveArinc429' ,'InitChannels'.
+    COMMENT
+    COMMENT 6.PTU has been split into 10 due to static dependency and memory constraint on target
+    COMMENT
+    COMMENT 7.Warning "enumerated type mixed with another type" is obtained when parameter  
+    COMMENT   (enum T_A429_TX_CHAN)u8_chan channel is exercised with 
+    COMMENT   value A429_TX_MAX_CHAN+1 to test LLR "hducommfa429-TransmitArinc429-CB-LLR-001"
+    COMMENT   in PTU "hducommfa429_1.ptu"
+    COMMENT
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'A429Init', function 'InitTimingA429' is called.
+    COMMENT
+    COMMENT Class 2 
+    COMMENT In function 'A429Init', function 'InitChannels' is called.
+    COMMENT
+    COMMENT Class 3 
+    COMMENT In function 'A429Init', function 'TbaseTaskSignaling' is called
+    COMMENT
+    COMMENT Class 4 
+    COMMENT In function 'A429Init', function 'OsSemCreate' is called.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'A429Init', function 'A429Task' is called.
+    COMMENT 
+    COMMENT Class 6
+    COMMENT In function 'A429Init', function 'OsSemCreate' returns OS_NO_ERR
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'A429Init', function 'OsSemCreate' returns other than OS_NO_ERR
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'InitTimingA429', function 'FsmcNorSramInit' is called 
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'InitTimingA429', function 'FsmcNorSramCmd' is called.
+    COMMENT
+    COMMENT Class 10 
+    COMMENT In function 'A429Task', function 'OsSemPend' is called.
+    COMMENT
+    COMMENT Class 11 
+    COMMENT In function 'A429Task', A429_mode is equal to A429_SELFTEST.
+    COMMENT
+    COMMENT Class 12 
+    COMMENT In function 'A429Task', A429_mode is equal to A429_NORMAL.
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'A429Task', self-test state is equal to TRUE.
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'A429Task', self-test state is  not  equal to TRUE.
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'A429Task', local counter is equal to DEC_ZERO.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'A429Task', local counter is  not  equal to DEC_ZERO.   
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'A429Task', normal state is equal to TRUE.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'A429Task', normal state is  not  equal to TRUE.
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'A429Task', function 'TransmitArinc429' is called. 
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'A429Task', function 'ReceiveArinc429' is called. 
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'ReceiveArinc429', sum of base address of the IC and A429_STATUS_REG_RD bitwise
+    COMMENT and A429_STATUS_RX1_MASK is equal to DEC_ZERO
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'ReceiveArinc429', sum of base address of the IC and A429_STATUS_REG_RD bitwise
+    COMMENT and A429_STATUS_RX1_MASK is not equal to DEC_ZERO
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'ReceiveArinc429', sum of base address of the IC and A429_STATUS_REG_RD bitwise
+    COMMENT and A429_STATUS_RX2_MASK is equal to  DEC_ZERO
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'ReceiveArinc429', sum of base address of the IC and A429_STATUS_REG_RD bitwise
+    COMMENT and A429_STATUS_RX2_MASK is not equal to  DEC_ZERO
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'ProcessArincWord',the received 32-bit ARINC word is DEC_ZERO.
+    COMMENT 
+    COMMENT Class 26
+    COMMENT In function 'ProcessArincWord',the received 32-bit ARINC word is other than DEC_ZERO.
+    COMMENT     
+    COMMENT Class 27
+    COMMENT In function 'ProcessArincWord',function 'HwMemset' is called. 
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'ProcessArincWord',App_active_transmit is true.
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'ProcessArincWord',App_active_transmit is false.
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'ProcessArincWord',channel number is DEC_ZERO.
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'ProcessArincWord',channel number is DEC_ONE.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'ProcessArincWord',channel number is other than DEC_ZERO and DEC_ONE.
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'ProcessArincWord',A429_mode is equal to A429_SELFTEST.
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'ProcessArincWord',A429_mode is  not  equal to A429_SELFTEST.
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'ProcessArincWord', test_data is equal to ARINC_TEST_DATA
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'ProcessArincWord', test_data is equal to  ARINC_TEST_DATA_INVRT
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'ProcessArincWord', test_data is not equal to ARINC_TEST_DATA_INVRT or ARINC_TEST_DATA
+    COMMENT     
+    COMMENT Class 39
+    COMMENT In function 'ProcessArincWord',function 'HwMemcpy' is called.
+    COMMENT     
+    COMMENT Class 40
+    COMMENT In function 'ProcessArincWord',function 'A825Xmit' is called.   
+    COMMENT
+    COMMENT Class 41
+    COMMENT The function 'TransmitArinc429',return FALSE when transmit FIFO is full.
+    COMMENT
+    COMMENT Class 42
+    COMMENT The function 'TransmitArinc429',return TRUE when transmit FIFO not full. 
+    COMMENT
+    COMMENT Class 43
+    COMMENT The function 'InitChannels',initializes A429 Chipset, and loads local Channel buffer.
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'ProcessArincWord',function 'WdogKickWatchDog' is called.
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function 'ReceiveArinc429', function 'ProcessArincWord' is called.
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'A429Init', function 'OsTaskCreate' is called.
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'ProcessArincWord', SID is greater than zero.
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function 'ProcessArincWord', SID is not greater than zero.         
+    COMMENT
+    COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+    DEFINE STUB hducommfa429_c
+
+    #void FsmcNorSramCmd(T_UINT32 _in fsmc_bank, T_FUNCTIONAL_STATE _in new_state); 
+    
+    -- Parameter fsmc_norsraminit_struct made as _no since the address of local variable is passed
+    #void FsmcNorSramInit(T_FSMC_NORSRAM_INIT _no *fsmc_norsraminit_struct)
+    #{
+    #   PTU_fsmc_norsraminit_struct=*fsmc_norsraminit_struct;
+    #   PTU_fsmc_write_timing_struct=*(fsmc_norsraminit_struct->fsmc_readwrite_timing_struct);
+    #   PTU_fsmc_readwrite_timing_struct=*(fsmc_norsraminit_struct->fsmc_write_timing_struct);
+    #}
+    
+    -- Parameter ps_xm made as _no since the address of local variable is passed 
+    #T_A825_XMIT_RESULT A825Xmit(T_A825_MESSAGE _no *ps_xm)
+    #{
+    #   PTU_A825Xmit[PTU2_index++] = *ps_xm;
+    #}
+
+    -- Parameter p_dest and p_src are made as _no since the address of local variable is passed 
+    #void HwMemcpy(void _no *p_dest, void _no *p_src, T_UINT32 _in count)
+    #{
+    #   for(PTU_loop_1=0;PTU_loop_1<count;PTU_loop_1++)
+    #   {   
+    #       *((T_UINT8 *)p_dest) = *((T_UINT8 *)p_src);
+    #       PTU_p_src[PTU_loop_1] = * ((T_UINT8 *)p_dest);
+    #       PTU_p_dest[PTU_loop_2][PTU_loop_1] = PTU_p_src[PTU_loop_1];
+    #       p_dest = ((T_UINT8 *)(p_dest)+1);
+    #       p_src = ((T_UINT8 *)(p_src)+1);
+    #   }
+    #   PTU_loop_2++;
+    # }
+
+    -- Parameter p_dest are made as _no since the address of local variable is passed 
+    #void HwMemset(void _no *p_dest, T_UINT8 _in value, T_UINT32 _in count)
+    #{  
+    #   for(PTU_loop=0;PTU_loop<count;PTU_loop++)
+    #   {
+    #       PTU_mem_p_dest_prev[PTU_loop] = *((T_UINT8 *)p_dest);
+    #       PTU_mem_p_dest[PTU_loop]= value;
+    #       p_dest = ((T_UINT8 *)(p_dest)+1);
+    #   }
+    #}
+
+    -- Parameter pevent and error made as _no since the address of local variable is passed
+    #void OsSemPend(T_OS_EVENT _no *pevent, T_UWORD _in timeout, T_UBYTE _no *error)
+    #{
+    # PTU_ps_semaphore2 = pevent;
+    # PTU_error=*error;
+    #}
+
+    -- Parameter ptask and pt_os made as _no since the address of local variable is passed
+    #T_UINT8 OsTaskCreate(void _no (  *ptask)(void* dptr), void _in *p_data, void _no *pt_os, T_UINT8 _in u8_prio)
+    #{
+    # (*ptask)(p_data);
+    # PTU_pt_os= (T_OS_STK*)pt_os;
+    #}
+
+    #T_OS_EVENT* OsSemCreate(T_UWORD _in value);
+    
+    -- Parameter ps_semaphore made as _no since the address of local variable is passed
+    #void TbaseTaskSignaling(T_UINT16 _in u16_task_ticks, T_OS_EVENT _no *ps_semaphore)
+    #{
+    #   PTU_ps_semaphore1 = ps_semaphore;
+    #}
+  
+    #void WdogKickWatchDog(void); 
+    
+    --Parameter 'gpio_x' is made as _in hence it is verified explicitly.in PTU hducommfa429_9
+    #void GpioSetBits(T_GPIO_TYPE _in *gpio_x, T_UINT16 _in gpio_pin);    
+  
+    END DEFINE
+    
+ELSE_SIMUL
+    
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommfa429.c
+ENVIRONMENT ENV_hducommfa429_c
+
+  VAR A429_mode,            init = A429_NORMAL,         ev = init
+  
+  VAR A429_sdi_to_rci,      init = 0,                   ev = init
+  
+  ARRAY A429_task_stk,      init = { others => 0 },     ev = init
+  
+END ENVIRONMENT -- ENV_hducommfa429_c
+
+USE ENV_hducommfa429_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service A429Init
+--------------------------------------------------------------------------------
+SERVICE A429Init
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT 
+    COMMENT [hducommfa429-A429Init-CB-LLR-001]
+    COMMENT The function calls 'InitTimingA429' to initialize FSMC.
+    COMMENT Equivalence Class 1
+    COMMENT
+    COMMENT [hducommfa429-A429Init-CB-LLR-002]
+    COMMENT The function calls 'InitChannels' to initialize ARINC 429 chip. 
+    COMMENT Equivalence Class 2
+    COMMENT
+    COMMENT [hducommfa429-A429Init-CB-LLR-003]
+    COMMENT The functioninitialize task signalling parameters by calling 'TbaseTaskSignaling' with parameters
+    COMMENT a) A429_TASK_TICKS and
+    COMMENT b) return value of function OsSemCreate with parameter DEC_ZERO.
+    COMMENT Equivalence Class 3,4,7
+    COMMENT
+    COMMENT [hducommfa429-A429Init-CB-LLR-004]
+    COMMENT The function create the ARINC 429 task by calling 'OsTaskCreate' with parameters
+    COMMENT a) pointer to function A429Task,
+    COMMENT b) HW_NULL
+    COMMENT c) top of A429 task stack and
+    COMMENT d) A429_TASK_PRIO.
+    COMMENT Equivalence Class 5,46
+    COMMENT
+    COMMENT [hducommfa429-InitTimingA429-CB-LLR-001]
+    COMMENT The function set fields of FSMC timing register as follows
+    COMMENT a) address setup time field (fsmc_address_setuptime) is set with DEC_FOUR,
+    COMMENT b) address hold time field (fsmc_address_holdtime) is set with DEC_ZERO,
+    COMMENT c) data setup time field (fsmc_data_setuptime) is set with DEC_TEN,
+    COMMENT d) bus turn around duration field (fsmc_bus_turnaround_duration) is set with DEC_FIFTEEN,
+    COMMENT e) clock division field (fsmc_clk_division) is set with DEC_ZERO,
+    COMMENT f) data latency field (fsmc_data_latency) is set with DEC_ZERO,
+    COMMENT g) access mode field (fsmc_access_mode) is set with FSMC_ACCESSMODE_A.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hducommfa429-InitTimingA429-CB-LLR-002]
+    COMMENT The function set fields of FSMC control register as follows 
+    COMMENT a) bank field (fsmc_bank)is set with FSMC_BANK1_NORSRAM1, 
+    COMMENT b) data addressmux field (fsmc_data_address_mux) is set with FSMC_DATAADDRESSMUX_DISABLE, 
+    COMMENT c) memory type field (fsmc_memory_type) is set with FSMC_MEMORYTYPE_PSRAM, 
+    COMMENT d) memory datawidth field (fsmc_memory_datawidth) is set with FSMC_MEMORYDATAWIDTH_16B, 
+    COMMENT e) burst access mode field (fsmc_burst_accessmode) is set with FSMC_BURSTACCESSMODE_DISABLE, 
+    COMMENT f) asynchronous wait field (fsmc_asynchronous_wait) is set with FSMC_ASYNCHRONOUSWAIT_DISABLE, 
+    COMMENT g) wait signal polarity field (fsmc_waitsignal_polarity) is set with FSMC_WAITSIGNALPOLARITY_LOW, 
+    COMMENT h) wrap mode field (fsmc_wrap_mode) is set with FSMC_WRAPMODE_DISABLE, 
+    COMMENT i) wait signal active field (fsmc_waitsignal_active) is set with FSMC_WAIT_SIG_ACTIVE_BEF_WAIT ,
+    COMMENT j) write operation field (fsmc_write_operation) is set with FSMC_WRITEOPERATION_ENABLE, 
+    COMMENT k) wait signal field (fsmc_waitsignal) is set with FSMC_WAITSIGNAL_DISABLE, 
+    COMMENT l) extended mode field (fsmc_extended_mode) is set with FSMC_EXTENDEDMODE_ENABLE,
+    COMMENT m) write burst field (fsmc_write_burst) is set with FSMC_WRITEBURST_DISABLE.
+    COMMENT n) write and read access field (fsmc_readwrite_timing_struct) is set with address of 
+    COMMENT    structure having Timing parameters for NOR/SRAM Banks.
+    COMMENT o) write access field (fsmc_write_timing_struct) is set with address of structure having 
+    COMMENT    Timing parameters for NOR/SRAM Banks 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hducommfa429-InitTimingA429-CB-LLR-003]
+    COMMENT The function initialize NOR/SRAM bank in FSMC by calling ‘FsmcNorSramInit’ with parameter
+    COMMENT address of FSMC NOR/SRAM init structure.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hducommfa429-InitTimingA429-CB-LLR-004]
+    COMMENT The function enable the first block of bank one of FSMC by calling ‘FsmcNorSramCmd’ with 
+    COMMENT parameters FSMC_BANK1_NORSRAM1 and ENABLE.
+    COMMENT Equivalence Class 9     
+    COMMENT
+    COMMENT [hducommfa429-InitChannels-CB-LLR-001]
+    COMMENT The function does the following for all the three ARINC 429 chips
+    COMMENT a) set drive master reset pin to DEC_ZERO,
+    COMMENT b) set drive master reset pin to DEC_ONE,
+    COMMENT c) initialize ARINC 429 chips by writing the configuration data A429_CNTRL_PARITY_EN | 
+    COMMENT    A429_CNTRL_SELF_TEST_DIS| A429_CNTRL_FORMAT_UNSCRAMBLE into the control register.
+    COMMENT Equivalence Class 43
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --None  
+
+        COMMENT OUTPUT SECTION:
+
+            -- Varibales of function InitTimingA429 
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_bank,                         init = 0x1,         ev = FSMC_BANK1_NORSRAM1
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_data_address_mux,             init = 0x1,         ev = FSMC_DATAADDRESSMUX_DISABLE
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_memory_type,                  init = 0x1,         ev = FSMC_MEMORYTYPE_PSRAM
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_memory_datawidth,             init = 0x1,         ev = FSMC_MEMORYDATAWIDTH_16B
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_burst_accessmode,             init = 0x1,         ev = FSMC_BURSTACCESSMODE_DISABLE
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_asynchronous_wait,            init = 0x1,         ev = FSMC_ASYNCHRONOUSWAIT_DISABLE
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_waitsignal_polarity,          init = 0x1,         ev = FSMC_WAITSIGNALPOLARITY_LOW
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_wrap_mode,                    init = 0x1,         ev = FSMC_WRAPMODE_DISABLE
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_waitsignal_active,            init = 0x1,         ev = FSMC_WAIT_SIG_ACTIVE_BEF_WAIT
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_write_operation,              init = 0x1,         ev = FSMC_WRITEOPERATION_ENABLE
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_waitsignal,                   init = 0x1,         ev = FSMC_WAITSIGNAL_DISABLE
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_extended_mode,                init = 0x1,         ev = FSMC_EXTENDEDMODE_ENABLE
+            VAR  PTU_fsmc_norsraminit_struct.fsmc_write_burst,                  init = 0x1,         ev = FSMC_WRITEBURST_DISABLE
+
+            VAR  PTU_fsmc_readwrite_timing_struct.fsmc_address_setuptime,       init = 0x1,         ev  = DEC_FOUR
+            VAR  PTU_fsmc_readwrite_timing_struct.fsmc_address_holdtime,        init = 0x1,         ev  = DEC_ZERO
+            VAR  PTU_fsmc_readwrite_timing_struct.fsmc_data_setuptime,          init = 0x1,         ev  = DEC_TEN      
+            VAR  PTU_fsmc_readwrite_timing_struct.fsmc_bus_turnaround_duration, init = 0x1,         ev  = DEC_FIFTEEN
+            VAR  PTU_fsmc_readwrite_timing_struct.fsmc_clk_division,            init = 0x1,         ev  = DEC_ZERO
+            VAR  PTU_fsmc_readwrite_timing_struct.fsmc_data_latency,            init = 0x1,         ev  = DEC_ZERO
+            VAR  PTU_fsmc_readwrite_timing_struct.fsmc_access_mode,             init = 0x1,         ev  = FSMC_ACCESSMODE_A
+
+            VAR  PTU_fsmc_write_timing_struct.fsmc_address_setuptime,           init = 0x1,         ev  = DEC_FOUR
+            VAR  PTU_fsmc_write_timing_struct.fsmc_address_holdtime,            init = 0x1,         ev  = DEC_ZERO
+            VAR  PTU_fsmc_write_timing_struct.fsmc_data_setuptime,              init = 0x1,         ev  = DEC_TEN      
+            VAR  PTU_fsmc_write_timing_struct.fsmc_bus_turnaround_duration,     init = 0x1,         ev  = DEC_FIFTEEN
+            VAR  PTU_fsmc_write_timing_struct.fsmc_clk_division,                init = 0x1,         ev  = DEC_ZERO
+            VAR  PTU_fsmc_write_timing_struct.fsmc_data_latency,                init = 0x1,         ev  = DEC_ZERO
+            VAR  PTU_fsmc_write_timing_struct.fsmc_access_mode,                 init = 0x1,         ev  = FSMC_ACCESSMODE_A
+
+
+            -- Varibales of function InitChannels   
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+14)),                             init = 0x00,        ev = DEC_ONE
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+46)),                             init = 0x00,        ev = DEC_ONE
+
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+10)),                             init = 0x1,         ev = 0x8030
+            VAR *((T_UINT16 *)(A429_BASE_ADDR+42)),                             init = 0x1,         ev = 0x8030
+
+            --Variable used in stub TbaseTaskSignaling
+            VAR PTU_ps_semaphore1,                                              init = NULL,        ev = &PTU_Sem_a429_task
+
+            --Variable used in stub OsSemPend
+            VAR PTU_ps_semaphore2,                                              init = NULL,        ev = &PTU_Sem_a429_task 
+            VAR PTU_error,                                                      init = 0x1,         ev = 0x0
+
+            --variable used in stub OsTaskCreate
+            VAR PTU_pt_os,                                                      init = 0x1,         ev = &A429_task_stk[A429_TASK_STK_SIZE]
+            
+
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --None
+
+        -- Stub Calls:              
+        SIMUL
+            -- Stubs called in function A429Init
+
+            -- Creates the semaphore
+            STUB OsSemCreate(DEC_ZERO)&PTU_Sem_a429_task
+
+            -- Initializes task signalling parameters 
+            STUB TbaseTaskSignaling(A429_TASK_TICKS)
+
+            --Creates ARINC 429 task
+            STUB OsTaskCreate(HW_NULL,A429_TASK_PRIO) OS_NO_ERR
+
+            --Stubs called in function InitTimingA429
+            -- Initialize NORSRAM bank in FSMC 
+            STUB  FsmcNorSramInit()
+
+            -- Enable first block of bank 1 
+            STUB FsmcNorSramCmd (FSMC_BANK1_NORSRAM1, ENABLE)
+
+            --Stubs called in function A429Task
+
+            --wait forever for the semaphore by A429 task       
+            STUB OsSemPend 1..4=> ( DEC_ZERO)
+
+        END SIMUL     
+            
+        --Calling the Unit Under Test:
+        #A429Init();
+
+    END ELEMENT      
+
+END TEST -- TEST 1  
+
+END SERVICE -- A429Init
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TransmitArinc429
+--------------------------------------------------------------------------------
+SERVICE TransmitArinc429
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_A429_TX_CHAN u8_chan;
+    #T_SINT32 i32_arinc_word;
+    -- By function returned type declaration
+    #T_UINT8 ret_TransmitArinc429;
+
+    ENVIRONMENT ENV_TransmitArinc429
+    VAR u8_chan,                                init = A429_TX_CHAN_1,      ev = init
+    VAR i32_arinc_word,                         init = 0,                   ev = init
+    VAR ret_TransmitArinc429,                   init = 0,                   ev = init
+    END ENVIRONMENT -- ENV_TransmitArinc429
+    USE ENV_TransmitArinc429
+    
+    
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommfa429-TransmitArinc429-CB-LLR-001]
+    COMMENT The function TransmitArinc429 returns FALSE when transmit FIFO is Full .
+    COMMENT u8Chan is A429_TX_MAX_CHAN (tested for max value)
+    COMMENT Equivalence Class 41
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+         
+            -- maximum channel number
+            VAR u8_chan,                                      init = A429_TX_MAX_CHAN,      ev = init
+
+            -- transmit FIFO
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+72)),          init = 0x0080,                ev = init
+
+            -- ARINC data
+            VAR i32_arinc_word,                               init = 0xFFFFFFFF,            ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            -- Returns the status of transmit FIFO
+            VAR ret_TransmitArinc429,                         init = TRUE,                  ev = FALSE  
+
+         COMMENT INPUT/OUTPUT SECTION:
+
+            -- None
+            
+         --Stub calls
+        SIMUL
+
+            --None
+
+        END SIMUL
+            
+        -- Calling the Unit Under Test
+        #ret_TransmitArinc429 = TransmitArinc429(u8_chan, i32_arinc_word);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommfa429-TransmitArinc429-CB-LLR-001]
+    COMMENT The function TransmitArinc429 returns TRUE when transmit FIFO is not full .
+    COMMENT u8Chan is A429_TX_CHAN_1 (tested for minimum value)
+    COMMENT Equivalence Class 42
+    COMMENT
+    COMMENT [hducommfa429-TransmitArinc429-CB-LLR-002]
+    COMMENT The function TransmitArinc429 load the extracted 32-bit ARINC word to FIFO LSB 
+    COMMENT and load the extracted 32-bit ARINC word to FIFO MSB
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+         
+            -- minimum channel number
+            VAR u8_chan,                                      init = A429_TX_CHAN_1,          ev = init
+            
+            -- transmit FIFO
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+8)),           init = 0xFF7F,                  ev = init
+                
+            -- ARINC data
+            VAR i32_arinc_word,                               init = 0x2,                     ev = init
+            
+        
+        COMMENT OUTPUT SECTION:
+         
+            -- Returns the status of transmit FIFO
+            VAR ret_TransmitArinc429,                         init = FALSE,                   ev = TRUE 
+            
+            -- transmit FIFO
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+4)),           init = 0x0000,                  ev = 0x2
+
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+6)),           init = 0xFFFF,                  ev = 0x0000
+         
+         COMMENT INPUT/OUTPUT SECTION:
+          
+            -- None
+            
+         --Stub calls
+        SIMUL
+
+            --None
+
+        END SIMUL
+            
+        -- Calling the Unit Under Test
+        #ret_TransmitArinc429 = TransmitArinc429(u8_chan, i32_arinc_word);
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommfa429-TransmitArinc429-CB-LLR-001]
+    COMMENT The function TransmitArinc429 returns TRUE when transmit FIFO is not full .
+    COMMENT u8Chan is A429_TX_CHAN_2(tested for minimum+1)
+    COMMENT Equivalence Class 42
+    COMMENT </TD>
+
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+         
+            --  nominal channel number
+            VAR u8_chan,                                      init = A429_TX_CHAN_2,          ev = init
+            
+            -- transmit FIFO
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+40)),          init = 0x0000,                  ev = init
+            
+            -- ARINC data
+            VAR i32_arinc_word,                               init = 0xFFFFFF00,              ev = init
+            
+         
+        COMMENT OUTPUT SECTION:
+         
+            -- Returns the status of transmit FIFO
+            VAR ret_TransmitArinc429,                         init = FALSE,                   ev = TRUE 
+            
+            -- transmit FIFO
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+36)),          init = 0x0000,                  ev = 0xFF00
+
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+38)),          init = 0xFFFF,                  ev = 0xFFFF
+         
+        COMMENT INPUT/OUTPUT SECTION:
+          
+            -- None
+            
+        --Stub calls
+        SIMUL
+
+            --None
+
+        END SIMUL
+            
+        -- Calling the Unit Under Test
+        #ret_TransmitArinc429 = TransmitArinc429(u8_chan, i32_arinc_word);
+        
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommfa429-TransmitArinc429-CB-LLR-001]
+    COMMENT The function TransmitArinc429 returns TRUE when transmit FIFO is not full .
+    COMMENT u8Chan is A429_TX_MAX_CHAN+1
+    COMMENT Equivalence Class 42
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+         
+            -- (max+1) channel number
+            VAR u8_chan,                                          init = A429_TX_MAX_CHAN+1,          ev = init
+
+            -- transmit FIFO
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+104)),             init = 0xA130,                      ev = init
+            
+            -- ARINC data 
+            VAR i32_arinc_word,                                   init = 0xFFFFFFFF,                  ev = init
+            
+        COMMENT OUTPUT SECTION:
+         
+            -- Returns the status of transmit FIFO
+            VAR ret_TransmitArinc429,                             init = FALSE,                       ev = TRUE 
+                
+            -- transmit FIFO
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+100)),             init = 0x0000,                      ev = 0xFFFF
+
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+102)),             init = 0xFFFF,                      ev = 0xFFFF
+         
+        COMMENT INPUT/OUTPUT SECTION:
+          
+            -- None
+            
+         --Stub calls
+        SIMUL
+
+            --None
+
+        END SIMUL
+
+        -- Calling the Unit Under Test
+        #ret_TransmitArinc429 = TransmitArinc429(u8_chan, i32_arinc_word);
+        
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommfa429-TransmitArinc429-CB-LLR-002]
+    COMMENT The function TransmitArinc429 load the extracted 32-bit ARINC word to FIFO LSB 
+    COMMENT and load the extracted 32-bit ARINC word to FIFO MSB
+    COMMENT (tested for range value of 32-bit ARINC word)
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- minimum channel number
+            VAR u8_chan,                                      init = A429_TX_CHAN_1,          ev = init
+
+            -- transmit FIFO
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+8)),           init = 0xFF7F,                  ev = init
+
+            -- ARINC data
+            VAR i32_arinc_word,                               init = -800,                    ev = init
+
+        COMMENT OUTPUT SECTION:
+         
+            -- Returns the status of transmit FIFO
+            VAR ret_TransmitArinc429,                         init = FALSE,                   ev = TRUE 
+            
+            -- transmit FIFO
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+4)),           init = 0x0000,                  ev = 0xFCE0
+
+            VAR *((T_UINT16 *) (A429_BASE_ADDR+6)),           init = 0xFFFF,                  ev = 0xFFFF
+         
+         COMMENT INPUT/OUTPUT SECTION:
+          
+            -- None
+            
+         --Stub calls
+        SIMUL
+
+            --None
+
+        END SIMUL
+            
+        -- Calling the Unit Under Test
+        #ret_TransmitArinc429 = TransmitArinc429(u8_chan, i32_arinc_word);
+    END ELEMENT
+
+END TEST -- TEST 5
+
+END SERVICE -- TransmitArinc429

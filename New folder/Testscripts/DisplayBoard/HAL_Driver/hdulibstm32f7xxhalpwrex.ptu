@@ -1,0 +1,612 @@
+HEADER hdulibstm32f7xxhalpwrex,Source Code Ver : 1.2,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Kavya M
+--
+-- File Name           : hdulibstm32f7xxhalpwrex.ptu 
+--
+-- Test Creation Date  : 31.10.2017 
+--
+-- Tested Functions    : HalPwrExEnableOverDrive
+--                      
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE           TESTER NAME        MODIFICATIONS
+-- ------------        ---------           -----------        -------------
+--    1.1              31.10.2017          Kavya M            Created the ptu file
+--    1.2              11.11.2017          Kavya M            updated as per PR100171
+--    1.3              14.11.2017		   Kavya M            updated as per PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibstm32f7xxhal.h"        
+##include "hdulibbasictypes.h"          
+##include "hdulibstm32f7xxhalpwr.h"     
+##include "hdulibstm32f7xxhalrcc.h"    
+##include "hdulibstm32f7xxhalpwrex.h"   
+##include "hdulibstm32f7xxhaldef.h"     
+##include "hdulibstm32f746xx.h"   
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	--None	
+
+--Declarations of the Temporary variables of the tested file
+
+	--None
+--------------------------------------------------------------------------------
+
+BEGIN
+	COMMENT Author Name      : Kavya M
+    COMMENT
+    COMMENT File Name        : hdulibstm32f7xxhalpwrex.ptu
+    COMMENT
+    COMMENT Tested Functions : HalPwrExEnableOverDrive
+    COMMENT 
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1.Header file "hdulibstm32f746xx.h" is modified for testing purpose. 
+    COMMENT     The macro 'PWR' is modified for stubbing hardware address.
+    COMMENT     
+    COMMENT 
+    COMMENT /*commented for testing purpose*/
+    COMMENT /*#define PWR                 ((T_PWR *) PWR_BASE)*/
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_PWR			   PTU_PWR;
+    COMMENT    
+    COMMENT  
+    COMMENT The macro 'RCC' is modified for stubbing hardware address. 
+    COMMENT /*commented for testing purpose*/
+    COMMENT /*#define RCC                 ((T_RCC *) RCC_BASE)*/
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_RCC			PTU_RCC;
+    COMMENT #define RCC                 ((T_RCC *) &PTU_RCC)
+    COMMENT
+    COMMENT 2.The while loop present in '__HAL_RCC_PWR_CLK_ENABLE()' cannot be covered for 0 and 
+    COMMENT   2 or more times as it is a while(0) loop.
+    COMMENT
+    COMMENT Code snippet: 
+    COMMENT 
+    COMMENT do { volatile  T_UINT32 tmpreg; (( ((T_RCC *) &PTU_RCC) ->APB1ENR ) |= (  0x10000000U  )) ;
+    COMMENT tmpreg = (( ((T_RCC *) &PTU_RCC) ->APB1ENR ) & (  0x10000000U  )) ; ((void)( tmpreg )) ; } while(0)
+    COMMENT 
+    COMMENT 3. Following Test script related warnings are observed during 
+    COMMENT Target Execution for volatile keyword member/variable:
+    COMMENT warning #191-D: type qualifier is meaningless on cast type
+    COMMENT
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+    COMMENT In The function 'HalPwrExEnableOverDrive', 'HALGetTick' is called. 
+    COMMENT
+    COMMENT Class 2
+    COMMENT In the function 'HalPwrExEnableOverDrive', returns 'HAL_OK'.
+    COMMENT
+    COMMENT Class 3
+    COMMENT In the function 'HalPwrExEnableOverDrive', returns 'HAL_TIMEOUT'.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In the function 'HalPwrExEnableOverDrive', the value of HALGetTick Minus tick_start  is greater than 
+    COMMENT PWR_OVERDRIVE_TIMEOUT_VALUE.
+    COMMENT   
+    COMMENT Class 5
+    COMMENT In the function 'HalPwrExEnableOverDrive', the value of HALGetTick Minus tick_start  is less than PWR_OVERDRIVE_TIMEOUT_VALUE
+	COMMENT
+	COMMENT Class 6
+	COMMENT In the function 'HalPwrExEnableOverDrive', the value of HALGetTick Minus tick_start  is  equals to PWR_OVERDRIVE_TIMEOUT_VALUE.
+    COMMENT     
+    COMMENT Class 7
+    COMMENT The function 'HalPwrExEnableOverDrive',calls '__HAL_RCC_PWR_CLK_ENABLE()' 
+    COMMENT
+    COMMENT Class 8
+    COMMENT The function 'HalPwrExEnableOverDrive',calls '__HAL_PWR_OVERDRIVE_ENABLE()' 
+    COMMENT
+    COMMENT Class 9
+    COMMENT  The function 'HalPwrExEnableOverDrive',calls '__HAL_PWR_GET_FLAG()'
+    COMMENT
+    COMMENT Class 10
+    COMMENT  The function 'HalPwrExEnableOverDrive',calls '__HAL_PWR_OVERDRIVESWITCH_ENABLE()'
+    COMMENT 
+    COMMENT Invalid Class(es)
+    COMMENT None
+    COMMENT</ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+	
+	DEFINE STUB hdulibstm32f7xxhalpwrex_c
+    
+    	#T_UINT32 HALGetTick(void); 
+    	
+    	#T_PWR PTU_PWR;
+    	
+    	#T_RCC PTU_RCC; 
+	
+	END DEFINE
+
+ELSE_SIMUL
+
+	-- No action defined as of now if the module is not simulated
+	
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+	-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+	-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONEMENT 
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdulibstm32f7xxhalpwrex.c
+
+--ENVIRONMENT ENV_hdulibstm32f7xxhalpwrex_c
+
+	--None 
+	
+--END ENVIRONMENT -- ENV_hdulibstm32f7xxhalpwrex_c
+
+--USE ENV_hdulibstm32f7xxhalpwrex_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalPwrExEnableOverDrive
+--------------------------------------------------------------------------------
+SERVICE HalPwrExEnableOverDrive
+SERVICE_TYPE extern
+
+-- By function returned type declaration
+#T_HAL_STATUS ret_HalPwrExEnableOverDrive;
+
+ENVIRONMENT ENV_HalPwrExEnableOverDrive
+
+	VAR ret_HalPwrExEnableOverDrive,		init = HAL_OK,		ev = init
+
+END ENVIRONMENT -- ENV_HalPwrExEnableOverDrive
+
+USE ENV_HalPwrExEnableOverDrive
+
+TEST 1
+FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-001]
+	COMMENT  The function calls ,'__HAL_RCC_PWR_CLK_ENABLE' to enable the RCC peripheral clock
+	COMMENT Equivalence Class 7
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-002]
+	COMMENT The  function calls ,'__HAL_PWR_OVERDRIVE_ENABLE' to enable the Over-drive to
+	COMMENT extend the clock frequency to 216 MHz 
+	COMMENT Equivalence Class 8
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-003]
+	COMMENT The function 'HALGetTick' is called and store the return value in the variable start_ticks
+	COMMENT Equivalence Class 1
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-004]
+	COMMENT The function does the following till the return value of the macro '__HAL_PWR_GET_FLAG' called with the parameter 
+	COMMENT PWR_FLAG_ODRDY is ZERO.
+	COMMENT Loops for 2 times and does the followings:
+	COMMENT 1.loop for 1st time
+	COMMENT   does nothing when Return HAL_TIMEOUT when the subtraction of the return value of function call HALGetTick and 
+	COMMENT   start ticks value is equals to PWR_OVERDRIVE_TIMEOUT_VALUE.
+	COMMENT 2.loop for 2nd time
+	COMMENT   Return HAL_TIMEOUT when the subtraction of the return value of function call HALGetTick and start ticks value is 
+	COMMENT   greater than PWR_OVERDRIVE_TIMEOUT_VALUE (Exercised for PWR_OVERDRIVE_TIMEOUT_VALUE+1). 
+	COMMENT Equivalence Class 3,6,4,9
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--CSR1 of PWR register is initialized.
+			VAR PWR->CSR1,							init=0,								ev=init
+	
+		COMMENT INPUT/OUTPUT SECTION:
+	
+			--enable the RCC peripheral clock
+	      	VAR RCC->APB1ENR,						init=0, 							ev=0x10000000U
+	      	
+			--CR1 of PWR register is initialized.
+			VAR PWR->CR1,							init=0x0000c000,					ev=0x0001c000
+	
+	 	COMMENT OUTPUT SECTION:
+	 	
+			--return value is expected
+			VAR ret_HalPwrExEnableOverDrive,		init =HAL_OK,						ev = HAL_TIMEOUT
+	 				
+	 	
+	   -- Stub calls:
+		SIMUL
+		
+			--to Get a tick value in millisecond 
+			STUB	HALGetTick()0
+			STUB	HALGetTick()1000
+			STUB	HALGetTick()1001
+            
+		END SIMUL
+	
+	-- Calling the unit under test
+	#ret_HalPwrExEnableOverDrive = HalPwrExEnableOverDrive();
+		
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-004]
+	COMMENT The function calls the macro '__HAL_PWR_GET_FLAG' with the parameter
+	COMMENT 'PWR_FLAG_ODRDY' is ZERO and does the following.
+	COMMENT Loops for 1 time  Return 'HAL_TIMEOUT'
+	COMMENT when the subtraction of the return value of function call HALGetTick and start ticks value is 
+	COMMENT greater than 'PWR_OVERDRIVE_TIMEOUT_VALUE' (Exercised for PWR_OVERDRIVE_TIMEOUT_VALUE+1). 
+	COMMENT Equivalence Class 3,4,9
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--CSR1 of PWR register is initialized.
+			VAR PWR->CSR1,							init=1,							ev=init
+	
+		COMMENT INPUT/OUTPUT SECTION:
+	
+			--enable the RCC peripheral clock
+	       	VAR RCC->APB1ENR, 						init=0, 						ev=0x10000000U
+	       	
+	        --CR1 of PWR register is initialized.
+			VAR PWR->CR1, 							init=0x0000c000,				ev=0x0001c000
+	
+		COMMENT OUTPUT SECTION:
+		
+			--expecting the return value.
+			VAR ret_HalPwrExEnableOverDrive,		init =HAL_OK,					ev = HAL_TIMEOUT
+	 
+		
+	    -- Stub calls:
+		SIMUL 
+		
+			--to Get a tick value in millisecond 
+			STUB	HALGetTick()1
+			STUB	HALGetTick()1002
+            
+		END SIMUL
+	
+    -- Calling the unit under test
+	#ret_HalPwrExEnableOverDrive = HalPwrExEnableOverDrive();
+		
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-004]
+	COMMENT The function does the following till the return value of the macro '__HAL_PWR_GET_FLAG' called with the parameter 
+	COMMENT PWR_FLAG_ODRDY other than ZERO.
+	COMMENT Loops for 0 time
+	COMMENT Equivalence Class 9 
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-005]
+	COMMENT the macro '__HAL_PWR_OVERDRIVESWITCH_ENABLE' is called to enable the Over-drive switch.
+	COMMENT Equivalence class 10
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-006]
+	COMMENT The function 'HALGetTick' is called and stores return value of it as start ticks
+	COMMENT Equivalence Class 1   
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-007]
+	COMMENT The function does the following till the return value of the macro '__HAL_PWR_GET_FLAG' called with the
+	COMMENT parameter 'PWR_FLAG_ODSWRDY' is ZERO.
+	COMMENT Loops for two times and does the followings:
+	COMMENT 1. loops for 1st time:
+	COMMENT Does nothing when the substration of the return value of function call HALGetTick and start ticks value is equal to 
+	COMMENT 'PWR_OVERDRIVE_TIMEOUT_VALUE'.
+	COMMENT 2. loops for 2nd time:
+	COMMENT Returns 'HAL_TIMEOUT' when the substration of the return value of function call 'HALGetTick' and start ticks value is 
+	COMMENT greater than 'PWR_OVERDRIVE_TIMEOUT_VALUE'(Exercised for PWR_OVERDRIVE_TIMEOUT_VALUE+1).
+	COMMENT Equivalence Class 3,6,4,9        
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--CSR1 of PWR register is initialized.
+			VAR PWR->CSR1,							init=PWR_FLAG_ODRDY,		ev=init
+	
+		COMMENT INPUT/OUTPUT SECTION:
+	
+			--enable the RCC peripheral clock
+	        VAR RCC->APB1ENR, 						init=0, 					ev=0x10000000U
+	        
+	         --CR1 of PWR register is initialized.
+	 		VAR PWR->CR1, 							init=0x0000c000,			ev=0x0003c000
+			
+		COMMENT OUTPUT SECTION:
+		
+			--expecting the return value.
+			VAR ret_HalPwrExEnableOverDrive,		init =HAL_OK,				ev = HAL_TIMEOUT
+	 	
+	   -- Stub calls:
+		SIMUL 
+		
+			--to Get a tick value in millisecond 
+			STUB	HALGetTick()1
+			STUB	HALGetTick()0
+			STUB	HALGetTick()1000
+			STUB	HALGetTick()1001
+
+		END SIMUL
+	
+    -- Calling the unit under test
+	#ret_HalPwrExEnableOverDrive = HalPwrExEnableOverDrive();
+		
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-007]
+	COMMENT The function does the following till the return value of the macro '__HAL_PWR_GET_FLAG' called with the parameter 
+	COMMENT 'PWR_FLAG_ODSWRDY' is ZERO.
+	COMMENT Loops for one time and does the following:
+	COMMENT Returns 'HAL_TIMEOUT' when the substration of the return value of function call 'HALGetTick' and start ticks value is 
+	COMMENT greater than 'PWR_OVERDRIVE_TIMEOUT_VALUE'(Exercised for PWR_OVERDRIVE_TIMEOUT_VALUE+1).
+	COMMENT Equivalence Class 3,4,9        
+	COMMENT </TD>
+	
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--CSR1 of PWR register is initialized.
+			VAR PWR->CSR1,						init=PWR_FLAG_ODRDY,		ev=init
+	 
+		COMMENT INPUT/OUTPUT SECTION:
+	
+			--enable the RCC peripheral clock
+	        VAR RCC->APB1ENR, 					init=0, 					ev=0x10000000U
+	        
+	    	--CR1 of PWR register is initialized.   
+			VAR PWR->CR1, 						init=0x0000c000,			ev=0x0003c000
+	
+		COMMENT OUTPUT SECTION:
+		
+			--expecting the return value.
+			VAR ret_HalPwrExEnableOverDrive,	init =HAL_OK,				ev = HAL_TIMEOUT
+		
+		-- Stub calls:
+		SIMUL 
+		
+		--to Get a tick value in millisecond 
+		
+			STUB	HALGetTick()4294967295
+			STUB	HALGetTick()2
+			STUB	HALGetTick()1003          
+		
+		END SIMUL
+	
+    -- Calling the unit under test
+	#ret_HalPwrExEnableOverDrive = HalPwrExEnableOverDrive();
+		
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-007]
+	COMMENT The function does the following till the returns value of the macro '__HAL_PWR_GET_FLAG' called with the parameter 
+	COMMENT 'PWR_FLAG_ODSWRDY' is other than ZERO.
+	COMMENT Loops for zero times
+	COMMENT Equivalence Class 5,9
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-008]
+	COMMENT The function returns 'HAL_OK' 
+	COMMENT Equivalence Class 2 
+	COMMENT </TD>
+
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+			--CSR1 of PWR register is initialized.
+			VAR PWR->CSR1,							init=0x00030000,		ev=init
+	
+		COMMENT INPUT/OUTPUT SECTION:
+	
+			--enable the RCC peripheral clock
+	 		VAR RCC->APB1ENR, 						init=0, 				ev=0x10000000U
+	 		
+	        --CR1 of PWR register is initialized.
+			VAR PWR->CR1, 							init=0x0000c000,		ev=0x0003c000
+	
+	
+	 	COMMENT OUTPUT SECTION:
+			--expecting the return value.
+			VAR ret_HalPwrExEnableOverDrive,		init =HAL_TIMEOUT,		ev = HAL_OK
+	 
+		
+	   -- Stub calls:
+		SIMUL
+	
+			--to Get a tick value in millisecond 
+			STUB	HALGetTick()4294967295
+			STUB	HALGetTick()0
+
+		END SIMUL
+	
+        -- Calling the unit under test
+		#ret_HalPwrExEnableOverDrive = HalPwrExEnableOverDrive();
+		
+    END ELEMENT
+
+END TEST -- TEST 5
+    
+TEST 6
+FAMILY nominal 
+    
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-004]
+	COMMENT The function does the following till the returns value of the macro '__HAL_PWR_GET_FLAG' called with the parameter
+	COMMENT 'PWR_FLAG_ODRDY' is ZERO.
+	COMMENT Loops for 2 times and does the followings:
+	COMMENT 1. loop for 1st time
+	COMMENT    does nothing when Return HAL_TIMEOUT when the subtraction of the returns value of function call HALGetTick and 
+	COMMENT    start ticks value is lesser than 'PWR_OVERDRIVE_TIMEOUT_VALUE' (Exercised for PWR_OVERDRIVE_TIMEOUT_VALUE-1).
+	COMMENT 2. loop for 2nd time
+	COMMENT    Return 'HAL_TIMEOUT' when the subtraction of the returns value of function call 'HALGetTick' and start ticks value is 
+	COMMENT    greater than 'PWR_OVERDRIVE_TIMEOUT_VALUE' (Exercised for PWR_OVERDRIVE_TIMEOUT_VALUE+1). 
+	COMMENT Equivalence Class  3,5,9
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+			--CSR1 of PWR register is initialized.
+			VAR PWR->CSR1,							init=0,				ev=init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--enable the RCC peripheral clock
+			VAR RCC->APB1ENR, 						init=0, 			ev=0x10000000U
+			--CR1 of PWR register is initialized.
+			VAR PWR->CR1, 							init=0x0000c000,	ev=0x0001c000
+
+		COMMENT OUTPUT SECTION:
+			--expecting the return value.
+			VAR ret_HalPwrExEnableOverDrive,		init =HAL_OK,		ev = HAL_TIMEOUT
+
+		
+	   -- Stub calls:
+		SIMUL 
+		
+			--to Get a tick value in millisecond 
+			STUB	HALGetTick()0
+			STUB	HALGetTick()999
+			STUB	HALGetTick()1001
+            
+		END SIMUL
+	
+        -- Calling the unit under test
+		#ret_HalPwrExEnableOverDrive = HalPwrExEnableOverDrive();
+		
+    END ELEMENT
+
+END TEST -- TEST 6
+    
+TEST 7
+FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalpwrex-HalPwrExEnableOverDrive-DB-LLR-007]
+	COMMENT The function does the following till the return value of the macro __HAL_PWR_GET_FLAG called with the parameter 
+	COMMENT PWR_FLAG_ODSWRDY is ZERO.
+	COMMENT Loop for two times and does the followings:
+	COMMENT 1. loop for 1st time:
+	COMMENT Does nothing when the substration of the return value of function call HALGetTick 
+	COMMENT and start ticks value is lesser than PWR_OVERDRIVE_TIMEOUT_VALUE (Exercised for PWR_OVERDRIVE_TIMEOUT_VALUE-1).
+	COMMENT 2. loop for 2nd time:
+	COMMENT Returns HAL_TIMEOUT when the substration of the return value of function call HALGetTick and start ticks value is 
+	COMMENT greater than PWR_OVERDRIVE_TIMEOUT_VALUE(Exercised for PWR_OVERDRIVE_TIMEOUT_VALUE+1).
+	COMMENT Equivalence Class 3,5        
+	COMMENT </TD>
+
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+			--CSR1 of PWR register is initialized.
+			VAR PWR->CSR1,							init=PWR_FLAG_ODRDY,		ev=init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--enable the RCC peripheral clock
+			VAR RCC->APB1ENR, 						init=0, 					ev=0x10000000U
+			
+			--CR1 of PWR register is initialized.
+			VAR PWR->CR1, 							init=0x0000c000,			ev=0x0003c000
+
+		COMMENT OUTPUT SECTION:
+
+			--expecting the return value.
+			VAR ret_HalPwrExEnableOverDrive,		init =HAL_OK,				ev = HAL_TIMEOUT
+
+
+	   -- Stub calls:
+		SIMUL 
+		
+			--to Get a tick value in millisecond 
+			STUB	HALGetTick()1
+			STUB	HALGetTick()0
+			STUB	HALGetTick()999
+			STUB	HALGetTick()1001
+		
+		END SIMUL
+	
+        -- Calling the unit under test
+		#ret_HalPwrExEnableOverDrive = HalPwrExEnableOverDrive();
+    END ELEMENT
+
+    END TEST -- TEST 7
+END SERVICE -- HalPwrExEnableOverDrive
+

@@ -1,0 +1,1943 @@
+HEADER hdudispftimers,Source Code Ver : 1.6 ,TestScript Ver :1.2
+--------------------------------------------------------------------------------
+-- Author Name         : Vignesh Sunil
+--
+-- File Name           : hdudispftimers.ptu
+--                       
+-- Test Creation Date  : 28.04.2021
+--
+-- Tested Functions    : FindTimerColor
+--						 FindTimerParam
+--						 AppExTimerDraw
+--						 
+--						 
+-- Version History     :
+--
+-- TEST-VERSION     TEST-DATE       TESTER NAME        MODIFICATIONS
+-- ------------     ---------       -----------        -------------
+--		1.1			28.04.2021		Vignesh Sunil	   Updated as per #PR100338
+--		1.2			14.05.2021		Vignesh Sunil	   Updated as per #PR100354
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/  
+##include "hdudispftimers.h"  /* Contains functions for exceedance timers */
+##include "hdudispfgrapp.h"           /* routines for all graph */
+##include "hdudispfbinascii.h"     /*Utility routines to convert binary to ascii base 10.*/
+##include "hdudispfpdidata.h" /* provides pdi declarations */
+##include "hdudispfrterror.h"           /* Provides sub routine for run time errors.*/
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+--------------------------------------------------------------------------------
+-- Declarations of the global variables of the tested file
+	
+    #T_PARAM_TABLE Parameters[256];
+    #T_CHAR Timer_message[13]; 
+    #T_PAGE Page_settings; 
+    #T_UINT8 Timer_cnt; 
+	
+    #extern T_CHAR glob_file_name[];	
+	
+    --  Declarations of the temporary variables of the tested file 
+    #T_UINT32 index1;
+  
+	
+    #T_UINT8 PTU_index3=0;  
+  
+    --Temporary variable created to verify the parameters of function "RterrWidget"
+    #T_CHAR  PTU_rterr_file[100];
+    #T_CHAR  PTU_rterr_message[100];
+
+    #T_CHAR PTU_p_src[20];
+    #T_CHAR PTU_p_src_1[20];		
+    #T_INT8 PTU_pc_string;	
+    #T_UINT8 PTU_index=0;	
+    #T_UINT32 PTU_src[10];	
+    #T_INT8 PTU_dest[10];		
+
+--------------------------------------------------------------------------------
+BEGIN
+
+    COMMENT Author name      : Vignesh Sunil
+    COMMENT
+    COMMENT File name        : hdudispftimers.ptu
+    COMMENT
+    COMMENT Tested functions : 
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT None
+    COMMENT</AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+	COMMENT Valid Class(es)
+	COMMENT 
+	COMMENT Class 1
+	COMMENT In function 'AppExTimerDraw', Timer_cnt is equal to zero.
+	COMMENT 
+	COMMENT Class 2
+	COMMENT In function 'AppExTimerDraw', Timer_cnt is greaterthan MAX_EXCEED_TIMERS
+	COMMENT 
+	COMMENT Class 3
+	COMMENT In function 'AppExTimerDraw', timer_a249_label of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT timer_label of Timer_settings with index Counter2 of Page_settings.	
+	COMMENT 
+	COMMENT Class 4
+	COMMENT In function 'AppExTimerDraw', timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+	COMMENT 
+	COMMENT Class 5
+	COMMENT In function 'AppExTimerDraw', timer_id of Exceed_timer_params 
+    COMMENT  with index Counter1 is equal to ZERO
+	COMMENT 
+	COMMENT Class 6
+	COMMENT In function 'AppExTimerDraw',timer_data_flag of Exceed_timer_params 
+    COMMENT  with index Counter1 is equal to FALSE	
+	COMMENT 
+	COMMENT Class 7
+	COMMENT In function 'AppExTimerDraw',timer_sec_flag of Exceed_timer_params 
+    COMMENT  with index Counter1 is equal to FALSE	
+	COMMENT 
+	COMMENT Class 8
+	COMMENT In function 'AppExTimerDraw', timer_id of Exceed_timer_params 
+    COMMENT  with index Counter1 is not equal to ZERO	
+	COMMENT 
+	COMMENT Class 9
+	COMMENT In function 'AppExTimerDraw', timer_a249_label of Exceed_timer_params with index Counter1 is not equal to 
+    COMMENT timer_label of Timer_settings with index Counter2 of Page_settings.	
+	COMMENT 
+	COMMENT Class 10
+	COMMENT In function 'AppExTimerDraw', timer_a429_sdi of Exceed_timer_params with index Counter1 is not equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.	
+	COMMENT 
+	COMMENT Class 11
+	COMMENT In function 'AppExTimerDraw', Timer_cnt is less than MAX_EXCEED_TIMERS	
+	COMMENT 
+	COMMENT Class 12
+	COMMENT In function 'AppExTimerDraw',timer_data_flag of Exceed_timer_params 
+    COMMENT  with index Counter1 is equal to TRUE	
+	COMMENT 
+	COMMENT Class 13
+	COMMENT In function 'AppExTimerDraw',timer_sec_flag of Exceed_timer_params 
+    COMMENT  with index Counter1 is equal to TRUE	
+	COMMENT 
+	COMMENT Class 14
+	COMMENT In function 'AppExTimerDraw',color is INVALID_COLOR
+	COMMENT 
+	COMMENT Class 15
+	COMMENT In function 'AppExTimerDraw',color is otherthan INVALID_COLOR	
+	COMMENT 
+	COMMENT Class 16
+	COMMENT In function 'AppExTimerDraw',timer_param of Exceed_timer_params with 
+    COMMENT  index Counter1 is not equal to ONE and TWO and THREE
+	COMMENT 
+	COMMENT Class 17
+	COMMENT In function 'AppExTimerDraw',timer_param of Exceed_timer_params with 
+    COMMENT  index Counter1 is equal to ONE and TWO and THREE
+	COMMENT 
+	COMMENT Class 18
+	COMMENT In function 'AppExTimerDraw',stat of reading of Parameters with index
+    COMMENT  Timer_a429_tag[Counter1] not equal to PARAM_OK
+	COMMENT 
+	COMMENT Class 19
+	COMMENT In function 'AppExTimerDraw',stat of reading of Parameters with index
+    COMMENT  Timer_a429_tag[Counter1] equal to PARAM_OK	
+	COMMENT 
+	COMMENT Class 20
+	COMMENT In function 'AppExTimerDraw',timer format of Timer_settings with index as engine sdi of 
+    COMMENT  Page_settings is equal to SECONDS
+	COMMENT 
+	COMMENT Class 21
+	COMMENT In function 'AppExTimerDraw',timer format of Timer_settings with index as engine sdi of 
+    COMMENT  Page_settings is equal to MIN_SEC
+	COMMENT 
+	COMMENT Class 22
+	COMMENT In function 'AppExTimerDraw',minutes is greater than 99
+	COMMENT 
+	COMMENT Class 23
+	COMMENT In function 'AppExTimerDraw',minutes is lessthan 99	
+	COMMENT 
+	COMMENT Class 24
+	COMMENT In function 'AppExTimerDraw',timer format of Timer_settings with index as engine sdi of 
+    COMMENT  Page_settings is equal to HOUR_MIN_SEC	
+	COMMENT 
+	COMMENT Class 25
+	COMMENT In function 'AppExTimerDraw',timers hours is greater than 0
+	COMMENT 
+	COMMENT Class 26
+	COMMENT In function 'AppExTimerDraw',timers hours is equal to 0	
+	COMMENT 
+	COMMENT Class 27
+	COMMENT In function 'FindTimerColor',return INVALID_COLOR when the color is apart from 1 and 2.	
+	COMMENT 
+	COMMENT Class 28
+	COMMENT In function 'FindTimerColor',return YELLOW when the color is 1.
+	COMMENT 
+	COMMENT Class 29
+	COMMENT In function 'FindTimerParam', call function MemCpy to copy XXX to param when value is apart from 1 and 2 .
+	COMMENT 
+	COMMENT Class 30
+	COMMENT In function 'FindTimerColor',return RED when the color is 2.
+	COMMENT 
+	COMMENT Class 31
+	COMMENT In function 'FindTimerParam',call the function MemCpy to copy N1 to param when value is 1.	
+	COMMENT 
+	COMMENT Class 32
+	COMMENT In function 'FindTimerParam',call the function MemCpy to copy TOT to param when value is 2.		
+	COMMENT 
+	COMMENT Class 33
+	COMMENT In function 'FindTimerParam',call the function MemCpy to copy TRQ to param when value is 3.	
+	COMMENT
+	COMMENT Class 34
+	COMMENT In function 'AppExTimerDraw',timer_flash of Exceed_timer_params with index Counter1 is equal to ONE
+	COMMENT
+	COMMENT Class 35
+	COMMENT In function 'AppExTimerDraw',timer_flash of Exceed_timer_params with index Counter1 is not equal to ONE
+	COMMENT
+    COMMENT Invalid Class(es)   
+    COMMENT
+    COMMENT None
+    COMMENT
+    COMMENT </ECD>	
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+
+DEFINE STUB hdudispftimers_c
+        #T_INT8* BinasByteFormatInfo(void _no *src, T_UINT16 _in format, T_INT8 _no *dest)
+        #{
+        #PTU_src[PTU_index]=*((T_UINT32 *)src);
+        #*dest=PTU_dest[PTU_index];
+        #PTU_index++;
+        #}
+        #void TextDispString(char _no *pc_string[200], T_UINT16 _in u16_x, T_UINT16 _in u16_y, T_ETXFONT _in e_tx_font,
+        #  T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv, T_ETXALIGN _in e_tx_align)
+        #{
+        #pc_string=&PTU_pc_string;
+        #}
+        #void RterrWidget(T_CHAR _no *pc_file, T_INT32 _in s32_line_number, T_CHAR _no *pc_message)
+        #{
+        #   for(index1 = 0; index1<50;   index1++)
+        #   {
+        #    PTU_rterr_file[index1]=*(T_CHAR *)pc_file;
+        #    pc_file++;
+        #    PTU_rterr_message[index1]=*(T_CHAR *)pc_message;
+        #    pc_message++;
+        #   }
+        #}		
+		#void MemCpy(void * _in p_dest,  const void _no *p_src, T_UINT16  _in count)			
+		#{	
+		# PTU_index3++;
+        #if(PTU_index3==1)
+        #{
+        # for(index1 = 0; index1<10;   index1++)
+        # {
+		#  PTU_p_src[index1] = *(T_CHAR *)p_src;
+        # 
+        # p_src++;
+        # }
+        #}
+        #else  	
+        # for(index1 = 0; index1<10;   index1++)
+        # { 	
+		#  PTU_p_src_1[index1] = *(T_CHAR *)p_src;
+        # 
+        # p_src++;
+		# }	
+		#}	
+		#	
+END DEFINE
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispftimers.c
+ENVIRONMENT ENV_hdudispftimers_c
+  ARRAY Timer_a429_tag,		init = { others => 0 },		ev = init
+END ENVIRONMENT -- ENV_hdudispftimers_c
+USE ENV_hdudispftimers_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service AppExTimerDraw
+--------------------------------------------------------------------------------
+SERVICE AppExTimerDraw
+SERVICE_TYPE extern
+
+
+    TEST 1
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT  
+    COMMENT [hdudispftimers-AppExTimerDraw-DB-LLR-001]
+    COMMENT The function return when Timer_cnt is equal to zero.
+    COMMENT Equivalence Class 1
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = ZERO,       ev = init	
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                            
+			--None		
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+            
+			--None		
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 1
+	
+    TEST 2
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-002]
+    COMMENT  The function call RterrWidget with parameter __FILE__, __LINE__ and string 
+    COMMENT  "Too many exceed timers" when MAX_EXCEED_TIMERS is less than Timer_cnt.
+    COMMENT  Equivalence Class 2  
+    COMMENT  
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-005]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a.Return from the function 
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2. timer_id,timer_data_flag,timer_sec_flag of Exceed_timer_params 
+    COMMENT  with index Counter1 is equal to FALSE.
+    COMMENT  Equivalence Class 3,4,5,6,7  
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = MAX_EXCEED_TIMERS+1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,        init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,        init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = FALSE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = FALSE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                            
+			--Variable to verify the STUB native code                                    
+            VAR PTU_rterr_file,                                init = "RTERR FILE",                 ev = glob_file_name
+
+			--Variable to verify the STUB native code                                
+            VAR PTU_rterr_message,                             init = "RTERR MESSAGE",              ev = "Too many Exceed Timers"			
+ 	
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+            
+			STUB RterrWidget(177)			
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 2	
+	
+    TEST 3
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT       
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-003]     
+    COMMENT  The function do nothing when      
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is not equal to 
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is not equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.     
+    COMMENT  2.timer_data_flag of Exceed_timer_params with index Counter1 is not equal to TRUE
+    COMMENT  Equivalence Class  6,9,10     
+    COMMENT      
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-005]     
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to   
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And   
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to   
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings else do nothing.  
+    COMMENT  2. timer_id is not ZERO,timer_data_flag,timer_sec_flag of   
+    COMMENT  Exceed_timer_params with index Counter1 is equal to FALSE  
+    COMMENT  Equivalence Class 6,9,1,8      
+    COMMENT       
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-006]
+    COMMENT  the function do nothing when
+    COMMENT  timer_data_flag,timer_sec_flag of Exceed_timer_params 
+    COMMENT  with index Counter1 is equal to FALSE.
+    COMMENT  Equivalence Class 6,7 
+    COMMENT  
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = MAX_EXCEED_TIMERS+1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[1..7].timer_a249_label,        init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0..7].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[1..7].timer_a429_sdi,        init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0..7].timer_sdi,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = FALSE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = FALSE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = 1,       ev = init	
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                            
+			--Variable to verify the STUB native code                                    
+            VAR PTU_rterr_file,                                init = "RTERR FILE",                 ev = glob_file_name
+
+			--Variable to verify the STUB native code                                
+            VAR PTU_rterr_message,                             init = "RTERR MESSAGE",              ev = "Too many Exceed Timers"			
+ 	
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+            
+			STUB RterrWidget(177)			
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 3	
+	
+    TEST 4
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT       
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-003]     
+    COMMENT  The function do nothing when      
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is not equal to 
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is not equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.     
+    COMMENT  2.timer_data_flag of Exceed_timer_params with index Counter1 is not equal to TRUE
+    COMMENT  Equivalence Class  6,9,10     
+    COMMENT      
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-005]     
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to   
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And   
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to   
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings else do nothing.  
+    COMMENT  2. timer_id is not ZERO,timer_data_flag,timer_sec_flag of   
+    COMMENT  Exceed_timer_params with index Counter1 is equal to FALSE  
+    COMMENT  Equivalence Class 6,9,1,8     
+    COMMENT       
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-006]
+    COMMENT  the function do nothing when
+    COMMENT  timer_data_flag,timer_sec_flag of Exceed_timer_params 
+    COMMENT  with index Counter1 is equal to FALSE.
+    COMMENT  Equivalence Class 6,7 
+    COMMENT  
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = MAX_EXCEED_TIMERS+1,       ev = init
+			
+            VAR Exceed_timer_params[0..7].timer_a249_label,        init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0..7].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[1..7].timer_a429_sdi,        init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0..7].timer_sdi,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = FALSE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = 0,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 1,       ev = init
+			
+            VAR Timer_message[0],                                 init = '0',       ev = init
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                            
+			--Variable to verify the STUB native code                                    
+            VAR PTU_rterr_file,                                init = "RTERR FILE",                 ev = glob_file_name
+
+			--Variable to verify the STUB native code                                
+            VAR PTU_rterr_message,                             init = "RTERR MESSAGE",              ev = "Too many Exceed Timers"		
+
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "N1 "				
+ 	
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+            
+			STUB RterrWidget(177)		
+			STUB MemCpy 1..8=>(&Timer_message[0],4)			
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 4	
+	
+    TEST 5
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT       
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-003]     
+    COMMENT  The function do nothing when      
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is not equal to 
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is not equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.     
+    COMMENT  2.timer_data_flag of Exceed_timer_params with index Counter1 is not equal to TRUE
+    COMMENT  Equivalence Class  6,9,10     
+    COMMENT      
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-005]     
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to   
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And   
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to   
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings else do nothing.  
+    COMMENT  2. timer_id is not ZERO,timer_data_flag,timer_sec_flag of   
+    COMMENT  Exceed_timer_params with index Counter1 is equal to FALSE  
+    COMMENT  Equivalence Class 6,9,1,8       
+    COMMENT       
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-006]
+    COMMENT  the function do nothing when
+    COMMENT  timer_data_flag,timer_sec_flag of Exceed_timer_params 
+    COMMENT  with index Counter1 is equal to FALSE.
+    COMMENT  Equivalence Class 6,7 
+    COMMENT  
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = MAX_EXCEED_TIMERS+1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[1..7].timer_a249_label,        init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0..7].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[1..7].timer_a429_sdi,        init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0..7].timer_sdi,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = FALSE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = 0,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 0,       ev = init	
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                            
+			--Variable to verify the STUB native code                                    
+            VAR PTU_rterr_file,                                init = "RTERR FILE",                 ev = glob_file_name
+
+			--Variable to verify the STUB native code                                
+            VAR PTU_rterr_message,                             init = "RTERR MESSAGE",              ev = "Too many Exceed Timers"			
+ 	
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+            
+			STUB RterrWidget(177)			
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 5	
+	
+    TEST 6
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-002]
+    COMMENT  The function do nothing when MAX_EXCEED_TIMERS is greaterthan Timer_cnt.
+    COMMENT  Equivalence Class 11  
+    COMMENT  
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-003]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a.Call function FindTimerParam with parameter timer_param of Exceed_timer_params
+    COMMENT   with index Counter1 and  address of Timer_message[0].
+    COMMENT  b.Set color to return value of function FindTimerColor with parameter timer_color
+    COMMENT   of Exceed_timer_params with index Counter1
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to
+    COMMENT   timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to timer_sdi
+    COMMENT   of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag of Exceed_timer_params with index Counter1 is equal to TRUE.
+    COMMENT  Equivalence Class 12  
+    COMMENT
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-004]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a.Set time  to timer_seconds of Exceed_timer_params with index Counter1
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to
+    COMMENT   timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to timer_sdi
+    COMMENT   of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_sec_flag of Exceed_timer_params with index Counter1 is equal to TRUE .
+    COMMENT  Equivalence Class 13 
+    COMMENT  
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-006]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a.Call function MemCpy to copy "  XXXX  " to  Timer_message[0]
+    COMMENT  b.Call the function TextDispString with parameters Timer_message,u16_x
+    COMMENT   and u16_y  of  timer_axis of  Timer_settings with index Counter2 of 
+    COMMENT   Page_settings,timer_font of Timer_settings with index Counter2 of 
+    COMMENT   Page_settings,RED, TX_NO_FLASH, V_NORMAL, ALIGN_LEFT.
+    COMMENT  c.Break from the loop.
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal 
+    COMMENT  to timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index
+    COMMENT   Counter1 is equal to TRUE.
+    COMMENT  3.color is INVALID_COLOR or timer_param of Exceed_timer_params with 
+    COMMENT  index Counter1 is not equal to ONE and TWO and THREE or stat of 
+    COMMENT  reading of Parameters with index
+    COMMENT  Timer_a429_tag[Counter1] (MCDC:TXXXX)
+    COMMENT  Equivalence Class 12,13,14 
+    COMMENT  
+    COMMENT  [hdudispftimers-FindTimerColor-DB-LLR-003]
+    COMMENT  The function return INVALID_COLOR when the color is apart from 1 and 2.
+    COMMENT  Equivalence Class 27
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 3,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 0,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = ONE,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "N1 "	
+            VAR PTU_p_src_1,          init = "MESSAGE",       ev = "  XXXX  "	
+			
+            VAR PTU_index3,         init = 0,               ev = 2					
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)		
+			STUB MemCpy(&Timer_message[0],9)	
+			
+			STUB TextDispString(0,0,0,RED, TX_NO_FLASH, V_NORMAL, ALIGN_LEFT)			
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 6	
+	
+    TEST 7
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-006]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a.Call function MemCpy to copy "  XXXX  " to  Timer_message[0]
+    COMMENT  b.Call the function TextDispString with parameters Timer_message,u16_x
+    COMMENT   and u16_y  of  timer_axis of  Timer_settings with index Counter2 of 
+    COMMENT   Page_settings,timer_font of Timer_settings with index Counter2 of 
+    COMMENT   Page_settings,RED, TX_NO_FLASH, V_NORMAL, ALIGN_LEFT.
+    COMMENT  c.Break from the loop.
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal 
+    COMMENT  to timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index
+    COMMENT   Counter1 is equal to TRUE.
+    COMMENT  3.color is INVALID_COLOR or timer_param of Exceed_timer_params with 
+    COMMENT  index Counter1 is not equal to ONE and TWO and THREE or stat of 
+    COMMENT  reading of Parameters with index
+    COMMENT  Timer_a429_tag[Counter1] (MCDC:FTXXX)
+    COMMENT  Equivalence Class 12,13,15,16
+    COMMENT  
+    COMMENT  [hdudispftimers-FindTimerColor-DB-LLR-001]
+    COMMENT  The function return YELLOW when the parameter is 1.
+    COMMENT  Equivalence Class 28
+    COMMENT  
+    COMMENT  [hdudispftimers-FindTimerParam-DB-LLR-004]
+    COMMENT  The function call the function MemCpy to copy XXX to param when value is apart from 1 and 2 
+    COMMENT  Equivalence Class 29  
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 4,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 0,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = ONE,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "XXX"	
+            VAR PTU_p_src_1,          init = "MESSAGE",       ev = "  XXXX  "	
+			
+            VAR PTU_index3,         init = 0,               ev = 2					
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)		
+			STUB MemCpy(&Timer_message[0],9)	
+			
+			STUB TextDispString(0,0,0,RED, TX_NO_FLASH, V_NORMAL, ALIGN_LEFT)			
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 7	
+	
+    TEST 8
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-006]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a.Call function MemCpy to copy "  XXXX  " to  Timer_message[0]
+    COMMENT  b.Call the function TextDispString with parameters Timer_message,u16_x
+    COMMENT   and u16_y  of  timer_axis of  Timer_settings with index Counter2 of 
+    COMMENT   Page_settings,timer_font of Timer_settings with index Counter2 of 
+    COMMENT   Page_settings,RED, TX_NO_FLASH, V_NORMAL, ALIGN_LEFT.
+    COMMENT  c.Break from the loop.
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal 
+    COMMENT  to timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index
+    COMMENT   Counter1 is equal to TRUE.
+    COMMENT  3.color is INVALID_COLOR or timer_param of Exceed_timer_params with 
+    COMMENT  index Counter1 is not equal to ONE and TWO and THREE or stat of 
+    COMMENT  reading of Parameters with index
+    COMMENT  Timer_a429_tag[Counter1] (MCDC:FFTXX)
+    COMMENT  Equivalence Class 12,13,15,16
+    COMMENT  
+    COMMENT  [hdudispftimers-FindTimerColor-DB-LLR-002]
+    COMMENT  The function return RED when the parameter is 2.
+    COMMENT  Equivalence Class 30
+    COMMENT  
+    COMMENT  [hdudispftimers-FindTimerParam-DB-LLR-001]
+    COMMENT  The function call the function MemCpy to copy N1 to param when value is 1.
+    COMMENT  Equivalence Class 31  
+    COMMENT  
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 2,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 0,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = ONE,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init	
+			
+            VAR Timer_a429_tag[0],   init = 0,       ev = init		
+			
+            VAR Parameters[0].reading.stat,   init = PARAM_ADVISORY,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "N1 "	
+            VAR PTU_p_src_1,          init = "MESSAGE",       ev = "  XXXX  "	
+			
+            VAR PTU_index3,         init = 0,               ev = 2					
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)		
+			STUB MemCpy(&Timer_message[0],9)	
+			
+			STUB TextDispString(0,0,0,RED, TX_NO_FLASH, V_NORMAL, ALIGN_LEFT)			
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 8	
+	
+    TEST 9
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-006]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a.Call function MemCpy to copy "  XXXX  " to  Timer_message[0]
+    COMMENT  b.Call the function TextDispString with parameters Timer_message,u16_x
+    COMMENT   and u16_y  of  timer_axis of  Timer_settings with index Counter2 of 
+    COMMENT   Page_settings,timer_font of Timer_settings with index Counter2 of 
+    COMMENT   Page_settings,RED, TX_NO_FLASH, V_NORMAL, ALIGN_LEFT.
+    COMMENT  c.Break from the loop.
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal 
+    COMMENT  to timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index
+    COMMENT   Counter1 is equal to TRUE.
+    COMMENT  3.color is INVALID_COLOR or timer_param of Exceed_timer_params with 
+    COMMENT  index Counter1 is not equal to ONE and TWO and THREE or stat of 
+    COMMENT  reading of Parameters with index
+    COMMENT  Timer_a429_tag[Counter1] (MCDC:FFFTX)
+    COMMENT  Equivalence Class 12,13,15,16
+    COMMENT  
+    COMMENT  [hdudispftimers-FindTimerParam-DB-LLR-002]
+    COMMENT  The function call the function MemCpy to copy TOT to param when value is 2.
+    COMMENT  Equivalence Class 32
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 2,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 2,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 0,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = ONE,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init	
+			
+            VAR Timer_a429_tag[0],   init = 0,       ev = init		
+			
+            VAR Parameters[0].reading.stat,   init = PARAM_ADVISORY,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "TOT"	
+            VAR PTU_p_src_1,          init = "MESSAGE",       ev = "  XXXX  "	
+			
+            VAR PTU_index3,         init = 0,               ev = 2					
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)		
+			STUB MemCpy(&Timer_message[0],9)	
+			
+			STUB TextDispString(0,0,0,RED, TX_NO_FLASH, V_NORMAL, ALIGN_LEFT)			
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 9	
+	
+    TEST 10
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT    
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-006]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a.Call function MemCpy to copy "  XXXX  " to  Timer_message[0]
+    COMMENT  b.Call the function TextDispString with parameters Timer_message,u16_x
+    COMMENT   and u16_y  of  timer_axis of  Timer_settings with index Counter2 of 
+    COMMENT   Page_settings,timer_font of Timer_settings with index Counter2 of 
+    COMMENT   Page_settings,RED, TX_NO_FLASH, V_NORMAL, ALIGN_LEFT.
+    COMMENT  c.Break from the loop.
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal 
+    COMMENT  to timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index
+    COMMENT   Counter1 is equal to TRUE.
+    COMMENT  3.color is INVALID_COLOR or timer_param of Exceed_timer_params with 
+    COMMENT  index Counter1 is not equal to ONE and TWO and THREE or stat of 
+    COMMENT  reading of Parameters with index
+    COMMENT  Timer_a429_tag[Counter1] (MCDC:FFFFT)
+    COMMENT  Equivalence Class 12,13,15,17,18
+    COMMENT  
+    COMMENT  [hdudispftimers-FindTimerParam-DB-LLR-003]
+    COMMENT  The function call the function MemCpy to copy TRQ to param when value is 3.
+    COMMENT  Equivalence Class 33
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 3,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 2,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 0,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = ONE,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init	
+			
+            VAR Timer_a429_tag[0],   init = 0,       ev = init		
+			
+            VAR Parameters[0].reading.stat,   init = MISSING,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "TRQ"	
+            VAR PTU_p_src_1,          init = "MESSAGE",       ev = "  XXXX  "	
+			
+            VAR PTU_index3,         init = 0,               ev = 2					
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)		
+			STUB MemCpy(&Timer_message[0],9)	
+			
+			STUB TextDispString(0,0,0,RED,TX_NO_FLASH, V_NORMAL, ALIGN_LEFT)			
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 10	
+	
+    TEST 11
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-006]
+    COMMENT  The function do nothing when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal 
+    COMMENT  to timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index
+    COMMENT   Counter1 is equal to TRUE.
+    COMMENT  3.color is not INVALID_COLOR or timer_param of Exceed_timer_params with 
+    COMMENT  index Counter1 is equal to ONE and TWO and THREE or stat of 
+    COMMENT  reading of Parameters with index
+    COMMENT  Timer_a429_tag[Counter1] is PARAM_OK (MCDC:FFFFF)
+    COMMENT  Equivalence Class 12,13,15,17,19
+    COMMENT  
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-007]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a.Set Timer_message[3] to ''.
+    COMMENT  b.Set timer hours to result of timers time and product of SEC_PER_MIN and MIN_PER_HOURS
+    COMMENT  c.Set the timers minutes to result of timers time and SEC_PER_MIN
+    COMMENT  d.Set the timers seconds to remainder of timers time and SEC_PER_MIN
+    COMMENT  Equivalence Class None
+    COMMENT  
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-008]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a.Set set timer string to return value of function BinasByteFormatInfo 
+    COMMENT  with reference to timers time , sum of FOURB,FIVEW,UNSIGNED and NOLZB 
+    COMMENT  and timers message with index four as its parameter
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal 
+    COMMENT  to timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index 
+    COMMENT  Counter1 is equal to TRUE.
+    COMMENT  3.timer format of Timer_settings with index as engine sdi of 
+    COMMENT  Page_settings is equal to SECONDS
+    COMMENT  Equivalence Class 12,13,20
+    COMMENT  
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 2,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 10,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = ONE,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init	
+			
+            VAR Timer_a429_tag[0],   init = 0,       ev = init		
+			
+            VAR Parameters[0].reading.stat,   init = PARAM_OK,       ev = init		
+			
+            VAR Page_settings.Timer_settings[0].timer_format,   init = SECONDS,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "N1 "	
+			
+            VAR PTU_index3,         init = 0,               ev = 1		
+			
+            VAR Timer_message[3],                                 init = '1',       ev = ' '
+			
+            VAR Timer_message[4],                                 init = '1',       ev = '\0'	
+
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[0],                                 init = 0,                   ev = 10
+
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[0],                                init = 0,                   ev = init			
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)			
+			
+			STUB TextDispString(0,0,0,RED, TX_FLASH, V_REVERSE, ALIGN_LEFT)	
+
+            STUB BinasByteFormatInfo (FOURB+FIVEW+UNSIGNED+NOLZB)&PTU_dest[0]				
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 11	
+	
+    TEST 12
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-009]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a)  Set the string with return value of BinasByteFormatInfo with minutes, 
+    COMMENT  FOURB+THREEW+UNSIGNED+NOLZB and timer message with index 4 as parameters.
+    COMMENT  b)  Add the string with colon to get the timer look.
+    COMMENT  c)  Add the string with return value of BinasByteFormatInfo with seconds, 
+    COMMENT  FOURB+TWOW+UNSIGNED+NOLZB and the string itself as parameters 
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index 
+    COMMENT  Counter1 is equal to TRUE.
+    COMMENT  3.timer format of Timer_settings with index as engine sdi of Page_settings 
+    COMMENT  is equal to MIN_SEC
+    COMMENT  4.minutes is greater than 99
+    COMMENT  Equivalence Class 12,13,21,22
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 2,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 2,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 6000,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = ONE,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init	
+			
+            VAR Timer_a429_tag[0],   init = 0,       ev = init		
+			
+            VAR Parameters[0].reading.stat,   init = PARAM_OK,       ev = init		
+			
+            VAR Page_settings.Timer_settings[0].timer_format,   init = MIN_SEC,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "TOT"	
+			
+            VAR PTU_index3,         init = 0,               ev = 1		
+			
+            VAR Timer_message[3],                                 init = '1',       ev = ' '
+			
+            VAR Timer_message[4],                                 init = '1',       ev = '\0'	
+
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[0],                                 init = 0,                   ev = 0
+			
+            VAR PTU_src[1],                                 init = 0,                   ev = 100
+
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[0],                                init = 0,                   ev = init	
+			
+            VAR PTU_dest[1],                                init = 0,                   ev = init			
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)			
+			
+			STUB TextDispString(0,0,0,RED, TX_FLASH, V_REVERSE, ALIGN_LEFT)	
+
+            STUB BinasByteFormatInfo (FOURB+THREEW+UNSIGNED+NOLZB)&PTU_dest[0]	
+			
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[1]				
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 12	
+	
+    TEST 13
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-009]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a) Set the string with return value of BinasByteFormatInfo with minutes, 
+    COMMENT  FOURB+TWOW+UNSIGNED+NOLZB and timer message with index 4 as parameters.
+    COMMENT  b)  Add the string with colon to get the timer look.
+    COMMENT  c) Add the string with return value of BinasByteFormatInfo with seconds, 
+    COMMENT  FOURB+TWOW+UNSIGNED+NOLZB and the string itself as parameters 
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index 
+    COMMENT  Counter1 is equal to TRUE.
+    COMMENT  3.timer format of Timer_settings with index as engine sdi of Page_settings 
+    COMMENT  is equal to MIN_SEC
+    COMMENT  4.minutes is lessthan 99
+    COMMENT  Equivalence Class 12,13,21,23
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 3,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 2,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 60,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = ONE,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init	
+			
+            VAR Timer_a429_tag[0],   init = 0,       ev = init		
+			
+            VAR Parameters[0].reading.stat,   init = PARAM_OK,       ev = init		
+			
+            VAR Page_settings.Timer_settings[0].timer_format,   init = MIN_SEC,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "TRQ"	
+			
+            VAR PTU_index3,         init = 0,               ev = 1		
+			
+            VAR Timer_message[3],                                 init = '1',       ev = ' '
+			
+            VAR Timer_message[4],                                 init = '1',       ev = '\0'	
+
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[0],                                 init = 0,                   ev = init
+			
+            VAR PTU_src[1],                                 init = 0,                   ev = init
+
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[0],                                init = 0,                   ev = init	
+			
+            VAR PTU_dest[1],                                init = 0,                   ev = init			
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)			
+			
+			STUB TextDispString(0,0,0,RED, TX_FLASH, V_REVERSE, ALIGN_LEFT)	
+
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[0]	
+			
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[1]				
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 13	
+	
+    TEST 14
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT  
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-010]
+    COMMENT  The function loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  - Update the timers minutes to remainder of calculated timers minutes and MIN_PER_HOUR.
+    COMMENT  a)  Set the string with return value of BinasByteFormatInfo with hours, 
+    COMMENT  ONEB+ONEW+UNSIGNED+NOLZB and timer message with index 4 as parameters.
+    COMMENT  b)  Add the string with colon to get the timer look.
+    COMMENT  c)  Add the string with return value of BinasByteFormatInfo with minutes, 
+    COMMENT  FOURB+TWOW+UNSIGNED+NOLZB and timer message with index 6 as parameters.
+    COMMENT  d)  Add the string with colon to get the timer look.
+    COMMENT  e)  Add the string with return value of BinasByteFormatInfo with seconds, 
+    COMMENT  FOURB+TWOW+UNSIGNED+NOLZB and the string itself as parameters
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal 
+    COMMENT  to timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index 
+    COMMENT  Counter1 is equal to TRUE.
+    COMMENT  3.timer format of Timer_settings with index as engine sdi of 
+    COMMENT  Page_settings is equal to HOUR_MIN_SEC and timers hours is greater than 0.
+    COMMENT  Equivalence Class 12,13,24,25
+    COMMENT  
+    COMMENT
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 2,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 3600,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = ONE,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init	
+			
+            VAR Timer_a429_tag[0],   init = 0,       ev = init		
+			
+            VAR Parameters[0].reading.stat,   init = PARAM_OK,       ev = init		
+			
+            VAR Page_settings.Timer_settings[0].timer_format,   init = HOUR_MIN_SEC,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "N1 "	
+			
+            VAR PTU_index3,         init = 0,               ev = 1		
+			
+            VAR Timer_message[3],                                 init = '1',       ev = ' '
+			
+            VAR Timer_message[4],                                 init = '1',       ev = '\0'	
+
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[0],                                 init = 0,                   ev = init
+			
+            VAR PTU_src[1],                                 init = 0,                   ev = init
+
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[0],                                init = 0,                   ev = init	
+			
+            VAR PTU_dest[1],                                init = 0,                   ev = init			
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)			
+			
+			STUB TextDispString(0,0,0,RED, TX_FLASH, V_REVERSE, ALIGN_LEFT)	
+
+            STUB BinasByteFormatInfo (ONEB+ONEW+UNSIGNED+NOLZB)&PTU_dest[0]	
+			
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[1]			
+
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[2]		
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 14	
+	
+    TEST 15
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-011]
+    COMMENT  The function shall loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a)  Set the string with return value of BinasByteFormatInfo with minutes,
+    COMMENT   FOURB+TWOW+UNSIGNED+NOLZB and timer message with index 4 as parameters.
+    COMMENT  b)  Add the string with colon .
+    COMMENT  c)  Add the string with return value of BinasByteFormatInfo with seconds, 
+    COMMENT  FOURB+TWOW+UNSIGNED+NOLZB and the string itself as parameters
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index 
+    COMMENT  Counter1 is equal to TRUE.
+    COMMENT  3.timer format of Timer_settings with index as engine sdi of Page_settings
+    COMMENT   is equal to HOUR_MIN_SEC and timers hours is less than or equal to 0.
+    COMMENT  Equivalence Class 12,13,24,26 
+    COMMENT  
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-012]
+    COMMENT  The function shall call the TextDispString with timer message, 
+    COMMENT  u16_x of timer axis of Timer_settings with index engine sdi of 
+    COMMENT  Page_settings, u16_y of timer axis of Timer_settings with index 
+    COMMENT  engine sdi of Page_settings, timer_font of timer axis of Timer_settings
+    COMMENT  with index engine sdi of Page_settings, color, TX_NO_FLASH, V_REVERSE 
+	COMMENT  and ALIGN_LEFT as parameters.
+    COMMENT  when
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to timer_label of 
+    COMMENT  Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to timer_sdi of 
+    COMMENT  Timer_settings with index Counter2 of Page_settings else do nothing.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index Counter1 
+    COMMENT  is equal to TRUE else do nothing.
+    COMMENT  3. timer_flash of Exceed_timer_params with index Counter1 is not equal to ONE
+    COMMENT  Equivalence Class 35
+    COMMENT  
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 2,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 360,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = 0,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init	
+			
+            VAR Timer_a429_tag[0],   init = 0,       ev = init		
+			
+            VAR Parameters[0].reading.stat,   init = PARAM_OK,       ev = init		
+			
+            VAR Page_settings.Timer_settings[0].timer_format,   init = HOUR_MIN_SEC,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "N1 "	
+			
+            VAR PTU_index3,         init = 0,               ev = 1		
+			
+            VAR Timer_message[3],                                 init = '1',       ev = ' '
+			
+            VAR Timer_message[4],                                 init = '1',       ev = '\0'	
+
+            --Source for BinasByteFormatInfo
+            VAR PTU_src[0],                                 init = 0,                   ev = init
+			
+            VAR PTU_src[1],                                 init = 0,                   ev = init
+
+            --Destination for BinasByteFormatInfo
+            VAR PTU_dest[0],                                init = 0,                   ev = init	
+			
+            VAR PTU_dest[1],                                init = 0,                   ev = init			
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)			
+			
+			STUB TextDispString(0,0,0,RED, TX_NO_FLASH, V_REVERSE, ALIGN_LEFT)	
+
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[0]	
+			
+            STUB BinasByteFormatInfo (FOURB+TWOW+UNSIGNED+NOLZB)&PTU_dest[1]				
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 15	
+	
+    TEST 16
+    FAMILY nominal
+	
+    COMMENT  Test Description
+    COMMENT  <TD>   
+    COMMENT    
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-011]
+    COMMENT  The function shall loop from Counter1 0 till  Timer_cnt and do the following
+    COMMENT  - Loop from Counter2 0 till Timer_cnt and do below:
+    COMMENT  a)  Set the string with return value of BinasByteFormatInfo with minutes,
+    COMMENT   FOURB+TWOW+UNSIGNED+NOLZB and timer message with index 4 as parameters.
+    COMMENT  b)  Add the string with colon .
+    COMMENT  c)  Add the string with return value of BinasByteFormatInfo with seconds, 
+    COMMENT  FOURB+TWOW+UNSIGNED+NOLZB and the string itself as parameters
+    COMMENT  when 
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_label of Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to 
+    COMMENT  timer_sdi of Timer_settings with index Counter2 of Page_settings.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index 
+    COMMENT  Counter1 is equal to TRUE.
+    COMMENT  3.timer format of Timer_settings with index as engine sdi of Page_settings
+    COMMENT   is equal to HOUR_MIN_SEC and timers hours is less than or equal to 0.
+    COMMENT  Equivalence Class 12,13,24,26 
+    COMMENT  
+    COMMENT  [hdudispftimers-AppExTimerDraw-DB-LLR-012]
+    COMMENT  The function shall call the TextDispString with timer message, 
+    COMMENT  u16_x of timer axis of Timer_settings with index engine sdi of 
+    COMMENT  Page_settings, u16_y of timer axis of Timer_settings with index 
+    COMMENT  engine sdi of Page_settings, timer_font of timer axis of Timer_settings
+    COMMENT  with index engine sdi of Page_settings, color, TX_FLASH, 
+	COMMENT  V_REVERSE and ALIGN_LEFT as parameters.
+    COMMENT  when
+    COMMENT  1.timer_a249_label of Exceed_timer_params with index Counter1 is equal to timer_label of 
+    COMMENT  Timer_settings with index Counter2 of Page_settings And 
+    COMMENT  timer_a429_sdi of Exceed_timer_params with index Counter1 is equal to timer_sdi of 
+    COMMENT  Timer_settings with index Counter2 of Page_settings else do nothing.
+    COMMENT  2.timer_data_flag and  timer_sec_flag of Exceed_timer_params with index Counter1 
+    COMMENT  is equal to TRUE else do nothing.
+    COMMENT  3. timer_flash of Exceed_timer_params with index Counter1 is equal to ONE
+    COMMENT  Equivalence Class 34 
+    COMMENT  
+    COMMENT  </TD>	
+
+        ELEMENT
+		
+        COMMENT INPUT SECTION:
+
+            VAR Timer_cnt,        init = 1,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_a249_label,            init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_label,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_a429_sdi,              init = 1,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_sdi,          init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_data_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_sec_flag,        init = TRUE,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_id,        init = ZERO,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_param,        init = 1,       ev = init	
+			
+            VAR Exceed_timer_params[0].timer_color,        init = 2,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_seconds,        init = 360,       ev = init
+			
+            VAR Exceed_timer_params[0].timer_flash,        init = ONE,       ev = init
+
+            VAR Timer_message[0],                                 init = '0',       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_x,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_axis.u16_y,   init = 0,       ev = init	
+			
+            VAR Page_settings.Timer_settings[0].timer_font,   init = 0,       ev = init	
+			
+            VAR Timer_a429_tag[0],   init = 0,       ev = init		
+			
+            VAR Parameters[0].reading.stat,   init = PARAM_OK,       ev = init		
+			
+            VAR Page_settings.Timer_settings[0].timer_format,   init = 1523,       ev = init			
+
+        COMMENT OUTPUT SECTION:
+                       
+			--None				
+                                                            
+        COMMENT INPUT/OUTPUT SECTION:
+                                                           
+            VAR PTU_p_src,          init = "MESSAGE",       ev = "N1 "	
+			
+            VAR PTU_index3,         init = 0,               ev = 1		
+			
+            VAR Timer_message[3],                                 init = '1',       ev = ' '
+			
+            VAR Timer_message[4],                                 init = '1',       ev =init			
+            
+        -- Stub Calls:
+                                                                
+        SIMUL
+           		
+			
+			STUB MemCpy(&Timer_message[0],4)			
+			
+			STUB TextDispString(0,0,0,RED, TX_FLASH, V_REVERSE, ALIGN_LEFT)				
+        
+        END SIMUL			
+		
+        #AppExTimerDraw();
+        END ELEMENT
+
+    END TEST -- TEST 16	
+	
+
+END SERVICE -- AppExTimerDraw
+
+
+
+

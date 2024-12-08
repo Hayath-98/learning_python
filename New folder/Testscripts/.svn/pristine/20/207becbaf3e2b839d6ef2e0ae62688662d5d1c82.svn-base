@@ -1,0 +1,835 @@
+HEADER hdulibstm32f7xxhalsdram,Source Code Ver : 1.2,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Manu K M
+--
+-- File Name           : hdulibstm32f7xxhalsdram.ptu
+--
+-- Test Creation Date  : 28.10.2017
+--
+-- Tested Functions    :HALSdramInit
+--						HALSdramMspInit
+--						HalSdramSendCommand
+--						HalSdramProgramRefreshRate
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE               TESTER NAME			MODIFICATIONS
+--  ------------        ---------               -----------			-------------
+--    1.1               28.10.2017              Manu K M    		Created the ptu file.
+--    1.2				10.11.2017				Manu K M 		 	Updated as per #PR100171		
+--    1.3				14.11.2017				Manu K M 		 	Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibstm32f7xxhal.h"       
+##include "hdulibstm32f7xxhalfmc.h"    
+##include "hdulibstm32f7xxhalsdram.h"  
+##include "hdulibstm32f7xxhaldef.h"    
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file	
+	
+	--None
+
+-- Declarations of the temporary variable
+
+	--Variable crearted to verify the function FmcSdramProgramRefreshRate.
+	#T_FMC_BANK5_6 PTU_Device_6;
+
+	--Variable crearted to verify the function FmcSdramInit.
+	#T_FMC_SDRAM_INIT PTU_Init;
+
+	--Variable crearted to verify the function FmcSdramTimingInit.
+	#T_FMC_SDRAM_TIMING PTU_Timing;
+
+	--Variable crearted to verify the function FmcSdramSendCommand.
+	#T_FMC_SDRAM_COMMAND PTU_Command;
+
+	--Variable created to handle structure hdma.
+	#T_DMA_HANDLE PTU_hdma;
+
+	--Variable created to handle structure Instance.
+	#T_FMC_SDRAM PTU_Instance;
+	
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Manu K M
+    COMMENT
+    COMMENT File Name        : hdulibstm32f7xxhalsdram.ptu
+    COMMENT
+    COMMENT Tested Functions : HALSdramInit
+    COMMENT                    HALSdramMspInit
+    COMMENT                    HalSdramSendCommand
+    COMMENT                    HalSdramProgramRefreshRate
+    COMMENT
+	COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s): 
+	COMMENT
+	COMMENT 1.Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+	COMMENT warning #191-D: type qualifier is meaningless on cast type
+	COMMENT 
+    COMMENT </AC>
+    
+	COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+	COMMENT Valid Class(es)
+    COMMENT Class 1
+	COMMENT In function 'HALSdramInit', T_SDRAM_HANDLE structure is NULL.
+    COMMENT
+	COMMENT Class 2
+	COMMENT In function 'HALSdramInit', T_SDRAM_HANDLE structure is not NULL.
+	COMMENT
+	COMMENT Class 3
+	COMMENT In function 'HALSdramInit',State of h_sdram is equal to HAL_SDRAM_STATE_RESET.
+	COMMENT
+	COMMENT Class 4
+	COMMENT In function 'HALSdramInit',State of h_sdram is not equal to HAL_SDRAM_STATE_RESET.
+	COMMENT
+	COMMENT Class 5
+	COMMENT The function 'HALSdramInit', calls the function 'HALSdramMspInit'.
+	COMMENT
+	COMMENT Class 6
+	COMMENT The function 'HALSdramInit', calls the function 'FmcSdramInit'.
+	COMMENT
+	COMMENT Class 7
+	COMMENT The function 'HALSdramInit', calls the function 'FmcSdramTimingInit'.
+	COMMENT
+	COMMENT Class 8
+	COMMENT The function 'HALSdramMspInit', calls the function 'UNUSED'.	
+	COMMENT
+	COMMENT Class 9
+	COMMENT In function 'HalSdramSendCommand', State of h_sdram is equal to HAL_SDRAM_STATE_BUSY.
+	COMMENT
+	COMMENT Class 10
+	COMMENT In function 'HalSdramSendCommand', State of h_sdram is not equal to HAL_SDRAM_STATE_BUSY.
+	COMMENT
+	COMMENT Class 11
+	COMMENT The function 'HalSdramSendCommand', calls the function 'FmcSdramSendCommand'.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In function 'HalSdramSendCommand', CommandMode of command is equal to FMC_SDRAM_CMD_PALL.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function 'HalSdramSendCommand', CommandMode of command is not equal to FMC_SDRAM_CMD_PALL.
+	COMMENT
+	COMMENT Class 14
+	COMMENT In function 'HalSdramProgramRefreshRate', State of h_sdram is equal to HAL_SDRAM_STATE_BUSY.
+	COMMENT
+	COMMENT Class 15
+	COMMENT In function 'HalSdramProgramRefreshRate', State of h_sdram is not equal to HAL_SDRAM_STATE_BUSY.
+	COMMENT
+	COMMENT Class 16
+	COMMENT The function 'HalSdramProgramRefreshRate', calls the function 'FmcSdramProgramRefreshRate'.
+	COMMENT
+	COMMENT Invalid Class(es)
+	COMMENT None
+	COMMENT
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+	DEFINE STUB hdulibstm32f7xxhalsdram_c
+	
+		--Parameter *Device is made _no since local variable address cannot be expected.
+		#T_HAL_STATUS FmcSdramProgramRefreshRate(T_FMC_BANK5_6 _no *Device, T_UINT32 _in RefreshRate)
+		#{
+		#	PTU_Device_6 = *Device;
+		#}
+		
+		--Parameter *Device is made _no since local variable address cannot be expected.
+		#T_HAL_STATUS FmcSdramSendCommand(T_FMC_BANK5_6 _no *Device, T_FMC_SDRAM_COMMAND _no *Command, T_UINT32 _in Timeout)
+		#{
+		#	PTU_Device_6 = *Device;
+		#	PTU_Command = *Command;
+		#}
+		
+		--Parameter *Device is made _no since local variable address cannot be expected.
+		#T_HAL_STATUS FmcSdramTimingInit(T_FMC_BANK5_6 _no *Device, T_FMC_SDRAM_TIMING _no *Timing, T_UINT32 _in Bank)
+		#{
+		#	PTU_Device_6 = *Device;
+		#	PTU_Timing = *Timing;	
+		#}
+		
+		--Parameter *Device is made _no since local variable address cannot be expected.
+		#T_HAL_STATUS FmcSdramInit(T_FMC_BANK5_6 _no *Device, T_FMC_SDRAM_INIT _no *Init)
+		#{
+		#	PTU_Device_6 = *Device;
+		#	PTU_Init = *Init;
+		#}
+		
+		# volatile  T_INT32 Itm_rx_buffer; 
+	
+	END DEFINE
+	
+ELSE_SIMUL
+
+  -- No action defined as of now if the module is not simulated.
+ 
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now.
+
+--END IF 
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT 
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdulibstm32f7xxhalsdram.c
+
+--ENVIRONMENT hdulibstm32f7xxhalsdram
+
+    --None
+
+--END ENVIRONMENT --ENV_hdulibstm32f7xxhalsdram_c
+
+--USE ENV_hdulibstm32f7xxhalsdram_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HALSdramInit
+--------------------------------------------------------------------------------
+SERVICE HALSdramInit
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+
+	#T_SDRAM_HANDLE h_sdram;
+	#T_FMC_SDRAM_TIMING timing;
+	#T_DMA_HANDLE PTU_hdma;
+	#T_FMC_SDRAM PTU_Instance;
+	
+-- By function returned type declaration
+
+    #T_HAL_STATUS ret_HALSdramInit;
+
+ENVIRONMENT ENV_HALSdramInit
+	
+	STRUCTURE h_sdram,		init = { Instance => NIL, Init => { SDBank => 0, ColumnBitsNumber => 0, RowBitsNumber => 0, MemoryDataWidth => 0, 
+	&								InternalBankNumber => 0, CASLatency => 0, WriteProtection => 0, SDClockPeriod => 0, 
+	&								ReadBurst => 0, ReadPipeDelay => 0 },State => HAL_SDRAM_STATE_RESET, Lock => HAL_UNLOCKED, hdma => NIL },	
+	&															ev = init
+   
+	STRUCTURE timing,		init = { LoadToActiveDelay => 0, ExitSelfRefreshDelay => 0, SelfRefreshTime => 0, RowCycleDelay => 0, 
+	&								WriteRecoveryTime => 0, RPDelay => 0, RCDDelay => 0 },		
+	&															ev = init
+    
+	VAR ret_HALSdramInit,	init = HAL_OK,						ev = init
+    
+END ENVIRONMENT -- ENV_HALSdramInit
+   
+USE ENV_HALSdramInit
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalsdram-HALSdramInit-DB-LLR-001]
+	COMMENT The function shall return HAL_ERROR when value of h_sdram is NULL. 
+	COMMENT Equivalence Class 1
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+			
+			--None
+			
+		COMMENT OUTPUT SECTION:
+			
+			--Returns HAL_ERROR if value of h_sdram is NULL. 
+			VAR ret_HALSdramInit,			init = HAL_OK,			ev = HAL_ERROR
+		
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+			
+		--Stub Calls :
+		SIMUL
+			
+			--none
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#ret_HALSdramInit = HALSdramInit(NULL, NULL);
+		
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalsdram-HALSdramInit-DB-LLR-001]
+	COMMENT The function does nothing when State of h_sdram is not equal to NULL. 
+	COMMENT Equivalence Class 2
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HALSdramInit-DB-LLR-002]
+	COMMENT The function does the following when State of h_sdram is equal to HAL_SDRAM_STATE_RESET.
+	COMMENT 1.Set HAL_UNLOCKED to Lock member of h_sdram 
+	COMMENT 2.Call the function HALSdramMspInit with parameter h_sdram.
+	COMMENT Equivalence Class 3,5
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HALSdramInit-DB-LLR-003]
+	COMMENT The function sets State of h_sdram to HAL_SDRAM_STATE_BUSY.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HALSdramInit-DB-LLR-004]
+	COMMENT The function calls the function FmcSdramInit with parameters Instance of h_sdram and 
+	COMMENT reference of Init  of h_sdram to Initialize SDRAM control Interface
+	COMMENT Equivalence Class 6
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HALSdramInit-DB-LLR-005]
+	COMMENT The function calls the function FmcSdramTimingInit with parameters Instance of h_sdram, timing value and
+	COMMENT SDBank of Init  of h_sdram to Initialize SDRAM timing Interface.
+	COMMENT Equivalence Class 7
+	COMMENT
+	COMMENT[hdulibstm32f7xxhalsdram-HALSdramInit-DB-LLR-006]
+	COMMENT The function update the State of h_sdram as HAL_SDRAM_STATE_READY and return HAL_OK.
+	COMMENT Equivalence Class None
+	COMMENT
+    COMMENT </TD>
+
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Instance structure is handled
+			VAR h_sdram.Instance,			init = &PTU_Instance,				ev = init
+			
+			--hdma structure is handled
+			VAR h_sdram.hdma,				init = &PTU_hdma,					ev = init
+
+		COMMENT OUTPUT SECTION:
+			
+			--Set HAL_UNLOCKED to Lock member of h_sdram 
+			VAR h_sdram.Lock,				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+			
+			--Returns the state as HAL_OK
+			VAR ret_HALSdramInit,			init = HAL_ERROR,					ev = HAL_OK
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--The function shall update the State of h_sdram as HAL_SDRAM_STATE_READY
+			VAR h_sdram.State, 				init = HAL_SDRAM_STATE_RESET, 		ev = HAL_SDRAM_STATE_READY
+			
+		--Stub Calls :
+		SIMUL
+			
+			--This function Initializes the FMC_SDRAM device timing according to the specified parameters in the T_FMC_SDRAM_INIT
+			STUB FmcSdramInit()HAL_OK
+			
+			--This function initializes the FMC_SDRAM device timing according to the specified parameters in the T_FMC_SDRAM_TIMING.
+			STUB FmcSdramTimingInit(0)HAL_OK
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+        #ret_HALSdramInit = HALSdramInit(&h_sdram, &timing);
+		
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalsdram-HALSdramInit-DB-LLR-002]
+	COMMENT The function does nothing when State of h_sdram is not equal to HAL_SDRAM_STATE_RESET. 
+	COMMENT Equivalence Class 4
+	COMMENT
+    COMMENT </TD>
+        
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+			
+			--Instance structure is handled
+			VAR h_sdram.Instance,				init = &PTU_Instance,						ev = init
+			
+			--hdma structure is handled
+			VAR h_sdram.hdma,					init = &PTU_hdma,							ev = init
+			
+		COMMENT OUTPUT SECTION:
+		
+			--The function shall update the State of h_sdram as HAL_SDRAM_STATE_READY
+			VAR h_sdram.State, 					init = HAL_SDRAM_STATE_BUSY, 				ev = HAL_SDRAM_STATE_READY
+			
+			-- Returns the state as HAL_OK
+			VAR ret_HALSdramInit,				init = HAL_ERROR,							ev = HAL_OK
+		
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+			
+		--Stub Calls :
+		SIMUL
+			
+			--This function Initializes the FMC_SDRAM device timing according to the specified parameters in the T_FMC_SDRAM_INIT
+			STUB FmcSdramInit()HAL_OK
+			
+			--This function initializes the FMC_SDRAM device timing according to the specified parameters in the T_FMC_SDRAM_TIMING.
+			STUB FmcSdramTimingInit(0)HAL_OK
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+        #ret_HALSdramInit = HALSdramInit(&h_sdram, &timing);
+		
+	END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- HALSdramInit
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalSdramProgramRefreshRate
+--------------------------------------------------------------------------------
+SERVICE HalSdramProgramRefreshRate
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+
+    #T_SDRAM_HANDLE h_sdram;
+    #T_UINT32 refresh_rate;
+    
+     #T_DMA_HANDLE PTU_hdma;
+	#T_FMC_SDRAM PTU_Instance;
+	
+-- By function returned type declaration
+
+    #T_HAL_STATUS ret_HalSdramProgramRefreshRate;
+
+ENVIRONMENT ENV_HalSdramProgramRefreshRate
+
+    STRUCTURE h_sdram,		init = { Instance => NIL, Init => { SDBank => 0, ColumnBitsNumber => 0, RowBitsNumber => 0, MemoryDataWidth => 0,
+	&								InternalBankNumber => 0, CASLatency => 0, WriteProtection => 0, SDClockPeriod => 0, ReadBurst => 0,
+	&								ReadPipeDelay => 0 }, State => HAL_SDRAM_STATE_RESET, Lock => HAL_UNLOCKED, hdma => NIL },	
+	&															ev = init
+    
+	VAR refresh_rate,						init = 0,			ev = init
+	
+    VAR ret_HalSdramProgramRefreshRate,		init = HAL_OK,		ev = init
+	
+END ENVIRONMENT -- ENV_HalSdramProgramRefreshRate
+
+USE ENV_HalSdramProgramRefreshRate
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramProgramRefreshRate-DB-LLR-001]
+	COMMENT The function returns with status HAL_BUSY when State of h_sdram is eqaul to HAL_SDRAM_STATE_BUSY
+	COMMENT Equivalence Class 14
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+	
+			--State of h_sdram holds HAL_SDRAM_STATE_BUSY.
+			VAR h_sdram.State,						init=HAL_SDRAM_STATE_BUSY,			ev=init
+	
+		COMMENT OUTPUT SECTION:	
+	
+			--The function shall return with status HAL_BUSY
+			VAR ret_HalSdramProgramRefreshRate,		init=HAL_OK,						ev=HAL_BUSY
+	
+		COMMENT INPUT/OUTPUT SECTION:
+	
+			--None
+	
+		--Stub Calls :
+		SIMUL
+			
+			--None
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#ret_HalSdramProgramRefreshRate = HalSdramProgramRefreshRate(&h_sdram, refresh_rate);
+        
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramProgramRefreshRate-DB-LLR-001]
+	COMMENT The function does nothing when State of h_sdram is not equal to HAL_SDRAM_STATE_BUSY.
+	COMMENT Equivalence Class 15
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramProgramRefreshRate-DB-LLR-002]
+	COMMENT The function updates the State of h_sdram to HAL_SDRAM_STATE_BUSY
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT[hdulibstm32f7xxhalsdram-HalSdramProgramRefreshRate-DB-LLR-003]
+	COMMENT The function call the function FmcSdramProgramRefreshRate with parameters h_sdram of Instance and refresh_rate value.
+	COMMENT Equivalence Class 16
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramProgramRefreshRate-DB-LLR-004]
+	COMMENT The function updates State of h_sdram to HAL_SDRAM_STATE_READY
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramProgramRefreshRate-DB-LLR-005]
+	COMMENT The function returns with the status HAL_OK
+	COMMENT Equivalence Class None
+	COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+	
+		COMMENT INPUT SECTION:
+	
+			--Instance structure is handled
+			VAR h_sdram.Instance,						init = &PTU_Instance,					ev = init
+				
+			--hdma structure is handled
+			VAR h_sdram.hdma,							init = &PTU_hdma,						ev = init
+	
+		COMMENT OUTPUT SECTION:	
+			
+			--State of h_sdram holds HAL_SDRAM_STATE_READY.
+			VAR h_sdram.State,							init=HAL_SDRAM_STATE_READY,				ev = init
+			
+			--The function shall return with status HAL_OK
+			VAR ret_HalSdramProgramRefreshRate,			init=HAL_BUSY,							ev = HAL_OK
+
+		COMMENT INPUT/OUTPUT SECTION:
+	
+			--None
+	
+		--Stub Calls :
+		SIMUL
+			
+			--This function programs the SDRAM Memory Refresh rate
+			STUB FmcSdramProgramRefreshRate(0)HAL_OK
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+        #ret_HalSdramProgramRefreshRate = HalSdramProgramRefreshRate(&h_sdram, refresh_rate);
+        
+	END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- HalSdramProgramRefreshRate
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HALSdramMspInit
+--------------------------------------------------------------------------------
+SERVICE HALSdramMspInit
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+
+    #T_SDRAM_HANDLE h_sdram;
+
+ENVIRONMENT ENV_HALSdramMspInit
+
+    STRUCTURE h_sdram,		init = { Instance => NIL, Init => { SDBank => 0, ColumnBitsNumber => 0, RowBitsNumber => 0, MemoryDataWidth => 0, 
+	&								InternalBankNumber => 0, CASLatency => 0, WriteProtection => 0, SDClockPeriod => 0, ReadBurst => 0,
+	&								ReadPipeDelay => 0 },State=> HAL_SDRAM_STATE_RESET, Lock => HAL_UNLOCKED, hdma => NIL },
+	&													ev = init
+    
+END ENVIRONMENT -- ENV_HALSdramMspInit
+    
+USE ENV_HALSdramMspInit
+
+TEST 1 
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalsdram-HALSdramMspInit-DB-LLR-001]
+	COMMENT The function calls the macro UNUSED with parameter h_sdram to prevent unused argument compilation warning.
+	COMMENT Equivalence Class 8
+	COMMENT
+	COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+		
+		COMMENT INPUT SECTION:
+			
+			--None
+			
+		COMMENT OUTPUT SECTION:
+			
+			--None
+		
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+			
+		--Stub Calls :
+		SIMUL
+			
+			--None
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		
+        #HALSdramMspInit(&h_sdram);
+        
+	END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- HALSdramMspInit
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalSdramSendCommand
+--------------------------------------------------------------------------------
+SERVICE HalSdramSendCommand
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+
+    #T_SDRAM_HANDLE h_sdram;
+    #T_FMC_SDRAM_COMMAND command;
+    #T_UINT32 timeout;
+    
+     #T_DMA_HANDLE PTU_hdma;
+	#T_FMC_SDRAM PTU_Instance;
+    
+-- By function returned type declaration
+
+    #T_HAL_STATUS ret_HalSdramSendCommand;
+
+ENVIRONMENT ENV_HalSdramSendCommand
+
+    STRUCTURE h_sdram,		init = { Instance => NIL, Init => { SDBank => 0, ColumnBitsNumber => 0, RowBitsNumber => 0, MemoryDataWidth => 0,
+	&								InternalBankNumber => 0, CASLatency => 0, WriteProtection => 0, SDClockPeriod => 0, ReadBurst => 0,
+	&								ReadPipeDelay => 0 }, State => HAL_SDRAM_STATE_RESET, Lock => HAL_UNLOCKED, hdma => NIL },
+	&															ev = init
+    
+	STRUCTURE command,		init = { CommandMode => 0, CommandTarget => 0, AutoRefreshNumber => 0, ModeRegisterDefinition => 0 },	
+	&															ev = init
+    
+	VAR timeout,						init = 0,				ev = init
+    
+	VAR ret_HalSdramSendCommand,		init = HAL_OK,			ev = init
+
+END ENVIRONMENT -- ENV_HalSdramSendCommand
+    
+USE ENV_HalSdramSendCommand
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramSendCommand-DB-LLR-001]
+	COMMENT The function returns with status HAL_BUSY when State of h_sdram is eqaul to HAL_SDRAM_STATE_BUSY.
+	COMMENT Equivalence Class 9
+	COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--State of h_sdram holds HAL_SDRAM_STATE_BUSY.
+			VAR h_sdram.State,					init = HAL_SDRAM_STATE_BUSY,				ev = init
+			
+		COMMENT OUTPUT SECTION:
+			
+			--The function shall return with status HAL_BUSY
+			VAR ret_HalSdramSendCommand,		init = HAL_OK,								ev = HAL_BUSY
+		
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+			
+		--Stub Calls :
+		SIMUL
+		
+			--None
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#ret_HalSdramSendCommand = HalSdramSendCommand(&h_sdram, &command, timeout);
+        
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramSendCommand-DB-LLR-001]
+	COMMENT The function does nothing when State of h_sdram is not equal to HAL_SDRAM_STATE_BUSY.
+	COMMENT Equivalence Class 10
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramSendCommand-DB-LLR-002]
+	COMMENT The function updates the State of h_sdram to HAL_SDRAM_STATE_BUSY.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramSendCommand-DB-LLR-003]
+	COMMENT The function calls the function FmcSdramSendCommand with parameters Instance of h_sdram,
+	COMMENT	command and time_out value. 
+	COMMENT Equivalence Class 11
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramSendCommand-DB-LLR-004]
+	COMMENT The function updates the State of h_sdram to HAL_SDRAM_STATE_PRECHARGED when CommandMode of 
+	COMMENT	command parameter value is command
+	COMMENT Equivalence Class 12
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramSendCommand-DB-LLR-005]
+	COMMENT The function returns with the status HAL_OK.
+	COMMENT Equivalence Class None
+	COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--Instance structure is handled
+			VAR h_sdram.Instance,				init = &PTU_Instance,						ev = init
+								
+			--hdma structure is handled
+			VAR h_sdram.hdma,					init = &PTU_hdma,							ev = init
+		
+			--Commandmode of command holds the value FMC_SDRAM_CMD_PALL
+			VAR command.CommandMode,			init = FMC_SDRAM_CMD_PALL,					ev = init
+		
+		COMMENT OUTPUT SECTION:
+			
+			--The function shall return with status HAL_OK
+			VAR ret_HalSdramSendCommand,		init = HAL_ERROR,							ev = HAL_OK
+
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--State of h_sdram holds HAL_SDRAM_STATE_PRECHARGED.
+			VAR h_sdram.State,					init = HAL_SDRAM_STATE_READY,				ev = HAL_SDRAM_STATE_PRECHARGED
+			
+		--Stub Calls :
+		SIMUL
+		
+		--This function sends command to the FMC SDRAM bank
+		STUB FmcSdramSendCommand(0)HAL_OK
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#ret_HalSdramSendCommand = HalSdramSendCommand(&h_sdram, &command, timeout);
+        
+	END ELEMENT
+
+END TEST -- TEST 2
+
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalsdram-HalSdramSendCommand-DB-LLR-004]
+	COMMENT The function updates the State of h_sdram to HAL_SDRAM_STATE_READY when CommandMode of 
+	COMMENT	command parameter value is not equal to command
+	COMMENT Equivalence Class 13
+	COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--Instance structure is handled
+			VAR h_sdram.Instance,				init = &PTU_Instance,							ev = init
+			
+			--hdma structure is handled
+			VAR h_sdram.hdma,					init = &PTU_hdma,								ev = init
+
+			--Commandmode of command holds FMC_SDRAM_CMD_CLK_ENABLE.
+			VAR command.CommandMode,			init = FMC_SDRAM_CMD_CLK_ENABLE,				ev = init
+		
+		COMMENT OUTPUT SECTION:
+			
+			--The function shall return with status HAL_OK
+			VAR ret_HalSdramSendCommand,		init = HAL_ERROR,								ev = HAL_OK
+	
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--State of h_sdram is set to the value HAL_SDRAM_STATE_READY
+			VAR h_sdram.State,					init = HAL_SDRAM_STATE_PRECHARGED,				ev = HAL_SDRAM_STATE_READY
+			
+		--Stub Calls :
+		SIMUL
+		
+		--This function sends command to the FMC SDRAM bank
+		STUB FmcSdramSendCommand(0)HAL_OK
+		
+		END SIMUL
+		
+		-- Calling the Unit Under Test :
+		#ret_HalSdramSendCommand = HalSdramSendCommand(&h_sdram, &command, timeout);
+        
+	END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- HalSdramSendCommand
+

@@ -1,0 +1,480 @@
+HEADER hdudispfcrc,Source Code Ver :1.3, TestScript Ver :1.2
+--------------------------------------------------------------------------------
+-- Author Name         : Santosh Mithari
+--
+-- File Name           : hdudispfcrc.ptu
+--
+-- Test Creation Date  : 15.10.2017
+--
+-- Tested Functions    : CrcCalculate
+--						 CrcInit
+
+-- Version History     :
+--
+-- TEST-VERSION         TEST-DATE        TESTER NAME           MODIFICATIONS
+-- ------------        -----------      -----------           -------------
+--    1.1              15.10.2017      Santosh Mithari       Created the PTU file.
+--    1.2              10.11.2017      Santosh Mithari       Updated as per #PR100171
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+##include "hdudispfcrc.h" 
+##include "hdulibstm32f7xxhalrcc.h"  
+##include "hdulibstm32f7xxhalcrc.h"
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	--None
+	
+-- Declarations of the temporary variable
+
+	--temporary varibale to pass address to buffer
+	#T_UINT32 PTU_u32_buffer;
+	
+	--variable verify Crc_handle
+	#T_CRC_HANDLE PTU_Crc_handle;
+	#T_CRC_HANDLE PTU_Crc_handle_1;
+
+--------------------------------------------------------------------------------
+BEGIN
+
+	COMMENT Author Name         : 	Santosh Mithari 
+	COMMENT
+	COMMENT File Name           : 	hdudispfcrc.ptu
+	COMMENT 
+	COMMENT Tested Functions    :  	CrcCalculate
+	COMMENT							CrcInit
+	COMMENT
+	COMMENT 
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT 
+	COMMENT Assumption(s): 
+	COMMENT None
+	COMMENT
+	COMMENT Constraint(s):
+	COMMENT 
+	COMMENT
+	COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT
+	COMMENT Valid Class(es)
+	COMMENT Class 1
+	COMMENT In function 'CrcCalculate', 'CrcInit' is called.
+	COMMENT
+	COMMENT Class 2
+	COMMENT In function 'CrcCalculate', 'HalCrcAccumulate' stub is called. 
+	COMMENT 
+	COMMENT Class 3
+	COMMENT In function 'CrcInit', 'HalCrcInit' stub is called. 
+	COMMENT
+	COMMENT Invalid Class(es)
+	COMMENT
+	COMMENT Class 4
+	COMMENT In function 'CrcCalculate', invalid reference  is passed to 'u32_buffer'.
+	COMMENT
+	COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdudispfcrc_c
+    
+    	--The parameter 'hcrc' is made _no since local address is passed.
+    	#T_UINT32 HalCrcAccumulate(T_CRC_HANDLE _no *hcrc, T_UINT32 _in *pBuffer, T_UINT32 _in BufferLength)
+    	#{
+    	#	 PTU_Crc_handle_1 = *(T_CRC_HANDLE *)hcrc;
+    	#}
+    	
+    	--The parameter 'hcrc' is made _no since local address is passed.
+		#T_HAL_STATUS HalCrcInit(T_CRC_HANDLE _no *hcrc)
+		#{
+		#	 PTU_Crc_handle = *(T_CRC_HANDLE *)hcrc;
+		#}
+		
+	END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+--No special things that have to be done on the host to run the test.
+
+--ELSE
+
+--No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+--Environment of the hdudispfcrc.c
+
+--ENVIRONMENT ENV_hdudispfcrc_c
+
+    --None
+
+--END ENVIRONMENT -- ENV_hdudispfcrc_c
+
+--USE ENV_hdudispfcrc_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CrcCalculate
+--------------------------------------------------------------------------------
+SERVICE CrcCalculate
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT32 u32_buffer;
+    #T_UINT32 u32_buffer_length;
+    -- By function returned type declaration
+    #T_UINT32 ret_CrcCalculate;
+
+    ENVIRONMENT ENV_CrcCalculate
+    VAR u32_buffer,		init = 0,		ev = init
+    VAR u32_buffer_length,		init = 0,		ev = init
+    VAR ret_CrcCalculate,		init = 0,		ev = init
+    END ENVIRONMENT -- ENV_CrcCalculate
+    USE ENV_CrcCalculate
+
+
+TEST 1
+FAMILY nominal
+ 
+ 	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfcrc-CrcCalculate-DB-LLR-001]
+    COMMENT The function calls 'CrcInit'.
+    COMMENT Equivalence Class 1.
+    COMMENT
+    COMMENT [hdudispfcrc-CrcCalculate-DB-LLR-002]
+    COMMENT The function return the value returned by the function HalCrcAccumulate with address
+    COMMENT of Crc handle, u32_buffer and u32_buffer_length as parameters.
+    COMMENT Equivalence Class 2.	
+    COMMENT
+    COMMENT [hdudispfcrc-CrcInit-DB-LLR-001]
+	COMMENT    The function does the following:
+	COMMENT	1. Set value of instance of Crc handle to CRC.
+	COMMENT	2. Set value of DefaultPolynomialUse of Init of Crc handle to DEFAULT_POLYNOMIAL_ENABLE.
+	COMMENT	3. Set value of DefaultInitValueUse of Init of Crc handle to DEFAULT_INIT_VALUE_ENABLE.
+	COMMENT	4. Set value of InputDataInversionMode of Init of Crc handle to CRC_INPUTDATA_INVERSION_NONE.
+	COMMENT	5. Set value of OutputDataInversionMode of Init of Crc handle to CRC_OUTPUTDATA_INVERSION_DISABLE.
+	COMMENT	6. Set value of InputDataFormat of Crc handle to CRC_INPUTDATA_FORMAT_WORDS.
+	COMMENT 7. Call the function HalCrcInit with address of Crc handle as its parameter.
+	COMMENT Equivalence Class 3.	
+    COMMENT </TD> 
+ 
+    ELEMENT
+ 
+		COMMENT INPUT SECTION:
+ 			
+ 			--pointer to the input data buffer
+ 			VAR u32_buffer,												init = 0,			ev = init
+ 			
+ 			--input data buffer length
+ 			VAR u32_buffer_length,										init = 0x100,		ev = init
+	
+         COMMENT OUTPUT SECTION:
+ 
+ 			--return value from function 'CrcCalculate'
+ 			VAR ret_CrcCalculate,										init = 0,			ev = 0x100
+ 
+         COMMENT INPUT/OUTPUT SECTION:
+             
+            --Members of the structure 'T_CRC_HANDLE' 
+			VAR PTU_Crc_handle.Instance,								init=0x1,			ev = CRC
+  			VAR PTU_Crc_handle.Init.DefaultPolynomialUse,				init=0x1,			ev = DEFAULT_POLYNOMIAL_ENABLE
+  			VAR PTU_Crc_handle.Init.DefaultInitValueUse,				init=0x1,			ev = DEFAULT_INIT_VALUE_ENABLE
+   			VAR PTU_Crc_handle.Init.InputDataInversionMode,				init=0x1,			ev = CRC_INPUTDATA_INVERSION_NONE
+   			VAR PTU_Crc_handle.Init.OutputDataInversionMode,			init=0x1,			ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+   			VAR PTU_Crc_handle.InputDataFormat,							init=0x1,			ev = CRC_INPUTDATA_FORMAT_WORDS
+
+         -- Stub Calls:
+         SIMUL
+             
+ 			STUB HalCrcInit() HAL_OK
+ 			
+ 			STUB HalCrcAccumulate(&u32_buffer, u32_buffer_length) 0x100
+     
+         END SIMUL
+ 
+         -- Calling the Unit Under Test :
+      	 #ret_CrcCalculate = CrcCalculate(&u32_buffer, u32_buffer_length);
+ 
+     END ELEMENT
+ 
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+ 
+ 	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfcrc-CrcCalculate-DB-LLR-002]
+    COMMENT The function return the value returned by the function HalCrcAccumulate with address
+    COMMENT of Crc handle, u32_buffer and u32_buffer_length as parameters.
+    COMMENT Equivalence Class 2.
+    COMMENT </TD> 
+ 
+    ELEMENT
+ 
+		COMMENT INPUT SECTION:
+ 			
+ 			--pointer to the input data buffer
+ 			VAR u32_buffer,												init = PTU_u32_buffer ,		ev = init
+ 			
+ 			--input data buffer length
+ 			VAR u32_buffer_length,										init = 100,					ev = init
+ 				 		
+         COMMENT OUTPUT SECTION:
+ 
+ 			--return value from function 'CrcCalculate'
+ 			VAR ret_CrcCalculate,										init = 0,					ev = 0x100
+ 
+         COMMENT INPUT/OUTPUT SECTION:
+             
+			--Temporary structure used to verify static variable Crc_handle in stub HalCrcInit
+			VAR PTU_Crc_handle.Instance,						init=0x1,			 	ev = CRC
+  			VAR PTU_Crc_handle.Init.DefaultPolynomialUse,		init=0x1,			 	ev = DEFAULT_POLYNOMIAL_ENABLE
+  			VAR PTU_Crc_handle.Init.DefaultInitValueUse,		init=0x1,			 	ev = DEFAULT_INIT_VALUE_ENABLE
+   			VAR PTU_Crc_handle.Init.InputDataInversionMode,		init=0x1,			 	ev = CRC_INPUTDATA_INVERSION_NONE
+   			VAR PTU_Crc_handle.Init.OutputDataInversionMode,	init=0x1,			 	ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+   			VAR PTU_Crc_handle.InputDataFormat,					init=0x1,			 	ev = CRC_INPUTDATA_FORMAT_WORDS
+   			
+   			--Temporary structure used to verify static variable Crc_handle in stub HalCrcAccumulate
+   			VAR PTU_Crc_handle_1.Instance,						init=0x1,			 	ev = CRC
+			VAR PTU_Crc_handle_1.Init.DefaultPolynomialUse,		init=0x1,			 	ev = DEFAULT_POLYNOMIAL_ENABLE
+			VAR PTU_Crc_handle_1.Init.DefaultInitValueUse,		init=0x1,			 	ev = DEFAULT_INIT_VALUE_ENABLE
+			VAR PTU_Crc_handle_1.Init.InputDataInversionMode,	init=0x1,			 	ev = CRC_INPUTDATA_INVERSION_NONE
+			VAR PTU_Crc_handle_1.Init.OutputDataInversionMode,	init=0x1,			 	ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+   			VAR PTU_Crc_handle_1.InputDataFormat,				init=0x1,			 	ev = CRC_INPUTDATA_FORMAT_WORDS
+         
+         -- Stub Calls:
+         SIMUL
+             
+ 			STUB HalCrcInit() HAL_OK
+ 			
+ 			STUB HalCrcAccumulate(&u32_buffer, u32_buffer_length) 0x100
+     
+         END SIMUL
+ 
+         -- Calling the Unit Under Test :
+      	 #ret_CrcCalculate = CrcCalculate(&u32_buffer, u32_buffer_length);
+ 
+     END ELEMENT
+ 
+END TEST -- TEST 2
+
+--TEST 3
+--FAMILY robustness
+-- 
+-- 	COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT [hdudispfcrc-CrcCalculate-DB-LLR-002]
+--    COMMENT The function return the value returned by the function HalCrcAccumulate with address
+--    COMMENT of Crc handle, u32_buffer and u32_buffer_length as parameters.
+--    COMMENT Invalid reference to 'u32_buffer' is passed as input to test invalid case.
+--    COMMENT Equivalence Class 2,4.
+--    COMMENT </TD> 
+-- 
+--    ELEMENT
+-- 
+--		COMMENT INPUT SECTION:
+-- 			
+-- 			--input data buffer length
+-- 			VAR u32_buffer_length,										init = 0x100,		ev = init
+-- 					
+--         COMMENT OUTPUT SECTION:
+-- 
+-- 			--return value from function 'CrcCalculate'
+-- 			VAR ret_CrcCalculate,										init = 0,			ev = 0x100
+-- 
+--         COMMENT INPUT/OUTPUT SECTION:
+--             
+--			--None
+--        
+--         -- Stub Calls:
+--         SIMUL
+--             
+-- 			STUB HalCrcInit() HAL_OK
+-- 			
+-- 			STUB HalCrcAccumulate(NULL, u32_buffer_length) 0x100
+--     
+--         END SIMUL
+-- 
+--         -- Calling the Unit Under Test :
+--      	 #ret_CrcCalculate = CrcCalculate(NULL, u32_buffer_length)
+-- 
+--     END ELEMENT
+-- 
+--END TEST -- TEST 3
+
+
+TEST 4
+FAMILY nominal
+ 
+ 	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfcrc-CrcCalculate-DB-LLR-002]
+    COMMENT The function return the value returned by the function HalCrcAccumulate with address
+    COMMENT of Crc handle, u32_buffer and u32_buffer_length as parameters. 
+    COMMENT Maximum value is passed to 'u32_buffer_length' to check range.
+    COMMENT Equivalence Class 2.
+    COMMENT </TD> 
+ 
+    ELEMENT
+ 
+		COMMENT INPUT SECTION:
+ 			
+ 			--pointer to the input data buffer
+ 			VAR u32_buffer,										init = PTU_u32_buffer,	ev = init
+ 			
+ 			--input data buffer length
+ 			VAR u32_buffer_length,								init = (T_UINT32)0xFFFFFFFF,
+ 			&																			ev = init
+ 			
+ 		
+         COMMENT OUTPUT SECTION:
+ 
+ 			--return value from function 'CrcCalculate'
+ 			VAR ret_CrcCalculate,								init = 0,				ev = 0x100
+ 
+         COMMENT INPUT/OUTPUT SECTION:
+             
+			--Temporary structure used to verify static variable Crc_handle in stub HalCrcInit
+			VAR PTU_Crc_handle.Instance,						init=0x1,			 	ev = CRC
+  			VAR PTU_Crc_handle.Init.DefaultPolynomialUse,		init=0x1,			 	ev = DEFAULT_POLYNOMIAL_ENABLE
+  			VAR PTU_Crc_handle.Init.DefaultInitValueUse,		init=0x1,			 	ev = DEFAULT_INIT_VALUE_ENABLE
+   			VAR PTU_Crc_handle.Init.InputDataInversionMode,		init=0x1,			 	ev = CRC_INPUTDATA_INVERSION_NONE
+   			VAR PTU_Crc_handle.Init.OutputDataInversionMode,	init=0x1,			 	ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+   			VAR PTU_Crc_handle.InputDataFormat,					init=0x1,			 	ev = CRC_INPUTDATA_FORMAT_WORDS
+   			
+   			--Temporary structure used to verify static variable Crc_handle in stub HalCrcAccumulate
+   			VAR PTU_Crc_handle_1.Instance,						init=0x1,			 	ev = CRC
+			VAR PTU_Crc_handle_1.Init.DefaultPolynomialUse,		init=0x1,			 	ev = DEFAULT_POLYNOMIAL_ENABLE
+			VAR PTU_Crc_handle_1.Init.DefaultInitValueUse,		init=0x1,			 	ev = DEFAULT_INIT_VALUE_ENABLE
+			VAR PTU_Crc_handle_1.Init.InputDataInversionMode,	init=0x1,			 	ev = CRC_INPUTDATA_INVERSION_NONE
+			VAR PTU_Crc_handle_1.Init.OutputDataInversionMode,	init=0x1,			 	ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+   			VAR PTU_Crc_handle_1.InputDataFormat,				init=0x1,			 	ev = CRC_INPUTDATA_FORMAT_WORDS
+
+
+         
+         -- Stub Calls:
+         SIMUL
+             
+ 			STUB HalCrcInit() HAL_OK
+ 			
+ 			STUB HalCrcAccumulate(&u32_buffer, u32_buffer_length) 0x100
+     
+         END SIMUL
+ 
+         -- Calling the Unit Under Test :
+      	 #ret_CrcCalculate = CrcCalculate(&u32_buffer, u32_buffer_length);
+ 
+     END ELEMENT
+ 
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+ 
+ 	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfcrc-CrcCalculate-DB-LLR-002]
+    COMMENT The function return the value returned by the function HalCrcAccumulate with address
+    COMMENT of Crc handle, u32_buffer and u32_buffer_length as parameters. 
+    COMMENT Minimum value is passed to 'u32_buffer_length' to check range.
+    COMMENT Equivalence Class 2.
+    COMMENT </TD> 
+ 
+    ELEMENT
+ 
+		COMMENT INPUT SECTION:
+ 			
+ 			--pointer to the input data buffer
+ 			VAR u32_buffer,												init = PTU_u32_buffer,	ev = init
+ 			
+ 			--input data buffer length
+ 			VAR u32_buffer_length,										init = 0x0000,			ev = init
+ 			
+ 		
+         COMMENT OUTPUT SECTION:
+ 
+ 			--return value from function 'CrcCalculate'
+ 			VAR ret_CrcCalculate,										init = 0,				ev = 0x100
+ 
+         COMMENT INPUT/OUTPUT SECTION:
+             
+			--Temporary structure used to verify static variable Crc_handle in stub HalCrcInit
+			VAR PTU_Crc_handle.Instance,						init=0x1,			 	ev = CRC
+  			VAR PTU_Crc_handle.Init.DefaultPolynomialUse,		init=0x1,			 	ev = DEFAULT_POLYNOMIAL_ENABLE
+  			VAR PTU_Crc_handle.Init.DefaultInitValueUse,		init=0x1,			 	ev = DEFAULT_INIT_VALUE_ENABLE
+   			VAR PTU_Crc_handle.Init.InputDataInversionMode,		init=0x1,			 	ev = CRC_INPUTDATA_INVERSION_NONE
+   			VAR PTU_Crc_handle.Init.OutputDataInversionMode,	init=0x1,			 	ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+   			VAR PTU_Crc_handle.InputDataFormat,					init=0x1,			 	ev = CRC_INPUTDATA_FORMAT_WORDS
+   			
+   			--Temporary structure used to verify static variable Crc_handle in stub HalCrcAccumulate
+   			VAR PTU_Crc_handle_1.Instance,						init=0x1,			 	ev = CRC
+			VAR PTU_Crc_handle_1.Init.DefaultPolynomialUse,		init=0x1,			 	ev = DEFAULT_POLYNOMIAL_ENABLE
+			VAR PTU_Crc_handle_1.Init.DefaultInitValueUse,		init=0x1,			 	ev = DEFAULT_INIT_VALUE_ENABLE
+			VAR PTU_Crc_handle_1.Init.InputDataInversionMode,	init=0x1,			 	ev = CRC_INPUTDATA_INVERSION_NONE
+			VAR PTU_Crc_handle_1.Init.OutputDataInversionMode,	init=0x1,			 	ev = CRC_OUTPUTDATA_INVERSION_DISABLE
+   			VAR PTU_Crc_handle_1.InputDataFormat,				init=0x1,			 	ev = CRC_INPUTDATA_FORMAT_WORDS
+   			
+
+
+         
+         -- Stub Calls:
+         SIMUL
+             
+ 			STUB HalCrcInit() HAL_OK
+ 			
+ 			STUB HalCrcAccumulate(&u32_buffer, u32_buffer_length) 0x100
+     
+         END SIMUL
+ 
+         -- Calling the Unit Under Test :
+      	 #ret_CrcCalculate = CrcCalculate(&u32_buffer, u32_buffer_length);
+ 
+     END ELEMENT
+ 
+END TEST -- TEST 5
+
+END SERVICE -- CrcCalculate

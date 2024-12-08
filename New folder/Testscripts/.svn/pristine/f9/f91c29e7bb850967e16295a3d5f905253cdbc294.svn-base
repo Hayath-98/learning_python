@@ -1,0 +1,620 @@
+HEADER hdudispfdemo,Source Code Ver : 1.9,TestScript Ver : 1.4  
+--------------------------------------------------------------------------------
+-- Author Name          : Chaitra T N
+--
+-- File Name            : hdudispfdemo_9.ptu
+--
+-- Test Creation Date   : 09.04.2018
+--
+-- Tested Functions     : DoDemo
+-- 
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------       ---------       -----------        -------------
+--     1.1             09.04.2018      Chaitra T N        Created the ptu file  
+--     1.2             27.07.2020      Vignesh Sunil      Updated as per #PR100267 
+--     1.3             02.10.2020      Vignesh Sunil      Updated as per #PR100281    
+--     1.4             27.04.2021      Vignesh Sunil      Updated as per #PR100338     
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/ 
+
+##include "hdudispfdemo.h"  
+##include "hdudispfa429.h"  
+##include "hdudispfpdidata.h" 
+##include "hdudispfpara.h"    
+##include "hdudispfdauprofile.h" 
+##include "hdudispfcbit.h"     
+##include "hdudispfglobalsettings.h"
+##include "hdudispfarinc825.h"   
+##include "hdudispfa825def.h" 
+##include "hdulibbasictypes.h"    
+
+--Macros defined for the purpose of testing
+
+##define DEMO_TASK_STK_SIZE     1024
+##define DEMO_TASK_PRIO            6
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	#extern void A429DemoInit(void);
+
+    #T_BOOL Demo_mode_activate; 
+    #T_BOOL Demo_mode; 
+    #T_UINT16 U16_sys_info_words[2]; 
+    #T_CONFIG_STRUCT Config_data; 
+    #T_EXCEED_STRUCT Exceed_data[66]; 
+    #T_UINT16 U16_message_words[3]; 
+    #T_UINT16 Cas_label_start_idx; 
+    #T_CAS_MSG_DEF Cas_msg[64]; 
+    #T_UINT8 Cas_cnt; 
+    #T_A429_DATA_STRUCT A429_data[2][256]; 
+    #T_A429_PARAMS A429_cfg_data[256]; 
+    #T_UINT16 A429_settings_cnt;
+    #T_UINT8 Timer_cnt;
+    #T_PAGE Page_settings;	
+    
+-- Declarations of the temporary variables of the tested file
+	
+	--Variable declared to be used in the function OsSemPend
+	#T_UBYTE PTU_error;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Chaitra T N
+    COMMENT
+    COMMENT File name        : hdudispfdemo_3.ptu
+    COMMENT
+    COMMENT Tested functions : DoDemo
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1.PTU has been split into 18 due to static dependency.
+    COMMENT 
+    COMMENT 2.In function 'DemoInit', for loop cannot be covered for 0 and 1 time since it is controlled by macro
+    COMMENT   DEMO_TASK_STK_SIZE
+    COMMENT 
+    COMMENT 3.In function 'DoDemo',
+    COMMENT   First for loop cannot be covered for 0 and 1 time since it is controlled by macro MAX_A429_CHANNEL
+    COMMENT   Second for loop cannot be covered for 0 and 1 time since it is controlled by macro MAX_A429_LABELS
+    COMMENT
+    COMMENT 4.Source file "hdudispfdemo.c" is modified for testing purpose. The while(TRUE) is modified for 
+    COMMENT   terminating the infinite loop.
+	COMMENT   Snippet of code is added in function 'DemoTask':
+	COMMENT
+	COMMENT   T_UINT16 PTU_count =0; /*local variable declared for testing purpose*/
+	COMMENT
+	COMMENT    while(TRUE)
+	COMMENT    {
+    COMMENT     .................
+	COMMENT
+   	COMMENT     /*Modified for testing purpose to terminate infinite loop*/
+   	COMMENT     PTU_count++;
+	COMMENT     if(PTU_count == 3)
+	COMMENT     {
+    COMMENT      break;
+	COMMENT     } 
+	COMMENT     else
+	COMMENT     {
+	COMMENT       /*nothing*/
+	COMMENT     }
+	COMMENT   }/*End of while loop*/
+	COMMENT 
+	COMMENT Hence while loop cannot be covered for 0 and 1 times .
+	COMMENT
+	COMMENT 5. Header file "hdudispfdemo.h" is modified for testing purpose
+	COMMENT    Due to memory constraint, the macro's MAX_CAS_DATA and MAX_A429_DATA_VALUE 
+	COMMENT    values has been modified as 2550 and 2550 respectively. 
+	COMMENT    /*Commented for testing purpose*/
+	COMMENT    /*#define MAX_CAS_DATA     0xFFFF*/
+	COMMENT    /*#define MAX_A429_DATA_VALUE    0x7FFFF*/
+	COMMENT
+	COMMENT    /*Modified macro for testing purpose*/
+	COMMENT    #define MAX_CAS_DATA     2550
+	COMMENT    #define MAX_A429_DATA_VALUE    2550 	
+    COMMENT 
+    COMMENT 6.In function 'A429DemoInit', for loop cannot be covered for 0 and 1 time since it is controlled by macro
+    COMMENT   CAU_WARN_MAX_ID
+	COMMENT 7.The following warnings in execution
+	COMMENT line 104: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT               A429_demo_data[0][port1_indx].A429_data.type= 
+	COMMENT                                                           ^
+	COMMENT line 139: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT                     A429_demo_data[0][port1_indx].A429_data.type= 
+	COMMENT                                                                 ^
+	COMMENT line 158: warning #188-D: 
+	COMMENT       enumerated type mixed with another type
+	COMMENT                  A429_demo_data[0][port1_indx].A429_data.type= 
+	COMMENT                                                              ^
+	COMMENT line 186: warning #188-D: 
+	COMMENT       enumerated type mixed with another type
+	COMMENT               A429_demo_data[1][port2_indx].A429_data.type= 
+	COMMENT                                                          ^
+	COMMENT line 222: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT                     A429_demo_data[1][port2_indx].A429_data.type= 
+	COMMENT                                                                ^
+	COMMENT line 241: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT                  A429_demo_data[1][port2_indx].A429_data.type= 
+	COMMENT                                                              ^
+	COMMENT line 282: warning #188-D: 
+	COMMENT        enumerated type mixed with another type
+	COMMENT      T_A825_MESSAGE tx_msg = {0U};
+	COMMENT	
+    COMMENT</AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT
+	COMMENT Class 1
+	COMMENT In function 'A429DemoInit', A429_port of A429_cfg_data with index value loop counter is equal to ONE
+    COMMENT
+	COMMENT Class 2
+	COMMENT In function 'A429DemoInit', A429_port of A429_cfg_data with index value loop counter is equal to TWO	
+    COMMENT
+	COMMENT Class 3
+	COMMENT In function 'A429DemoInit', A429_port of A429_cfg_data with index value loop counter is other than ONE or TWO	
+    COMMENT
+	COMMENT Class 4
+	COMMENT In function 'A429DemoInit', A429_type of A429_cfg_data with index value loop counter is equal to BNR	
+    COMMENT
+	COMMENT Class 5
+	COMMENT In function 'A429DemoInit', A429_type of A429_cfg_data with index value loop counter is equal to DDW
+    COMMENT
+	COMMENT Class 6
+	COMMENT In function 'A429DemoInit', A429_type of A429_cfg_data with index value loop counter is other than BNR or DDW	
+    COMMENT
+	COMMENT Class 7
+	COMMENT In function 'A429DemoInit', Cas_cnt is ZERO 
+    COMMENT
+	COMMENT Class 8
+	COMMENT In function 'A429DemoInit', Cas_cnt is other than ZERO 
+    COMMENT
+	COMMENT Class 9
+	COMMENT In function 'A429DemoInit', A429_label of A429_cfg_data with index loop counter is equal to label of Cas_msg
+    COMMENT
+	COMMENT Class 10
+	COMMENT In function 'A429DemoInit', A429_label of A429_cfg_data with index loop counter is not equal to label of Cas_msg
+    COMMENT
+	COMMENT Class 11
+	COMMENT In function 'DoDemo', transmit count is equal to FIFTY.	
+    COMMENT
+	COMMENT Class 12
+	COMMENT In function 'DoDemo', transmit count is greater than FIFTY.
+    COMMENT
+	COMMENT Class 13
+	COMMENT In function 'DoDemo', transmit count is lesser than FIFTY.	
+    COMMENT
+	COMMENT Class 14
+	COMMENT In function 'DoDemo', type of A429_data of A429 Demo data with indices channel value and label count is equal to DDW.	
+    COMMENT
+	COMMENT Class 15
+	COMMENT In function 'DoDemo', type of A429_data of A429 Demo data with indices channel value and label count is not equal to DDW.	
+    COMMENT
+	COMMENT Class 16
+	COMMENT In function 'DoDemo', localtimer of A429 Demo data with indices channel value and label count is equal to TWO_THOUSAND
+    COMMENT
+	COMMENT Class 17
+	COMMENT In function 'DoDemo', localtimer of A429 Demo data with indices channel value and label count is greater than TWO_THOUSAND
+    COMMENT
+	COMMENT Class 18
+	COMMENT In function 'DoDemo', localtimer of A429 Demo data with indices channel value and label count is lesser than TWO_THOUSAND	
+    COMMENT
+	COMMENT Class 19
+	COMMENT In function 'DoDemo', update flag is TRUE
+    COMMENT
+	COMMENT Class 20
+	COMMENT In function 'DoDemo', update flag is FALSE
+    COMMENT
+	COMMENT Class 21
+	COMMENT In function 'DoDemo', Demo label value is equal to CAS label 
+    COMMENT
+	COMMENT Class 22
+	COMMENT In function 'DoDemo', Demo label value is equal to Exceedance label 
+	COMMENT
+	COMMENT Class 23
+	COMMENT In function 'DoDemo', label of A429_data of A429 Demo data with indices channel value and label count is equal to LABEL_0370
+    COMMENT
+	COMMENT Class 24
+	COMMENT In function 'DoDemo', label of A429_data of A429 Demo data with indices channel value and label count is equal to LABEL_0360
+    COMMENT
+	COMMENT Class 25
+	COMMENT In function 'DoDemo', Demo label value is other than CAS label,Exceedance label, LABEL_0370 and LABEL_0360
+    COMMENT
+	COMMENT Class 26
+	COMMENT In function 'DoDemo', Data is greater than MAX_CAS_DATA		
+    COMMENT
+	COMMENT Class 27
+	COMMENT In function 'DoDemo', Data is equal to MAX_CAS_DATA	
+    COMMENT
+	COMMENT Class 28
+	COMMENT In function 'DoDemo', Data is lesser than MAX_CAS_DATA
+	COMMENT
+	COMMENT Class 29
+	COMMENT In function 'DoDemo', CAS count value is equal to MAX_CAS_COUNT		
+    COMMENT
+	COMMENT Class 30
+	COMMENT In function 'DoDemo', CAS count value is greater than MAX_CAS_COUNT		
+    COMMENT
+	COMMENT Class 31
+	COMMENT In function 'DoDemo', CAS count value is lesser than MAX_CAS_COUNT			
+	COMMENT
+	COMMENT Class 32
+	COMMENT In function 'DoDemo', data value is equal to MAX_EXCEE_DATA	
+    COMMENT
+	COMMENT Class 33
+	COMMENT In function 'DoDemo', data value is greater than MAX_EXCEE_DATA	
+    COMMENT
+	COMMENT Class 34
+	COMMENT In function 'DoDemo', data value is lesser than MAX_EXCEE_DATA	
+	COMMENT
+	COMMENT Class 35
+	COMMENT In function 'DoDemo', incremented value of airframe label sequence number is equal to NUM_OF_SEQ
+    COMMENT
+	COMMENT Class 36
+	COMMENT In function 'DoDemo', incremented value of airframe label sequence number is greater than NUM_OF_SEQ
+    COMMENT
+	COMMENT Class 37
+	COMMENT In function 'DoDemo', incremented value of airframe label sequence number is lesser than NUM_OF_SEQ	
+	COMMENT
+	COMMENT Class 38
+	COMMENT In function 'DoDemo', data value is equal to MAX_A429_DATA_VALUE
+    COMMENT
+	COMMENT Class 39
+	COMMENT In function 'DoDemo', data value is greater than MAX_A429_DATA_VALUE	
+    COMMENT
+	COMMENT Class 40
+	COMMENT In function 'DoDemo', data value is lesser than MAX_A429_DATA_VALUE		
+	COMMENT
+	COMMENT Class 41
+	COMMENT In function 'DoDemo', localtimer of A429 Demo data with indices channel value and label count is equal to label count
+    COMMENT
+	COMMENT Class 42
+	COMMENT In function 'DoDemo', localtimer of A429 Demo data with indices channel value and label count is greater than label count	
+    COMMENT
+	COMMENT Class 43
+	COMMENT In function 'DoDemo', localtimer of A429 Demo data with indices channel value and label count is lesser than label count
+    COMMENT
+	COMMENT Class 44
+	COMMENT In function 'DoDemo', FWD of A429 Demo data with indices channel value and label count is TRUE
+    COMMENT
+	COMMENT Class 45
+	COMMENT In function 'DoDemo', FWD of A429 Demo data with indices channel value and label count is FALSE
+	COMMENT
+	COMMENT Class 46
+	COMMENT In function 'DoDemo', data is equal to max_val of A429_data of A429 Demo data with indices channel value and label count
+	COMMENT 
+	COMMENT Class 47
+	COMMENT In function 'DoDemo', data is greater than max_val of A429_data of A429 Demo data with indices channel value and label count
+    COMMENT
+	COMMENT Class 48
+	COMMENT In function 'DoDemo', data is lesser than max_val of A429_data of A429 Demo data with indices channel value and label count.
+	COMMENT
+	COMMENT Class 75
+	COMMENT In function 'DoDemo', data is equal to min_val of A429_data of A429 Demo data with indices channel value and label count
+	COMMENT 
+	COMMENT Class 76
+	COMMENT In function 'DoDemo', data is greater than min_val of A429_data of A429 Demo data with indices channel value and label count
+    COMMENT
+	COMMENT Class 77
+	COMMENT In function 'DoDemo', data is lesser than min_val of A429_data of A429 Demo data with indices channel value and label count.
+    COMMENT
+	COMMENT Class 49
+	COMMENT In function 'DoDemo', transmit flag is TRUE 
+    COMMENT
+	COMMENT Class 50
+	COMMENT In function 'DoDemo', transmit flag is FALSE
+    COMMENT
+	COMMENT Class 51
+	COMMENT In function 'DoDemo', airframe label transmit status is TRUE
+    COMMENT
+	COMMENT Class 52
+	COMMENT In function 'DoDemo', airframe label transmit status is FALSE
+    COMMENT
+	COMMENT Class 53
+	COMMENT In function 'DoDemo', function 'A8251Xmit' is called 
+    COMMENT
+	COMMENT Class 54
+	COMMENT In function 'DemoTask', function 'OsSemPend' is called 
+    COMMENT
+	COMMENT Class 55
+	COMMENT In function 'DemoTask', function 'CAN1DemoConfig' is called 
+    COMMENT
+	COMMENT Class 56
+	COMMENT In function 'DemoTask', function 'A429DemoInit' is called 
+    COMMENT
+	COMMENT Class 57
+	COMMENT In function 'DemoTask', Demo_mode is equal to zero 
+    COMMENT
+	COMMENT Class 58
+	COMMENT In function 'DemoTask', Demo_mode is greater than zero
+    COMMENT
+	COMMENT Class 59
+	COMMENT In function 'DoDemo', macro INIT_NOC_MESSAGE is called
+	COMMENT
+	COMMENT Class 60
+	COMMENT In function 'DemoTask', Demo_mode_activate is equal to zero 
+    COMMENT
+	COMMENT Class 61
+	COMMENT In function 'DemoTask', Demo_mode_activate is greater than zero
+    COMMENT
+	COMMENT Class 63
+	COMMENT In function 'DemoTask', function 'DoDemo' is called 
+    COMMENT
+	COMMENT Class 64
+	COMMENT In function 'DemoTask', First In flag is equal to TRUE
+    COMMENT
+	COMMENT Class 65
+	COMMENT In function 'DemoTask', First In flag is equal to FALSE
+    COMMENT
+	COMMENT Class 66
+	COMMENT In function 'DemoTask', active delay is equal to ACT_DELAY_WAIT
+    COMMENT
+	COMMENT Class 67
+	COMMENT In function 'DemoTask', active delay is greater than ACT_DELAY_WAIT
+    COMMENT
+	COMMENT Class 68
+	COMMENT In function 'DemoTask', active delay is lesser than ACT_DELAY_WAIT
+    COMMENT
+	COMMENT Class 69
+	COMMENT In function 'DemoSignalTask', function 'OsSemPost' is called 
+    COMMENT
+	COMMENT Class 70
+	COMMENT In function 'DemoSignalTask', tick counter value is equal to DEMO_TASK_TICKS 	
+    COMMENT
+	COMMENT Class 71
+	COMMENT In function 'DemoSignalTask', tick counter value is greater than DEMO_TASK_TICKS 	
+    COMMENT
+	COMMENT Class 72
+	COMMENT In function 'DemoSignalTask', tick counter value is lesser than DEMO_TASK_TICKS 		
+    COMMENT
+	COMMENT Class 73
+	COMMENT In function 'DemoInit', function 'OsSemCreate' is called 
+    COMMENT
+	COMMENT Class 74
+	COMMENT In function 'DemoInit', function 'OsTaskCreate' is called 	
+	COMMENT	
+	COMMENT Class 78	
+	COMMENT In function 'DoDemo',set eng_sdi of Config_data is equal to ONE
+	COMMENT
+	COMMENT Class 79	
+	COMMENT In function 'DoDemo',set eng_sdi of Config_data is lessthan ONE
+	COMMENT
+	COMMENT Class 80	
+	COMMENT In function 'DoDemo',set eng_sdi of Config_data is greaterthan ONE
+	COMMENT	
+	COMMENT Class 81	
+	COMMENT In function 'DoDemo',index timer of Page_settings is equal to label of A429_demo_data indices of channel
+	COMMENT  and loop index count
+	COMMENT
+	COMMENT Class 82
+	COMMENT In function 'DoDemo',index timer of Page_settings is not equal to label of A429_demo_data indices of channel
+	COMMENT  and loop index count	
+	COMMENT
+	COMMENT Class 83
+	COMMENT In function 'DoDemo',timer_sdi of Timer_settings with index timer of Page_settings 
+	COMMENT  is equal to sdi of A429_demo_data indices of channel and loop index count
+	COMMENT
+	COMMENT Class 84
+	COMMENT In function 'DoDemo',timer_sdi of Timer_settings with index timer of Page_settings 
+	COMMENT  is not equal to sdi of A429_demo_data indices of channel and loop index count	
+	COMMENT
+	COMMENT Class 85
+	COMMENT In function 'DoDemo',timer flag is TRUE
+	COMMENT
+	COMMENT Class 86
+	COMMENT In function 'DoDemo',timer flag is FALSE
+	COMMENT	
+	COMMENT Invalid Class(es)	
+	COMMENT	None
+	COMMENT </ECD>	
+	
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdudispfdemo_c 5000
+
+		--Parameter task is made as _no as the address of function is passec
+		#T_UBYTE OsTaskCreate(void _no ( *  task)(void* pd), void * _in pdata, void * _in pstk, T_UBYTE  _in prio)
+		#{
+		# task(pdata);
+		#}
+
+		#T_OS_EVENT* OsSemCreate(T_UWORD  _in count); 
+
+		#T_UBYTE OsSemPost(T_OS_EVENT  _in * param_event); 
+
+		#void CAN1DemoConfig(void); 
+
+		--Parameter error is made as _no as the address of local variable is passed
+		#void OsSemPend(T_OS_EVENT  * p_event, T_UWORD  _in time_out, T_UBYTE  _no *error)
+		#{
+		# error = &PTU_error;
+		#}
+
+		--Parameter ps_xm is made as _no as the address of local variable is passed
+		#T_A825_XMITRESULT A8251Xmit(T_A825_MESSAGE  _no * ps_xm); 
+
+	END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfdemo.c
+
+ENVIRONMENT ENV_hdudispfdemo_c
+
+	VAR Demo_active,		init = FALSE,				ev = init
+
+	ARRAY Demo_task_stk,	init = { others => 0 },		ev = init
+  
+END ENVIRONMENT -- ENV_hdudispfdemo_c
+
+USE ENV_hdudispfdemo_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service DemoInit
+--------------------------------------------------------------------------------
+SERVICE DemoInit
+SERVICE_TYPE extern
+
+    --Local variables Declarations
+    #T_OS_EVENT PTU_OsSemCreate;
+    
+    #T_UINT32 Loop_index,Loop_index_2, Loop_index_1=0;
+
+TEST 8
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>   
+	COMMENT [hdudispfdemo-DoDemo-DB-LLR-010] 
+	COMMENT The function 'DoDemo' loops from zero to MAX_A429_CHANNEL-1 and zero to MAX_A429_LABELS-1
+	COMMENT and does the following 
+	COMMENT a. Resets the data of A429 Demo data with indices channel value and label count to zero 
+	COMMENT    when data value is equal to MAX_A429_DATA_VALUE(when function iterates through 748 loop)
+	COMMENT a. does nothing, 
+	COMMENT    when data value is lesser than MAX_A429_DATA_VALUE(when function iterates through 1 to 747)
+	COMMENT b. Builds the data by left shifting data by TEN.
+	COMMENT    when the following conditions are satisfied
+	COMMENT    1. type of A429_data of A429 Demo data with indices channel value and label count is equal to DDW
+	COMMENT    2. Demo label is other than CAS label and Exceedance label
+	COMMENT Equivalence Class 14,25,40,38
+	COMMENT </TD> 
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			VAR Demo_mode,						init = TRUE,							ev = init
+
+			VAR Demo_mode_activate,				init = TRUE,							ev = init
+
+			VAR A429_settings_cnt,				init = 256,								ev = init
+			
+			VAR Config_data.eng_sdi,			init = ZERO,							ev = init
+			
+			VAR A429_cfg_data[0..255].A429_port,init = ONE,								ev = init
+						
+			VAR A429_cfg_data[0..255].A429_label,	init = 1,							ev = init
+			
+			VAR Cas_msg[0].label,				init = 0,								ev = init
+
+			VAR Exceed_data[0].label,			init = 0,								ev = init
+			
+			--VAR Cas_cnt,						init = 1,								ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR U16_sys_info_words[1],			init = 2,								ev = 2
+
+			VAR A429_cfg_data[0..255].A429_type,	init = BNR,							ev = DDW
+
+		COMMENT OUTPUT SECTION:
+		
+			--Allocate stack for the Demo task
+			VAR Demo_task_stk[0..1023],			init = (T_OS_STK)0xFFFFFFFF,			ev = 0xDEADDEAD
+			
+			--Sem to signal task execution
+			VAR Sem_demo_task,					init = NULL,							ev = &PTU_OsSemCreate
+			
+			VAR Demo_active,					init = FALSE,							ev = TRUE
+
+		--Stub Calls:
+		SIMUL
+		
+			--Creates and initializes the Semaphore
+			STUB OsSemCreate 1..264 => (ZERO)(&PTU_OsSemCreate)
+			
+			--Creates OS Task
+			STUB OsTaskCreate 1..264 => (NULL, &Demo_task_stk[DEMO_TASK_STK_SIZE], DEMO_TASK_PRIO)1
+			
+			--Function waits on a Semaphore
+			STUB OsSemPend 1..792 => (&PTU_OsSemCreate, 0)
+			
+			--Configures the can
+			STUB CAN1DemoConfig()
+			
+			--Builds a CAN message from the user supplied ARINC 825 message
+			STUB A8251Xmit 1..12574 => ()A825_XM_OK
+		
+		END SIMUL
+
+		-- Calling the Unit Under Test is called for 8 times to increment act_delay,
+		-- 256 times to increment data	
+		#for(Loop_index=0;Loop_index<264;Loop_index++)
+		#{	  
+			# A429_cfg_data[Loop_index_1].A429_type = BNR; 
+			# A429DemoInit();
+			# A429_cfg_data[Loop_index_1].A429_type = DDW; 			
+			# Loop_index_1++;
+			#if(Loop_index_1 >=256)
+			#Loop_index_1 = 0;
+			#DemoInit();
+		#}
+		
+		
+	
+	END ELEMENT
+
+END TEST -- TEST 8
+
+END SERVICE -- DemoInit
+
+

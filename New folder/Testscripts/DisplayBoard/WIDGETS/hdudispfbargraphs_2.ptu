@@ -1,0 +1,626 @@
+HEADER hdudispfbargraphs, Source Code Ver : 1.8 , TestScript Ver : 1.6
+--------------------------------------------------------------------------------
+-- Author Name          : Swathi G
+--
+-- File Name            : hdudispfbargraphs_2.ptu
+--
+-- Test Creation Date   : 10.10.2017
+--
+-- Tested Functions     : BargraphClear
+--
+-- Version History      :
+--
+-- TEST-VERSION       TEST-DATE        TESTER NAME        MODIFICATIONS
+-- ------------       ---------        -----------        -------------
+-- 1.1                10.10.2017        Swathi G          Created the PTU file.
+-- 1.2                10.11.2017        Swathi G          updated as per #PR100171.
+-- 1.3                14.11.2017        Swathi G          updated as per #PR100171.
+-- 1.4                27.07.2020        Swaroopa N        updated as per #PR100267.
+-- 1.5                03.10.2020        Vignesh Sunil     updated as per #PR100281.
+-- 1.6                16.10.2020        Vignesh Sunil     updated as per #PR100295.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfdma2d.h"      
+##include "hdudispfpolygon1.h"    
+##include "hdudispfrterror.h"   
+##include "hdudispftext.h"       
+##include "hdudispfbargraphs.h"  
+##include "hdudispfconfig.h"      
+##include "hdudispfbinascii.h"   
+##include "hdulibbasictypes.h"   
+##include "hdudispffonts.h"  
+##include "hdudispfpdidata.h" 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+   # volatile  T_INT32 Itm_rx_buffer;
+   
+   #T_INT16 S16_panel_height;
+    
+   #T_ELANDSCAPEORPORTRIAT E_orientation;
+   
+-- Declarations of the temporary variable
+
+    --Temporary variable to obtain psParam member value of structure member contents
+    #T_PARAM_READING      PTU_psParam;
+    
+    --Temporary variable to hold rterr file name
+    #T_CHAR               PTU_rterr_file[200];
+    
+    --Temporary variable to hold rterr message
+    #T_CHAR               PTU_rterr_message[200];
+    
+    --Temporary variable used in "RterrWidget" stub native code
+    #T_UINT32             index1, index2;
+    
+    --Temporary variable used in "BinasByteFormatInfoBE" stub native code
+    #T_INT16            *  PTU_BinasByte_s16DisDig_src;
+    #T_INT8             *  PTU_BinasByte_s16DisDig_dest;
+    
+    --Temporary variable used in "TextAllocat" stub native code
+    #T_PTEXT            *  PTU_pps_handle_add;
+    #T_UINT8            *  PTU_pu8_string;
+    
+    --Temporary variable used in "Dma2dDrawChar" stub native code
+    #T_CHAR              PTU_character_data[600];
+    #T_UINT32           * PTU_write_loc;
+    
+    --Temporary variable used in "WidgetsRedX" stub native code
+    #T_SDISREGION       *PTU_ps_dis_region;
+    #T_SPOLY            PTU_Pps_poly_red_x;
+
+    --Temporary variable used in "WidgetsDotAddr" stub native code
+    #T_SDISLOC           PTU_ppoint_3;
+
+    --Temporary variable used in "LookupTableLookup" stub native code
+    #T_LOOKUP_TABLE      PTU_table;
+    #T_PARAM_STAT        PTU_stat;
+    
+    --Temporary variable used in "WidgetsNumUpdate" stub native code
+    #T_PARAM_READING     PTU_param;
+    #T_SWIDGETPARAM      PTU_ps_widget_param;
+    #T_CHAR              PTU_ac_dig_text[13];
+
+    --Temporary variable used in "WidgetsUpdateRT" stub native code
+    #T_PARAM_READING   PTU_ps_param;
+    #T_SWIDGETPARAM    PTU_widget_parm;
+
+     --Temporary variable used in "TextUpdate" stub native code
+     #T_PTEXT  PTU_p_text;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Swathi G
+    COMMENT
+    COMMENT File Name        : hdudispfbargraphs_2.ptu
+    COMMENT
+    COMMENT Tested Functions : BargraphClear
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1. Following Test script related warning is observed during Target Execution for stub function return value:
+    COMMENT    warning #120-D: 
+    COMMENT    return value type does not match the function type
+    COMMENT    return(Attol_ptr_out->ret);
+	COMMENT 2. Below statement is added in 'hdudispfbargraphs.c' file befor the include section to fetch the actual path of source file independent
+    COMMENT    to different target machines.
+    COMMENT    Code:
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+	COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In Function BargraphAllocat the u16Width of ps_bar_graph_def is greater than MAX_BAR_WIDTH.
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In Function BargraphAllocat the u16Width of ps_bar_graph_def is lesser than MAX_BAR_WIDTH.
+    COMMENT
+    COMMENT Class 53
+    COMMENT In Function BargraphAllocat the u16Width of ps_bar_graph_def is equal to MAX_BAR_WIDTH.
+    COMMENT
+    COMMENT Class 3
+    COMMENT In Function BargraphAllocat the number of bar garphs installed is equal to MAX_BARS.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In Function BargraphAllocat the number of bar garphs installed is not equal to MAX_BARS.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In Function BargraphAllocat, 'RterrWidget' function is called.
+    COMMENT
+    COMMENT Class 58
+    COMMENT In Function BargraphAllocat, 'CalculatePower' function is called.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In Function BargraphAllocat, 'BinasGetWidth' function is called.
+    COMMENT
+    COMMENT Class 7
+    COMMENT In Function BargraphAllocat, the resultant value of logical AND operation between return value of function 'BinasGetWidth' 
+    COMMENT and eFont of ps_bar_graph_def is true.
+    COMMENT
+    COMMENT Class 8
+    COMMENT In Function BargraphAllocat, the resultant value of logical AND operation between return value of function 'BinasGetWidth' 
+    COMMENT and eFont of ps_bar_graph_def is not true.
+    COMMENT
+    COMMENT Class 9
+    COMMENT In Function BargraphAllocat, 'BinasByteFormatInfoBE' function is called.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In Function BargraphAllocat, 'TextAllocat' function is called.
+    COMMENT
+    COMMENT Class 11
+    COMMENT In Function BargraphUpdate, 'WidgetsUpdateRT' function is called.
+    COMMENT
+    COMMENT Class 54
+    COMMENT In Function BargraphUpdate, 'CalculatePower' function is called.
+    COMMENT
+    COMMENT Class 52
+    COMMENT In Function BargraphUpdate, 'LookupTableLookup' function is called.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In Function BargraphUpdate, the value of pText of sWidgetParm of ps_bar_graph is not equal to NULL.
+    COMMENT
+    COMMENT Class 13
+    COMMENT In Function BargraphUpdate, the value of stat of psParam of ps_bar_graph_def of ps_bar_graph is lesser than PARAM_BAD.
+    COMMENT
+    COMMENT Class 14
+    COMMENT In Function BargraphUpdate, the value of pText of sWidgetParm of ps_bar_graph is equal to NULL.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In Function BargraphUpdate, the value of stat of psParam of ps_bar_graph_def of ps_bar_graph is greater than PARAM_BAD.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In Function BargraphUpdate, the value of stat of psParam of ps_bar_graph_def of ps_bar_graph is equal to PARAM_BAD.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In Function BargraphUpdate, 'WidgetsNumUpdate' function is called.
+    COMMENT
+    COMMENT Class 19
+    COMMENT In Function BargraphUpdate, 'BinasGetWidth' function is called.
+    COMMENT
+    COMMENT Class 20
+    COMMENT In Function BargraphUpdate, 'TextUpdate' function is called.
+    COMMENT
+    COMMENT Class 21
+    COMMENT In Function BargraphDraw, the value of stat of psParam of ps_bar_graph_def is lesser than PARAM_BAD.
+    COMMENT
+    COMMENT Class 22
+    COMMENT In Function BargraphDraw, the value of E_orientation is equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In Function BargraphDraw, the value of bg_hv is equal to BG_VERTICAL.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In Function BargraphDraw, the value of bg_hv is not equal to BG_VERTICAL.
+    COMMENT
+    COMMENT Class 25
+    COMMENT In Function BargraphDraw, the value of E_orientation is not equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 27
+    COMMENT In Function BargraphDraw, the value of length is lesser than ZERO.
+    COMMENT
+    COMMENT Class 57
+    COMMENT In Function BargraphDraw, the value of length is greater than ZERO.
+    COMMENT
+    COMMENT Class 55
+    COMMENT In Function BargraphDraw, the value of length is equal to ZERO.
+    COMMENT
+    COMMENT Class 28
+    COMMENT In Function BargraphDraw, the value of anti alias is not equal to ZERO.
+    COMMENT
+    COMMENT Class 29
+    COMMENT In Function BargraphDraw, the value of anti alias is equal to ZERO.
+    COMMENT
+    COMMENT Class 30
+    COMMENT In Function BargraphDraw, the value of s16_length is greater than ZERO.
+    COMMENT
+    COMMENT Class 42
+    COMMENT In Function BargraphDraw, the value of stat of psParam of ps_bar_graph_def is greater than PARAM_BAD.
+    COMMENT
+    COMMENT Class 56
+    COMMENT In Function BargraphDraw, the value of stat of psParam of ps_bar_graph_def is equal to PARAM_BAD.
+    COMMENT
+    COMMENT Class 45
+    COMMENT In Function BargraphDraw, 'Dma2dIsBusy' is called.
+    COMMENT
+    COMMENT Class 46
+    COMMENT In Function BargraphDraw, 'PolygonFillRectNT' is called.
+    COMMENT
+    COMMENT Class 47
+    COMMENT In Function BargraphDraw, 'WidgetsDotAddr' is called.
+    COMMENT
+    COMMENT Class 48
+    COMMENT In Function BargraphDraw, 'Dma2dDrawChar' is called.
+    COMMENT
+    COMMENT Class 49
+    COMMENT In Function BargraphDraw, 'WidgetsRedX' is called.
+    COMMENT
+    COMMENT Class 50
+    COMMENT The Function BargraphClear, deallocate's the bar graphs.
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT
+    COMMENT Class 51
+    COMMENT The function BargraphAllocat is called with input parameter ps_bar_graph_def as NULL.
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+DEFINE STUB hdudispfbargraphs_c
+    
+    --The input parameter's ps_dis_region and Pps_poly_red_x are made as _no since they are pointer variables
+    #void WidgetsRedX(T_SDISREGION _no *ps_dis_region, T_SPOLY _no **Pps_poly_red_x)
+    #{
+    #    PTU_ps_dis_region  = ps_dis_region;
+    #    PTU_Pps_poly_red_x = **Pps_poly_red_x;
+    #}  
+    
+    --The input parameter's character_data and write_loc are made as _no since they are pointer variables
+    #void Dma2dDrawChar(  const void _no *character_data, void _no *write_loc, T_UINT32 _in u32_width, T_UINT32 _in u32_height, T_UINT16 _in e_color) 
+    #{   
+    #   for(index1 = 0; index1<600;   index1++)
+    #   {
+    #       PTU_character_data[index1]=*(T_CHAR *)character_data;
+    #       character_data = ((T_CHAR *)character_data)+1;
+    #   }
+    #    PTU_write_loc      = write_loc;
+    #}
+    
+    --The input parameter ppoint_3 is made as _no since it is a pointer variable
+    #T_UINT32 WidgetsDotAddr(T_SDISLOC _no *ppoint_3)
+    #{
+    #    PTU_ppoint_3 = *ppoint_3;
+    #} 
+    
+    #void PolygonFillRectNT(T_INT16 _in s16_ulx, T_INT16 _in s16_uly, T_INT16 _in s16_width, T_INT16 _in s16_height, T_EPENCOLOR _in e_color); 
+        
+    #T_INT16 Dma2dIsBusy(void); 
+    
+    --The input parameter p_text is made as _no since it is a pointer variable.
+    #void TextUpdate(T_PTEXT _no p_text, T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv)
+    #{
+    #    PTU_p_text = p_text;
+    #}
+    
+    --The input parameter's param, ps_widget_param and ac_dig_text are made as _no since they are pointer variables
+    #void WidgetsNumUpdate(T_PARAM_READING _no *param, T_SWIDGETPARAM _no *ps_widget_param,T_CHAR _no *ac_dig_text, T_UINT16 u16_format, T_EPENCOLOR _in e_pen_color)
+    #{
+    #   for(index1 = 0; index1<30;   index1++)
+    #   {
+    #       PTU_ac_dig_text[index1]=*(T_CHAR *)ac_dig_text;
+    #       ac_dig_text++;
+    #   } 
+    #
+    #   PTU_param             = *param;
+    #   PTU_ps_widget_param   = *ps_widget_param;
+    #}
+     
+    --The input parameter's table and stat are made as _no since they are pointer variables  
+    #T_INT32 LookupTableLookup( const T_LOOKUP_TABLE _no *table, T_INT32 _in ind_var, T_PARAM_STAT _no *stat)
+    #{
+    #    PTU_table  = *table;
+    #    PTU_stat   = *stat; 
+    #} 
+    
+    --The input parameter's ps_param and ps_widget_parm are made as _no since they are pointer variables
+    #void WidgetsUpdateRT(T_PARAM_READING _no *ps_param, T_SWIDGETPARAM _no *ps_widget_parm)
+    #{
+    #    PTU_ps_param        =  *ps_param;
+    #    PTU_widget_parm  =  *ps_widget_parm;
+    #}  
+    
+    --The input parameters *pps_handle_add and *pu8_string as made as _no since they are pointer variables and they are verified using temporary variables. 
+    #void TextAllocat(T_PTEXT _no *pps_handle_add, T_UINT8 _no *pu8_string, T_UINT16 _in u16_x0, T_UINT16 _in u16_y0, T_ETXALIGN _in e_tx_align, T_ETXFONT _in e_tx_font, T_EPENCOLOR _in e_pen_color, T_ETXV _in e_txv, T_ETXFLASH _in e_tx_flash)
+    #{
+    #     PTU_pps_handle_add = pps_handle_add;
+    #     PTU_pu8_string     = pu8_string;
+    #}
+    
+    --The input parameters *src and *dest as made as _no since they are pointer variables and they are verified using temporary variables. 
+    #T_INT8* BinasByteFormatInfoBE(void _no *src, T_UINT16 _in format, T_INT8 _no *dest)
+    #{
+    #    PTU_BinasByte_s16DisDig_src  = src;
+    #    PTU_BinasByte_s16DisDig_dest = dest;
+    #}
+    
+    #T_FLOAT CalculatePower(T_FLOAT _in value, T_INT32 _in mul);
+    
+    #T_UINT16 BinasGetWidth(T_UINT16 _in format);
+    
+    --The input parameters pc_file and pc_message is made as _no since they are pointer variables and they are verified using temporary variables.
+    #void RterrWidget(T_CHAR * _no pc_file, T_INT8 _in s32_line_number, T_CHAR * _no pc_message) 
+    #{
+    #   for(index1 = 0; index1<100;   index1++)
+    #   {
+    #       PTU_rterr_file[index1]=*(T_CHAR *)pc_file;
+    #       pc_file++;
+    #   }
+    #   for(index2 = 0; index2<100;   index2++)
+    #   {
+    #       PTU_rterr_message[index2]=*(T_CHAR *)pc_message;
+    #       pc_message++;
+    #   }
+    #}
+    
+     END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BargraphClear
+--------------------------------------------------------------------------------
+SERVICE BargraphClear
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_SBARGRAPHDEF    ps_bar_graph_def[4];   
+    #T_SDISREGION      PTU_psDisRegion;
+    #T_PARAM_READING   PTU_psparam;
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphClear-DB-LLR-001]
+        COMMENT The Function BargraphClear set psPolyRedX of As bar graph with index number of bargraphs installed minus one 
+        COMMENT to ZERO and decrement number of bargraphs installed by one till number of bargraphs installed is not equal 
+        COMMENT to zero. The while loop present in the function is exercised for 0 time.
+        COMMENT Equivalence Class 50  
+        COMMENT 
+        COMMENT </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam               
+                VAR PTU_psparam.r,                                                            init = 12,                           ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --None                
+                
+            -- Stub Calls :
+            SIMUL
+        
+               --None
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :
+            #BargraphClear();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphClear-DB-LLR-001]
+        COMMENT The Function BargraphClear set psPolyRedX of As bar graph with index number of bargraphs installed minus one 
+        COMMENT to ZERO and decrement number of bargraphs installed by one till number of bargraphs installed is not equal 
+        COMMENT to zero. The while loop present in the function is exercised for 1 time.
+        COMMENT Equivalence Class 50  
+        COMMENT </TD>
+
+		--To initialize psbargraph of ps_bar_graph_def with temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                
+                --Holds the value of r member of structure PTU_psparam          
+                VAR PTU_psparam.r,                                                               init = 12,                           ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                            init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                                                 init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                                                init = 578,                          ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                                               init = 10,                           ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                                                   init = E_LARGE_FONT,                 ev = init
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+			
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def 
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          init = NULL,                         ev = &ps_bar_graph_def[0]
+				
+				--holds the value of psPolyRedX of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->psPolyRedX,                init = (T_SPOLY *)100,               ev = (T_SPOLY *)ZERO
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+               
+			   --Called to calculate the power value
+               STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            -- the below specified functions are called to allocate the bargraph
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+			
+            -- Calling the Unit Under Test :
+            #BargraphClear();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 2
+    
+    TEST 3
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphClear-DB-LLR-001]
+        COMMENT The Function BargraphClear set psPolyRedX of As bar graph with index number of bargraphs installed minus one 
+        COMMENT to ZERO and decrement number of bargraphs installed by one till number of bargraphs installed is not equal 
+        COMMENT to zero. The while loop present in the function is exercised for 2 or more times.
+        COMMENT Equivalence Class 50  
+        COMMENT </TD>
+
+		--To initialize psbargraph of ps_bar_graph_def with temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+        #ps_bar_graph_def[1].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+        #ps_bar_graph_def[2].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+        #ps_bar_graph_def[3].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+        #PTU_psparam.fread = 12;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam               
+                VAR PTU_psparam.r,                                                               init = 12,                          ev = init
+                
+                --Holds the value of PTU_psparam member value of structure variable
+                VAR PTU_psparam.stat,                                                            init = PARAM_OK,                    ev = init
+                  
+                --Holds the value of psParam member of structure ps_bar_graph_def                 
+                VAR ps_bar_graph_def[0].psParam,                                                 init = &PTU_psparam,                ev = init
+                VAR ps_bar_graph_def[1].psParam,                                                 init = &PTU_psparam,                ev = init
+                VAR ps_bar_graph_def[2].psParam,                                                 init = &PTU_psparam,                ev = init
+                VAR ps_bar_graph_def[3].psParam,                                                 init = &PTU_psparam,                ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                                                init = 578,                         ev = init
+                VAR ps_bar_graph_def[1].u16Width,                                                init = 58,                          ev = init
+                VAR ps_bar_graph_def[2].u16Width,                                                init = 57,                          ev = init
+                VAR ps_bar_graph_def[3].u16Width,                                                init = 5,                           ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                                               init = (T_UINT16)10,                ev = init
+                VAR ps_bar_graph_def[1].u16Format,                                               init = (T_UINT16)10,                ev = init
+                VAR ps_bar_graph_def[2].u16Format,                                               init = (T_UINT16)10,                ev = init
+                VAR ps_bar_graph_def[3].u16Format,                                               init = (T_UINT16)10,                ev = init
+               
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                                                   init = E_LARGE_FONT,                ev = init
+                VAR ps_bar_graph_def[1].eFont,                                                   init = E_LARGE_FONT,                ev = init
+                VAR ps_bar_graph_def[2].eFont,                                                   init = E_LARGE_FONT,                ev = init
+                VAR ps_bar_graph_def[3].eFont,                                                   init = E_LARGE_FONT,                ev = init
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+				--holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          init = NULL,                         ev = &ps_bar_graph_def[0]
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[1].psbargraph))->ps_bar_graph_def,          init = NULL,                         ev = &ps_bar_graph_def[1]
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[2].psbargraph))->ps_bar_graph_def,          init = NULL,                         ev = &ps_bar_graph_def[2]
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[3].psbargraph))->ps_bar_graph_def,          init = NULL,                         ev = &ps_bar_graph_def[3]
+                
+				--holds the value of psPolyRedX of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->psPolyRedX,                init = (T_SPOLY *)100,               ev = (T_SPOLY *)ZERO
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[1].psbargraph))->psPolyRedX,                init = (T_SPOLY *)1,                 ev = (T_SPOLY *)ZERO
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[2].psbargraph))->psPolyRedX,                init = (T_SPOLY *)10,                ev = (T_SPOLY *)ZERO
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[3].psbargraph))->psPolyRedX,                init = (T_SPOLY *)1000,              ev = (T_SPOLY *)ZERO
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+        
+               --STUB calls
+               
+			   --Called to calculate the power value
+               STUB CalculatePower (10, 0)1
+               STUB CalculatePower (10, 0)1
+               STUB CalculatePower (10, 0)1
+               STUB CalculatePower (10, 0)1
+                      
+            END SIMUL        
+            
+            -- the below specified functions are called to allocate the bargraph
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+            #BargraphAllocat(&ps_bar_graph_def[1]);
+            #BargraphAllocat(&ps_bar_graph_def[2]);
+            #BargraphAllocat(&ps_bar_graph_def[3]);
+			
+            -- Calling the Unit Under Test :
+            #BargraphClear();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 3  
+
+END SERVICE -- BargraphClear
+

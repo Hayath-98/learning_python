@@ -1,0 +1,461 @@
+HEADER hducommftbase, Source Code Ver : 1.1, TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Priyanka N
+--
+-- File Name           : hducommftbase_1.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : TbaseTaskSignaling
+--                       TbaseIntrHandler
+--                       TbaseInit
+--
+-- Version  History    :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--   1.1                30.10.2017      Priyanka N         Created the PTU file.
+--   1.2                11.11.2017      Priyanka N         Updated as per #PR100171
+--   1.3                14.11.2017      Priyanka N         Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommftbase.h"
+##include "hdulibbasicfunc.h"
+##include "hducommfhw.h"
+##include "hducommfoscfg.h"
+##include "hdulibcorecm4.h"
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+    
+    -- To handle parameters in function "TbaseIntrHandler" below variables are declared as global
+    #T_UINT16 u16_task_ticks;
+    #T_OS_EVENT *ps_semaphore;
+    
+-- Declarations of the temporary variable
+
+    -- Temporary variable created to be used in the 'OsSemPost'.
+    #T_OS_EVENT *PTU_p_event;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hducommftbase_1.ptu
+    COMMENT
+    COMMENT Tested Functions : TbaseTaskSignaling
+    COMMENT                    TbaseIntrHandler
+    COMMENT                    TbaseInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1. Header file "hdulibcorecm4.h" is modified for testing purpose. The macros 'SCB','SYSTICK','NVIC' are modified
+    COMMENT for stubbing hardware address.
+    COMMENT a.  /*Commented for testing purpose*/
+    COMMENT /* #define SCB                 ((T_SCB_TYPE*)SCB_BASE) */
+    COMMENT
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_SCB_TYPE PTU_SCB;
+    COMMENT #define SCB    ((T_SCB_TYPE *)& PTU_SCB)
+    COMMENT
+    COMMENT b.  /*Commented for testing purpose*/
+    COMMENT /* #define SYSTICK             ((T_SYSTICK_TYPE*)SYSTICK_BASE  ) */
+    COMMENT
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_SYSTICK_TYPE PTU_SYSTICK;
+    COMMENT #define SYSTICK    ((T_SYSTICK_TYPE *)&PTU_SYSTICK)
+    COMMENT 
+    COMMENT c.  /*Commented for testing purpose*/
+    COMMENT /* #define NVIC                ((T_NVIC_TYPE *)NVIC_BASE)*/
+    COMMENT
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_NVIC_TYPE PTU_NVIC;
+    COMMENT #define NVIC    ((T_NVIC_TYPE *)& PTU_NVIC) 
+    COMMENT
+    COMMENT 2. Due to static variable dependency PTUs are split into 4 PTUs.
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function "TbaseIntrHandler", calls the function "OsIntEnter".
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function "TbaseIntrHandler", calls the function "OsTimeTick".
+    COMMENT
+    COMMENT Class 3
+    COMMENT Function "TbaseIntrHandler", calls the function "OsIntExit".
+    COMMENT
+    COMMENT Class 4
+    COMMENT Function "TbaseIntrHandler", calls the function "OsSemPost".
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function "TbaseIntrHandler", task tick counter is lesser than task ticks of the corresponding task 
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In function "TbaseIntrHandler", task tick counter is equal to task ticks of the corresponding task 
+    COMMENT 
+    COMMENT Class 8
+    COMMENT In function "TbaseInit",SysTickConfig is called
+    COMMENT
+    COMMENT Class 9
+    COMMENT In "TbaseTaskSignaling", number of installed tasks is lesser than OS_MAX_TASKS.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In "TbaseTaskSignaling", number of installed tasks is equal to OS_MAX_TASKS.
+    COMMENT
+    COMMENT Class 11
+    COMMENT In "TbaseTaskSignaling", number of installed tasks is greater than OS_MAX_TASKS.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function "TbaseIntrHandler", task tick counter is greater than task ticks of the corresponding task
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT Class 13
+    COMMENT In function "TbaseTaskSignaling" parameter 'ps_semaphore' is passed with invalid reference.
+    COMMENT
+    COMMENT </ECD>
+    
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hducommftbase_c
+
+        #void OsIntExit(void);
+
+        --Parameter p_event is made _no hence it is verified explicitly
+        #T_UINT8 OsSemPost(T_OS_EVENT _no *p_event) 
+        #{
+        #   PTU_p_event=p_event;
+        #}
+
+        #void OsTimeTick(void);
+
+        #void OsIntEnter(void);
+
+    END DEFINE 
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+--Enviornment of the file hducommftbase.c
+
+--ENVIRONMENT ENV_hducommftbase_c
+
+    --None
+
+--END ENVIRONMENT -- hducommftbase_c
+
+--USE ENV_hducommftbase_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TbaseIntrHandler
+--------------------------------------------------------------------------------
+SERVICE TbaseIntrHandler
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_OS_EVENT PTU_ps_semaphore;
+    #ps_semaphore = &PTU_ps_semaphore;
+
+    --Default Variables 
+    ENVIRONMENT ENV_TbaseIntrHandler
+
+    -- Structure memebers are initialized before usage
+    STRUCTURE PTU_ps_semaphore,     init = { os_event_grp => 0, os_event_tbl => { others => 0 }, os_event_cnt => 0, os_event_ptr => NIL },
+    &                               ev = init
+
+    END ENVIRONMENT -- ENV_eiutbase
+
+    USE ENV_TbaseIntrHandler
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommftbase-TbaseIntrHandler-CB-LLR-001]
+    COMMENT Function informs the Kernel that, it is entering the ISR by calling OsIntEnter.
+    COMMENT Equivalence Class 1
+    COMMENT
+    COMMENT [hducommftbase-TbaseIntrHandler-CB-LLR-002]
+    COMMENT Function updates the time tick by calling OsTimeTick.
+    COMMENT Equivalence Class 2
+    COMMENT
+    COMMENT [hducommftbase-TbaseIntrHandler-CB-LLR-003]
+    COMMENT Function loops for 0 times since number of task installed is ZERO.  
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hducommftbase-TbaseIntrHandler-CB-LLR-004]
+    COMMENT Function informs the Micro C OS, that it is leaving the ISR by calling OsIntExit.
+    COMMENT Equivalence Class 3 
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        --Stub Calls
+        SIMUL
+
+            --Inform the Kernel that it is entering the ISR.
+            STUB OsIntEnter()
+
+            --update the time tick
+            STUB OsTimeTick()
+
+            --Inform the Micro C OS, that it is leaving the ISR .
+            STUB OsIntExit()
+
+        END SIMUL
+
+            --Calling the Unit Under Test:
+            #TbaseIntrHandler();
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommftbase-TbaseIntrHandler-CB-LLR-003]
+    COMMENT Function loops(for one time) through the Timebase Task List and does nothing since
+    COMMENT task tick counter (incremented by 1) is less than the task ticks. 
+    COMMENT Equivalence Class 6
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Task ticks to delay thread
+            VAR u16_task_ticks,     init = 2,         ev=init 
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        --Stub Calls
+        SIMUL
+
+            --Informs the kernel when the function enters the ISR
+            STUB OsIntEnter()
+
+            --Updates the time tick
+            STUB OsTimeTick()
+
+            --Informs the Micro C OS when the function leaves the ISR 
+            STUB OsIntExit()
+
+        END SIMUL
+
+          -- Function 'TbaseTaskSignaling' is called 1 time to verify tick counter is less than the task ticks 
+          -- here "As_task_list[u8_var].u16_tickcntr" is 1 and "As_task_list[u8_var].u16_taskticks" is 2
+          #TbaseTaskSignaling(u16_task_ticks, ps_semaphore);
+
+          --Calling the Unit Under Test:
+          #TbaseIntrHandler();
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- TbaseIntrHandler
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TbaseTaskSignaling
+--------------------------------------------------------------------------------
+SERVICE TbaseTaskSignaling
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT16 u16_task_ticks;
+    #struct os_event ps_semaphore;
+
+    ENVIRONMENT ENV_TbaseTaskSignaling
+
+    -- Parameter is initialized before usage
+    VAR u16_task_ticks,         init = 0,       ev = init
+
+    -- Structure members are initialized before usage
+    STRUCTURE ps_semaphore,     init = { os_event_grp => 0, os_event_tbl => { others => 0 }, os_event_cnt => 0, os_event_ptr => NIL },
+    &                           		ev = init
+
+    END ENVIRONMENT -- ENV_TbaseTaskSignaling
+
+    USE ENV_TbaseTaskSignaling
+    
+TEST 1
+FAMILY robustness
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommftbase-TbaseTaskSignaling-CB-LLR-004]
+    COMMENT Function saves ps_semaphore to the Semaphore of the Timebase Task List
+    COMMENT This test case is written to test parameter 'ps_semaphore' by passing invalid reference.
+    COMMENT Equivalence Class 13
+    COMMENT
+    COMMENT Note :Variable 'As_task_list' and 'U8_installed_tasks' are static, hence these variables are not expected in the output section 
+    COMMENT  and the functionality of the requirement is verified implicitly.
+    COMMENT </TD>
+
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+          --Task ticks to delay thread
+          VAR u16_task_ticks,     init=0,         ev=init
+
+        COMMENT OUTPUT SECTION:
+
+          --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        --Stub Calls
+        SIMUL
+
+          --None
+
+        END SIMUL
+        
+          --Calling the Unit Under Test:
+          -- Paramter value of "ps_semaphore" is NULL
+          #TbaseTaskSignaling(u16_task_ticks, NULL);
+
+      END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- TbaseTaskSignaling
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TbaseInit
+--------------------------------------------------------------------------------
+SERVICE TbaseInit
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommftbase-TbaseInit-CB-LLR-001]
+    COMMENT Initializes the System Tick Interrupt period by calling SysTickConfig with
+    COMMENT number of ticks between two interrupts as parameter (HW_SYSTEM_CLOCK / OS_TICKS_PER_SEC).
+    COMMENT Equivalence Class 8
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+          -- None
+                      
+        COMMENT OUTPUT SECTION:
+        
+          --  Set reload register
+          VAR SYSTICK->LOAD , 	init = 0 , 	ev = 0x0000419F
+            
+          -- set Priority for Cortex-M  System Interrupts
+          VAR SCB->SHP[11] , 	init = 0 , 	ev = 240
+    
+          -- Load the SYSTICK Counter Value
+          VAR SYSTICK->VAL , 	init = 10 , 	ev = 0
+          VAR SYSTICK->CTRL , 	init = 0 , 	ev = 7     
+          
+        COMMENT INPUT/OUTPUT SECTION:
+
+          --None
+
+        --Stub Calls
+        SIMUL 
+
+          --No stubs
+
+        END SIMUL
+        
+          -- Calling the Unit Under Test :
+          #TbaseInit();
+            
+    END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- TbaseInit
+

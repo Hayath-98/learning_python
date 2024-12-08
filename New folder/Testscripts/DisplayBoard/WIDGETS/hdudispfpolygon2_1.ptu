@@ -1,0 +1,2974 @@
+HEADER hdudispfpolygon2,Source Code Ver :1.13,TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+-- Author Name         : Vinothini M
+--
+-- File Name           : hdudispfpolygon2_1.ptu
+--
+-- Test Creation Date  : 27.10.2017
+--
+-- Tested Functions    :  ModulusFunc
+--                     :  Tan32Func
+--                     :  TangentFunc
+--                     :  InverseTangent
+--                     :  SquareRoot
+--                     :  ClearElements
+--                     :  AllocateElements
+--                     :  ClearPolys
+--                     :  PolygonsClear
+--                     :  PsAllocatePoly
+--                     :  PolygonsPsDuplicate
+--                     :  PsGetShape  
+--                     :  VInitPolar  
+--                     :  PolygonsPsPolyInit  
+--                       
+-- Version History             :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME           MODIFICATIONS
+--  ------------        ---------       -----------           -------------
+--      1.1             27.10.2017      Vinothini M         Created the ptu file.
+--      1.2             10.11.2017      Vinothini M         Updated as per #PR100171.
+--      1.3             14.11.2017      Vinothini M         Updated as per #PR100171.
+--      1.4             10.04.2018      Chaitra T N      	Updated as per #PR100201
+--      1.5             21.09.2020      Harshitha R      	Updated as per #PR100281
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+##include "hdudispfarmmath.h"  
+##include "hdudispfrterror.h"   
+##include "hdudispfconfig.h"   
+##include "hdudispfpolygon2.h"  
+##include "hdudispfwidgets.h"   
+##include "hdulibbasictypes.h"  
+##include "hdudispfpdidata.h"  
+##include "hdudispfgrapp.h"
+##include "hdudispfpdidata.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    --Temporary variables created to test return value of PolygonsPsDuplicate
+    #T_SRECTPOINT PTU_psRP[100];
+    #T_SPOLARPOINT PTU_psPP[100];
+    #T_SRECTPOINT   PTU_sRP;
+    #T_SPOLARPOINT  PTU_sPP;
+    #extern T_CHAR glob_file_name[];
+    #T_POLYGRAPHDEF Ap_poly_graph[30];
+	#T_UINT8 Pg_cnt;
+	--#T_POLYGRAPHDEF Ap_poly_graph[50];
+	#T_SFLOATPOLY PTU_polystruct;
+	#T_SFLOATPOLY PTU_polystruct_1;
+
+    
+	--##define ZERO                        0U
+	##define FLOAT_ONE 					1.0f
+	##define FLOAT_TWO 					2.0f
+	##define NUMBER_OF_BITS 			32
+	##define DEC_TWO 					2
+
+	
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Vinothini M
+    COMMENT
+    COMMENT File name        : hdudispfpolygon2_1.ptu
+    COMMENT
+    COMMENT Tested functions :  ModulusFunc
+    COMMENT                  :  Tan32Func
+    COMMENT                  :  TangentFunc
+    COMMENT                  :  InverseTangent
+    COMMENT                  :  SquareRoot
+    COMMENT                  :  ClearElements
+    COMMENT                  :  AllocateElements
+    COMMENT                  :  ClearPolys
+    COMMENT                  :  PolygonsClear
+    COMMENT		     		 :  PsAllocatePoly
+    COMMENT		     		 :  PolygonsPsDuplicate
+    COMMENT		        	 :  PsGetShape
+    COMMENT		     		 :  VInitPolar
+    COMMENT		     		 :  PolygonsPsPolyInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT 1) In function 'PolygonsPsPolyInit', while loop cannot be covered for 0 and 1 loop since s16_point_ctr is controlled by static values which are all greater than 0 and 1.
+    COMMENT 
+    COMMENT 2) In function 'VInitPolar', for loop cannot be covered for 0 and 1 loop since ps_poly->s16Pts is controlled by static values which are all greater than 0 and 1.
+    COMMENT 
+    COMMENT 3) Source file "hdudispftext.c" is modified for testing purpose to verify the file name
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT
+    COMMENT 4) PTUs are split into 2 to avoid static dependency.
+    COMMENT    
+    COMMENT 5) In function 'SquareRoot', for loop cannot be covered for 0 and 1 loop since loop_counter is controlled by constant 32.
+    COMMENT 
+    COMMENT</AC>
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'PolygonsPsDuplicate', 'ps_poly_src' is equal to NULL.
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function 'PolygonsPsDuplicate', 'ps_poly_src' is not equal to NULL.
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'PolygonsPsDuplicate', the function 'PsAllocatePoly' is called.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'PsAllocatePoly', the function 'RterrWidget' is called .
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'PsAllocatePoly', s16_num_elements is less than THREE.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'PsAllocatePoly', s16_num_elements is greater than or equal to THREE.
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'PolygonsPsDuplicate', pointer counter less than s16Pts of ps_poly_src.
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'PolygonsPsDuplicate', pointer counter greater than or equal to s16Pts of ps_poly_src.
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'PsAllocatePoly', U32_polys_allocated greater than POLYS_AVAILABLE.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'PsAllocatePoly', U32_polys_allocated equal to POLYS_AVAILABLE.
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'PsAllocatePoly', U32_polys_allocated less than POLYS_AVAILABLE.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'PsAllocatePoly', AllocateElements is called.
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'PsAllocatePoly', ps_rec_points is NULL.
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'PsAllocatePoly', ps_rec_points is not NULL.
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'PsAllocatePoly', ps_pol_points is NULL.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'PsAllocatePoly', ps_pol_points is not NULL.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'AllocateElements', u32_num_elements is greater than POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'AllocateElements', u32_num_elements is lesser than POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'AllocateElements', u32_num_elements is equal to POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'AllocateElements', polygon elements allocated plus u32_num_elements is greater than POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'AllocateElements', polygon elements allocated plus u32_num_elements is less than POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'AllocateElements', polygon elements allocated plus u32_num_elements is equal to POLY_POINTS_AVAILABLE.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'PolygonsClear', the functions ClearElements and ClearPolys are called.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'PsGetShape', the function 'RterrWidget' is called .
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'PsGetShape', e_shape is equal to ENOSHAPE .
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'PsGetShape', e_shape is not equal to ENOSHAPE .
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'PsGetShape', e_shape is equal to EMAXSTOCKSHAPE .
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'PsGetShape', e_shape is greater than EMAXSTOCKSHAPE .
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'PsGetShape', e_shape is less than EMAXSTOCKSHAPE .
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'PsGetShape', e_shape is equal to ECAPRSHAPE .
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'PsGetShape', e_shape is not equal to ECAPRSHAPE .
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'PsGetShape', e_shape is equal to EREDXSHAPE .
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'PsGetShape', e_shape is not equal to EREDXSHAPE .
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'PsGetShape', e_shape is equal to ESTDPTRSHAPE .
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'PsGetShape', e_shape is not equal to ESTDPTRSHAPE .
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'PsGetShape', e_shape is equal to ESTDTIPSHAPE .
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'PsGetShape', e_shape is not equal to ESTDTIPSHAPE .
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'PsGetShape', e_shape is equal to EDIMONDPOINTSHAPE .
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'PsGetShape', e_shape is not equal to EDIMONDPOINTSHAPE .
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'PsGetShape', e_shape is equal to EDIMONDPOINTTIPSHAPE .
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'PsGetShape', e_shape is not equal to EDIMONDPOINTTIPSHAPE .
+    COMMENT
+    COMMENT Class 42
+    COMMENT In function 'PsGetShape', e_shape is equal to ECAPTSHAPE .
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function 'PsGetShape', e_shape is not equal to ECAPTSHAPE .
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'PsGetShape', e_shape is equal to ECAPESHAPE .
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function 'PsGetShape', e_shape is not equal to ECAPESHAPE.
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'PolygonsPsPolyInit', PsGetShape is called.
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'PolygonsPsPolyInit', PsAllocatePoly is called.
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function 'PolygonsPsPolyInit', VInitPolar is called.
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function 'PolygonsPsPolyInit', PolygonsvPolarToRect is called.
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function 'PolygonsPsPolyInit', ps_float_poly is NULL.
+    COMMENT
+    COMMENT Class 51
+    COMMENT In function 'PolygonsPsPolyInit', ps_float_poly is not NULL.
+    COMMENT
+    COMMENT Class 52
+    COMMENT In function 'VInitPolar', s32X of ps rectangle point is equal to ZERO.
+    COMMENT
+    COMMENT Class 53
+    COMMENT In function 'VInitPolar', s32X of ps rectangle point is not equal to ZERO.
+    COMMENT
+    COMMENT Class 54
+    COMMENT In function 'VInitPolar', s32Y of ps rectangle point is equal to ZERO.
+    COMMENT
+    COMMENT Class 55
+    COMMENT In function 'VInitPolar', s32Y of ps rectangle point is not equal to ZERO.
+    COMMENT
+    COMMENT Class 56
+    COMMENT In function 'VInitPolar', s32X of ps rectangle point is less than ZERO.
+    COMMENT
+    COMMENT Class 57
+    COMMENT In function 'VInitPolar', s32X of ps rectangle point is greater than ZERO.
+    COMMENT
+    COMMENT Class 58
+    COMMENT In function 'VInitPolar', s32Y of ps rectangle point is less than ZERO.
+    COMMENT
+    COMMENT Class 59
+    COMMENT In function 'VInitPolar', s32Y of ps rectangle point is greater than ZERO.
+    COMMENT
+    COMMENT Class 60
+    COMMENT In function "PolygonsvPolarToRect", ps_poly is equal to NULL
+    COMMENT 
+    COMMENT Class 61
+    COMMENT In function "PolygonsvPolarToRect", ps_poly is not equal to NULL
+    COMMENT 
+    COMMENT Class 62
+    COMMENT The function "PolygonsvPolarToRect", calls function "RterrWidget"
+    COMMENT 
+    COMMENT Class 63
+    COMMENT In function "PolygonsvPolarToRect", E_orientation is equal to E_PORTRAIT.
+    COMMENT 
+    COMMENT Class 64
+    COMMENT In function "PolygonsvPolarToRect", E_orientation is not equal to E_PORTRAIT.
+    COMMENT 
+    COMMENT Class 65
+    COMMENT In function "PolygonsvPolarToRect", pointer counter is less than s16Pts of ps_poly
+    COMMENT 
+    COMMENT Class 66
+    COMMENT In function "PolygonsvPolarToRect", pointer counter is equal to s16Pts of ps_poly
+    COMMENT 
+    COMMENT Class 67
+    COMMENT In function "PolygonsvPolarToRect", calls ArmCosQ15
+    COMMENT 
+    COMMENT Class 68
+    COMMENT In function "PolygonsvPolarToRect", calls ArmSinQ15
+    COMMENT 
+    COMMENT Class 69
+    COMMENT In function "InverseTangent", sign is equal to TRUE.   
+    COMMENT
+    COMMENT Class 70
+    COMMENT In function "InverseTangent", sign is not equal to TRUE.      
+    COMMENT
+    COMMENT Class 71
+    COMMENT In function "TangentFunc", calls the function 'ModulusFunc'   
+    COMMENT
+    COMMENT Class 72
+    COMMENT In function "TangentFunc", calls the function 'Tan32Func'
+    COMMENT
+    COMMENT Class 73
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_0.   
+    COMMENT
+    COMMENT Class 74
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_1.   
+    COMMENT
+    COMMENT Class 75
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_2.   
+    COMMENT
+    COMMENT Class 76
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_3.   
+    COMMENT
+    COMMENT Class 77
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_4.   
+    COMMENT
+    COMMENT Class 78
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_5.   
+    COMMENT
+    COMMENT Class 79
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_6.   
+    COMMENT
+    COMMENT Class 80
+    COMMENT In function "TangentFunc", ocatant value is equal to OCTANT_VAL_7.   
+    COMMENT
+    COMMENT Class 81
+    COMMENT In function "TangentFunc", ocatant value is other than OCTANT_VAL_0,OCTANT_VAL_1,OCTANT_VAL_2,OCTANT_VAL_03
+    COMMENT OCTANT_VAL_4,OCTANT_VAL_5,OCTANT_VAL_6 and OCTANT_VAL_7.     
+    COMMENT
+    COMMENT Class 82
+    COMMENT In function "InverseTangent", val is less than 0. 
+    COMMENT
+    COMMENT Class 83
+    COMMENT In function "InverseTangent", val is greater than 0.
+    COMMENT
+    COMMENT Class 84
+    COMMENT In function "InverseTangent", val is equal to 0.   
+    COMMENT
+    COMMENT Class 85
+    COMMENT In function "InverseTangent", val is less than 1.0.  
+    COMMENT
+    COMMENT Class 86
+    COMMENT In function "InverseTangent", val is greater than 1.0.   
+    COMMENT
+    COMMENT Class 87
+    COMMENT In function "InverseTangent", val is equal to 1.0.     
+    COMMENT
+    COMMENT Class 88
+    COMMENT In function "InverseTangent", val is lesser than the return value of TangentFunc.  
+    COMMENT
+    COMMENT Class 89
+    COMMENT In function "InverseTangent", val is greater than the return value of TangentFunc.   
+    COMMENT
+    COMMENT Class 90
+    COMMENT In function "InverseTangent", val is equal to return value of TangentFunc.   
+    COMMENT
+    COMMENT Class 91
+    COMMENT In function "InverseTangent", calls the function 'TangentFunc'.     
+    COMMENT
+    COMMENT Class 92
+    COMMENT In function "InverseTangent", region is equal to TRUE.   
+    COMMENT
+    COMMENT Class 93
+    COMMENT In function "InverseTangent", region is not equal to TRUE.
+    COMMENT
+    COMMENT Class 94
+    COMMENT In function "InverseTangent", complement is equal to TRUE.   
+    COMMENT
+    COMMENT Class 95
+    COMMENT In function "InverseTangent", complement is not equal to TRUE.  
+    COMMENT
+    COMMENT Class 96
+    COMMENT In function "SquareRoot", square is equal to 0.   
+    COMMENT
+    COMMENT Class 97
+    COMMENT In function "SquareRoot", square is lesser than 0.      
+    COMMENT    
+    COMMENT Class 98
+    COMMENT In function "SquareRoot", square is greater than 0.      
+    COMMENT
+    COMMENT Class 99
+    COMMENT In function "VInitPolar", function 'InverseTangent' is called.      
+    COMMENT
+    COMMENT Class 100
+    COMMENT In function "VInitPolar", function 'SquareRoot' is called.     
+    COMMENT
+    COMMENT Class 101
+    COMMENT In function 'PsGetShape', e_shape is equal to ENOSHAPE .
+    COMMENT
+    COMMENT Class 102
+    COMMENT In function 'PsGetShape', e_shape is greater than equal to EMAXSTOCKSHAPE .
+    COMMENT
+    COMMENT Class 103
+    COMMENT In function 'PsGetShape',e_shape is equal to polygon_shape of Ap_poly_graph with loop index value.
+    COMMENT
+    COMMENT Class 104
+    COMMENT In function 'PsGetShape', shape valid is not equal to VALID_SHAPE .
+    COMMENT
+	COMMENT Class 105
+    COMMENT In function 'PsGetShape', shape valid is equal to VALID_SHAPE.
+    COMMENT
+    COMMENT Class 106
+    COMMENT In function 'PsGetShape', calls function RterrWidget function .
+    COMMENT
+	COMMENT Class 107
+	COMMENT In function 'PolygonsAngle' rd_state is equal to TRUE.
+	COMMENT
+	COMMENT Class 108
+	COMMENT In function 'PolygonsAngle' rd_state is not equal to TRUE.	
+	COMMENT
+	COMMENT Class 19
+	COMMENT In function 'PolygonsAngle' pt_ctr is greater than ZERO.
+	COMMENT
+	COMMENT Class 110
+	COMMENT In function 'PolygonsAngle' pt_ctr is less than ZERO.
+	COMMENT
+	COMMENT Class 111
+	COMMENT In function 'PolygonsAngle' pt_ctr is equal to ZERO.
+	COMMENT 
+	COMMENT Class 112
+	COMMENT In function 'PolygonsAngle' end_rot is greater than start_rot.
+	COMMENT
+	COMMENT Class 113
+	COMMENT In function 'PolygonsAngle' end_rot is less than start_rot.
+	COMMENT
+	COMMENT Class 114
+	COMMENT In function 'PolygonsAngle' end_rot is equal to start_rot.
+	COMMENT 
+	COMMENT Class 115
+	COMMENT In function 'PolygonsAngle' updated_angle is greater than end_rot.
+	COMMENT
+	COMMENT Class 116
+	COMMENT In function 'PolygonsAngle' updated_angle is less than end_rot.
+	COMMENT
+	COMMENT Class 117
+	COMMENT In function 'PolygonsAngle' updated_angle is equal to end_rot.
+	COMMENT
+	COMMENT Class 118
+	COMMENT In function 'PolygonsAngle' E_orientation is equal to E_PORTRAIT.
+	COMMENT
+	COMMENT Class 119
+	COMMENT In function 'PolygonsAngle' E_orientation is not equal to E_PORTRAIT.
+	COMMENT
+	COMMENT Class 120
+	COMMENT In function 'PolygonsvPolarToRect' calls the function 'PolygonsAngle'.
+    COMMENT	
+    COMMENT Invalid Class(es)
+    COMMENT </ECD>
+----------------------------------------------------------------------------------
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+
+
+    DEFINE STUB hdudispfpolygon2_c 30
+    
+    	-- Created to verify the 1st parameter of RterrWidget
+        # char PTU_pc_file_in_1[200],PTU_pc_file_out_1[200];
+        # char PTU_pc_file_in_2[200],PTU_pc_file_out_2[200];
+    
+        -- Created to store count value for function RterrWidget
+        # T_UINT8 PTU_temp1,PTU_Count;
+    
+        -- Created to verify the 3rd parameter of RterrWidget
+        # char PTU_pc_message_in_1[200],PTU_pc_message_out_1[200];
+        # char PTU_pc_message_in_2[200],PTU_pc_message_out_2[200];
+        #T_Q15 ArmSinQ15(T_Q15 _in x); 
+        #T_Q15 ArmCosQ15(T_Q15 _in x); 
+        #T_INT16 S16_panel_height;
+        #T_ELANDSCAPEORPORTRIAT E_orientation; 
+        --Parameter pc_file and pc_message are made as _no and is verified explicitly
+        #void RterrWidget(char _no pc_file[200], T_INT32 _in s32_line_number, char _no pc_message[200])
+        #{
+        # if(PTU_Count==0)
+        # {PTU_Count++;
+        #  PTU_temp1 = 0;
+        #  while(pc_file[PTU_temp1]!= ZERO)
+        #  {
+        #    PTU_pc_file_in_1[PTU_temp1]= pc_file[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #    PTU_pc_file_in_1[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(pc_message[PTU_temp1]!= ZERO)
+        #  {
+        #    PTU_pc_message_in_1[PTU_temp1]= pc_message[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #    PTU_pc_message_in_1[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(PTU_pc_file_out_1[PTU_temp1]!= ZERO)
+        #  {
+        #   pc_file[PTU_temp1]       = PTU_pc_file_out_1[PTU_temp1];
+        #   PTU_temp1 = PTU_temp1+1;
+        #  }
+        #   pc_file[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(PTU_pc_message_out_1[PTU_temp1]!= ZERO)
+        #  {
+        #    pc_message[PTU_temp1] = PTU_pc_message_out_1[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #   pc_message[PTU_temp1]= ZERO;
+        # }
+        # else
+        # {
+        #  PTU_temp1 = 0;
+        #  while(pc_file[PTU_temp1]!= ZERO)
+        #  {
+        #    PTU_pc_file_in_2[PTU_temp1]= pc_file[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #    PTU_pc_file_in_2[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(pc_message[PTU_temp1]!= ZERO)
+        #  {
+        #    PTU_pc_message_in_2[PTU_temp1]= pc_message[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #    PTU_pc_message_in_2[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(PTU_pc_file_out_2[PTU_temp1]!= ZERO)
+        #  {
+        #   pc_file[PTU_temp1]       = PTU_pc_file_out_2[PTU_temp1];
+        #   PTU_temp1 = PTU_temp1+1;
+        #  }
+        #   pc_file[PTU_temp1]= ZERO;
+        #
+        #  PTU_temp1 = 0;
+        #  while(PTU_pc_message_out_2[PTU_temp1]!= ZERO)
+        #  {
+        #    pc_message[PTU_temp1] = PTU_pc_message_out_2[PTU_temp1];
+        #    PTU_temp1 = PTU_temp1+1;
+        #  }
+        #   pc_message[PTU_temp1]= ZERO;
+        # }
+        #}
+        
+    END DEFINE
+    
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+--Environment of the hdudispfpolygon2.c
+
+--ENVIRONMENT ENV_hdudispfpolygon2_c
+
+    --None
+
+--END ENVIRONMENT -- ENV_hdudispfpolygon2_c
+
+--USE ENV_hdudispfpolygon2_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PolygonsClear
+--------------------------------------------------------------------------------
+SERVICE PolygonsClear
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_SPOLY ps_poly_src;    
+
+    -- By function returned type declaration
+    #T_SPOLY *ret_PolygonsPsDuplicate;
+
+    --Temporary variable created to test return value of PolygonsPsDuplicate
+    #T_SPOLY PTU_ret_PolygonsPsDuplicate;
+
+    ENVIRONMENT ENV_PolygonsClear
+    STRUCTURE ps_poly_src,      init = { s16Pts => 0, psRP => NIL, psPP => NIL, psNext => NIL },        ev = init
+    VAR ret_PolygonsPsDuplicate,        init = NIL,     ev = init  
+    END ENVIRONMENT -- ENV_PolygonsClear
+    USE ENV_PolygonsClear
+    
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon2-PolygonsClear-DB-LLR-001]
+    COMMENT The function PolygonsClear call function ClearElements and function ClearPolys 
+    COMMENT to Clear all post initialization polygon allocations.
+    COMMENT  
+    COMMENT Equivalence Class 23
+    COMMENT 
+    COMMENT [hdudispfpolygon2-ClearElements-DB-LLR-001]
+    COMMENT The function ClearElements set polygon next element to polygon element lock and 
+    COMMENT polygon elements allocated to element lock.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT  
+    COMMENT [hdudispfpolygon2-ClearPolys-DB-LLR-001]
+    COMMENT The function ClearPolys set ps next poly to ps poly lock and 
+    COMMENT polys allocated to poly lock.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-AllocateElements-DB-LLR-003]
+    COMMENT The function AllocateElements sets return value to next element.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-AllocateElements-DB-LLR-002]
+    COMMENT The function AllocateElements does nothing when polygon elements allocated plus 
+    COMMENT u32_num_elements is less than POLY_POINTS_AVAILABLE.
+    COMMENT 
+    COMMENT Equivalence Class 21
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-003]
+    COMMENT The function PsAllocatePoly sets ps return value to ps next poly, Increment 
+    COMMENT ps next poly and polys allocated by one.
+    COMMENT 
+    COMMENT Equivalence Class 6
+    COMMENT      
+    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-002]
+    COMMENT The function PsAllocatePoly does nothing when polys allocated is  
+    COMMENT less than POLYS_AVAILABLE.
+    COMMENT 
+    COMMENT Equivalence Class 11
+    COMMENT      
+    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-006]
+    COMMENT The function PsAllocatePoly does the following
+    COMMENT 1.Set s16Pts of ps retrun value to s16_num_elements.
+    COMMENT 2.Set psRP of ps return value to ps rectangle points.
+    COMMENT 3.Set psPP of ps return value to ps polygon points.
+    COMMENT 4.Set psNext of ps return value to NULL.
+    COMMENT 5.returns ps return value.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT </TD> 
+ 
+        ELEMENT
+        COMMENT INPUT SECTION:
+            STRUCTURE ps_poly_src,              init = { s16Pts => 3, psRP => &PTU_psRP[0], psPP => &PTU_psPP[0], psNext => NIL },        
+                                                        &   ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsDuplicate,                init = &PTU_ret_PolygonsPsDuplicate,    ev ==
+            VAR ret_PolygonsPsDuplicate->s16Pts,        init = 2,                               ev = 3
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsDuplicate->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsDuplicate->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsDuplicate->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsDuplicate->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsDuplicate->psPP->s32R,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsDuplicate->psPP->s32A,    init = 7,                               ev = 0
+            VAR ret_PolygonsPsDuplicate->psNext,        init = &ps_poly_src,                    ev = NULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+               --Stub Calls:
+        SIMUL
+                --None 
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+        #PolygonsClear();
+        
+        -- Calling the function PolygonsPsDuplicate to verify the values set by functions ClearElements and ClearPolys   
+        #ret_PolygonsPsDuplicate = (T_SPOLY *)PolygonsPsDuplicate(&ps_poly_src);
+        
+        END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- PolygonsClear
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PolygonsPsDuplicate
+--------------------------------------------------------------------------------
+SERVICE PolygonsPsDuplicate
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_SPOLY ps_poly_src;
+    #T_SPOLY ps_poly_src_1;
+
+    -- By function returned type declaration
+    #T_SPOLY* ret_PolygonsPsDuplicate;
+
+    --Temporary variable created for looping
+    #T_UINT8 PTU_i;
+
+    --Temporary variable created to test return value of PolygonsPsDuplicate
+    #T_SPOLY PTU_ret_PolygonsPsDuplicate;
+    
+    ENVIRONMENT ENV_PolygonsPsDuplicate
+        STRUCTURE ps_poly_src,      init = { s16Pts => 0, psRP => NIL, psPP => NIL, psNext => NIL },        ev = init
+        VAR ret_PolygonsPsDuplicate,        init = NIL,     ev = init
+    END ENVIRONMENT -- ENV_PolygonsPsDuplicate
+    USE ENV_PolygonsPsDuplicate
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-001]
+    COMMENT The function PolygonsPsDuplicate returns NULL when ps_poly_src
+    COMMENT is NULL
+    COMMENT  
+    COMMENT Equivalence Class 1
+    COMMENT 
+    COMMENT      
+    COMMENT </TD> 
+ 
+        ELEMENT
+        COMMENT INPUT SECTION:
+                --None 
+
+        COMMENT OUTPUT SECTION:
+            VAR ret_PolygonsPsDuplicate,        init = &ret_PolygonsPsDuplicate,     ev = (T_SPOLY *)NULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+               --Stub Calls:
+        SIMUL
+                --None 
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+        #ret_PolygonsPsDuplicate = PolygonsPsDuplicate(NULL);
+        END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase, s16Pts of ps_poly_src is exercised for minimum value(-32768)
+    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-002]
+    COMMENT The function PolygonsPsDuplicate, sets ps poly return to return value of function 
+    COMMENT PsAllocatePoly and ps poly destination to ps poly return.
+    COMMENT  
+    COMMENT Equivalence Class 2,3,8
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-004]
+    COMMENT The function PolygonsPsDuplicate, sets ps_poly_src to psNext of ps_poly_src(NULL). 
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-005]
+    COMMENT The function PolygonsPsDuplicate, returns ps poly return. 
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-001]
+    COMMENT The function PsAllocatePoly, call function RterrWidget with parameters __FILE__ , 
+    COMMENT __LINE__ and string "Too few points in Polygon." and return ps return value  
+    COMMENT when s16_num_elements(-32768) is less than THREE. 
+    COMMENT 
+    COMMENT Equivalence Class 4,5
+    COMMENT 
+    COMMENT      
+    COMMENT </TD> 
+ 
+        ELEMENT
+        COMMENT INPUT SECTION:
+          STRUCTURE ps_poly_src,            init = { s16Pts => -32768,psRP => &PTU_psRP, psPP => &PTU_psPP, psNext => NIL },
+                                                                                   &ev = init
+
+        COMMENT OUTPUT SECTION:
+          VAR PTU_pc_file_in_1,             init = "AA",                            ev = "E:\\HDU\\polygon\\src\\hdudispfpolygon2.c"
+          VAR PTU_pc_message_in_1,          init = "AAA",                           ev = "Too few points in Polygon."
+          VAR ret_PolygonsPsDuplicate,      init = &ret_PolygonsPsDuplicate,        ev = (T_SPOLY *)NULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+            VAR PTU_Count,                    init = 0,                 ev = 1
+
+               --Stub Calls:
+        SIMUL
+            STUB RterrWidget(482)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+        #ret_PolygonsPsDuplicate = PolygonsPsDuplicate(&ps_poly_src);
+        END ELEMENT
+
+END TEST -- TEST 2
+    
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase, s16Pts of ps_poly_src is exercised for nominal values
+    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-003]
+    COMMENT The function PolygonsPsDuplicate, loop till the  ps_poly_src is equal to NULL and does the following 
+    COMMENT until pointer counter less than s16Pts of ps_poly_src
+    COMMENT     - Set psPP of ps poly destination to psPP of ps_poly_src.
+    COMMENT     - Set psRP of ps poly destination to psRP of ps_poly_src.
+    COMMENT  
+    COMMENT Equivalence Class 7,3
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-004]
+    COMMENT The function PolygonsPsDuplicate, sets ps_poly_src to psNext of ps_poly_src, psNext of
+    COMMENT ps poly destination to return value of PsAllocatePoly and ps poly destination to psNext
+    COMMENT of ps poly destination when ps_poly_src is not equal to NULL
+    COMMENT  
+    COMMENT Equivalence Class 2
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-005]
+    COMMENT The function PolygonsPsDuplicate, returns ps poly return. 
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-003]
+    COMMENT The function sets ps return value to ps next poly, Increment ps next poly and polys allocated by one. 
+    COMMENT 
+    COMMENT Equivalence Class 6,11
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-004]
+    COMMENT The function sets ps rectangle points to return value of AllocateElements and does not call function RterrWidget
+    COMMENT when ps rectangle ponits is not equal to NULL. 
+    COMMENT 
+    COMMENT Equivalence Class 12,14
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-005]
+    COMMENT The function sets ps polygon points to return value of AllocateElements and does not call function RterrWidget
+    COMMENT when ps polygon points is not equal to NULL. 
+    COMMENT 
+    COMMENT Equivalence Class 12,16
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-006]
+    COMMENT The function PsAllocatePoly does the following
+    COMMENT 1.Set s16Pts of ps retrun value to s16_num_elements.
+    COMMENT 2.Set psRP of ps return value to ps rectangle points.
+    COMMENT 3.Set psPP of ps return value to ps polygon points.
+    COMMENT 4.Set psNext of ps return value to NULL.
+    COMMENT 5.returns ps return value.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-AllocateElements-DB-LLR-001]
+    COMMENT The function does nothing when u32_num_elements is lesser than POLY_POINTS_AVAILABLE. 
+    COMMENT 
+    COMMENT Equivalence Class 18
+    COMMENT     
+    COMMENT [hdudispfpolygon2-AllocateElements-DB-LLR-002]
+    COMMENT The function does nothing when polygon elements allocated plus u32_num_elements is less than POLY_POINTS_AVAILABLE. 
+    COMMENT 
+    COMMENT Equivalence Class 21
+    COMMENT 
+    COMMENT      
+    COMMENT </TD> 
+
+        ELEMENT
+        COMMENT INPUT SECTION:
+            STRUCTURE ps_poly_src,          init = { s16Pts => 3,psRP => &PTU_psRP, psPP => &PTU_psPP, psNext => (T_SPOLY *)NULL },
+                                                                            &ev = init
+            STRUCTURE ps_poly_src_1,        init = { s16Pts => 4,psRP => &PTU_psRP, psPP => &PTU_psPP, psNext => &ps_poly_src },
+                                                                            &ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsDuplicate,                init = &PTU_ret_PolygonsPsDuplicate,    ev ==
+            VAR ret_PolygonsPsDuplicate->s16Pts,        init = 2,                               ev = 4
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsDuplicate->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsDuplicate->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsDuplicate->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsDuplicate->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsDuplicate->psPP->s32R,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsDuplicate->psPP->s32A,    init = 7,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psNext is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsDuplicate->psNext,        init = &PTU_ret_PolygonsPsDuplicate,    ev ==
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+               --Stub Calls:
+        SIMUL
+                --None 
+        END SIMUL
+
+        -- Calling the Unit Under Test  
+        #ret_PolygonsPsDuplicate = PolygonsPsDuplicate(&ps_poly_src_1);
+        END ELEMENT
+
+END TEST -- TEST 3
+    
+    
+---- Testcase is commented since it is crashing 
+--TEST 4
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT In this testcase, s16Pts of ps_poly_src is exercised for maximum value(32767)
+--    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-003]
+--    COMMENT The function sets ps return value to ps next poly, Increment ps next poly and polys allocated by one. 
+--    COMMENT 
+--    COMMENT Equivalence Class 6,11
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-004]
+--    COMMENT The function sets ps rectangle points to return value of AllocateElements and call function RterrWidget with message
+--    COMMENT "Out of poly points." when ps rectangle ponits is equal to NULL. 
+--    COMMENT 
+--    COMMENT Equivalence Class 12,13
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-005]
+--    COMMENT The function sets ps polygon points to return value of AllocateElements and call function RterrWidget with message
+--    COMMENT "Out of poly points." when ps polygon points is equal to NULL. 
+--    COMMENT 
+--    COMMENT Equivalence Class 12,15
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-AllocateElements-DB-LLR-001]
+--    COMMENT The function returns NULL when u32_num_elements is greater than POLY_POINTS_AVAILABLE. 
+--    COMMENT 
+--    COMMENT Equivalence Class 17,20
+--    COMMENT      
+--    COMMENT </TD> 
+--
+--        ELEMENT
+--        COMMENT INPUT SECTION:
+--            STRUCTURE ps_poly_src,            init = { s16Pts => 32767,psRP => &PTU_psRP, psPP => &PTU_psPP, psNext => (T_SPOLY *)NULL },
+--                                                                            &ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+--            VAR ret_PolygonsPsDuplicate,                init = &PTU_ret_PolygonsPsDuplicate,    ev ==
+--            VAR ret_PolygonsPsDuplicate->s16Pts,        init = 2,                               ev = 32767
+--            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+--            VAR ret_PolygonsPsDuplicate->psRP,          init = &PTU_sRP,                        ev ==
+--            VAR ret_PolygonsPsDuplicate->psRP->s32X,    init = 2,                               ev = 0
+--            VAR ret_PolygonsPsDuplicate->psRP->s32Y,    init = 5,                               ev = 0
+--            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+--            VAR ret_PolygonsPsDuplicate->psPP,          init = &PTU_sPP,                        ev ==
+--            VAR ret_PolygonsPsDuplicate->psPP->s32R,    init = 2,                               ev = 0
+--            VAR ret_PolygonsPsDuplicate->psPP->s32A,    init = 7,                               ev = 0
+--            -- ret_PolygonsPsDuplicate->psNext is expected as '==' since the staic address is returned, hence cannot be verified.
+--            VAR ret_PolygonsPsDuplicate->psNext,        init = &PTU_ret_PolygonsPsDuplicate,                    ev ==
+--
+--            VAR PTU_pc_file_in_1,             init = "AA",                            ev = glob_file_name
+--            VAR PTU_pc_message_in_1,          init = "AAA",                           ev = "Out of poly points."
+--            VAR PTU_pc_file_out_1,            init = glob_file_name,   		ev = init
+--            VAR PTU_pc_message_out_1,         init = "Out of poly points.",           ev = init
+--            VAR PTU_pc_file_in_2,             init = "AA",                            ev = glob_file_name
+--            VAR PTU_pc_message_in_2,          init = "AAA",                           ev = "Out of poly points."
+--
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--            VAR PTU_Count,                    init = 0,                 ev = 1
+--
+--               --Stub Calls:
+--        SIMUL
+--           STUB RterrWidget(381)
+--           STUB RterrWidget(392)
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test  
+--        #ret_PolygonsPsDuplicate = PolygonsPsDuplicate(&ps_poly_src);
+--        END ELEMENT
+--
+--END TEST -- TEST 4
+--
+--    
+---- Testcase is commented since it is crashing 
+--TEST 5
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT In this Test case FUT is looped 201 times to increment polys allocated.
+--    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-002]
+--    COMMENT The function PsAllocatePoly call function RterrWidget with message "Too few polygons available." 
+--    COMMENT and return ps return value when polys allocated is greater than or equal to POLYS_AVAILABLE. 
+--    COMMENT 
+--    COMMENT Equivalence Class 4,9,10
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-003]
+--    COMMENT The function sets ps return value to ps next poly, Increment ps next poly and polys allocated by one. 
+--    COMMENT 
+--    COMMENT Equivalence Class 6,11
+--    COMMENT 
+--    COMMENT      
+--    COMMENT </TD> 
+--
+--        ELEMENT
+--        COMMENT INPUT SECTION:
+--            STRUCTURE ps_poly_src,            init = { s16Pts => 3,psRP => &PTU_psRP, psPP => &PTU_psPP, psNext => (T_SPOLY *)NULL },
+--                                                                            &ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--            VAR ret_PolygonsPsDuplicate,                init = &PTU_ret_PolygonsPsDuplicate,    ev = NULL
+--            VAR ret_PolygonsPsDuplicate->s16Pts,        init = 2,                               ev = 3
+--            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+--            VAR ret_PolygonsPsDuplicate->psRP,          init = &PTU_sRP,                        ev ==
+--            VAR ret_PolygonsPsDuplicate->psRP->s32X,    init = 2,                               ev = 0
+--            VAR ret_PolygonsPsDuplicate->psRP->s32Y,    init = 5,                               ev = 0
+--            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+--            VAR ret_PolygonsPsDuplicate->psPP,          init = &PTU_sPP,                        ev ==
+--            VAR ret_PolygonsPsDuplicate->psPP->s32R,    init = 2,                               ev = 0
+--            VAR ret_PolygonsPsDuplicate->psPP->s32A,    init = 7,                               ev = 0
+--            -- ret_PolygonsPsDuplicate->psNext is expected as '==' since the staic address is returned, hence cannot be verified.
+--            VAR ret_PolygonsPsDuplicate->psNext,        init = &PTU_ret_PolygonsPsDuplicate,                    ev ==
+--
+--            VAR PTU_pc_file_in_1,             init = "AA",                            ev = glob_file_name
+--            VAR PTU_pc_message_in_1,          init = "AAA",                           ev = "Too few polygons available."
+--            VAR PTU_pc_file_out_1,            init = glob_file_name, 
+--                                                                            &         ev = init
+--            VAR PTU_pc_message_out_1,         init = "Too few polygons available.",   ev = init
+--            VAR PTU_pc_file_in_2,             init = "AA",                            ev = glob_file_name
+--            VAR PTU_pc_message_in_2,          init = "AAA",                           ev = "Too few polygons available."
+--
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--            VAR PTU_Count,                    init = 0,                 ev = 1
+--
+--               --Stub Calls:
+--        SIMUL
+--           STUB RterrWidget(363)
+--           STUB RterrWidget(363)
+--        END SIMUL
+--        
+--        --Calling the function to clear the static variables
+--        #PolygonsClear();
+--    #for(PTU_i=0;PTU_i<=201;PTU_i++)
+--    #{
+--        -- Calling the Unit Under Test  
+--        #ret_PolygonsPsDuplicate = PolygonsPsDuplicate(&ps_poly_src);
+--    #}
+--        END ELEMENT
+--
+--END TEST -- TEST 5
+--    
+-- --Testcase is commented since it is crashing 
+--TEST 6
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-005]
+--    COMMENT The function sets ps polygon points to return value of AllocateElements and call function RterrWidget with message
+--    COMMENT "Out of poly points." when ps polygon points is equal to NULL. 
+--    COMMENT 
+--    COMMENT Equivalence Class 4,12,15
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-AllocateElements-DB-LLR-002]
+--    COMMENT The function return NULL when polygon elements allocated plus u32_num_elements is greater than POLY_POINTS_AVAILABLE. 
+--    COMMENT 
+--    COMMENT Equivalence Class  19,22
+--    COMMENT      
+--    COMMENT </TD> 
+--
+--        ELEMENT
+--        COMMENT INPUT SECTION:
+--            VAR PTU_psPP[0..2001],     init = {others=>0,s32A=>0},         ev = init
+--            VAR PTU_psRP[0..2001],     init = {others=>0,s32Y=>0},         ev = init
+--            STRUCTURE ps_poly_src,            init = { s16Pts => 2000,psRP => &PTU_psRP[0], psPP => &PTU_psPP[0], psNext => (T_SPOLY *)NULL },
+--                                                                            &ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+--            VAR ret_PolygonsPsDuplicate,                init = &PTU_ret_PolygonsPsDuplicate,    ev ==
+--            VAR ret_PolygonsPsDuplicate->s16Pts,        init = 2,                               ev = 2000
+--            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+--            VAR ret_PolygonsPsDuplicate->psRP,          init = &PTU_sRP,                        ev ==
+--            VAR ret_PolygonsPsDuplicate->psRP->s32X,    init = 2,                               ev = 0
+--            VAR ret_PolygonsPsDuplicate->psRP->s32Y,    init = 5,                               ev = 0
+--            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+--            VAR ret_PolygonsPsDuplicate->psPP,          init = &PTU_sPP,                        ev ==
+--            VAR ret_PolygonsPsDuplicate->psPP->s32R,    init = 2,                               ev = 0
+--            VAR ret_PolygonsPsDuplicate->psPP->s32A,    init = 7,                               ev = 0
+--            VAR ret_PolygonsPsDuplicate->psNext,        init = &ps_poly_src,                    ev = NULL
+--            
+--            VAR PTU_pc_file_in_1,                       init = "AA",                            ev = glob_file_name
+--            VAR PTU_pc_message_in_1,                    init = "AAA",                           ev = "Out of poly points."
+--            VAR PTU_pc_file_out_1,                      init = glob_file_name,   
+--                                                                            &                   ev = init
+--            VAR PTU_pc_message_out_1,                   init = "Out of poly points.",           ev = init
+--
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--            VAR PTU_Count,                    init = 0,                 ev = 1
+--
+--               --Stub Calls:
+--        SIMUL
+--           STUB RterrWidget(392)
+--        END SIMUL
+--
+--        --Calling the function to clear the static variables
+--        #PolygonsClear();
+--        -- Calling the Unit Under Test  
+--        #ret_PolygonsPsDuplicate =PolygonsPsDuplicate(&ps_poly_src);
+--        END ELEMENT
+--
+--END TEST -- TEST 6
+--
+--
+-- --Testcase is commented since it is crashing 
+--TEST 7
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT In this testcase, s16Pts of ps_poly_src is exercised for minimum value
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-002]
+--    COMMENT The function PolygonsPsDuplicate, sets ps poly return to return value of function 
+--    COMMENT PsAllocatePoly and ps poly destination to ps poly return.
+--    COMMENT  
+--    COMMENT Equivalence Class 2,3,8
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-004]
+--    COMMENT The function PolygonsPsDuplicate, sets ps_poly_src to psNext of ps_poly_src(NULL). 
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-005]
+--    COMMENT The function PolygonsPsDuplicate, returns ps poly return. 
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-001]
+--    COMMENT The function PsAllocatePoly, call function RterrWidget with parameters __FILE__ , 
+--    COMMENT __LINE__ and string "Too few points in Polygon." and return ps return value  
+--    COMMENT when s16_num_elements(-32768) is less than THREE. 
+--    COMMENT 
+--    COMMENT Equivalence Class 4,5
+--    COMMENT 
+--    COMMENT      
+--    COMMENT </TD> 
+-- 
+--        ELEMENT
+--        COMMENT INPUT SECTION:
+--          VAR PTU_psPP[0..1],     init = {others=>0,s32A=>0},         ev = init
+--          VAR PTU_psRP[0..1],     init = {others=>0,s32Y=>0},         ev = init
+--          STRUCTURE ps_poly_src,            init = { s16Pts => 1,psRP => &PTU_psRP[0], psPP => &PTU_psPP[0], psNext => NIL },
+--                                                                                   &ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--          VAR PTU_pc_file_in_1,             init = "AA",                            ev = glob_file_name
+--          VAR PTU_pc_message_in_1,          init = "AAA",                           ev = "Too few points in Polygon."
+--          VAR ret_PolygonsPsDuplicate,      init = NIL,                             ev = init
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--            VAR PTU_Count,                    init = 0,                 ev = 1
+--
+--               --Stub Calls:
+--        SIMUL
+--            STUB RterrWidget(351)
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test        
+--        #ret_PolygonsPsDuplicate = PolygonsPsDuplicate(&ps_poly_src);
+--        END ELEMENT
+--
+--END TEST -- TEST 7
+--
+--TEST 8
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT In this testcase, s16Pts of ps_poly_src is exercised for minimum value(-32768)
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-002]
+--    COMMENT The function PolygonsPsDuplicate, sets ps poly return to return value of function 
+--    COMMENT PsAllocatePoly and ps poly destination to ps poly return.
+--    COMMENT  
+--    COMMENT Equivalence Class 2,3,8
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-004]
+--    COMMENT The function PolygonsPsDuplicate, sets ps_poly_src to psNext of ps_poly_src(NULL). 
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-005]
+--    COMMENT The function PolygonsPsDuplicate, returns ps poly return. 
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-001]
+--    COMMENT The function PsAllocatePoly, call function RterrWidget with parameters __FILE__ , 
+--    COMMENT __LINE__ and string "Too many poly elements in PDI." and return ps return value  
+--    COMMENT when Pg_cnt is greater than  than MAX_POLYS. 
+--    COMMENT 
+--    COMMENT Equivalence Class 
+--    COMMENT 
+--    COMMENT      
+--    COMMENT </TD> 
+-- 
+--        ELEMENT
+--        COMMENT INPUT SECTION:
+--          STRUCTURE ps_poly_src,            init = { s16Pts => 10,psRP => &PTU_psRP, psPP => &PTU_psPP, psNext => NIL },
+--                                                                                   &ev = init
+--		  VAR  Pg_cnt,				init = 31,								ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--          VAR PTU_pc_file_in_1,             init = "AA",                            ev = "glob_file_name"
+--          VAR PTU_pc_message_in_1,          init = "AAA",                           ev = "Too many poly elements in PDI."
+--          VAR ret_PolygonsPsDuplicate,      init = &ret_PolygonsPsDuplicate,        ev = (T_SPOLY *)NULL
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--            VAR PTU_Count,                    init = 0,                 ev = 1
+--
+--               --Stub Calls:
+--        SIMUL
+--            STUB RterrWidget(652)
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test        
+--        #ret_PolygonsPsDuplicate = PolygonsPsDuplicate(&ps_poly_src);
+--        END ELEMENT
+--
+--END TEST -- TEST 8
+--
+--TEST 9
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT In this testcase, s16Pts of ps_poly_src is exercised for minimum value(-32768)
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-002]
+--    COMMENT The function PolygonsPsDuplicate, sets ps poly return to return value of function 
+--    COMMENT PsAllocatePoly and ps poly destination to ps poly return.
+--    COMMENT  
+--    COMMENT Equivalence Class 2,3,8
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-004]
+--    COMMENT The function PolygonsPsDuplicate, sets ps_poly_src to psNext of ps_poly_src(NULL). 
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-005]
+--    COMMENT The function PolygonsPsDuplicate, returns ps poly return. 
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-001]
+--    COMMENT The function PsAllocatePoly, call function RterrWidget with parameters __FILE__ , 
+--    COMMENT __LINE__ and string "Too many poly elements in PDI." and return ps return value  
+--    COMMENT when Pg_cnt is equal to MAX_POLYS. 
+--    COMMENT 
+--    COMMENT Equivalence Class 
+--    COMMENT 
+--    COMMENT      
+--    COMMENT </TD> 
+-- 
+--        ELEMENT
+--        COMMENT INPUT SECTION:
+--          STRUCTURE ps_poly_src,            init = { s16Pts => 10,psRP => &PTU_psRP, psPP => &PTU_psPP, psNext => NIL },
+--                                                                                   &ev = init
+--		  VAR T_UINT8 Pg_cnt,				init = 30,								ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--          VAR PTU_pc_file_in_1,             init = "AA",                            ev = "glob_file_name"
+--          VAR PTU_pc_message_in_1,          init = "AAA",                           ev = "Too many poly elements in PDI."
+--          VAR ret_PolygonsPsDuplicate,      init = &ret_PolygonsPsDuplicate,        ev = (T_SPOLY *)NULL
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--            VAR PTU_Count,                    init = 0,                 ev = 1
+--
+--               --Stub Calls:
+--        SIMUL
+--            STUB RterrWidget(652)
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test        
+--        #ret_PolygonsPsDuplicate = PolygonsPsDuplicate(&ps_poly_src);
+--        END ELEMENT
+--
+--END TEST -- TEST 9
+--
+--TEST 10
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT In this testcase, s16Pts of ps_poly_src is exercised for minimum value(-32768)
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-002]
+--    COMMENT The function PolygonsPsDuplicate, sets ps poly return to return value of function 
+--    COMMENT PsAllocatePoly and ps poly destination to ps poly return.
+--    COMMENT  
+--    COMMENT Equivalence Class 2,3,8
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-004]
+--    COMMENT The function PolygonsPsDuplicate, sets ps_poly_src to psNext of ps_poly_src(NULL). 
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsDuplicate-DB-LLR-005]
+--    COMMENT The function PolygonsPsDuplicate, returns ps poly return. 
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsAllocatePoly-DB-LLR-001]
+--    COMMENT The function PsAllocatePoly, call function RterrWidget with parameters __FILE__ , 
+--    COMMENT __LINE__ and string "Too many poly elements in PDI." and return ps return value  
+--    COMMENT when Pg_cnt is less than  than MAX_POLYS. 
+--    COMMENT 
+--    COMMENT Equivalence Class 
+--    COMMENT 
+--    COMMENT      
+--    COMMENT </TD> 
+-- 
+--        ELEMENT
+--        COMMENT INPUT SECTION:
+--          STRUCTURE ps_poly_src,            init = { s16Pts => 10,psRP => &PTU_psRP, psPP => &PTU_psPP, psNext => NIL },
+--                                                                                   &ev = init
+--		  VAR T_UINT8 Pg_cnt,				init = 29,								ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--          VAR PTU_pc_file_in_1,             init = "AA",                            ev = "glob_file_name"
+--          VAR PTU_pc_message_in_1,          init = "AAA",                           ev = "Too many poly elements in PDI."
+--          VAR ret_PolygonsPsDuplicate,      init = &ret_PolygonsPsDuplicate,        ev = (T_SPOLY *)NULL
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--            VAR PTU_Count,                    init = 0,                 ev = 1
+--
+--               --Stub Calls:
+--        SIMUL
+--            STUB RterrWidget(652)
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test        
+--        #ret_PolygonsPsDuplicate = PolygonsPsDuplicate(&ps_poly_src);
+--        END ELEMENT
+--
+--END TEST -- TEST 10
+
+END SERVICE  PolygonsPsDuplicate
+
+------------------------------------------------------------------------------
+ --Declaration of the service PolygonsPsPolyInit
+------------------------------------------------------------------------------
+SERVICE PolygonsPsPolyInit
+SERVICE_TYPE extern
+
+     --Tested service parameters declarations
+    #T_ESTOCKSHAPE e_poly_shape;
+    #T_FLOAT fx_scale;
+    #T_INT16 s16_xoff;
+    #T_FLOAT fy_scale;
+    #T_INT16 s16_yoff;
+    #T_INT16 s16_rot;
+     --By function returned type declaration
+    #T_SPOLY* ret_PolygonsPsPolyInit;
+    
+    #T_SPOLY PTU_ret_PolygonsPsPolyInit;
+
+    ENVIRONMENT ENV_PolygonsPsPolyInit
+    VAR e_poly_shape,       init = EEND,        ev = init
+    VAR fx_scale,       init = 0.0,     ev = init
+    VAR s16_xoff,       init = 0,       ev = init
+    VAR fy_scale,       init = 0.0,     ev = init
+    VAR s16_yoff,       init = 0,       ev = init
+    VAR s16_rot,        init = 0,       ev = init
+    VAR ret_PolygonsPsPolyInit,     init = NIL,     ev = init
+    END ENVIRONMENT  --ENV_PolygonsPsPolyInit
+    USE ENV_PolygonsPsPolyInit
+
+ --Testcase is commented since it is crashing 
+--TEST 1
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT In this testcase function parameters are exercised for minimum values.
+--    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-001]
+--    COMMENT The function PolygonsPsPolyInit initializes the ps float poly to return value(NULL) 
+--    COMMENT of function PsGetShape with parameter e_poly_shape(EEND+1)
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsGetShape-DB-LLR-015]
+--    COMMENT The function PsGetShape call function RterrWidget with message "Undefined Stock Shape."
+--    COMMENT return NULL for default case. 
+--    COMMENT  
+--    COMMENT Equivalence Class 24,26,29,31,33,35,37,39,41,43,45,104,102,106,108,110,112,114,116
+--    COMMENT 
+--    COMMENT      
+--    COMMENT </TD>  
+--
+--        ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--            VAR e_poly_shape,   init = EEND+1,        ev = init
+--            VAR fx_scale,       init = (T_FLOAT)-3.4E+38,      ev = init
+--            VAR s16_xoff,       init = (T_INT16)-32768,        ev = init
+--            VAR fy_scale,       init = (T_FLOAT)-3.4E+38,      	 ev = init
+--            VAR s16_yoff,       init = (T_INT16)-32768,        ev = init
+--            VAR s16_rot,        init = (T_INT16)-32768,        ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--            VAR PTU_pc_file_in_1,                       init = "AA",                            ev = glob_file_name
+--            VAR PTU_pc_message_in_1,                    init = "AAA",                           ev = "Undefined Stock Shape."
+--            VAR PTU_pc_file_out_1,                      init = glob_file_name,   
+--                                                                            &                   ev = init
+--            VAR PTU_pc_message_out_1,                   init = "Undefined Stock Shape.",        ev = init
+--            VAR ret_PolygonsPsPolyInit,                 init = NIL,                             ev = init
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--           VAR PTU_Count,                    init = 0,                 ev = 1
+--
+--        --Stub Calls:
+--        SIMUL
+--           STUB RterrWidget(675)
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test        
+--
+--        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+--        END ELEMENT
+--
+--END TEST -- TEST 1
+--
+-- Testcase is commented since it is crashing 
+--TEST 2
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-001]
+--    COMMENT The function PolygonsPsPolyInit initializes the ps float poly to return value(NULL) 
+--    COMMENT of function PsGetShape with parameter e_poly_shape(ENOSHAPE)
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsGetShape-DB-LLR-001]
+--    COMMENT The function PsGetShape return NULL when e_shape is equal to ENOSHAPE OR e_shape is 
+--    COMMENT greater than or equal to EMAXSTOCKSHAPE. 
+--    COMMENT  
+--    COMMENT Equivalence Class 25
+--    COMMENT 
+--    COMMENT      
+--    COMMENT </TD>  
+--
+--        ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--            VAR e_poly_shape,   init = ENOSHAPE,        ev = init
+--            VAR fx_scale,       init = -3.4E+38,        ev = init
+--            VAR s16_xoff,       init = -32768,          ev = init
+--            VAR fy_scale,       init = -3.4E+38,        ev = init
+--            VAR s16_yoff,       init = -32768,          ev = init
+--            VAR s16_rot,        init = -32768,          ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--            VAR ret_PolygonsPsPolyInit,     init = NIL,     ev = init
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--                --None 
+--
+--        --Stub Calls:
+--        SIMUL
+--                --None 
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test        
+--
+--        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+--        END ELEMENT
+--
+--END TEST -- TEST 2
+--
+-- Testcase is commented since it is crashing 
+--TEST 3
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-001]
+--    COMMENT The function PolygonsPsPolyInit initializes the ps float poly to return value(NULL) 
+--    COMMENT of function PsGetShape with parameter e_poly_shape(EMAXSTOCKSHAPE)
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsGetShape-DB-LLR-001]
+--    COMMENT The function PsGetShape return NULL when e_shape is equal to ENOSHAPE OR e_shape is 
+--    COMMENT greater than or equal to EMAXSTOCKSHAPE. 
+--    COMMENT  
+--    COMMENT Equivalence Class 26,27
+--    COMMENT 
+--    COMMENT      
+--    COMMENT </TD>  
+--
+--        ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--            VAR e_poly_shape,   init = EMAXSTOCKSHAPE,      ev = init
+--            VAR fx_scale,       init = -3.4E+38,        ev = init
+--            VAR s16_xoff,       init = -32768,          ev = init
+--            VAR fy_scale,       init = -3.4E+38,        ev = init
+--            VAR s16_yoff,       init = -32768,          ev = init
+--            VAR s16_rot,        init = -32768,          ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--            VAR ret_PolygonsPsPolyInit,     init = NIL,     ev = init
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--                --None 
+--
+--        --Stub Calls:
+--        SIMUL
+--                --None 
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test        
+--
+--        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+--        END ELEMENT
+--
+--END TEST -- TEST 3
+--
+-- Testcase is commented since it is crashing 
+--TEST 4
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-001]
+--    COMMENT The function PolygonsPsPolyInit initializes the ps float poly to return value(NULL) 
+--    COMMENT of function PsGetShape with parameter e_poly_shape(EMAXSTOCKSHAPE+1)
+--    COMMENT  
+--    COMMENT Equivalence Class None
+--    COMMENT 
+--    COMMENT [hdudispfpolygon2-PsGetShape-DB-LLR-001]
+--    COMMENT The function PsGetShape return NULL when e_shape is equal to ENOSHAPE OR e_shape is 
+--    COMMENT greater than or equal to EMAXSTOCKSHAPE. 
+--    COMMENT  
+--    COMMENT Equivalence Class 26,28
+--    COMMENT 
+--    COMMENT      
+--    COMMENT </TD>  
+--
+--        ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--            VAR e_poly_shape,   init = EMAXSTOCKSHAPE+1,        ev = init
+--            VAR fx_scale,       init = -3.4E+38,            ev = init
+--            VAR s16_xoff,       init = -32768,              ev = init
+--            VAR fy_scale,       init = -3.4E+38,            ev = init
+--            VAR s16_yoff,       init = -32768,              ev = init
+--            VAR s16_rot,        init = -32768,              ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--            VAR ret_PolygonsPsPolyInit,     init = NIL,     ev = init
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--                --None 
+--
+--        --Stub Calls:
+--        SIMUL
+--                --None 
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test        
+--
+--        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+--        END ELEMENT
+--
+--END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for minimum values.
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-001]
+    COMMENT The function PolygonsPsPolyInit initializes the ps float poly to return value 
+    COMMENT of function PsGetShape with parameter e_poly_shape(ECAPRSHAPE)
+    COMMENT  
+    COMMENT Equivalence Class 46,47
+    COMMENT  
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-002]
+    COMMENT The function PolygonsPsPolyInit loop untill ps float poly is equal to NULL and does the following 
+    COMMENT - Sets ps float point to asFloatPoint of ps float poly.
+    COMMENT - Sets ps rectangle point to psRP of ps poly.
+    COMMENT - Sets pointer counter to s16Points of ps float poly.
+    COMMENT  
+    COMMENT Equivalence Class 50
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-003]
+    COMMENT The function PolygonsPsPolyInit does the following 
+    COMMENT - Sets s32X of ps reactangle point to (fX of ps float point * fx_scale * MAG_FACTOR) + s16_xoff
+    COMMENT - Sets s32Y of ps reactangle point to (fY of ps float point * fy_scale * MAG_FACTOR) + s16_yoff
+    COMMENT - Increments ps float pointer, ps reactangle pointer by one and Decrement pointer counter by one.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-004]
+    COMMENT The function PolygonsPsPolyInit calls the function VInitPolar
+    COMMENT 
+    COMMENT Equivalence Class 48
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-005]
+    COMMENT The function PolygonsPsPolyInit initialize ps float poly to psNext of ps float poly and does following when ps float poly not NULL 
+    COMMENT - Sets psNext of ps poly to return value of PsAllocatePoly
+    COMMENT - Sets ps poly to psNext of ps poly
+    COMMENT  
+    COMMENT Equivalence Class 50,51
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-006]
+    COMMENT The function PolygonsPsPolyInit call the function PolygonsvPolarToRect.
+    COMMENT  
+    COMMENT Equivalence Class 49
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-007]
+    COMMENT The function PolygonsPsPolyInit returns ps return value.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PsGetShape-DB-LLR-018]
+    COMMENT The function shall loop from ZERo to MAX_POLYGON_GRAPHS
+	COMMENT If e_shape is equal to polygon_shape of Ap_poly_graph with loop index value
+	COMMENT 1. Set shape valid to VALID_SHAPE.
+	COMMENT 2. Set pointer points draw to polystruct of Ap_poly_graph with index loop index.
+	COMMENT 3. Break from the function. 
+    COMMENT  
+	COMMENT Equivalence Class 103,105
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-001]
+    COMMENT The function VInitPolar set ps rectangle point to psRP of ps_poly and set ps polygon point to psPP of ps_poly.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-004]
+    COMMENT The function VInitPolar sets ftemp to return value of function InverseTangent with s32Y of ps rectangle divided by s32X of ps rectangle when  
+    COMMENT s32X of ps rectangle is not equal to ZERO and s32Y of ps rectangle is not equal to ZERO and ftemp to
+    COMMENT ftemp multiplied with PI_2_RAD_MAX, ftemp to ftemp divided by FL2XPI,s32A of ps polygon point to ftemp plus POINT_FIVE.
+    COMMENT  
+    COMMENT Equivalence Class 53,55,56,57,59,99
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-005]
+    COMMENT The function VInitPolar Sets ftemp to ftemp plus Pi when s32X of ps rectangle is 
+    COMMENT less than ZERO AND s32Y of ps rectangle is greater than ZERO.
+    COMMENT  
+    COMMENT Equivalence Class 56,59
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-006]
+    COMMENT The function VInitPolar Sets s32A of ps polygon point to s32A of ps polygon point  plus s16_rot and
+    COMMENT s32A of ps polygon point to result of bitwise AND of s32A of ps polygon point and ANGLE_MASK.
+    COMMENT
+    COMMENT Equivalence Class 53,55
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-007]
+    COMMENT The function VInitPolar sets rectangle square root to (s32X of ps rectangle * s32X of ps rectangle)+(s32Y of ps rectangle* 
+    COMMENT s32Y of ps rectangle),ftemp to return value of function SquareRoot with parameters(square root * SIXTEEN_POINT_ZERO)+POINT_FIVE and
+    COMMENT s32R of ps polygon pointer with index pointer counter to ftemp.
+    COMMENT
+    COMMENT Equivalence Class 100
+    COMMENT 
+    COMMENT [hdudispfpolygon2-ModulusFunc-DB-LLR-001]
+    COMMENT The function ModulusFunc does the following
+    COMMENT - sets quotient to result of numerator divided by denominator and
+    COMMENT  resultant value to difference of numerator and product of quotient and denominator 
+    COMMENT - returns the resultant value.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-Tan32Func-DB-LLR-001]
+    COMMENT The function Tan32Func return the result (val multiplied by TAN_CONST1)
+    COMMENT divided by sum of TAN_CONST2 and Product of twice of val.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-SquareRoot-DB-LLR-001]
+    COMMENT The function SquareRoot  return 0 when parameter square is less than 0.
+    COMMENT
+    COMMENT Equivalence Class 97
+    COMMENT 
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-007]
+    COMMENT The function InverseTangent does not set resultant value to negative value of resultant value 
+    COMMENT when sign is not equal to TRUE
+    COMMENT
+    COMMENT Equivalence Class 70
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-001]
+    COMMENT The function InverseTangent doesnot set val to opposite sign of val and sign to TRUE 
+    COMMENT when val is greater than 0.
+    COMMENT
+    COMMENT Equivalence Class 83
+    COMMENT      
+	COMMENT [hdudispfpolygon2-PsGetShape-DB-LLR-020]
+	COMMENT Function returns ptr_points_draw as a return value.
+    COMMENT </TD>  
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+            VAR e_poly_shape,   init = ECAPTSHAPE,      	 ev = init
+            VAR fx_scale,       init = (T_FLOAT)-3.4E+38,        ev = init
+            VAR s16_xoff,       init = (T_INT16)-32768,          ev = init
+            VAR fy_scale,       init = (T_FLOAT)-3.4E+38,        ev = init
+            VAR s16_yoff,       init = (T_INT16)-32768,          ev = init
+            VAR s16_rot,        init = (T_INT16)-32768,          ev = init
+			
+			VAR PTU_polystruct.s16Points,		init = 6,					ev = init
+			VAR PTU_polystruct.psNext,			init = NIL,					ev = init
+			VAR PTU_polystruct.asFloatPoint,	init = {others=>{fX =>1.0,fY=>1.0}},		ev = init
+			
+			VAR Ap_poly_graph,	init = {others=>{polygon_shape=>ECAPTSHAPE,polygon_no_pts=>4,polystruct => &PTU_polystruct}},		ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit,                init = &PTU_ret_PolygonsPsPolyInit,    ev ==
+            VAR ret_PolygonsPsPolyInit->s16Pts,        init = 2,                               ev = 6
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psPP->s32R,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psPP->s32A,    init = 7,                               ev = 4095
+            -- ret_PolygonsPsDuplicate->psNext is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psNext,        init = &PTU_ret_PolygonsPsPolyInit,     ev ==
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+        --Stub Calls:
+        SIMUL
+            STUB ArmCosQ15(0)0
+            STUB ArmCosQ15 2=> (4095)0
+            STUB ArmCosQ15 3=>(0)0
+            STUB ArmCosQ15 4=> (4095)0
+            STUB ArmCosQ15 5=> (0)0
+            STUB ArmCosQ15 6=> (4095)0
+            STUB ArmCosQ15 7=> (0)0
+            STUB ArmCosQ15 8=> (4095)0
+            STUB ArmCosQ15 9=> (0)0
+			STUB ArmCosQ15 10=> (4095)0
+            STUB ArmCosQ15 11=> (0)0
+            STUB ArmCosQ15 12=> (4095)0
+
+            STUB ArmSinQ15(0)0
+            STUB ArmSinQ15 2=> (4095)0
+            STUB ArmSinQ15 3=> (0)0
+            STUB ArmSinQ15 4=> (4095)0
+            STUB ArmSinQ15 5=> (0)0
+            STUB ArmSinQ15 6=> (4095)0
+            STUB ArmSinQ15 7=> (0)0
+            STUB ArmSinQ15 8=> (4095)0
+            STUB ArmSinQ15 9=> (0)0
+            STUB ArmSinQ15 10=> (4095)0
+			STUB ArmSinQ15 11=> (0)0
+            STUB ArmSinQ15 12=> (4095)0
+
+            
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+
+        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+        END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for nominal values.
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-005]
+    COMMENT The function PolygonsPsPolyInit initialize ps float poly to psNext of ps float poly and does following nothing 
+    COMMENT when ps float poly is NULL
+    COMMENT  
+    COMMENT Equivalence Class 50,51
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-001]
+    COMMENT The function VInitPolar set ps rectangle point to psRP of ps_poly and set ps polygon point to psPP of ps_poly.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-002]
+    COMMENT The function VInitPolar sets s32A of ps polygon point to ANGLE_PIBY2 when 
+    COMMENT s32Y of ps rectangle point is greater than ZERO and s32X of ps rectangle point is equal to ZERO.
+    COMMENT  
+    COMMENT Equivalence Class 52,57
+    COMMENT 
+    COMMENT [hdudispfpolygon2-TangentFunc-DB-LLR-001]
+    COMMENT The function TangentFunc sets remainder to result of function ModulusFunc with parameters as val and 
+    COMMENT (2.0 multiplied with PI) and  octant to val divided (PI divided by FOUR).
+    COMMENT  
+    COMMENT Equivalence Class 71
+    COMMENT 
+    COMMENT [hdudispfpolygon2-TangentFunc-DB-LLR-002]
+    COMMENT The function TangentFunc return the return value of function Tan32Func with 
+    COMMENT product of  remainder and (FOUR divided by PI) as its parameter when ocatant value is equal to OCTANT_VAL_0.
+    COMMENT  
+    COMMENT Equivalence Class 72,73
+    COMMENT 
+    COMMENT [hdudispfpolygon2-SquareRoot-DB-LLR-001]
+    COMMENT The function SquareRoot does not return 0 when parameter square is greater than 0.
+    COMMENT
+    COMMENT Equivalence Class 98
+    COMMENT 
+    COMMENT [hdudispfpolygon2-SquareRoot-DB-LLR-002]
+    COMMENT The function SquareRoot Sets root to result of square divided by 3.0f and loop from 0 to less than THIRTY_TWO 
+    COMMENT and do the following.
+    COMMENT - Set root to result of (sum of root and square divided by root) divided by 2.0f.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-SquareRoot-DB-LLR-003]
+    COMMENT The function SquareRoot return the root from the function.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT </TD>  
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+            VAR e_poly_shape,   init = ECAPTSHAPE,      ev = init
+            VAR fx_scale,       init = 0.0,              ev = init
+            VAR s16_xoff,       init = 0,              ev = init
+            VAR fy_scale,       init = 0.0,              ev = init
+            VAR s16_yoff,       init = 10,              ev = init
+            VAR s16_rot,        init = 0,              ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit,                init = &PTU_ret_PolygonsPsPolyInit,    ev ==
+            VAR ret_PolygonsPsPolyInit->s16Pts,        init = 2,                               ev = 6
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psPP->s32R,    init = 2,                               ev = 40
+            VAR ret_PolygonsPsPolyInit->psPP->s32A,    init = 7,                               ev = 8192
+            VAR ret_PolygonsPsPolyInit->psNext,        init = &PTU_ret_PolygonsPsPolyInit,     ev = NULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+        --Stub Calls:
+        SIMUL
+            STUB ArmCosQ15(0)0
+            STUB ArmCosQ15 2=> (8192)0
+            STUB ArmCosQ15 3=>(0)0
+            STUB ArmCosQ15 4=> (8192)0
+            STUB ArmCosQ15 5=> (0)0
+            STUB ArmCosQ15 6=> (8192)0
+            STUB ArmCosQ15 7=> (0)0
+            STUB ArmCosQ15 8=> (8192)0
+            STUB ArmCosQ15 9=> (0)0
+			STUB ArmCosQ15 10=> (8192)0
+            STUB ArmCosQ15 11=> (0)0
+            STUB ArmCosQ15 12=> (8192)0
+
+            STUB ArmSinQ15(0)0
+            STUB ArmSinQ15 2=> (8192)0
+            STUB ArmSinQ15 3=> (0)0
+            STUB ArmSinQ15 4=> (8192)0
+            STUB ArmSinQ15 5=> (0)0
+            STUB ArmSinQ15 6=> (8192)0
+            STUB ArmSinQ15 7=> (0)0
+            STUB ArmSinQ15 8=> (8192)0
+            STUB ArmSinQ15 9=> (0)0
+            STUB ArmSinQ15 10=> (8192)0
+			STUB ArmSinQ15 11=> (0)0
+            STUB ArmSinQ15 12=> (8192)0
+            
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+
+        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+        END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for nominal values.
+    COMMENT   
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-003]
+    COMMENT The function VInitPolar Sets s32A of ps polygon point to ZERO  
+    COMMENT when s32X of ps rectangle point is greater than ZERO and s32Y of ps rectangle point is equal to ZERO.
+    COMMENT  
+    COMMENT Equivalence Class 53,54,57
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-005]
+    COMMENT The function VInitPolar Sets
+    COMMENT - ftemp to ftemp plus Pi when s32X of ps rectangle is less than ZERO AND s32Y of ps rectangle is greater than ZERO.
+    COMMENT - ftemp to ftemp plus Pi when s32X of ps rectangle is less than ZERO AND s32Y of ps rectangle is less than ZERO
+    COMMENT - ftemp to ftemp plus FL2XPI when s32X of ps rectangle is greater than ZERO AND s32Y of ps rectangle is less than ZERO 
+    COMMENT
+    COMMENT Equivalence Class 53,55,56,57,58,59
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-001]
+    COMMENT The function InverseTangent set val to opposite sign of val and sign to TRUE if val is less than 0.
+    COMMENT
+    COMMENT Equivalence Class 82
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-002]
+    COMMENT The function InverseTangent does not set val to result of 1.0f divided by val and 
+    COMMENT complement to TRUE if val is lesset than or equal to 1.0f.
+    COMMENT
+    COMMENT Equivalence Class 85,87
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-003]
+    COMMENT The function InverseTangent does the following when val is greater than the return value of 
+    COMMENT TangentFunc with parameter as TWELFTH_PI.
+    COMMENT complement to TRUE if val is lesset than or equal to 1.0f.
+    COMMENT - Set val to (difference of val and return value of TangentFunc with parameter as SIXTH_PI) divided by 
+    COMMENT ( product of val and sum of one and return value of TangentFunc with parameter as SIXTH_PI)
+    COMMENT -Set region value to TRUE
+    COMMENT
+    COMMENT Equivalence Class 88,89,90,91
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-004]
+    COMMENT The function InverseTangent set resultant value to product of val and 
+    COMMENT (sum of INV_TAN_CONST1 and (INV_TAN_CONST2 multiplied by twice of val)) divided by 
+    COMMENT (sum of INV_TAN_CONST3 and twice of val)
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-005]
+    COMMENT The function InverseTangent set resultant value to sum of resultant value and SIXTH_PI when region is equal to TRUE
+    COMMENT
+    COMMENT Equivalence Class 92
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-006]
+    COMMENT The function InverseTangent does not set resultant value to difference of HALF_PI and 
+    COMMENT resultant value when complement is not equal to TRUE.
+    COMMENT
+    COMMENT Equivalence Class 95
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-007]
+    COMMENT The function InverseTangent set resultant value to negative value of resultant value when sign is equal to TRUE
+    COMMENT
+    COMMENT Equivalence Class 69
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-008]
+    COMMENT The function InverseTangent returns the resultant value.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT      
+    COMMENT </TD>  
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+            VAR e_poly_shape,   init = ECAPTSHAPE,      ev = init
+            VAR fx_scale,       init = 20.0,              ev = init
+            VAR s16_xoff,       init = 20,              ev = init
+            VAR fy_scale,       init = 0.0,              ev = init
+            VAR s16_yoff,       init = 0,              ev = init
+            VAR s16_rot,        init = 20,              ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit,                init = &PTU_ret_PolygonsPsPolyInit,    ev ==
+            VAR ret_PolygonsPsPolyInit->s16Pts,        init = 2,                               ev = 6
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psPP->s32R,    init = 2,                               ev = 400
+            VAR ret_PolygonsPsPolyInit->psPP->s32A,    init = 7,                               ev = 20
+            VAR ret_PolygonsPsPolyInit->psNext,        init = &PTU_ret_PolygonsPsPolyInit,     ev = NULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+        --Stub Calls:
+        SIMUL
+            STUB ArmCosQ15(0)0
+            STUB ArmCosQ15 2=> (20)0
+            STUB ArmCosQ15 3=>(0)0
+            STUB ArmCosQ15 4=> (20)0
+            STUB ArmCosQ15 5=> (0)0
+            STUB ArmCosQ15 6=> (20)0
+            STUB ArmCosQ15 7=> (0)0
+            STUB ArmCosQ15 8=> (20)0
+            STUB ArmCosQ15 9=> (0)0
+			STUB ArmCosQ15 10=> (20)0
+            STUB ArmCosQ15 11=> (0)0
+            STUB ArmCosQ15 12=> (20)0
+
+            STUB ArmSinQ15(0)0
+            STUB ArmSinQ15 2=> (20)0
+            STUB ArmSinQ15 3=> (0)0
+            STUB ArmSinQ15 4=> (20)0
+            STUB ArmSinQ15 5=> (0)0
+            STUB ArmSinQ15 6=> (20)0
+            STUB ArmSinQ15 7=> (0)0
+            STUB ArmSinQ15 8=> (20)0
+            STUB ArmSinQ15 9=> (0)0
+            STUB ArmSinQ15 10=> (20)0
+			STUB ArmSinQ15 11=> (0)0
+            STUB ArmSinQ15 12=> (20)0
+            
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+
+        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+        END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-001]
+    COMMENT The function VInitPolar set ps rectangle point to psRP of ps_poly and set ps polygon point to psPP of ps_poly.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-004]
+    COMMENT The function VInitPolar sets ftemp to return value of function InverseTangent with s32Y of ps rectangle divided by s32X of ps rectangle when  
+    COMMENT s32X of ps rectangle is not equal to ZERO and s32Y of ps rectangle is not equal to ZERO and ftemp to
+    COMMENT ftemp multiplied with PI_2_RAD_MAX, ftemp to ftemp divided by FL2XPI,s32A of ps polygon point to ftemp plus POINT_FIVE.
+    COMMENT  
+    COMMENT Equivalence Class 53,55,99
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-005]
+    COMMENT The function VInitPolar Sets ftemp to ftemp plus Pi when s32X of ps rectangle is 
+    COMMENT less than ZERO AND s32Y of ps rectangle is greater than ZERO.
+    COMMENT  
+    COMMENT Equivalence Class 56,59
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-006]
+    COMMENT The function VInitPolar Sets s32A of ps polygon point to s32A of ps polygon point  plus s16_rot and
+    COMMENT s32A of ps polygon point to result of bitwise AND of s32A of ps polygon point and ANGLE_MASK.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-007]
+    COMMENT The function VInitPolar sets rectangle square root to (s32X of ps rectangle * s32X of ps rectangle)+(s32Y of ps rectangle* 
+    COMMENT s32Y of ps rectangle),ftemp to return value of function SquareRoot with parameters(square root * SIXTEEN_POINT_ZERO)+POINT_FIVE and
+    COMMENT s32R of ps polygon pointer with index pointer counter to ftemp.
+    COMMENT
+    COMMENT Equivalence Class 100
+    COMMENT 
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-001]
+    COMMENT The function InverseTangent doesnot set val to opposite sign of val and sign to TRUE 
+    COMMENT when val is equal to 0.
+    COMMENT
+    COMMENT Equivalence Class 84
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-002]
+    COMMENT The function InverseTangent set val to result of 1.0f divided by val and 
+    COMMENT complement to TRUE if val is greater than 1.0f.
+    COMMENT
+    COMMENT Equivalence Class 86
+    COMMENT      
+    COMMENT </TD>  
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+            VAR e_poly_shape,   init = ECAPTSHAPE,    ev = init
+            VAR fx_scale,       init = -1.0,              ev = init
+            VAR s16_xoff,       init = 0,              ev = init
+            VAR fy_scale,       init = 20.0,              ev = init
+            VAR s16_yoff,       init = 20,              ev = init
+            VAR s16_rot,        init = 20,              ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit,                init = &PTU_ret_PolygonsPsPolyInit,     ev ==
+            VAR ret_PolygonsPsPolyInit->s16Pts,        init = 2,                               ev = 6
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psPP->s32R,    init = 2,                               ev = 400
+            VAR ret_PolygonsPsPolyInit->psPP->s32A,    init = 7,                               ev = 8420
+            VAR ret_PolygonsPsPolyInit->psNext,        init = &PTU_ret_PolygonsPsPolyInit,     ev = NULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+        --Stub Calls:
+        SIMUL
+             STUB ArmCosQ15(0)0
+            STUB ArmCosQ15 2=> (8420)0
+            STUB ArmCosQ15 3=>(0)0
+            STUB ArmCosQ15 4=> (8420)0
+            STUB ArmCosQ15 5=> (0)0
+            STUB ArmCosQ15 6=> (8420)0
+            STUB ArmCosQ15 7=> (0)0
+            STUB ArmCosQ15 8=> (8420)0
+            STUB ArmCosQ15 9=> (0)0
+			STUB ArmCosQ15 10=> (8420)0
+            STUB ArmCosQ15 11=> (0)0
+            STUB ArmCosQ15 12=> (8420)0
+
+            STUB ArmSinQ15(0)0
+            STUB ArmSinQ15 2=> (8420)0
+            STUB ArmSinQ15 3=> (0)0
+            STUB ArmSinQ15 4=> (8420)0
+            STUB ArmSinQ15 5=> (0)0
+            STUB ArmSinQ15 6=> (8420)0
+            STUB ArmSinQ15 7=> (0)0
+            STUB ArmSinQ15 8=> (8420)0
+            STUB ArmSinQ15 9=> (0)0
+            STUB ArmSinQ15 10=> (8420)0
+			STUB ArmSinQ15 11=> (0)0
+            STUB ArmSinQ15 12=> (8420)0
+               
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+
+        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+        END ELEMENT
+
+END TEST -- TEST 8
+
+
+TEST 9
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-001]
+    COMMENT The function VInitPolar set ps rectangle point to psRP of ps_poly and set ps polygon point to psPP of ps_poly.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-002]
+    COMMENT The function VInitPolar sets s32A of ps polygon point to ANGLE_3PIBY2_1 when s32Y of ps rectangle point
+    COMMENT is less than or equal to ZERO and s32X of ps rectangle point is equal to ZERO.
+    COMMENT  
+    COMMENT Equivalence Class 52,54
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-006]
+    COMMENT The function VInitPolar Sets s32A of ps polygon point to s32A of ps polygon point  plus s16_rot and
+    COMMENT s32A of ps polygon point to result of bitwise AND of s32A of ps polygon point and ANGLE_MASK.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-007]
+    COMMENT The function VInitPolar sets rectangle square root to (s32X of ps rectangle * s32X of ps rectangle)+(s32Y of ps rectangle* 
+    COMMENT s32Y of ps rectangle),ftemp to return value of function SquareRoot with parameters(square root * SIXTEEN_POINT_ZERO)+POINT_FIVE and
+    COMMENT s32R of ps polygon pointer to ftemp.
+    COMMENT
+    COMMENT Equivalence Class 100
+    COMMENT 
+    COMMENT [hdudispfpolygon2-SquareRoot-DB-LLR-001]
+    COMMENT The function SquareRoot  return 0 when parameter square is equal to 0.
+    COMMENT
+    COMMENT Equivalence Class 96
+    COMMENT 
+    COMMENT      
+    COMMENT </TD>  
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+            VAR e_poly_shape,   init = ECAPTSHAPE,       ev = init
+            VAR fx_scale,       init = -10.0,              	ev = init
+            VAR s16_xoff,       init = 1,              		ev = init
+            VAR fy_scale,       init = -2.0,              	ev = init
+            VAR s16_yoff,       init = 6,              		ev = init
+            VAR s16_rot,        init = 0,              		ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit,                init = &PTU_ret_PolygonsPsPolyInit,    ev ==
+            VAR ret_PolygonsPsPolyInit->s16Pts,        init = 2,                               ev = 6
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psPP->s32R,    init = 2,                               ev = 156
+            VAR ret_PolygonsPsPolyInit->psPP->s32A,    init = 7,                               ev = 16651
+            -- ret_PolygonsPsDuplicate->psNext is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psNext,        init = &PTU_ret_PolygonsPsPolyInit,     ev ==
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+        --Stub Calls:
+        SIMUL
+            STUB ArmCosQ15(0)0
+            STUB ArmCosQ15 2=> (16651)0
+            STUB ArmCosQ15 3=>(0)0
+            STUB ArmCosQ15 4=> (16651)0
+            STUB ArmCosQ15 5=> (0)0
+            STUB ArmCosQ15 6=> (16651)0
+            STUB ArmCosQ15 7=> (0)0
+            STUB ArmCosQ15 8=> (16651)0
+            STUB ArmCosQ15 9=> (0)0
+			STUB ArmCosQ15 10=> (16651)0
+            STUB ArmCosQ15 11=> (0)0
+            STUB ArmCosQ15 12=> (16651)0
+
+            STUB ArmSinQ15(0)0
+            STUB ArmSinQ15 2=> (16651)0
+            STUB ArmSinQ15 3=> (0)0
+            STUB ArmSinQ15 4=> (16651)0
+            STUB ArmSinQ15 5=> (0)0
+            STUB ArmSinQ15 6=> (16651)0
+            STUB ArmSinQ15 7=> (0)0
+            STUB ArmSinQ15 8=> (16651)0
+            STUB ArmSinQ15 9=> (0)0
+            STUB ArmSinQ15 10=> (16651)0
+			STUB ArmSinQ15 11=> (0)0
+            STUB ArmSinQ15 12=> (16651)0
+            
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+
+        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+        END ELEMENT
+
+END TEST -- TEST 9
+
+TEST 10
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-001]
+    COMMENT The function VInitPolar set ps rectangle point to psRP of ps_poly and set ps polygon point to psPP of ps_poly.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-003]
+    COMMENT The function VInitPolar s32A of ps polygon point to ANGLE_3PIBY2_2 when s32X of ps rectangle point
+    COMMENT is less than and s32Y of ps rectangle point is equal to ZERO.
+    COMMENT  
+    COMMENT Equivalence Class 54,56
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-005]
+    COMMENT The function VInitPolar Sets
+    COMMENT - ftemp to ftemp plus Pi when s32X of ps rectangle is less than ZERO AND s32Y of ps rectangle is greater than ZERO.
+    COMMENT - ftemp to ftemp plus Pi when s32X of ps rectangle is less than ZERO AND s32Y of ps rectangle is less than ZERO
+    COMMENT
+    COMMENT Equivalence Class 56,58,59
+    COMMENT 
+    COMMENT      
+    COMMENT </TD>  
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+            VAR e_poly_shape,   init = ECAPTSHAPE,      ev = init
+            VAR fx_scale,       init = 0.0,              	  ev = init
+            VAR s16_xoff,       init = -1,              	  ev = init
+            VAR fy_scale,       init = 0.0,              	  ev = init
+            VAR s16_yoff,       init = 0,              		  ev = init
+            VAR s16_rot,        init = 20,              	  ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit,                init = &PTU_ret_PolygonsPsPolyInit,    ev ==
+            VAR ret_PolygonsPsPolyInit->s16Pts,        init = 2,                               ev = 6
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psPP->s32R,    init = 2,                               ev = 4
+            VAR ret_PolygonsPsPolyInit->psPP->s32A,    init = 7,                               ev = 16404
+            VAR ret_PolygonsPsPolyInit->psNext,        init = &PTU_ret_PolygonsPsPolyInit,     ev = NULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+        --Stub Calls:
+        SIMUL
+            STUB ArmCosQ15(0)0
+            STUB ArmCosQ15 2=> (16404)0
+            STUB ArmCosQ15 3=>(0)0
+            STUB ArmCosQ15 4=> (16404)0
+            STUB ArmCosQ15 5=> (0)0
+            STUB ArmCosQ15 6=> (16404)0
+            STUB ArmCosQ15 7=> (0)0
+            STUB ArmCosQ15 8=> (16404)0
+            STUB ArmCosQ15 9=> (0)0
+			STUB ArmCosQ15 10=> (16404)0
+            STUB ArmCosQ15 11=> (0)0
+            STUB ArmCosQ15 12=> (16404)0
+
+            STUB ArmSinQ15(0)0
+            STUB ArmSinQ15 2=> (16404)0
+            STUB ArmSinQ15 3=> (0)0
+            STUB ArmSinQ15 4=> (16404)0
+            STUB ArmSinQ15 5=> (0)0
+            STUB ArmSinQ15 6=> (16404)0
+            STUB ArmSinQ15 7=> (0)0
+            STUB ArmSinQ15 8=> (16404)0
+            STUB ArmSinQ15 9=> (0)0
+            STUB ArmSinQ15 10=> (16404)0
+			STUB ArmSinQ15 11=> (0)0
+            STUB ArmSinQ15 12=> (16404)0
+            
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+
+        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+        END ELEMENT
+
+END TEST -- TEST 10
+
+
+TEST 11
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-004]
+    COMMENT The function VInitPolar sets ftemp to return value of function InverseTangent with s32Y of ps rectangle divided by s32X of ps rectangle when  
+    COMMENT s32X of ps rectangle is not equal to ZERO and s32Y of ps rectangle is not equal to ZERO and ftemp to
+    COMMENT ftemp multiplied with PI_2_RAD_MAX, ftemp to ftemp divided by FL2XPI,s32A of ps polygon point to ftemp plus POINT_FIVE.
+    COMMENT
+    COMMENT Equivalence Class 53,55,99
+    COMMENT      
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-005]
+    COMMENT The function VInitPolar Sets
+    COMMENT - ftemp to ftemp plus Pi when s32X of ps rectangle is less than ZERO AND s32Y of ps rectangle is greater than ZERO.
+    COMMENT - ftemp to ftemp plus FL2XPI if s32X of ps rectangle is greater than ZERO AND s32Y of ps rectangle is less than ZERO 
+    COMMENT
+    COMMENT Equivalence Class 56,57,58,59
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-005]
+    COMMENT The function InverseTangent does not set resultant value to sum of resultant value 
+    COMMENT and SIXTH_PI when region is not equal to TRUE
+    COMMENT
+    COMMENT Equivalence Class 93
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-006]
+    COMMENT The function InverseTangent set resultant value to difference of HALF_PI and 
+    COMMENT resultant value when complement is equal to TRUE.
+    COMMENT
+    COMMENT Equivalence Class 94
+    COMMENT      
+    COMMENT </TD>  
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+            VAR e_poly_shape,   init = ECAPTSHAPE,      ev = init
+            VAR fx_scale,       init = 20.0,              ev = init
+            VAR s16_xoff,       init = 20,              ev = init
+            VAR fy_scale,       init = -50.0,              ev = init
+            VAR s16_yoff,       init = 20,              ev = init
+            VAR s16_rot,        init = 20,              ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit,                init = &PTU_ret_PolygonsPsPolyInit,    ev ==
+            VAR ret_PolygonsPsPolyInit->s16Pts,        init = 2,                               ev = 6
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psPP->s32R,    init = 2,                               ev = 824
+            VAR ret_PolygonsPsPolyInit->psPP->s32A,    init = 7,                               ev = 27240
+            -- ret_PolygonsPsDuplicate->psNext is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psNext,        init = &PTU_ret_PolygonsPsPolyInit,     ev ==
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+        --Stub Calls:
+        SIMUL
+            STUB ArmCosQ15(0)0
+            STUB ArmCosQ15 2=> (27240)0
+            STUB ArmCosQ15 3=>(0)0
+            STUB ArmCosQ15 4=> (27240)0
+            STUB ArmCosQ15 5=> (0)0
+            STUB ArmCosQ15 6=> (27240)0
+            STUB ArmCosQ15 7=> (0)0
+            STUB ArmCosQ15 8=> (27240)0
+            STUB ArmCosQ15 9=> (0)0
+			STUB ArmCosQ15 10=> (27240)0
+            STUB ArmCosQ15 11=> (0)0
+            STUB ArmCosQ15 12=> (27240)0
+
+            STUB ArmSinQ15(0)0
+            STUB ArmSinQ15 2=> (27240)0
+            STUB ArmSinQ15 3=> (0)0
+            STUB ArmSinQ15 4=> (27240)0
+            STUB ArmSinQ15 5=> (0)0
+            STUB ArmSinQ15 6=> (27240)0
+            STUB ArmSinQ15 7=> (0)0
+            STUB ArmSinQ15 8=> (27240)0
+            STUB ArmSinQ15 9=> (0)0
+            STUB ArmSinQ15 10=> (27240)0
+			STUB ArmSinQ15 11=> (0)0
+            STUB ArmSinQ15 12=> (27240)0
+
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+
+        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+        END ELEMENT
+
+END TEST -- TEST 11
+
+
+TEST 12
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-004]
+    COMMENT The function VInitPolar sets ftemp to return value of function InverseTangent with s32Y of ps rectangle divided by s32X of ps rectangle when  
+    COMMENT s32X of ps rectangle is not equal to ZERO and s32Y of ps rectangle is not equal to ZERO and ftemp to
+    COMMENT ftemp multiplied with PI_2_RAD_MAX, ftemp to ftemp divided by FL2XPI,s32A of ps polygon point to ftemp plus POINT_FIVE.
+    COMMENT
+    COMMENT Equivalence Class 53,55,99
+    COMMENT      
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-005]
+    COMMENT The function VInitPolar Sets
+    COMMENT - ftemp to ftemp plus Pi when s32X of ps rectangle is less than ZERO AND s32Y of ps rectangle is greater than ZERO.
+    COMMENT - ftemp to ftemp plus FL2XPI if s32X of ps rectangle is greater than ZERO AND s32Y of ps rectangle is less than ZERO 
+    COMMENT
+    COMMENT Equivalence Class 56,57,58,59
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-005]
+    COMMENT The function InverseTangent does not set resultant value to sum of resultant value 
+    COMMENT and SIXTH_PI when region is equal to TRUE
+    COMMENT
+    COMMENT Equivalence Class 92
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-006]
+    COMMENT The function InverseTangent set resultant value to difference of HALF_PI and 
+    COMMENT resultant value when complement is not equal to TRUE.
+    COMMENT
+    COMMENT Equivalence Class 95
+    COMMENT      
+    COMMENT </TD>  
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+            VAR e_poly_shape,   init = ECAPTSHAPE,      ev = init
+            VAR fx_scale,       init = -60.0,              ev = init
+            VAR s16_xoff,       init = 5,              ev = init
+            VAR fy_scale,       init = 20.0,              ev = init
+            VAR s16_yoff,       init = 20,              ev = init
+            VAR s16_rot,        init = 20,              ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit,                init = &PTU_ret_PolygonsPsPolyInit,    ev ==
+            VAR ret_PolygonsPsPolyInit->s16Pts,        init = 2,                               ev = 6
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psPP->s32R,    init = 2,                               ev = 1022
+            VAR ret_PolygonsPsPolyInit->psPP->s32A,    init = 7,                               ev = 14306
+            VAR ret_PolygonsPsPolyInit->psNext,        init = &PTU_ret_PolygonsPsPolyInit,     ev = NULL
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+        --Stub Calls:
+        SIMUL
+            STUB ArmCosQ15(0)0
+            STUB ArmCosQ15 2=> (14306)0
+            STUB ArmCosQ15 3=>(0)0
+            STUB ArmCosQ15 4=> (14306)0
+            STUB ArmCosQ15 5=> (0)0
+            STUB ArmCosQ15 6=> (14306)0
+            STUB ArmCosQ15 7=> (0)0
+            STUB ArmCosQ15 8=> (14306)0
+            STUB ArmCosQ15 9=> (0)0
+			STUB ArmCosQ15 10=> (14306)0
+            STUB ArmCosQ15 11=> (0)0
+            STUB ArmCosQ15 12=> (14306)0
+
+            STUB ArmSinQ15(0)0
+            STUB ArmSinQ15 2=> (14306)0
+            STUB ArmSinQ15 3=> (0)0
+            STUB ArmSinQ15 4=> (14306)0
+            STUB ArmSinQ15 5=> (0)0
+            STUB ArmSinQ15 6=> (14306)0
+            STUB ArmSinQ15 7=> (0)0
+            STUB ArmSinQ15 8=> (14306)0
+            STUB ArmSinQ15 9=> (0)0
+            STUB ArmSinQ15 10=> (14306)0
+			STUB ArmSinQ15 11=> (0)0
+            STUB ArmSinQ15 12=> (14306)0 
+           
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+
+        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+        END ELEMENT
+
+END TEST -- TEST 12
+
+
+TEST 13
+FAMILY nominal
+
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-002]
+    COMMENT The function shall initialize pointer counter to zero and loop till pointer counter is less than s16Pts of 
+	COMMENT ps_poly and does the following
+	COMMENT 1.Increment pointer counter by one
+	COMMENT 2.Set s32A of ps polygon point with index pointer counter to ANGLE_PIBY2 if s32Y of ps rectangle point is greater than ZERO and s32X of ps rectangle point is equal to ZERO.
+	COMMENT Does nothing when 1if s32Y of ps rectangle point is greater than ZERO  
+    COMMENT Equivalence Class 52,59    
+    COMMENT </TD>  
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+            VAR e_poly_shape,   init = ECAPTSHAPE,       ev = init
+            VAR fx_scale,       init = 0.0,              	ev = init
+            VAR s16_xoff,       init = 0,              		ev = init
+            VAR fy_scale,       init = 0.0,              	ev = init
+            VAR s16_yoff,       init = 0,              		ev = init
+            VAR s16_rot,        init = 0,              		ev = init
+
+        COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit,                init = &PTU_ret_PolygonsPsPolyInit,    ev ==
+            VAR ret_PolygonsPsPolyInit->s16Pts,        init = 2,                               ev = 6
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psPP->s32R,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psPP->s32A,    init = 7,                               ev = 24576
+            -- ret_PolygonsPsDuplicate->psNext is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psNext,        init = &PTU_ret_PolygonsPsPolyInit,     ev ==
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+        --Stub Calls:
+        SIMUL
+            STUB ArmCosQ15(0)0
+            STUB ArmCosQ15 2=> (24576)0
+            STUB ArmCosQ15 3=>(0)0
+            STUB ArmCosQ15 4=> (24576)0
+            STUB ArmCosQ15 5=> (0)0
+            STUB ArmCosQ15 6=> (24576)0
+            STUB ArmCosQ15 7=> (0)0
+            STUB ArmCosQ15 8=> (24576)0
+            STUB ArmCosQ15 9=> (0)0
+			STUB ArmCosQ15 10=> (24576)0
+            STUB ArmCosQ15 11=> (0)0
+            STUB ArmCosQ15 12=> (24576)0
+
+            STUB ArmSinQ15(0)0
+            STUB ArmSinQ15 2=> (24576)0
+            STUB ArmSinQ15 3=> (0)0
+            STUB ArmSinQ15 4=> (2457624576)0
+            STUB ArmSinQ15 5=> (0)0
+            STUB ArmSinQ15 6=> (24576)0
+            STUB ArmSinQ15 7=> (0)0
+            STUB ArmSinQ15 8=> (24576)0
+            STUB ArmSinQ15 9=> (0)0
+            STUB ArmSinQ15 10=> (24576)0
+			STUB ArmSinQ15 11=> (0)0
+            STUB ArmSinQ15 12=> (24576)0
+            
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+
+        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+        END ELEMENT
+
+END TEST -- TEST 13
+
+
+TEST 14
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-001]
+    COMMENT The function PolygonsPsPolyInit initializes the ps float poly to return value 
+    COMMENT of function PsGetShape with parameter e_poly_shape(ECAPTSHAPE)
+    COMMENT  
+    COMMENT Equivalence Class 46,47
+    COMMENT  
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-002]
+    COMMENT The function PolygonsPsPolyInit loop untill ps float poly is equal to NULL and does the following 
+    COMMENT - Sets ps float point to asFloatPoint of ps float poly.
+    COMMENT - Sets ps rectangle point to psRP of ps poly.
+    COMMENT - Sets pointer counter to s16Points of ps float poly.
+    COMMENT  
+    COMMENT Equivalence Class 50
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-003]
+    COMMENT The function PolygonsPsPolyInit does the following 
+    COMMENT - Sets s32X of ps reactangle point to (fX of ps float point * fx_scale * MAG_FACTOR) + s16_xoff
+    COMMENT - Sets s32Y of ps reactangle point to (fY of ps float point * fy_scale * MAG_FACTOR) + s16_yoff
+    COMMENT - Increments ps float pointer, ps reactangle pointer by one and Decrement pointer counter by one.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-004]
+    COMMENT The function PolygonsPsPolyInit calls the function VInitPolar
+    COMMENT 
+    COMMENT Equivalence Class 48
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-005]
+    COMMENT The function PolygonsPsPolyInit initialize ps float poly to psNext of ps float poly and does following when ps float poly not NULL 
+    COMMENT - Sets psNext of ps poly to return value of PsAllocatePoly
+    COMMENT - Sets ps poly to psNext of ps poly
+    COMMENT  
+    COMMENT Equivalence Class 50,51
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-006]
+    COMMENT The function PolygonsPsPolyInit call the function PolygonsvPolarToRect.
+    COMMENT  
+    COMMENT Equivalence Class 49
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PolygonsPsPolyInit-DB-LLR-007]
+    COMMENT The function PolygonsPsPolyInit returns ps return value.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-PsGetShape-DB-LLR-018]
+    COMMENT The function shall loop from ZERo to MAX_POLYGON_GRAPHS
+	COMMENT If e_shape is equal to polygon_shape of Ap_poly_graph with loop index value
+	COMMENT 1. Set shape valid to VALID_SHAPE.
+	COMMENT 2. Set pointer points draw to polystruct of Ap_poly_graph with index loop index.
+	COMMENT 3. Break from the function. 
+    COMMENT  
+	COMMENT Equivalence Class 103,105
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-001]
+    COMMENT The function VInitPolar set ps rectangle point to psRP of ps_poly and set ps polygon point to psPP of ps_poly.
+    COMMENT  
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-004]
+    COMMENT The function VInitPolar sets ftemp to return value of function InverseTangent with s32Y of ps rectangle divided by s32X of ps rectangle when  
+    COMMENT s32X of ps rectangle is not equal to ZERO and s32Y of ps rectangle is not equal to ZERO and ftemp to
+    COMMENT ftemp multiplied with PI_2_RAD_MAX, ftemp to ftemp divided by FL2XPI,s32A of ps polygon point to ftemp plus POINT_FIVE.
+    COMMENT  
+    COMMENT Equivalence Class 53,55,56,57,59,99
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-005]
+    COMMENT The function VInitPolar Sets ftemp to ftemp plus Pi when s32X of ps rectangle is 
+    COMMENT less than ZERO AND s32Y,s32X of ps rectangle are greater than ZERO.
+    COMMENT  
+    COMMENT Equivalence Class 59,57
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-006]
+    COMMENT The function VInitPolar Sets s32A of ps polygon point to s32A of ps polygon point  plus s16_rot and
+    COMMENT s32A of ps polygon point to result of bitwise AND of s32A of ps polygon point and ANGLE_MASK.
+    COMMENT
+    COMMENT Equivalence Class 53,55
+    COMMENT 
+    COMMENT [hdudispfpolygon2-VInitPolar-DB-LLR-007]
+    COMMENT The function VInitPolar sets rectangle square root to (s32X of ps rectangle * s32X of ps rectangle)+(s32Y of ps rectangle* 
+    COMMENT s32Y of ps rectangle),ftemp to return value of function SquareRoot with parameters(square root * SIXTEEN_POINT_ZERO)+POINT_FIVE and
+    COMMENT s32R of ps polygon pointer with index pointer counter to ftemp.
+    COMMENT
+    COMMENT Equivalence Class 100
+    COMMENT 
+    COMMENT [hdudispfpolygon2-ModulusFunc-DB-LLR-001]
+    COMMENT The function ModulusFunc does the following
+    COMMENT - sets quotient to result of numerator divided by denominator and
+    COMMENT  resultant value to difference of numerator and product of quotient and denominator 
+    COMMENT - returns the resultant value.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-Tan32Func-DB-LLR-001]
+    COMMENT The function Tan32Func return the result (val multiplied by TAN_CONST1)
+    COMMENT divided by sum of TAN_CONST2 and Product of twice of val.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpolygon2-SquareRoot-DB-LLR-001]
+    COMMENT The function SquareRoot  return 0 when parameter square is less than 0.
+    COMMENT
+    COMMENT Equivalence Class 97
+    COMMENT 
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-003]
+    COMMENT The function shall do the following when val is greater than the return value of TangentFunc with parameter as TWELFTH_PI.
+	COMMENT 1.Set val to result of COND1 divided by COND2
+	COMMENT Where,
+	COMMENT COND1 is difference of val and return value of TangentFunc with parameter as SIXTH_PI.
+	COMMENT COND2 is product of val and sum of one and return value of TangentFunc with parameter as SIXTH_PI.
+	COMMENT 2.Set region value to TRUE.
+	COMMENT
+    COMMENT Equivalence Class 89
+    COMMENT      
+    COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-001]
+    COMMENT The function InverseTangent does nothing when val is greater than 0.
+    COMMENT when val is greater than 0.
+    COMMENT
+    COMMENT Equivalence Class 85
+    COMMENT      
+	COMMENT [hdudispfpolygon2-InverseTangent-DB-LLR-004]
+	COMMENT The function shall set resultant value to product of val and COND1 divided by COND2,
+	COMMENT Where 
+	COMMENT COND1 is sum of INV_TAN_CONST1 and (INV_TAN_CONST2 multiplied by twice of val)
+    COMMENT COND2 is sum of INV_TAN_CONST3 and twice of val.
+	COMMENT Equivalence Class None
+	COMMENT 
+	COMMENT[hdudispfpolygon2-InverseTangent-DB-LLR-005]
+	COMMENT The function shall set resultant value to sum of resultant value and SIXTH_PI when region is equal to TRUE
+	COMMENT Equivalence Class 92
+    COMMENT </TD>  
+
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+            VAR e_poly_shape,   init = ECAPTSHAPE,      	 ev = init
+            VAR fx_scale,       init = (T_FLOAT)-3.4E+38,        ev = init
+            VAR s16_xoff,       init = (T_INT16)-32768,          ev = init
+            VAR fy_scale,       init = (T_FLOAT)-3.4E+38,        ev = init
+            VAR s16_yoff,       init = (T_INT16)-32768,          ev = init
+            VAR s16_rot,        init = (T_INT16)-32768,          ev = init
+			VAR PTU_polystruct,	init = {s16Points=>10,psNext=>NIL,asFloatPoint=>{others=>{fX =>1.0,fY=>1.0}}},	ev = init
+			VAR PTU_polystruct_1,	init = {s16Points=>12,psNext=>&PTU_polystruct,asFloatPoint=>{others=>{fX =>1.0,fY=>1.0}}},	ev = init
+			VAR Ap_poly_graph,	init = {others=>{polygon_shape=>ECAPTSHAPE,polygon_no_pts=>4,polystruct => &PTU_polystruct_1}},		ev = init
+
+		
+		COMMENT OUTPUT SECTION:
+            -- ret_PolygonsPsDuplicate is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit,                init = &PTU_ret_PolygonsPsPolyInit,    ev ==
+            VAR ret_PolygonsPsPolyInit->s16Pts,        init = 2,                               ev = 12
+            -- ret_PolygonsPsDuplicate->psRP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psRP,          init = &PTU_sRP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psRP->s32X,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psRP->s32Y,    init = 5,                               ev = 0
+            -- ret_PolygonsPsDuplicate->psPP is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psPP,          init = &PTU_sPP,                        ev ==
+            VAR ret_PolygonsPsPolyInit->psPP->s32R,    init = 2,                               ev = 0
+            VAR ret_PolygonsPsPolyInit->psPP->s32A,    init = 7,                               ev = 4095
+            -- ret_PolygonsPsDuplicate->psNext is expected as '==' since the staic address is returned, hence cannot be verified.
+            VAR ret_PolygonsPsPolyInit->psNext,        init = &PTU_ret_PolygonsPsPolyInit,     ev ==
+
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+
+        --Stub Calls:
+        SIMUL
+            STUB ArmCosQ15(0)0
+            STUB ArmCosQ15 2=> (4095)0
+            STUB ArmCosQ15 3=>(0)0
+            STUB ArmCosQ15 4=> (4095)0
+            STUB ArmCosQ15 5=> (0)0
+            STUB ArmCosQ15 6=> (4095)0
+            STUB ArmCosQ15 7=> (0)0
+            STUB ArmCosQ15 8=> (4095)0
+            STUB ArmCosQ15 9=> (0)0
+			STUB ArmCosQ15 10=> (4095)0
+            STUB ArmCosQ15 11=> (0)0
+            STUB ArmCosQ15 12=> (4095)0
+            STUB ArmCosQ15 13=> (0)0
+            STUB ArmCosQ15 14=> (4095)0
+			STUB ArmCosQ15 15=> (0)0
+			STUB ArmCosQ15 16=> (4095)0
+            STUB ArmCosQ15 17=> (0)0
+			STUB ArmCosQ15 18=> (4095)0
+            STUB ArmCosQ15 19=> (0)0
+			STUB ArmCosQ15 20=> (4095)0
+            STUB ArmCosQ15 21=> (0)0
+			STUB ArmCosQ15 22=> (4095)0
+            STUB ArmCosQ15 23=> (0)0
+			STUB ArmCosQ15 24=> (4095)0
+            STUB ArmCosQ15 25=> (0)0
+			STUB ArmCosQ15 26=> (4095)0
+            STUB ArmCosQ15 27=> (0)0
+			STUB ArmCosQ15 28=> (4095)0
+            STUB ArmCosQ15 29=> (0)0
+			STUB ArmCosQ15 30=> (4095)0
+            STUB ArmCosQ15 31=> (0)0
+			STUB ArmCosQ15 32=> (4095)0
+            STUB ArmCosQ15 33=> (0)0
+			STUB ArmCosQ15 34=> (4095)0
+            STUB ArmCosQ15 35=> (0)0
+			STUB ArmCosQ15 36=> (4095)0
+            STUB ArmCosQ15 37=> (0)0
+			STUB ArmCosQ15 38=> (4095)0
+            STUB ArmCosQ15 39=> (0)0
+			STUB ArmCosQ15 40=> (4095)0
+            STUB ArmCosQ15 41=> (0)0
+			STUB ArmCosQ15 42=> (4095)0
+            STUB ArmCosQ15 43=> (0)0
+			STUB ArmCosQ15 44=> (4095)0
+
+
+
+            STUB ArmSinQ15(0)0
+            STUB ArmSinQ15 2=> (4095)0
+            STUB ArmSinQ15 3=>(0)0
+            STUB ArmSinQ15 4=> (4095)0
+            STUB ArmSinQ15 5=> (0)0
+            STUB ArmSinQ15 6=> (4095)0
+            STUB ArmSinQ15 7=> (0)0
+            STUB ArmSinQ15 8=> (4095)0
+            STUB ArmSinQ15 9=> (0)0
+			STUB ArmSinQ15 10=> (4095)0
+            STUB ArmSinQ15 11=> (0)0
+            STUB ArmSinQ15 12=> (4095)0
+            STUB ArmSinQ15 13=> (0)0
+            STUB ArmSinQ15 14=> (4095)0
+			STUB ArmSinQ15 15=> (0)0
+			STUB ArmSinQ15 16=> (4095)0
+            STUB ArmSinQ15 17=> (0)0
+			STUB ArmSinQ15 18=> (4095)0
+            STUB ArmSinQ15 19=> (0)0
+			STUB ArmSinQ15 20=> (4095)0
+            STUB ArmSinQ15 21=> (0)0
+			STUB ArmSinQ15 22=> (4095)0
+            STUB ArmSinQ15 23=> (0)0
+			STUB ArmSinQ15 24=> (4095)0
+            STUB ArmSinQ15 25=> (0)0
+			STUB ArmSinQ15 26=> (4095)0
+            STUB ArmSinQ15 27=> (0)0
+			STUB ArmSinQ15 28=> (4095)0
+            STUB ArmSinQ15 29=> (0)0
+			STUB ArmSinQ15 30=> (4095)0
+            STUB ArmSinQ15 31=> (0)0
+			STUB ArmSinQ15 32=> (4095)0
+            STUB ArmSinQ15 33=> (0)0
+			STUB ArmSinQ15 34=> (4095)0
+            STUB ArmSinQ15 35=> (0)0
+			STUB ArmSinQ15 36=> (4095)0
+            STUB ArmSinQ15 37=> (0)0
+			STUB ArmSinQ15 38=> (4095)0
+            STUB ArmSinQ15 39=> (0)0
+			STUB ArmSinQ15 40=> (4095)0
+            STUB ArmSinQ15 41=> (0)0
+			STUB ArmSinQ15 42=> (4095)0
+            STUB ArmSinQ15 43=> (0)0
+			STUB ArmSinQ15 44=> (4095)0
+            
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+
+        #ret_PolygonsPsPolyInit = PolygonsPsPolyInit(e_poly_shape, fx_scale, s16_xoff, fy_scale, s16_yoff, s16_rot);
+        END ELEMENT
+
+END TEST -- TEST 14
+
+END SERVICE -- PolygonsPsPolyInit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

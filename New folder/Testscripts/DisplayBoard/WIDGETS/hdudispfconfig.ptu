@@ -1,0 +1,317 @@
+HEADER hdudispfconfig,Source Code Ver : 1.2,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name          : Pallavi V N
+--
+-- File Name            : hdudispfconfig.ptu
+--
+-- Test Creation Date   : 09.10.2017
+--
+-- Tested Functions     : ConfigSetConfig
+-- 
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------       ---------       -----------        -------------
+--     1.1             09.10.2017      Pallavi V N        Created the ptu file 
+--     1.2             10.11.2017      Pallavi V N        Updated as per #PR100171 
+--	   1.3			   16.10.2020	   Harshitha R		Updated as per #PR100295
+
+-------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/ 
+
+##include "hdudispftimer.h"        
+##include "hdudispfconfig.h"       
+##include "hdudispfwidgets.h"      
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #T_UINT32 U32_digital_timer; 
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Pallavi V N
+    COMMENT
+    COMMENT File name        : hdudispfconfig.ptu
+    COMMENT
+    COMMENT Tested functions : ConfigSetConfig
+    COMMENT                    
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT Following Test script related warnings are observed during Target 
+    COMMENT Execution for volatile keyword member/variable:
+    COMMENT warning #191-D: type qualifier is meaningless on cast type
+    COMMENT
+    COMMENT</AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function "ConfigSetConfig", TimerInstall function is called.
+    COMMENT     
+    COMMENT Invalid Class(es)
+    COMMENT  
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+DEFINE STUB hdudispfconfig_c
+
+    #void TimerInstall( volatile  T_TIMER _inout timer); 
+    
+END DEFINE
+
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfconfig.c
+ENVIRONMENT ENV_hdudispfconfig_c
+
+  VAR E_orientation,        init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,       ev = init
+  VAR S16_panel_height,     init = 0,                                   ev = init
+  VAR S16_panel_width,      init = 0,                                   ev = init
+  
+END ENVIRONMENT -- ENV_hdudispfconfig_c
+USE ENV_hdudispfconfig_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service ConfigSetConfig
+--------------------------------------------------------------------------------
+SERVICE ConfigSetConfig
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ELANDSCAPEORPORTRIAT e_land_scape_or_portriat;
+    #T_INT16 panel_width;
+    #T_INT16 panel_height;
+
+    ENVIRONMENT ENV_ConfigSetConfig
+    
+    VAR e_land_scape_or_portriat,       init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,       ev = init
+    VAR panel_width,                    init = 0,                                   ev = init
+    VAR panel_height,                   init = 0,                                   ev = init
+    
+    END ENVIRONMENT -- ENV_ConfigSetConfig
+    USE ENV_ConfigSetConfig
+
+    TEST 1
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfconfig-ConfigSetConfig-DB-LLR-001]
+    COMMENT The function 'ConfigSetConfig' does the following:  
+    COMMENT 1.Sets the value of E_orientation to e_land_scape_or_portriat(E_LAND_SCAPE_PORTRAIT_UNKNOWN).
+    COMMENT 2.Sets the value of S16_panel_height to panel_height (Minimum value). 
+    COMMENT 3.Sets the value of S16_panel_width to panel_width(Minimum value).
+    COMMENT 4.Calls TimerInstall function with address of U32_digital_timer 
+    COMMENT as parameter (Minimum value).
+    COMMENT
+    COMMENT Equivalence Class 1
+    COMMENT
+    COMMENT </TD> 
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            --Holds Orientation of the display
+            VAR e_land_scape_or_portriat,       init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,       ev = init
+        --Holds Width of the panel
+            VAR panel_width,                    init = -32768,                              ev = init
+        --Holds height of the panel
+            VAR panel_height,                   init = -32768,                              ev = init 
+            
+        COMMENT OUTPUT SECTION:
+            --Holds the orientation value
+            VAR E_orientation,              init = E_LAND_SCAPE,                ev = E_LAND_SCAPE_PORTRAIT_UNKNOWN
+        --Holds the panel width value
+            VAR S16_panel_width,            init = 0,                           ev = -32768
+        --Holds the panel height value
+            VAR S16_panel_height,           init = 0,                           ev = -32768
+            
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+            --Holds Digital value
+            VAR U32_digital_timer,          init = 0,                          ev = 4294967295  
+        
+        --Stub Calls:
+        SIMUL   
+        
+            STUB TimerInstall((0,4294967295))
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test:
+        #ConfigSetConfig(e_land_scape_or_portriat, panel_width, panel_height);
+        
+    END ELEMENT
+
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfconfig-ConfigSetConfig-DB-LLR-001]
+    COMMENT The function 'ConfigSetConfig' does the following:  
+    COMMENT 1.Sets the value of E_orientation to e_land_scape_or_portriat(E_LAND_SCAPE).
+    COMMENT 2.Sets the value of S16_panel_height to panel_height (Nominal value). 
+    COMMENT 3.Sets the value of S16_panel_width to panel_width(Nominal value).
+    COMMENT 4.Calls TimerInstall function with address of U32_digital_timer 
+    COMMENT as parameter (Nominal value).
+    COMMENT
+    COMMENT Equivalence Class 1
+    COMMENT
+    COMMENT </TD> 
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            
+            --Holds Orientation of the display
+            VAR e_land_scape_or_portriat,       init = E_LAND_SCAPE,                        ev = init
+        --Holds Width of the panel
+            VAR panel_width,                    init = 144,                                 ev = init
+        --Holds height of the panel
+            VAR panel_height,                   init = 1024,                                ev = init
+            
+        COMMENT OUTPUT SECTION:
+        
+            --Holds the orientation value
+            VAR E_orientation,              init = E_PORTRAIT,                  ev = E_LAND_SCAPE
+        --Holds the panel width value
+            VAR S16_panel_width,            init = 0,                           ev = 144
+        --Holds the panel height value
+            VAR S16_panel_height,           init = 0,                           ev = 1024
+            
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+            --Holds Digital value        
+            VAR U32_digital_timer,          init = 1000,                        ev = 0  
+        
+        --Stub Calls:
+        SIMUL   
+        
+            STUB TimerInstall((1000,0))
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test:
+        #ConfigSetConfig(e_land_scape_or_portriat, panel_width, panel_height);
+        
+    END ELEMENT
+
+    END TEST -- TEST 2    
+    
+    TEST 3
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfconfig-ConfigSetConfig-DB-LLR-001]
+    COMMENT The function 'ConfigSetConfig' does the following:  
+    COMMENT 1.Sets the value of E_orientation to e_land_scape_or_portriat(E_PORTRAIT).
+    COMMENT 2.Sets the value of S16_panel_height to panel_height (Maximum value). 
+    COMMENT 3.Sets the value of S16_panel_width to panel_width(Maximum value).
+    COMMENT 4.Calls TimerInstall function with address of U32_digital_timer 
+    COMMENT as parameter (Maximum value).
+    COMMENT
+    COMMENT Equivalence Class 1
+    COMMENT
+    COMMENT </TD> 
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            
+            --Holds Orientation of the display
+            VAR e_land_scape_or_portriat,       init = E_PORTRAIT,                        ev = init
+        --Holds Width of the panel
+            VAR panel_width,                    init = 32767,                             ev = init
+        --Holds height of the panel
+            VAR panel_height,                   init = 32767,                             ev = init
+            
+        COMMENT OUTPUT SECTION:
+        
+            --Holds the orientation value
+            VAR E_orientation,              init = E_LAND_SCAPE,                ev = E_PORTRAIT
+        --Holds the panel width value
+            VAR S16_panel_width,            init = 0,                           ev = 32767
+        --Holds the panel height value
+            VAR S16_panel_height,           init = 0,                           ev = 32767
+            
+        
+        COMMENT INPUT/OUTPUT SECTION: 
+             
+            --Holds Digital value
+            VAR U32_digital_timer,          init = 4294967295,                        ev = 150  
+        
+        --Stub Calls:
+        SIMUL   
+        
+            STUB TimerInstall((4294967295,150))
+            
+        END SIMUL
+        
+        -- Calling the Unit Under Test:
+        #ConfigSetConfig(e_land_scape_or_portriat, panel_width, panel_height);
+        
+    END ELEMENT
+
+    END TEST -- TEST 3    
+
+END SERVICE -- ConfigSetConfig
+
+

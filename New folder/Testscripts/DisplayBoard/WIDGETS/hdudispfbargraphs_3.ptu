@@ -1,0 +1,2258 @@
+HEADER hdudispfbargraphs, Source Code Ver : 1.8 , TestScript Ver : 1.6
+--------------------------------------------------------------------------------
+-- Author Name          : Swathi G
+--
+-- File Name            : hdudispfbargraphs_3.ptu
+--
+-- Test Creation Date   : 10.10.2017
+--
+-- Tested Functions     : BargraphDraw
+--
+-- Version History      :
+--
+-- TEST-VERSION       TEST-DATE        TESTER NAME        MODIFICATIONS
+-- ------------       ---------        -----------        -------------
+-- 1.1                10.10.2017        Swathi G          Created the PTU file.
+-- 1.2                10.11.2017        Swathi G          updated as per #PR100171.
+-- 1.3                14.11.2017        Swathi G          updated as per #PR100171.
+-- 1.4                27.07.2020        Swaroopa N        updated as per #PR100267.
+-- 1.5                03.10.2020        Vignesh Sunil     updated as per #PR100281.
+-- 1.6                16.10.2020        Vignesh Sunil     updated as per #PR100295.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfdma2d.h"      
+##include "hdudispfpolygon1.h"    
+##include "hdudispfrterror.h"   
+##include "hdudispftext.h"       
+##include "hdudispfbargraphs.h"  
+##include "hdudispfconfig.h"      
+##include "hdudispfbinascii.h"   
+##include "hdulibbasictypes.h"   
+##include "hdudispffonts.h"  
+##include "hdudispfpdidata.h" 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+   # volatile  T_INT32 Itm_rx_buffer;
+   
+   #T_INT16 S16_panel_height;
+    
+   #T_ELANDSCAPEORPORTRIAT E_orientation;
+   
+-- Declarations of the temporary variable
+
+    --Temporary variable to obtain psParam member value of structure member contents
+    #T_PARAM_READING      PTU_psParam;
+    
+    --Temporary variable to hold rterr file name
+    #T_CHAR               PTU_rterr_file[200];
+    
+    --Temporary variable to hold rterr message
+    #T_CHAR               PTU_rterr_message[200];
+    
+    --Temporary variable used in "RterrWidget" stub native code
+    #T_UINT32             index1, index2;
+    
+    --Temporary variable used in "BinasByteFormatInfoBE" stub native code
+    #T_INT16            *  PTU_BinasByte_s16DisDig_src;
+    #T_INT8             *  PTU_BinasByte_s16DisDig_dest;
+    
+    --Temporary variable used in "TextAllocat" stub native code
+    #T_PTEXT            *  PTU_pps_handle_add;
+    #T_UINT8            *  PTU_pu8_string;
+    
+    --Temporary variable used in "Dma2dDrawChar" stub native code
+    #T_CHAR              PTU_character_data[600];
+    #T_UINT32           * PTU_write_loc;
+    
+    --Temporary variable used in "WidgetsRedX" stub native code
+    #T_SDISREGION       *PTU_ps_dis_region;
+    #T_SPOLY            PTU_Pps_poly_red_x;
+
+    --Temporary variable used in "WidgetsDotAddr" stub native code
+    #T_SDISLOC           PTU_ppoint_3;
+
+    --Temporary variable used in "LookupTableLookup" stub native code
+    #T_LOOKUP_TABLE      PTU_table;
+    #T_PARAM_STAT        PTU_stat;
+    
+    --Temporary variable used in "WidgetsNumUpdate" stub native code
+    #T_PARAM_READING     PTU_param;
+    #T_SWIDGETPARAM      PTU_ps_widget_param;
+    #T_CHAR              PTU_ac_dig_text[13];
+
+    --Temporary variable used in "WidgetsUpdateRT" stub native code
+    #T_PARAM_READING   PTU_ps_param;
+    #T_SWIDGETPARAM    PTU_widget_parm;
+
+    --Temporary variable used in "TextUpdate" stub native code
+    #T_PTEXT  PTU_p_text;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Swathi G
+    COMMENT
+    COMMENT File Name        : hdudispfbargraphs_3.ptu
+    COMMENT
+    COMMENT Tested Functions : BargraphDraw
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1. Following Test script related warning is observed during Target Execution for stub BinasByteFormatInfoBE function return value:
+    COMMENT    warning #120-D: return value type does not match the function type
+    COMMENT    return(Attol_ptr_out->ret);
+	COMMENT 2. Below statement is added in 'hdudispfbargraphs.c' file befor the include section to fetch the actual path of source file independent
+    COMMENT    to different target machines.
+    COMMENT    Code:
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+	COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In Function BargraphAllocat the u16Width of ps_bar_graph_def is greater than MAX_BAR_WIDTH.
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In Function BargraphAllocat the u16Width of ps_bar_graph_def is lesser than MAX_BAR_WIDTH.
+    COMMENT
+    COMMENT Class 53
+    COMMENT In Function BargraphAllocat the u16Width of ps_bar_graph_def is equal to MAX_BAR_WIDTH.
+    COMMENT
+    COMMENT Class 3
+    COMMENT In Function BargraphAllocat the number of bar garphs installed is equal to MAX_BARS.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In Function BargraphAllocat the number of bar garphs installed is not equal to MAX_BARS.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In Function BargraphAllocat, 'RterrWidget' function is called.
+    COMMENT
+    COMMENT Class 58
+    COMMENT In Function BargraphAllocat, 'CalculatePower' function is called.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In Function BargraphAllocat, 'BinasGetWidth' function is called.
+    COMMENT
+    COMMENT Class 7
+    COMMENT In Function BargraphAllocat, the resultant value of logical AND operation between return value of function 'BinasGetWidth' 
+    COMMENT and eFont of ps_bar_graph_def is true.
+    COMMENT
+    COMMENT Class 8
+    COMMENT In Function BargraphAllocat, the resultant value of logical AND operation between return value of function 'BinasGetWidth' 
+    COMMENT and eFont of ps_bar_graph_def is not true.
+    COMMENT
+    COMMENT Class 9
+    COMMENT In Function BargraphAllocat, 'BinasByteFormatInfoBE' function is called.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In Function BargraphAllocat, 'TextAllocat' function is called.
+    COMMENT
+    COMMENT Class 11
+    COMMENT In Function BargraphUpdate, 'WidgetsUpdateRT' function is called.
+    COMMENT
+    COMMENT Class 54
+    COMMENT In Function BargraphUpdate, 'CalculatePower' function is called.
+    COMMENT
+    COMMENT Class 52
+    COMMENT In Function BargraphUpdate, 'LookupTableLookup' function is called.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In Function BargraphUpdate, the value of pText of sWidgetParm of ps_bar_graph is not equal to NULL.
+    COMMENT
+    COMMENT Class 13
+    COMMENT In Function BargraphUpdate, the value of stat of psParam of ps_bar_graph_def of ps_bar_graph is lesser than PARAM_BAD.
+    COMMENT
+    COMMENT Class 14
+    COMMENT In Function BargraphUpdate, the value of pText of sWidgetParm of ps_bar_graph is equal to NULL.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In Function BargraphUpdate, the value of stat of psParam of ps_bar_graph_def of ps_bar_graph is greater than PARAM_BAD.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In Function BargraphUpdate, the value of stat of psParam of ps_bar_graph_def of ps_bar_graph is equal to PARAM_BAD.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In Function BargraphUpdate, 'WidgetsNumUpdate' function is called.
+    COMMENT
+    COMMENT Class 19
+    COMMENT In Function BargraphUpdate, 'BinasGetWidth' function is called.
+    COMMENT
+    COMMENT Class 20
+    COMMENT In Function BargraphUpdate, 'TextUpdate' function is called.
+    COMMENT
+    COMMENT Class 21
+    COMMENT In Function BargraphDraw, the value of stat of psParam of ps_bar_graph_def is lesser than PARAM_BAD.
+    COMMENT
+    COMMENT Class 22
+    COMMENT In Function BargraphDraw, the value of E_orientation is equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In Function BargraphDraw, the value of bg_hv is equal to BG_VERTICAL.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In Function BargraphDraw, the value of bg_hv is not equal to BG_VERTICAL.
+    COMMENT
+    COMMENT Class 25
+    COMMENT In Function BargraphDraw, the value of E_orientation is not equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Class 27
+    COMMENT In Function BargraphDraw, the value of length is lesser than ZERO.
+    COMMENT
+    COMMENT Class 57
+    COMMENT In Function BargraphDraw, the value of length is greater than ZERO.
+    COMMENT
+    COMMENT Class 55
+    COMMENT In Function BargraphDraw, the value of length is equal to ZERO.
+    COMMENT
+    COMMENT Class 28
+    COMMENT In Function BargraphDraw, the value of anti alias is not equal to ZERO.
+    COMMENT
+    COMMENT Class 29
+    COMMENT In Function BargraphDraw, the value of anti alias is equal to ZERO.
+    COMMENT
+    COMMENT Class 30
+    COMMENT In Function BargraphDraw, the value of s16_length is greater than ZERO.
+    COMMENT
+    COMMENT Class 42
+    COMMENT In Function BargraphDraw, the value of stat of psParam of ps_bar_graph_def is greater than PARAM_BAD.
+    COMMENT
+    COMMENT Class 56
+    COMMENT In Function BargraphDraw, the value of stat of psParam of ps_bar_graph_def is equal to PARAM_BAD.
+    COMMENT
+    COMMENT Class 45
+    COMMENT In Function BargraphDraw, 'Dma2dIsBusy' is called.
+    COMMENT
+    COMMENT Class 46
+    COMMENT In Function BargraphDraw, 'PolygonFillRectNT' is called.
+    COMMENT
+    COMMENT Class 47
+    COMMENT In Function BargraphDraw, 'WidgetsDotAddr' is called.
+    COMMENT
+    COMMENT Class 48
+    COMMENT In Function BargraphDraw, 'Dma2dDrawChar' is called.
+    COMMENT
+    COMMENT Class 49
+    COMMENT In Function BargraphDraw, 'WidgetsRedX' is called.
+    COMMENT
+    COMMENT Class 50
+    COMMENT The Function BargraphClear, deallocate's the bar graphs.
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT
+    COMMENT Class 51
+    COMMENT The function BargraphAllocat is called with input parameter ps_bar_graph_def as NULL.
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+DEFINE STUB hdudispfbargraphs_c
+    
+    --The input parameter's ps_dis_region and Pps_poly_red_x are made as _no since they are pointer variables
+    #void WidgetsRedX(T_SDISREGION _no *ps_dis_region, T_SPOLY _no **Pps_poly_red_x)
+    #{
+    #    PTU_ps_dis_region  = ps_dis_region;
+    #    PTU_Pps_poly_red_x = **Pps_poly_red_x;
+    #}  
+    
+    --The input parameter's character_data and write_loc are made as _no since they are pointer variables
+    #void Dma2dDrawChar(  const void _no *character_data, void _no *write_loc, T_UINT32 _in u32_width, T_UINT32 _in u32_height, T_UINT16 _in e_color) 
+    #{   
+    #   for(index1 = 0; index1<600;   index1++)
+    #   {
+    #       PTU_character_data[index1]=*(T_CHAR *)character_data;
+    #       character_data = ((T_CHAR *)character_data)+1;
+    #   }
+    #    PTU_write_loc      = write_loc;
+    #}
+    
+    --The input parameter ppoint_3 is made as _no since it is a pointer variable
+    #T_UINT32 WidgetsDotAddr(T_SDISLOC _no *ppoint_3)
+    #{
+    #    PTU_ppoint_3 = *ppoint_3;
+    #} 
+    
+    #void PolygonFillRectNT(T_INT16 _in s16_ulx, T_INT16 _in s16_uly, T_INT16 _in s16_width, T_INT16 _in s16_height, T_EPENCOLOR _in e_color); 
+        
+    #T_INT16 Dma2dIsBusy(void); 
+    
+    --The input parameter p_text is made as _no since it is a pointer variable.
+    #void TextUpdate(T_PTEXT _no p_text, T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv)
+    #{
+    #    PTU_p_text = p_text;
+    #}
+    
+    --The input parameter's param, ps_widget_param and ac_dig_text are made as _no since they are pointer variables
+    #void WidgetsNumUpdate(T_PARAM_READING _no *param, T_SWIDGETPARAM _no *ps_widget_param,T_CHAR _no *ac_dig_text, T_UINT16 u16_format, T_EPENCOLOR _in e_pen_color)
+    #{
+    #   for(index1 = 0; index1<30;   index1++)
+    #   {
+    #       PTU_ac_dig_text[index1]=*(T_CHAR *)ac_dig_text;
+    #       ac_dig_text++;
+    #   } 
+    #
+    #   PTU_param             = *param;
+    #   PTU_ps_widget_param   = *ps_widget_param;
+    #}
+     
+    --The input parameter's table and stat are made as _no since they are pointer variables  
+    #T_INT32 LookupTableLookup( const T_LOOKUP_TABLE _no *table, T_INT32 _in ind_var, T_PARAM_STAT _no *stat)
+    #{
+    #    PTU_table  = *table;
+    #    PTU_stat   = *stat; 
+    #} 
+    
+    --The input parameter's ps_param and ps_widget_parm are made as _no since they are pointer variables
+    #void WidgetsUpdateRT(T_PARAM_READING _no *ps_param, T_SWIDGETPARAM _no *ps_widget_parm)
+    #{
+    #    PTU_ps_param        =  *ps_param;
+    #    PTU_widget_parm  =  *ps_widget_parm;
+    #}  
+    
+    --The input parameters *pps_handle_add and *pu8_string as made as _no since they are pointer variables and they are verified using temporary variables. 
+    #void TextAllocat(T_PTEXT _no *pps_handle_add, T_UINT8 _no *pu8_string, T_UINT16 _in u16_x0, T_UINT16 _in u16_y0, T_ETXALIGN _in e_tx_align, T_ETXFONT _in e_tx_font, T_EPENCOLOR _in e_pen_color, T_ETXV _in e_txv, T_ETXFLASH _in e_tx_flash)
+    #{
+    #     PTU_pps_handle_add = pps_handle_add;
+    #     PTU_pu8_string     = pu8_string;
+    #}
+    
+    --The input parameters *src and *dest as made as _no since they are pointer variables and they are verified using temporary variables. 
+    #T_INT8* BinasByteFormatInfoBE(void _no *src, T_UINT16 _in format, T_INT8 _no *dest)
+    #{
+    #    PTU_BinasByte_s16DisDig_src  = src;
+    #    PTU_BinasByte_s16DisDig_dest = dest;
+    #}
+    
+    #T_FLOAT CalculatePower(T_FLOAT _in value, T_INT32 _in mul);
+    
+    #T_UINT16 BinasGetWidth(T_UINT16 _in format);
+    
+    --The input parameters pc_file and pc_message is made as _no since they are pointer variables and they are verified using temporary variables.
+    #void RterrWidget(T_CHAR * _no pc_file, T_INT8 _in s32_line_number, T_CHAR * _no pc_message) 
+    #{
+    #   for(index1 = 0; index1<100;   index1++)
+    #   {
+    #       PTU_rterr_file[index1]=*(T_CHAR *)pc_file;
+    #       pc_file++;
+    #   }
+    #   for(index2 = 0; index2<100;   index2++)
+    #   {
+    #       PTU_rterr_message[index2]=*(T_CHAR *)pc_message;
+    #       pc_message++;
+    #   }
+    #}
+    
+     END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BargraphDraw
+--------------------------------------------------------------------------------
+SERVICE BargraphDraw
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_SBARGRAPHDEF    ps_bar_graph_def[4];   
+    #T_SDISREGION      PTU_psDisRegion;
+    #T_PARAM_READING   PTU_psparam;
+    #T_INT16           PTU_s16_height;
+    #T_SDISLOC         PTU_ul_cor;
+    #T_SRECTPOINT      PTU_psRP;
+    #T_SPOLY           PTU_1_Pps_poly_red_x;
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-001]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does the following (In this test case the for loop is executed for 0 time)
+        COMMENT 1. Increment the ps bar graph by one 
+        COMMENT 2. Set ps bar graph def to ps_bar_graph_def of ps bar graph
+        COMMENT 3. Shall loop till return value of function Dma2dIsBusy is not zero when
+        COMMENT    stat of psParam of ps bar graph def is less than PARAM_BAD.
+        COMMENT 4. Set length to sLength of ps bar graph def
+        COMMENT 5. Set origin bar to sOrigin of ps bar graph def
+        COMMENT 6. Set background vertical horizantal to eBGHV of ps bar graph def
+        COMMENT Equivalence Class None 
+        COMMENT </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --As the Element section should contain the verification activity hence the dummy verification is performed.                 
+                VAR PTU_psparam.r,                      init = 12,                           ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --None                
+                
+            -- Stub Calls :
+            SIMUL
+       
+               --None
+                      
+            END SIMUL
+        
+            -- Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-001]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does the following (In this test case the for loop is executed for 
+        COMMENT 1 time, i.e. the number of bargraphs allocated is one)
+        COMMENT 1. Increment the ps bar graph by one 
+        COMMENT 2. Set ps bar graph def to ps_bar_graph_def of ps bar graph
+        COMMENT 3. Shall loop till return value of function Dma2dIsBusy is not zero when stat of psParam
+        COMMENT    of ps bar graph def is less than PARAM_BAD(while loop is exercised for 2 or more times)
+        COMMENT 4. Set length to sLength of ps bar graph def
+        COMMENT 5. Set origin bar to sOrigin of ps bar graph def
+        COMMENT 6. Set background vertical horizontal to eBGHV of ps bar graph def
+        COMMENT Equivalence Class 21
+        COMMENT
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-002]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does the following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and E_orientation is equal to E_PORTRAIT.
+        COMMENT 1. Set temporary variable to u16X0 of origin bar
+        COMMENT 2. Set u16X0 of origin bar to u16Y0 of origin bar 
+        COMMENT 3. Set u16Y0 of origin bar to S16_panel_height minus temporary variable.
+        COMMENT 4. Set background vertical horizontal to BG_HORIZONTAL when background vertical horizontal is equal to BG_VERTICAL
+        COMMENT Equivalence Class 22, 23
+        COMMENT
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-005]
+        COMMENT The function BargraphAllocat initialize ps bar graph to As bar graph and loop number 
+        COMMENT of bargraph installed and does following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and background vertical horizantal is not equal to BG_VERTICAL.
+        COMMENT 1. Set anti alias value to absolute value of length MOD FOUR multiply by PIXEL_INC_A4_HOR.
+        COMMENT 2. initialize temporary variable to zero and loop till temporary variable is less 
+        COMMENT    than u16Width of ps bar graph def and increment temporary variable and set line for 
+        COMMENT    anti alias with index temporary variable to anti alias.(for loop is exercised for 2 or more times)
+        COMMENT 3. Set u16Y0 of upper left corner to u16Y0 of origin bar minus u16Width of ps bar graph def 
+        COMMENT    divided by TWO.
+        COMMENT 4. Set u16X0 of upper left corner to u16X0 of origin bar plus length divided by FOUR. 
+        COMMENT    when length is less than ZERO
+        COMMENT 5. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, u16Y0 
+        COMMENT    of upper left corner, minus length divide by FOUR, u16Width of ps bar graph def 
+        COMMENT    and ePenColor of ps bar graph def when length is less than ZERO.
+        COMMENT 6. Decrement u16X0 of upper left corner by one when lenght is less than ZERO and anti 
+        COMMENT    alias is not equal to ZERO.
+        COMMENT 7. Set corner address to return value of function WidgetsDotAddr with parameter address of 
+        COMMENT    upper left corner when lenght is less than ZERO and anti alias is not equal to ZERO.
+        COMMENT 8. Call function Dma2dDrawChar with parameter line for anti alias, corner address, 
+        COMMENT    TWO, u16Width of ps bar graph def, ePenColor of ps bar graph def when lenght is less 
+        COMMENT    than ZERO and anti alias is not equal to ZERO.
+        COMMENT Equivalence Class 24, 27, 28, 45, 46, 47, 48
+        COMMENT     
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable initialization
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+        
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                
+                --Holds the value of r member of structure PTU_psparam              
+                VAR PTU_psparam.r,                                        init = 12,                           ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                     init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                          init = &PTU_psparam,                 ev = init                
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                         init = 100,                          ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                        init = (T_UINT16)10,                 ev = init
+                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                            init = E_LARGE_FONT,                 ev = init
+
+                --Holds the value of variable E_orientation
+                VAR E_orientation,                                        init = E_PORTRAIT,                   ev = init
+                
+                --Holds the eBGHV member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eBGHV,                            init = BG_VERTICAL,                  ev = init
+
+                --Holds the ePenColor member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].ePenColor,                        init = (T_EPENCOLOR)0xf00,           ev = init
+                
+                --Holds the value of variable S16_panel_height
+                VAR S16_panel_height,                                     init = 100,                          ev = init
+
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                    init = 10,                           ev = init
+                 
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def                 
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                    init = 20,                           ev = init
+                                        
+            COMMENT INPUT/OUTPUT SECTION:        
+
+                --Holds the value of u16X0 member of structure PTU_ppoint_3
+                VAR PTU_ppoint_3.u16X0,                                   init = 12,                           ev = -8172
+                
+                --Holds the value of u16Y0 member of structure PTU_ppoint_3
+                VAR PTU_ppoint_3.u16Y0,                                   init = 12,                           ev = 40
+
+                --To verify the STUB native code
+                VAR PTU_write_loc,                                        init = 100,                          ev = 20
+
+              
+                
+                VAR PTU_character_data[0..99],                            init = 0,                            ev = 4
+                
+                VAR PTU_character_data[100..599],                         init = 0,                            ev = init
+        
+            COMMENT OUTPUT SECTION:
+                
+                --None
+                
+            -- Stub Calls :
+            SIMUL
+               
+               --Called to check wheather the DMA2D is busy or notq.
+               STUB Dma2dIsBusy()1
+               STUB Dma2dIsBusy()10
+               STUB Dma2dIsBusy()0
+               
+               --Called to obtain foreground buffer address.
+               STUB WidgetsDotAddr()20
+              
+               --Called to draw a 4bbp font character.
+               STUB Dma2dDrawChar((T_UINT32)2, (T_UINT32)ps_bar_graph_def[0].u16Width, (T_UINT16)ps_bar_graph_def[0].ePenColor)
+               
+               --Called to Fill the rectangle with specified color
+               STUB PolygonFillRectNT(-8171, 40, 8191, 100, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+               
+               --Called to calculate the power value.
+               STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            --Called to clear the previously installed bargraph
+            #BargraphClear();
+            
+            -- Called to update the value of 'U16_bar_graphs_installed'
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+            
+            --sLength of installed bargraph is set to the negative value 
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = -32765;
+             
+            -- Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 2
+    
+    TEST 7
+    FAMILY nominal  
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-007]
+        COMMENT The Function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does following when stat of psParam of ps bar graph def greater 
+        COMMENT than or equal to PARAM_BAD and psDisRegion of ps bar graph def is not equal to ZERO.
+        COMMENT 1. Call function WidgetsRedX with parameter psDisRegion of ps bar graph def and 
+        COMMENT    address of psPolyRedX of ps bar graph.
+        COMMENT Equivalence Class 42, 49, 21
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam               
+                VAR PTU_psparam.r,                                           init = 12,                           ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                        init = RANGE_ERROR,                    ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                             init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                       init = 10,                           ev = init
+                
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def                
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                       init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                            init = 1,                            ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                           init = (T_UINT16)10,                 ev = init
+                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                               init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of E_orientation 
+                VAR E_orientation,                                           init = E_PORTRAIT,                   ev = init
+                
+                --Holds the eBGHV member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eBGHV,                               init = BG_VERTICAL,                  ev = init
+                
+               --Holds the ePenColor member value of structure member ps_bar_graph_def
+               VAR ps_bar_graph_def[0].ePenColor,                           init = (T_EPENCOLOR)0xf00,                         ev = init
+                
+               --Holds the psDisRegion member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psDisRegion,                         init = (T_SDISREGION *)&PTU_psDisRegion,        
+                &                                                                                                  ev = init
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --Holds the value of PTU_ps_dis_region 
+                VAR PTU_ps_dis_region,                                       init = NULL,                         ev = (T_SDISREGION *)&PTU_psDisRegion
+            
+                --Holds the s16Pts member value of structure member PTU_1_Pps_poly_red_x
+                VAR PTU_1_Pps_poly_red_x.s16Pts,                             init = 10,                           ev = init                
+                
+                --Holds the s16Pts member value of structure member PTU_Pps_poly_red_x              
+                VAR PTU_Pps_poly_red_x.s16Pts,                               init = 0,                            ev = 10          
+        
+            COMMENT OUTPUT SECTION:
+                
+                --None
+       
+            -- Stub Calls :
+            SIMUL
+               
+               --Called to display RedX in Gauge and numberbox place.
+               STUB WidgetsRedX()
+
+               --Called to calculate the power value.
+               STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            --Called to clear the previously allocated bargraphs
+            #BargraphClear();
+            
+            --Called to allocate the bargraphs.
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+            
+            --sLength of installed bargraph is set to the negative value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = -32765;
+             
+            --psPolyRedX of installed bargraph is set to the temporary variable address
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->psPolyRedX  = (T_SPOLY      *)&PTU_1_Pps_poly_red_x;
+             
+            -- Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 7
+    
+    TEST 8  
+    FAMILY nominal 
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-007]
+        COMMENT The Function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does nothing when stat of psParam of ps bar graph def greater 
+        COMMENT than or equal to PARAM_BAD and psDisRegion of ps bar graph def is equal to ZERO.
+        COMMENT Equivalence Class 42, 56  
+        COMMENT </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam               
+                VAR PTU_psparam.r,                                         init = 12,                           ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                      init = PARAM_BAD,                    ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                           init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                     init = 10,                           ev = init
+                    
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                     init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                          init = 100,                          ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                         init = (T_UINT16)10,                 ev = init
+                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                             init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of E_orientation
+                VAR E_orientation,                                         init = E_PORTRAIT,                   ev = init
+                
+                --Holds the eBGHV member value of structure member ps_bar_graph_def  
+                VAR ps_bar_graph_def[0].eBGHV,                             init = BG_VERTICAL,                  ev = init
+                
+                --Holds the ePenColor member value of structure member ps_bar_graph_def     
+                VAR ps_bar_graph_def[0].ePenColor,                         init = (T_EPENCOLOR)0xf00,                         ev = init
+                
+                --Holds the psDisRegion member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psDisRegion,                       init = (T_SDISREGION *)ZERO,         ev = init
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --None
+ 
+            -- Stub Calls :
+            SIMUL
+        
+               
+               --Called to calculate the power value.
+               STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            --Called to clear the previously installed bargraph
+            #BargraphClear();
+            
+            --Called to allocate the bargraphs.
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+            
+            --sLength of installed bargraph is set to the negative value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = -32765;
+             
+            -- Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 8
+    
+    TEST 3
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-001]
+        COMMENT The function BargraphAllocat initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does the following (In this test case the for loop is executed for 
+        COMMENT 2 or more times, i.e. the number of bargraphs allocated is 2 or more)
+        COMMENT 1. Increment the ps bar graph by one 
+        COMMENT 2. Set ps bar graph def to ps_bar_graph_def of ps bar graph
+        COMMENT 3. Shall loop till return value of function Dma2dIsBusy is not zero when stat of psParam
+        COMMENT    of ps bar graph def is less than PARAM_BAD(while loop is exercised for 1 time for each iteration)
+        COMMENT 4. Set length to sLength of ps bar graph def
+        COMMENT 5. Set origin bar to sOrigin of ps bar graph def
+        COMMENT 6. Set background vertical horizontal to eBGHV of ps bar graph def
+        COMMENT Equivalence Class 21, 45, 48
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+        #ps_bar_graph_def[1].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+        #ps_bar_graph_def[2].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+        #ps_bar_graph_def[3].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                
+                --Holds the value of r member of structure PTU_psparam          
+                VAR PTU_psparam.r,                                                               init = 12,                          ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                                            init = PARAM_OK,                    ev = init
+                
+                -- Holds Pencolor of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].ePenColor,                                               init = (T_EPENCOLOR)0xf00,          ev = init
+
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                                                 init = &PTU_psparam,                ev = init
+                VAR ps_bar_graph_def[1].psParam,                                                 init = &PTU_psparam,                ev = init
+                VAR ps_bar_graph_def[2].psParam,                                                 init = &PTU_psparam,                ev = init
+                VAR ps_bar_graph_def[3].psParam,                                                 init = &PTU_psparam,                ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                                                init = 579,                         ev = init
+                VAR ps_bar_graph_def[1].u16Width,                                                init = 58,                          ev = init
+                VAR ps_bar_graph_def[2].u16Width,                                                init = 57,                          ev = init
+                VAR ps_bar_graph_def[3].u16Width,                                                init = 4,                           ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                                               init = (T_UINT16)10,                ev = init
+                VAR ps_bar_graph_def[1].u16Format,                                               init = (T_UINT16)10,                ev = init
+                VAR ps_bar_graph_def[2].u16Format,                                               init = (T_UINT16)10,                ev = init
+                VAR ps_bar_graph_def[3].u16Format,                                               init = (T_UINT16)10,                ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                                                   init = E_LARGE_FONT,                ev = init
+                VAR ps_bar_graph_def[1].eFont,                                                   init = E_LARGE_FONT,                ev = init
+                VAR ps_bar_graph_def[2].eFont,                                                   init = E_LARGE_FONT,                ev = init
+                VAR ps_bar_graph_def[3].eFont,                                                   init = E_LARGE_FONT,                ev = init
+                
+                --Holds the value of variable S16_panel_height
+                VAR S16_panel_height,                                                            init = 100,                         ev = init
+                
+                --Holds the value of variable E_orientation                
+                VAR E_orientation,                                                               init = E_PORTRAIT,                  ev = init
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --Holds the u16X0 value of member of structure PTU_ppoint_3
+                VAR PTU_ppoint_3.u16X0,                                                          init = 12,                         ev = -8182  
+                
+                --Holds the u16Y0 value of member of structure PTU_ppoint_3             
+                VAR PTU_ppoint_3.u16Y0,                                                          init = 12,                         ev = -199                
+        
+            COMMENT OUTPUT SECTION:
+                
+                --Holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          init = NULL,                        ev = &ps_bar_graph_def[0]
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[1].psbargraph))->ps_bar_graph_def,          init = NULL,                        ev = &ps_bar_graph_def[1]
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[2].psbargraph))->ps_bar_graph_def,          init = NULL,                        ev = &ps_bar_graph_def[2]
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[3].psbargraph))->ps_bar_graph_def,          init = NULL,                        ev = &ps_bar_graph_def[3]
+                                                                                              
+            -- Stub Calls :
+            SIMUL
+               
+                --Called to check wheather DMA2D is busy.
+                STUB Dma2dIsBusy()0
+                STUB Dma2dIsBusy()0
+                STUB Dma2dIsBusy()0
+                STUB Dma2dIsBusy()0
+               
+                --Called to obtain the foreground buffer address.
+                STUB WidgetsDotAddr()20
+               
+                --Called to draw a 4bbp font character.              
+                STUB Dma2dDrawChar((T_UINT32)2, (T_UINT32)ps_bar_graph_def[0].u16Width, (T_UINT16)ps_bar_graph_def[0].ePenColor)
+               
+                --Called to Fill the rectangle with specified color 
+                STUB PolygonFillRectNT(-8181, -199, 8191, 579, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+
+                --Called to Calculate the power value.               
+                STUB CalculatePower (10, 0)1
+                STUB CalculatePower (10, 0)1
+                STUB CalculatePower (10, 0)1
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            --Called to clear the previously installed bargraphs
+            #BargraphClear();
+            
+            --Called to Allocate the bargraphs:
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+            #BargraphAllocat(&ps_bar_graph_def[1]);
+            #BargraphAllocat(&ps_bar_graph_def[2]);
+            #BargraphAllocat(&ps_bar_graph_def[3]);
+            
+            -- Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 3   
+    
+    TEST 4 
+    FAMILY nominal  
+    
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-004]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and background vertical horizantal is equal to BG_VERTICAL and 
+        COMMENT length is greater than zero.
+        COMMENT 1. Set u16Y0 of upper left corner to u16Y0 of origin bar 
+        COMMENT 2. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, 
+        COMMENT    u16Y0 of upper left corner, u16Width of ps bar graph def, minus length divide by 
+        COMMENT    FOUR and ePenColor of ps bar graph def. 
+        COMMENT 3. Set u16Y0 of upper left corner to u16Y0 of origin bar plus length divided by 
+        COMMENT    FOUR when anti alias is not equal to ZERO.
+        COMMENT 4. Set corner address to return value of WidgetsDotAddr with parameter address 
+        COMMENT    of upper left corner.
+        COMMENT 5. Call function Dma2dDrawChar with parameter line for anti alias, corner address 
+        COMMENT    u16Width of ps bar graph def, one, ePenColor of ps bar graph def when anti 
+        COMMENT    alias is not equal to ZERO.     
+        COMMENT Equivalence Class 27, 29, 45, 46, 47, 24
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam               
+                VAR PTU_psparam.r,                                             init = 12,                 ev = init
+                
+                -- Holds the vale of ePencolor of structure ps_bar_graph_def  
+                VAR ps_bar_graph_def[0].ePenColor,                         init = (T_EPENCOLOR)0xf00,                         ev = init
+
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                          init = PARAM_OK,           ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                               init = &PTU_psparam,       ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                         init = 10,                 ev = init
+                 
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def                 
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                         init = 10,                 ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                              init = 2,                  ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                             init = (T_UINT16)10,       ev = init
+                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                                 init = E_LARGE_FONT,       ev = init
+
+                --Holds the value of E_orientation
+                VAR E_orientation,                                             init = E_PORTRAIT,         ev = init
+                
+                --Holds the eBGHV member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eBGHV,                                 init = BG_HORIZONTAL,      ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+            
+                --Holds the value of PTU_s16_height             
+                VAR PTU_s16_height,                                            init = 10,                 ev = init
+            
+                --Holds the value of u16Y0 member of structure PTU_ul_cor                       
+                VAR PTU_ul_cor.u16Y0,                                          init = 10,                 ev = init
+                
+                --Holds the value of u16X0 member of structure PTU_ul_cor                   
+                VAR PTU_ul_cor.u16X0,                                          init = 10,                 ev = init
+        
+            COMMENT OUTPUT SECTION:
+
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                              init = NULL,               ev = &ps_bar_graph_def[0]
+         
+            -- Stub Calls :
+            SIMUL
+               
+                --Called to check wheather DMA2D is busy
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()10
+                STUB Dma2dIsBusy()0
+               
+                --Called to Fill the rectangle with specified color               
+                STUB PolygonFillRectNT(9, 90, (T_INT16)ps_bar_graph_def[0].u16Width, 8190, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+               
+                --Called to calculate the power value               
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            --Called to clear the previously installed bargraphs
+            #BargraphClear();
+            
+            --Called to allocate the bargraphs
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+
+            --sLength of installed bargraph is set to the negative value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = -32760;
+             
+            -- Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+        
+    END TEST -- TEST 4    
+    
+    TEST 5
+    FAMILY nominal 
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-002]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does the following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and E_orientation is equal to E_PORTRAIT.
+        COMMENT 1. Set temporary variable to u16X0 of origin bar
+        COMMENT 2. Set u16X0 of origin bar to u16Y0 of origin bar 
+        COMMENT 3. Set u16Y0 of origin bar to S16_panel_height minus temporary variable.
+        COMMENT 5. Set background vertical horizontal to BG_VERTICAL and set length to minus 
+        COMMENT    length when background vertical horizontal is not equal to BG_VERTICAL
+        COMMENT Equivalence Class 22, 24
+        COMMENT
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-006]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and 
+        COMMENT loop number of bargraph installed and does following when stat of psParam 
+        COMMENT of ps bar graph def less than PARAM_BAD and background vertical horizantal 
+        COMMENT is not equal to BG_VERTICAL and length is greater than zero.
+        COMMENT 1. Set u16X0 of upper left corner to u16X0 of origin bar 
+        COMMENT 2. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, 
+        COMMENT    u16Y0 of upper left corner, minus length divide by FOUR, u16Width of 
+        COMMENT    ps bar graph def and ePenColor of ps bar graph def 
+        COMMENT 3. Set corner address to return value of WidgetsDotAddr with parameter address 
+        COMMENT    of upper left corner when anti alias is not equal to ZERO.
+        COMMENT 4. Set corner address to return value of WidgetsDotAddr with parameter address 
+        COMMENT    of upper left corner when anti alias is not equal to ZERO.
+        COMMENT 5. Call function Dma2dDrawChar with parameter line for anti alias, corner address, 
+        COMMENT    TWO, u16Width of ps bar graph def, ePenColor of ps bar graph def when anti alias 
+        COMMENT    is not equal to ZERO.
+        COMMENT Equivalence Class 45, 46, 47, 55
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                
+                --Holds the value of r member of structure PTU_psparam          
+                VAR PTU_psparam.r,                                             init = 12,                           ev = init
+
+                -- Holds ePencolor of structure ps_bar_graph_def                   
+                VAR ps_bar_graph_def[0].ePenColor,                             init = (T_EPENCOLOR)0xf00,           ev = init
+
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                          init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                               init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                         init = 10,                           ev = init
+                 
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def 
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                         init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                              init = 1,                            ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                             init = (T_UINT16)10,                 ev = init
+                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                                 init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of E_orientation
+                VAR E_orientation,                                             init = E_PORTRAIT,                   ev = init
+                
+                --Holds the eBGHV member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eBGHV,                                 init = BG_VERTICAL,                  ev = init                
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                              init = NULL,                         ev = &ps_bar_graph_def[0]
+        
+            -- Stub Calls :
+            SIMUL
+               
+                --Called to check wheather DMA2D is busy
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()10
+                STUB Dma2dIsBusy()0  
+               
+                --Called to Fill the rectangle with specified color
+                STUB PolygonFillRectNT(10, 90, 10, 1, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+
+                --Called to calculate the power value
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+           --Called to clear the previously installed bargraphs
+           #BargraphClear();
+           
+           --Called to allocate the bargraphs
+           #BargraphAllocat(&ps_bar_graph_def[0]);
+           
+           --sLength of installed bargraph is set to the positive value
+           #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = 40;
+           
+           -- Calling the Unit Under Test :
+           #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 5
+    
+    TEST 6 
+    FAMILY nominal  
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-004]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and background vertical horizantal is equal to BG_VERTICAL and 
+        COMMENT length is greater than zero.
+        COMMENT 1. Set u16Y0 of upper left corner to u16Y0 of origin bar 
+        COMMENT 2. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, 
+        COMMENT    u16Y0 of upper left corner, u16Width of ps bar graph def, minus length divide by 
+        COMMENT    FOUR and ePenColor of ps bar graph def. 
+        COMMENT 3. Set u16Y0 of upper left corner to u16Y0 of origin bar plus length divided by 
+        COMMENT    FOUR when anti alias is not equal to ZERO.
+        COMMENT 4. Set corner address to return value of WidgetsDotAddr with parameter address 
+        COMMENT    of upper left corner.
+        COMMENT 5. Call function Dma2dDrawChar with parameter line for anti alias, corner address 
+        COMMENT    u16Width of ps bar graph def, one, ePenColor of ps bar graph def when anti 
+        COMMENT    alias is not equal to ZERO.      
+        COMMENT Equivalence Class 27, 29, 45, 47
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH  *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                
+                --Holds the value of r member of structure PTU_psparam              
+                VAR PTU_psparam.r,                                          init = 12,                           ev = init
+
+                -- Holds ePencolor of structure ps_bar_graph_def                 
+                VAR ps_bar_graph_def[0].ePenColor,                          init = (T_EPENCOLOR)0xf00,           ev = init
+
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                       init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                            init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                      init = 10,                           ev = init
+                
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def                
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                      init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                           init = 1,                            ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                          init = (T_UINT16)10,                 ev = init
+                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                              init = E_LARGE_FONT,                 ev = init
+
+                -- 'E_orientation' is initialized with 'E_PORTRAIT'                
+                VAR E_orientation,                                          init = E_PORTRAIT,                   ev = init
+                
+                -- Structure member 'eBGHV' initialized
+                VAR ps_bar_graph_def[0].eBGHV,                              init = BG_HORIZONTAL,                ev = init                
+                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                           init = NULL,                         ev = &ps_bar_graph_def[0]
+        
+            -- Stub Calls :
+            SIMUL
+        
+               
+                --Called to check wheather DMA2D is busy               
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()10
+                STUB Dma2dIsBusy()0
+               
+                --Called to Fill the rectangle with specified color
+                STUB PolygonFillRectNT(10, 90, 1, 10, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+               
+                --Called to calculate the power value
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            --Called to clear the previously installed bargraphs
+            #BargraphClear();
+            
+            --Called to allocate bargraphs            
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+
+            --sLength of installed bargraph is set to the negative value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = -40;
+            
+            --Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 6   
+    
+    TEST 9 
+    FAMILY nominal 
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-003]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of bargraph 
+        COMMENT installed and does following when stat of psParam of ps bar graph def less than PARAM_BAD and 
+        COMMENT background vertical horizantal is equal to BG_VERTICAL.
+        COMMENT 1. Set anti alias value to absolute value of length MOD FOUR 
+        COMMENT    multiply by PIXEL_INC_A4_VER.
+        COMMENT 2. Shall initialize temporary variable to zero and loop till temporary variable is 
+        COMMENT    less than u16Width of ps bar graph def divided by TWO and increment temporary 
+        COMMENT    variable and set line for anti alias with index temporary variable to anti 
+        COMMENT    alias.(for loop exercised for 1 time)
+        COMMENT 3. Set u16X0 of upper left corner to u16X0 of origin bar minus u16Width of 
+        COMMENT    ps bar graph def divided by TWO.
+        COMMENT 4. Set u16Y0 of upper left corner to u16Y0 of origin bar plus length 
+        COMMENT    divided by FOUR. when length is ZERO.
+        COMMENT 5. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, 
+        COMMENT    u16Y0 of upper left corner, u16Width of ps bar graph def, minus length 
+        COMMENT    divide by FOUR and ePenColor of ps bar graph def when length is less than ZERO.
+        COMMENT 6. Decrement u16Y0 of upper left corner by one when lenght is less than ZERO and 
+        COMMENT    anti alias is not equal to ZERO.
+        COMMENT 7. Set corner address to return value of function WidgetsDotAddr with parameter 
+        COMMENT    address of upper left corner when lenght is less than ZERO and anti alias is not 
+        COMMENT    equal to ZERO.
+        COMMENT 8. Call function Dma2dDrawChar with parameter line for anti alias, corner address 
+        COMMENT    u16Width of ps bar graph def, one, ePenColor of ps bar graph def when lenght is 
+        COMMENT    less than ZERO and anti alias is not equal to ZERO.member value of structure bar graph to address of a 
+        COMMENT    bar graph with index number of bargraph installed.      
+        COMMENT Equivalence Class 23, 30, 45, 46, 47, 48
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam           
+                VAR PTU_psparam.r,                                              init = 12,                           ev = init
+
+                -- Holds ePencolor of structure ps_bar_graph_def                 
+                VAR ps_bar_graph_def[0].ePenColor,                              init = (T_EPENCOLOR)0xf00,           ev = init
+
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                           init = PARAM_OK,                      ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                                init = &PTU_psparam,                  ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                          init = 10,                            ev = init
+                
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def                
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                          init = 10,                            ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                               init = 100,                           ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                              init = (T_UINT16)10,                  ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                                  init = E_LARGE_FONT,                  ev = init
+                
+                --Holds the value of E_orientation
+                VAR E_orientation,                                              init = E_LAND_SCAPE,                  ev = init
+
+                --Holds the eBGHV member value of structure member ps_bar_graph_def                
+                VAR ps_bar_graph_def[0].eBGHV,                                  init = BG_HORIZONTAL,                 ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+
+                --Holds the value of u16X0 of PTU_ppoint_3        
+                VAR PTU_ppoint_3.u16X0,                                         init = 12,                            ev = 201
+
+                --Holds the value of u16X0 of PTU_ppoint_3              
+                VAR PTU_ppoint_3.u16Y0,                                         init = 12,                            ev = -40               
+        
+            COMMENT OUTPUT SECTION:
+                
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                               init = NULL,                         ev = &ps_bar_graph_def[0]
+
+            -- Stub Calls :
+            SIMUL
+               
+                --Called to check wheather DMA2D is busy.
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()10
+                STUB Dma2dIsBusy()0
+               
+                --Called to obtain foreground buffer address.
+                STUB WidgetsDotAddr()20
+               
+                --Called to draw a 4bbp font character.
+                STUB Dma2dDrawChar(2, 100, ps_bar_graph_def[0].ePenColor)
+               
+                --Called to Fill the rectangle with specified color
+                STUB PolygonFillRectNT(10, -40, 191, 100, ps_bar_graph_def[0].ePenColor)
+                
+                --Called to calculate the power value
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            --Called to clear the installed the bargraphs
+            #BargraphClear();
+
+            --Called to allocate the bargraphs            
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+
+            --sLength of installed bargraph is set to the positive value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = 765;
+             
+            --Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+            
+    END TEST -- TEST 9
+    
+    TEST 10 
+    FAMILY nominal 
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-002]
+        COMMENT The Function BargraphDraw shall initialize ps bar graph to As bar graph 
+        COMMENT and loop number of bargraph installed and does nothing when stat of 
+        COMMENT psParam of ps bar graph def less than PARAM_BAD and E_orientation is 
+        COMMENT not equal to E_PORTRAIT.    
+        COMMENT Equivalence Class 25, 45 
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam               
+                VAR PTU_psparam.r,                                            init = 12,                           ev = init
+              
+                -- Holds the value of ePencolor of structure ps_bar_graph_def    
+                VAR ps_bar_graph_def[0].ePenColor,                            init = (T_EPENCOLOR)0xf00,           ev = init
+  
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                         init = PARAM_OK,                     ev = init
+               
+                --Holds the value of psParam member of structure ps_bar_graph_def              
+                VAR ps_bar_graph_def[0].psParam,                              init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sDigOffset of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                        init = 10,                           ev = init
+                                 
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                        init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                             init = 100,                          ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                            init = (T_UINT16)10,                 ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                                init = E_LARGE_FONT,                 ev = init
+                
+                --'E_orientation' is initialized with 'E_PORTRAIT'
+                VAR E_orientation,                                            init = E_LAND_SCAPE,                 ev = init
+                
+                --Structure member 'eBGHV' initialized
+                VAR ps_bar_graph_def[0].eBGHV,                                init = BG_HORIZONTAL,                ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                             init = NULL,                         ev = &ps_bar_graph_def[0]
+
+            -- Stub Calls :
+            SIMUL
+               
+                --called to check wheather DMA2D is busy
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()10
+                STUB Dma2dIsBusy()0
+               
+                --Called to calculate the power value               
+                STUB CalculatePower (10, 0)1
+                                     
+            END SIMUL
+
+            --Called to clear the installed the bargraphs
+            #BargraphClear(); 
+            
+            --Called to allocate the bargraphs
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+
+            --sLength of installed bargraph is set to 0
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = 0;
+             
+            -- Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 10
+
+    TEST 11 
+    FAMILY nominal   
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-004]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and background vertical horizantal is equal to BG_VERTICAL and 
+        COMMENT length is greater than zero.
+        COMMENT 1. Set u16Y0 of upper left corner to u16Y0 of origin bar 
+        COMMENT 2. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, 
+        COMMENT    u16Y0 of upper left corner, u16Width of ps bar graph def, minus length divide by 
+        COMMENT    FOUR and ePenColor of ps bar graph def. 
+        COMMENT 3. Set u16Y0 of upper left corner to u16Y0 of origin bar plus length divided by 
+        COMMENT    FOUR when anti alias is not equal to ZERO.
+        COMMENT 4. Set corner address to return value of WidgetsDotAddr with parameter address 
+        COMMENT    of upper left corner.
+        COMMENT 5. Call function Dma2dDrawChar with parameter line for anti alias, corner address 
+        COMMENT    u16Width of ps bar graph def, one, ePenColor of ps bar graph def when anti 
+        COMMENT    alias is not equal to ZERO.      
+        COMMENT Equivalence Class 27, 29, 45 
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam               
+                VAR PTU_psparam.r,                                         init = 12,                           ev = init
+                
+                --Holds ePencolor value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].ePenColor,                         init = (T_EPENCOLOR)0xf00,                         ev = init
+
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                      init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                           init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                     init = 10,                           ev = init
+                 
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def                 
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                     init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                          init = 1,                            ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                         init = (T_UINT16)10,                 ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                             init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of E_orientation
+                VAR E_orientation,                                         init = E_PORTRAIT,                   ev = init
+
+                --Holds the eBGHV member value of structure member ps_bar_graph_def                
+                VAR ps_bar_graph_def[0].eBGHV,                             init = BG_HORIZONTAL,                ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                          init = NULL,                         ev = &ps_bar_graph_def[0]
+    
+            -- Stub Calls :
+            SIMUL
+
+               --called to check wheather DMA2D is busy               
+               STUB Dma2dIsBusy()1
+               STUB Dma2dIsBusy()0
+
+               --Called to Fill the rectangle with specified color               
+               STUB PolygonFillRectNT((T_INT16)10, 90, 1, 8192, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+               
+               --Called to Calculate the power value
+               STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+            
+            --Called to clear the installed the bargraphs
+            #BargraphClear();
+
+            --Called to update the value of 'U16_bar_graphs_installed'.            
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+            
+            --sLength of installed bargraph is set to negative value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = -32768;
+             
+            -- Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 11
+
+    TEST 12
+    FAMILY nominal  
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-005]
+        COMMENT The function BargraphAllocat initialize ps bar graph to As bar graph and loop number 
+        COMMENT of bargraph installed and does following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and background vertical horizantal is not equal to BG_VERTICAL.
+        COMMENT 1. Set anti alias value to absolute value of length MOD FOUR multiply by PIXEL_INC_A4_HOR.
+        COMMENT 2. initialize temporary variable to zero and loop till temporary variable is less 
+        COMMENT    than u16Width of ps bar graph def and increment temporary variable and set line for 
+        COMMENT    anti alias with index temporary variable to anti alias.(for loop is exercised for 2 or more times)
+        COMMENT 3. Set u16Y0 of upper left corner to u16Y0 of origin bar minus u16Width of ps bar graph def 
+        COMMENT    divided by TWO.
+        COMMENT 4. Set u16X0 of upper left corner to u16X0 of origin bar plus length divided by FOUR. 
+        COMMENT    when length is less than ZERO
+        COMMENT 5. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, u16Y0 
+        COMMENT    of upper left corner, minus length divide by FOUR, u16Width of ps bar graph def 
+        COMMENT    and ePenColor of ps bar graph def when length is less than ZERO.
+        COMMENT 6. Decrement u16X0 of upper left corner by one when lenght is less than ZERO and anti 
+        COMMENT    alias is not equal to ZERO.
+        COMMENT 7. Set corner address to return value of function WidgetsDotAddr with parameter address of 
+        COMMENT    upper left corner when lenght is less than ZERO and anti alias is not equal to ZERO.
+        COMMENT 8. Call function Dma2dDrawChar with parameter line for anti alias, corner address, 
+        COMMENT    TWO, u16Width of ps bar graph def, ePenColor of ps bar graph def when lenght is less 
+        COMMENT    than ZERO and anti alias is not equal to ZERO.
+        COMMENT Equivalence Class 27, 28, 45, 47
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                
+                --Holds the value of r member of structure PTU_psparam          
+                VAR PTU_psparam.r,                                        init = 12,                           ev = init
+                
+                -- Holds ePencolor value of structure ps_bar_graph_def     
+                VAR ps_bar_graph_def[0].ePenColor,                         init = (T_EPENCOLOR)0xf00,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                     init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                          init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                    init = 10,                           ev = init
+                 
+                 --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def                
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                    init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                         init = 100,                          ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                        init = (T_UINT16)10,                 ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                            init = E_LARGE_FONT,                 ev = init
+                
+                --'E_orientation' is initialized with 'E_PORTRAIT'
+                VAR E_orientation,                                        init = E_PORTRAIT,                   ev = init
+
+                --Structure member 'eBGHV' initialized                
+                VAR ps_bar_graph_def[0].eBGHV,                            init = BG_VERTICAL,                  ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                         init = NULL,                         ev = &ps_bar_graph_def[0]
+     
+            -- Stub Calls :
+            SIMUL
+               
+                --Called to check wheather DMA2D is busy               
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()10
+                STUB Dma2dIsBusy()0
+               
+                --Called to Fill the rectangle with specified color               
+                STUB PolygonFillRectNT(-8182, 40, 8192, 100, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+
+                --Called to Calculate the power value               
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            --Called to clear the installed the bargraphs
+            #BargraphClear();
+            
+            --Called to installed the bargraphs
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+            
+            --sLength of installed bargraph is set to negative value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = -32768;
+             
+            -- Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 12
+
+    TEST 13
+    FAMILY nominal  
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-005]
+        COMMENT The function BargraphAllocat initialize ps bar graph to As bar graph and loop number 
+        COMMENT of bargraph installed and does following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and background vertical horizantal is not equal to BG_VERTICAL.
+        COMMENT 1. Set anti alias value to absolute value of length MOD FOUR multiply by PIXEL_INC_A4_HOR.
+        COMMENT 2. initialize temporary variable to zero and loop till temporary variable is less 
+        COMMENT    than u16Width of ps bar graph def and increment temporary variable and set line for 
+        COMMENT    anti alias with index temporary variable to anti alias.(for loop is exercised for 0 times)
+        COMMENT 3. Set u16Y0 of upper left corner to u16Y0 of origin bar minus u16Width of ps bar graph def 
+        COMMENT    divided by TWO.
+        COMMENT 4. Set u16X0 of upper left corner to u16X0 of origin bar plus length divided by FOUR. 
+        COMMENT    when length is less than ZERO
+        COMMENT 5. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, u16Y0 
+        COMMENT    of upper left corner, minus length divide by FOUR, u16Width of ps bar graph def 
+        COMMENT    and ePenColor of ps bar graph def when length is less than ZERO.
+        COMMENT 6. Decrement u16X0 of upper left corner by one when lenght is less than ZERO and anti 
+        COMMENT    alias is not equal to ZERO.
+        COMMENT 7. Set corner address to return value of function WidgetsDotAddr with parameter address of 
+        COMMENT    upper left corner when lenght is less than ZERO and anti alias is not equal to ZERO.
+        COMMENT 8. Call function Dma2dDrawChar with parameter line for anti alias, corner address, 
+        COMMENT    TWO, u16Width of ps bar graph def, ePenColor of ps bar graph def when lenght is less 
+        COMMENT    than ZERO and anti alias is not equal to ZERO.
+        COMMENT Equivalence Class 45, 46, 47  
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                
+                --Holds the value of r member of structure PTU_psparam              
+                VAR PTU_psparam.r,                                        init = 12,                           ev = init
+        
+                -- Hold the value of ePencolor of structure ps_bar_graph_def             
+                VAR ps_bar_graph_def[0].ePenColor,                        init = (T_EPENCOLOR)0xf00,           ev = init 
+                 
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                     init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                          init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                    init = 10,                           ev = init
+                
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def                
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                    init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                         init = 0,                            ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                        init = (T_UINT16)10,                 ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                            init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of E_orientation
+                VAR E_orientation,                                        init = E_PORTRAIT,                   ev = init
+ 
+                --Holds the eBGHV member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eBGHV,                            init = BG_VERTICAL,                  ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                         init = NULL,                         ev = &ps_bar_graph_def[0]
+    
+            -- Stub Calls :
+            SIMUL
+
+                --Called to check wheather DMA2D is busy.               
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()10
+                STUB Dma2dIsBusy()0
+               
+                --Called to Fill the rectangle with specified color               
+                STUB PolygonFillRectNT(-8182, 90, 8192, 0, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+               
+                --Called to calculate the power value               
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+        
+            --Called to clear the previously installed bargraphs
+            #BargraphClear();
+            
+            --Called to install bargraphs            
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+            
+            --sLength of installed bargraph is set to negative value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = -32768;
+             
+            -- Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 13
+
+    TEST 14 
+    FAMILY nominal   
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-004]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and background vertical horizantal is equal to BG_VERTICAL and 
+        COMMENT length is greater than zero.
+        COMMENT 1. Set u16Y0 of upper left corner to u16Y0 of origin bar 
+        COMMENT 2. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, 
+        COMMENT    u16Y0 of upper left corner, u16Width of ps bar graph def, minus length divide by 
+        COMMENT    FOUR and ePenColor of ps bar graph def. 
+        COMMENT 3. Anti alias value is 0. 
+        COMMENT Equivalence class 23, 30, 45
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam               
+                VAR PTU_psparam.r,                                         init = 12,                           ev = init
+               
+                --Holds the value epenColor of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].ePenColor,                         init = (T_EPENCOLOR)0xf00,                         ev = init
+ 
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                      init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                           init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                     init = 10,                           ev = init
+                 
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def              
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                     init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                          init = 1,                            ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                         init = (T_UINT16)10,                 ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                             init = E_LARGE_FONT,                 ev = init
+                
+                --'E_orientation' is initialized with 'E_PORTRAIT'
+                VAR E_orientation,                                         init = E_PORTRAIT,                   ev = init
+                
+                --Structure member 'E_PORTRAIT' initialized
+                VAR ps_bar_graph_def[0].eBGHV,                             init = BG_HORIZONTAL,                ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --None              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                          init = NULL,                         ev = &ps_bar_graph_def[0]
+    
+            -- Stub Calls :
+            SIMUL
+               
+                --Called to check wheather DMA2D is busy.
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()0
+               
+                --Called to Fill the rectangle with specified color               
+                STUB PolygonFillRectNT((T_INT16)10, -10, 1, 100, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+               
+                --Called to Calculate the power value               
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+            
+            --Called to clear the previously installed bargraphs
+            #BargraphClear();
+            
+            --Called to allocate the bargarphs            
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+
+            --sLength of installed bargraph is set to positive value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = 400;
+             
+            --Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 14
+
+    TEST 15 
+    FAMILY nominal   
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-003]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of bargraph 
+        COMMENT installed and does following when stat of psParam of ps bar graph def less than PARAM_BAD and 
+        COMMENT background vertical horizantal is equal to BG_VERTICAL.
+        COMMENT 1. Set anti alias value to absolute value of length MOD FOUR 
+        COMMENT    multiply by PIXEL_INC_A4_VER.
+        COMMENT 2. Shall initialize temporary variable to zero and loop till temporary variable is 
+        COMMENT    less than u16Width of ps bar graph def divided by TWO and increment temporary 
+        COMMENT    variable and set line for anti alias with index temporary variable to anti 
+        COMMENT    alias.(for loop exercised for 1 time)
+        COMMENT 3. Set u16X0 of upper left corner to u16X0 of origin bar minus u16Width of 
+        COMMENT    ps bar graph def divided by TWO.
+        COMMENT 4. Set u16Y0 of upper left corner to u16Y0 of origin bar plus length 
+        COMMENT    divided by FOUR. when length is ZERO.
+        COMMENT 5. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, 
+        COMMENT    u16Y0 of upper left corner, u16Width of ps bar graph def, minus length 
+        COMMENT    divide by FOUR and ePenColor of ps bar graph def when length is less than ZERO.
+        COMMENT 6. Anti alias value is 0.      
+        COMMENT Equivalence Class 23, 27, 28, 45, 48
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                
+                --Holds the value of r member of structure PTU_psparam              
+                VAR PTU_psparam.r,                                         init = 12,                           ev = init
+             
+                --Structure member 'ePenColor' is initialized
+                VAR ps_bar_graph_def[0].ePenColor,                         init = (T_EPENCOLOR)0xf00,                         ev = init
+   
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                      init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                           init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                     init = 10,                           ev = init
+                 
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def              
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                     init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                          init = 1,                            ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                         init = (T_UINT16)10,                 ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                             init = E_LARGE_FONT,                 ev = init
+                
+                -- 'E_orientation' is initialized with 'E_PORTRAIT'
+                VAR E_orientation,                                         init = E_PORTRAIT,                   ev = init
+
+                -- Structure member 'eBGHV' is initialized with 'BG_HORIZONTAL'                
+                VAR ps_bar_graph_def[0].eBGHV,                             init = BG_HORIZONTAL,                ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+
+                --Holds the value of 'u16X0' of PTU_ppoint_3        
+                VAR PTU_ppoint_3.u16X0,                                    init = 12,                           ev = 10
+                
+                --Holds the value of 'u16X0' of PTU_ppoint_3
+                VAR PTU_ppoint_3.u16Y0,                                    init = 12,                           ev = 190              
+        
+            COMMENT OUTPUT SECTION:
+                
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                          init = NULL,                         ev = &ps_bar_graph_def[0]
+    
+            -- Stub Calls :
+            SIMUL
+               
+                --Called to check wheather DMA2D is busy        
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()0
+               
+                --Called to Fill the rectangle with specified color               
+                STUB PolygonFillRectNT((T_INT16)10, 90, 1, 100, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+               
+                --Called to obtain the foreground buffer address               
+                STUB WidgetsDotAddr()20
+               
+                --called to draw a 4bbp font character               
+                STUB Dma2dDrawChar(1, 1, (T_UINT16)ps_bar_graph_def[0].ePenColor)
+               
+                --Called to Calculate the power value               
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+            
+            --Called to clear the previously installed bargraphs
+            #BargraphClear();
+
+            --Called to install the bargraphs            
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+             
+            --sLength of installed bargraph is set to negative value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = -401;
+             
+            --Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 15
+
+    TEST 16 
+    FAMILY nominal   
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-004]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and background vertical horizantal is equal to BG_VERTICAL and 
+        COMMENT length is greater than zero.
+        COMMENT 1. Set u16Y0 of upper left corner to u16Y0 of origin bar 
+        COMMENT 2. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, 
+        COMMENT    u16Y0 of upper left corner, u16Width of ps bar graph def, minus length divide by 
+        COMMENT    FOUR and ePenColor of ps bar graph def. 
+        COMMENT 3. Set u16Y0 of upper left corner to u16Y0 of origin bar plus length divided by 
+        COMMENT    FOUR when anti alias is not equal to ZERO.
+        COMMENT 4. Set corner address to return value of WidgetsDotAddr with parameter address 
+        COMMENT    of upper left corner.
+        COMMENT 5. Call function Dma2dDrawChar with parameter line for anti alias, corner address 
+        COMMENT    u16Width of ps bar graph def, one, ePenColor of ps bar graph def when anti 
+        COMMENT    alias is not equal to ZERO.      
+        COMMENT Equivalence Class 23, 30, 46, 47, 48, 57  
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam           
+                VAR PTU_psparam.r,                                         init = 12,                           ev = init
+
+                --Holds the value of ePenColor of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].ePenColor,                         init = (T_EPENCOLOR)0xf00,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                      init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                           init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                     init = 10,                           ev = init
+ 
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def 
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                     init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                          init = 1,                            ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                         init = (T_UINT16)10,                 ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                             init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of E_orientation              
+                VAR E_orientation,                                         init = E_PORTRAIT,                   ev = init
+                
+                --Holds the eBGHV member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eBGHV,                             init = BG_HORIZONTAL,                ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+        
+                --Holds the u16X0 member value of structure member PTU_ppoint_3         
+                VAR PTU_ppoint_3.u16X0,                                   init = 12,                           ev = 10  
+
+                --Holds the u16Y0 member value of structure member PTU_ppoint_3             
+                VAR PTU_ppoint_3.u16Y0,                                   init = 12,                           ev = -11              
+        
+            COMMENT OUTPUT SECTION:
+
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                          init = NULL,                         ev = &ps_bar_graph_def[0]
+    
+            -- Stub Calls :
+            SIMUL
+               
+                --called to check wheather DMA2D is busy
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()0
+               
+                --Called to Fill the rectangle with specified color
+                STUB PolygonFillRectNT((T_INT16)10, -10, 1, 100, (T_EPENCOLOR)ps_bar_graph_def[0].ePenColor)
+               
+                --Called to obtain the foreground buffer address
+                STUB WidgetsDotAddr()20
+               
+                --called to draw a 4bbp font character
+                STUB Dma2dDrawChar(1, 1, (T_UINT16)ps_bar_graph_def[0].ePenColor)
+               
+                --Called to Calculate the power value
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+            
+            --Called to clear the previously installed bargraphs
+            #BargraphClear();
+            
+            --Called to install the bargraphs
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+            
+            --sLength of installed bargraph is set to negative value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = 401;
+            
+            --Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 16
+
+    TEST 17
+    FAMILY nominal   
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfbargraphs-BargraphDraw-DB-LLR-004]
+        COMMENT The function BargraphDraw initialize ps bar graph to As bar graph and loop number of 
+        COMMENT bargraph installed and does following when stat of psParam of ps bar graph def less 
+        COMMENT than PARAM_BAD and background vertical horizantal is equal to BG_VERTICAL and 
+        COMMENT length is greater than zero.
+        COMMENT 1. Set u16Y0 of upper left corner to u16Y0 of origin bar 
+        COMMENT 2. Call function PolygonFillRectNT with parameter u16X0 of upper left corner, 
+        COMMENT    u16Y0 of upper left corner, u16Width of ps bar graph def, minus length divide by 
+        COMMENT    FOUR and ePenColor of ps bar graph def. 
+        COMMENT 3. Set u16Y0 of upper left corner to u16Y0 of origin bar plus length divided by 
+        COMMENT    FOUR when anti alias is not equal to ZERO.
+        COMMENT 4. Set corner address to return value of WidgetsDotAddr with parameter address 
+        COMMENT    of upper left corner.
+        COMMENT 5. Call function Dma2dDrawChar with parameter line for anti alias, corner address 
+        COMMENT    u16Width of ps bar graph def, one, ePenColor of ps bar graph def when anti 
+        COMMENT    alias is not equal to ZERO.      
+        COMMENT Equivalence Class 23, 30, 46, 47, 48, 57  
+        COMMENT </TD>
+
+        --psbargraph of ps_bar_graph_def pointer variable is initialized with the temporary variable address
+        #ps_bar_graph_def[0].psbargraph  = (T_PSBARGRAPH      *)&PTU_psDisRegion;
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION:
+                 
+                --Holds the value of r member of structure PTU_psparam           
+                VAR PTU_psparam.r,                                         init = 12,                           ev = init
+
+                --Holds the value of ePenColor of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].ePenColor,                         init = (T_EPENCOLOR)0xf00,                         ev = init
+                
+                --Holds the value of stat member of structure PTU_psparam
+                VAR PTU_psparam.stat,                                      init = PARAM_OK,                     ev = init
+                
+                --Holds the value of psParam member of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].psParam,                           init = &PTU_psparam,                 ev = init
+                
+                --Holds the u16X0 value of sOrigin of member value of structure ps_bar_graph_def
+                VAR ps_bar_graph_def[0].sOrigin.u16X0,                     init = 10,                           ev = init
+ 
+                --Holds the u16Y0 value of sOrigin of member value of structure ps_bar_graph_def 
+                VAR ps_bar_graph_def[0].sOrigin.u16Y0,                     init = 10,                           ev = init
+                
+                --Holds the u16Width member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Width,                          init = 4,                            ev = init
+                                
+                --Holds the u16Format member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].u16Format,                         init = (T_UINT16)10,                 ev = init
+                                
+                --Holds the eFont member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eFont,                             init = E_LARGE_FONT,                 ev = init
+                
+                --Holds the value of E_orientation              
+                VAR E_orientation,                                         init = E_PORTRAIT,                   ev = init
+                
+                --Holds the eBGHV member value of structure member ps_bar_graph_def
+                VAR ps_bar_graph_def[0].eBGHV,                             init = BG_HORIZONTAL,                ev = init
+                                                        
+            COMMENT INPUT/OUTPUT SECTION:
+                     
+        
+            COMMENT OUTPUT SECTION:
+
+                --holds the value of ps_bar_graph_def of psbargraph of ps_bar_graph_def
+                VAR ((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->ps_bar_graph_def,          
+                &                                                          init = NULL,                         ev = &ps_bar_graph_def[0]
+    
+            -- Stub Calls :
+            SIMUL
+               
+                --called to check wheather DMA2D is busy
+                STUB Dma2dIsBusy()1
+                STUB Dma2dIsBusy()0
+               
+                --Called to Calculate the power value
+                STUB CalculatePower (10, 0)1
+                      
+            END SIMUL
+            
+            --Called to clear the previously installed bargraphs
+            #BargraphClear();
+            
+            --Called to install the bargraphs
+            #BargraphAllocat(&ps_bar_graph_def[0]);
+            
+            --sLength of installed bargraph is set to negative value
+            #((T_PSBARGRAPH)(ps_bar_graph_def[0].psbargraph))->sLength = 0;
+            
+            --Calling the Unit Under Test :
+            #BargraphDraw();
+            
+        END ELEMENT
+    
+    END TEST -- TEST 17	
+	
+END SERVICE -- BargraphDraw
+
+
+

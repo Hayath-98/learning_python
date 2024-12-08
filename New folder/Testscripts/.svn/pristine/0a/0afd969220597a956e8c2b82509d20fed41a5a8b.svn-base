@@ -1,0 +1,545 @@
+HEADER hdudispfstmadc,Source Code Ver : 1.4,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name          : Meena P
+--
+-- File Name            : hdudispfstmadc_5.ptu
+--
+-- Test Creation Date   : 14.10.2017
+--
+-- Tested Functions     : StmadcInit
+--                        ErrorHandler
+-- 
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------       ---------       -----------        -------------
+--     1.1             14.10.2017      Meena P          Created the ptu file 
+--     1.2             10.11.2017      Meena P          Updated as per #PR100171  
+--     1.3             14.11.2017      Meena P          Updated as per #PR100171 
+-------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/ 
+
+##include "hdudispfstmadc.h" 
+##include "hdulibstm32f7xxhaladc.h"
+##include "hdulibstm32f7xxhalrccex.h" 
+##include "hdulibstm32f7xxhalgpio.h" 
+##include "hdulibstm32f7xxhal.h" 
+##include "hdulibbasictypes.h" 
+##include "hdulibstm32hallegacy.h"
+##include "hdulibstm32f7xx.h"
+
+
+##define ADCX                            ADC3
+##define ADCX_CHANNEL_GPIO_PORT          GPIOC
+##define ADCX_CHANNEL_PIN                (GPIO_PIN_0|GPIO_PIN_1)
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+ 
+-- Declarations of the temporary variables  
+
+    -- Variable created to verify stub 'HalGpioInit' parameter 'GPIOx'
+    #T_GPIO PTU_GPIOx_out; 
+    
+    -- Variable created to provide input to stub 'HalGpioInit' parameter 'GPIOx' 
+    #T_GPIO PTU_GPIOx_in;  
+    
+    -- Variable created to provide input to stub 'HalGpioInit' parameter 'GPIO_Init'
+    #T_GPIO_INIT PTU_GPIO_Init;
+    
+    --Variable created to verify stub 'HalAdcInit' parameter 'h_adc'
+    #T_ADC_HANDLE PTU_h_adc;
+    
+    -- variable created to provide input to stub 'HalAdcConfigChannel' parameter 'h_adc'
+    #T_ADC_HANDLE PTU_HalAdcConfigChannel_in;
+    
+    -- variable created to verify the stub 'HalAdcConfigChannel' parameter 'h_adc'
+    #T_ADC_HANDLE PTU_HalAdcConfigChannel_out;
+    
+    -- variable created to verify the stub 'HalAdcStart' parameter 'h_adc'
+    #T_ADC_HANDLE PTU_HalAdcStart_out;
+    
+    -- variable created to provide input to stub 'HalAdcConfigChannel' parameter 'h_adc'
+    #T_ADC_HANDLE PTU_HalAdcConfigChannel_in_1;
+    
+    -- variable created to verify the stub 'HalAdcConfigChannel' parameter 'h_adc'
+    #T_ADC_HANDLE PTU_HalAdcConfigChannel_out_1;
+    
+    -- variable created to verify the stub 'HalAdcStart' parameter 'h_adc'
+    #T_ADC_HANDLE PTU_HalAdcStart_out_1;
+    
+    -- variable created to verify the stub 'HalAdcConfigChannel' parameter 'sConfig'
+    #T_ADC_CHANNEL_CONF PTU_sConfig;
+    
+    -- variable created to verify the stub 'HalAdcConfigChannel' parameter 'sConfig'
+    #T_ADC_CHANNEL_CONF PTU_sConfig_1;
+    
+    -- variables are created to verify the number times the stub is called
+    # T_UINT16 PTU_count_2, PTU_count_1;
+    
+    -- Local variable is created to provide the maximum value of uint32
+    # T_UINT32 PTU_uint32_max= (unsigned  long int)0xFFFFFFFF;
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Meena P
+    COMMENT
+    COMMENT File name        : hdudispfstmadc_5.ptu
+    COMMENT
+    COMMENT Tested functions :  StmadcInit
+    COMMENT                     ErrorHandler
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1. Scripts are splitted into 1 to 5 due to static dependency.
+    COMMENT 2. In header file "hdulibstm32f746xx.h" the below mentioned macros are modified due to hardware stubbing.
+    COMMENT    Code Snippet:
+    COMMENT    T_GPIO PTU_GPIOC;
+    COMMENT    //#define GPIOC               ((T_GPIO *) GPIOC_BASE)
+    COMMENT    #define GPIOC               ((T_GPIO *) &PTU_GPIOC)
+    COMMENT 
+    COMMENT    T_UINT32 PTU_ADC3_BASE;
+    COMMENT    //#define ADC3                ((T_ADC *) ADC3_BASE)
+    COMMENT    #define ADC3                ((T_ADC *) &PTU_ADC3_BASE)
+    COMMENT
+    COMMENT    T_RCC PTU_RCC_BASE;
+    COMMENT    //#define RCC                 ((T_RCC *) RCC_BASE)
+    COMMENT    #define RCC                 ((T_RCC *) &PTU_RCC_BASE) 
+    COMMENT 
+    COMMENT 3. Source code is modified in function "ErrorHandler" due to infinite loop
+    COMMENT 
+    COMMENT Code Snippet:
+    COMMENT while(TRUE)
+    COMMENT    {
+    COMMENT          /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT          PTU_count++;
+    COMMENT          if(PTU_count == 4)
+    COMMENT          {
+    COMMENT              break;
+    COMMENT          }
+    COMMENT          else
+    COMMENT          {
+    COMMENT                                       /*nothing*/
+    COMMENT          }
+    COMMENT    }/*End of while loop*/
+    COMMENT    
+    COMMENT 4.   In function "ErrorHandler" 0, 1st loops cannot be covered for the 'while' loop
+    COMMENT  Code Snippet:
+    COMMENT  while(TRUE)
+    COMMENT  { 
+    COMMENT   ........
+    COMMENT  } 
+    COMMENT
+    COMMENT 5. In function 'StmadcInit' macros 'ADCX_CLK_ENABLE, ADCX_CHANNEL_GPIO_CLK_ENABLE' are cannot be 
+    COMMENT    covered for 2 or more loops.
+    COMMENT 
+    COMMENT 6. Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+    COMMENT    warning #191-D: type qualifier is meaningless on cast type
+    COMMENT
+    COMMENT</AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'StmadcDriver', the function 'HalAdcPollForConversion' is called
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function 'StmadcDriver', the function 'HalAdcGetValue' is called
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'StmadcDriver', channel number is equal to NUM_CHAN
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'StmadcDriver', channel number is not equal to NUM_CHAN
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'StmadcDriver', channel number is equal to zero
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'StmadcDriver', channel number is equal to one
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'StmadcDriver', channel number is other than zero and one
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'StmadcDriver', the function 'HalAdcConfigChannel' is called
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'StmadcDriver', the function 'HalAdcStart' is called
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'StmadcInit', the function 'HalAdcInit' is called
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'StmadcInit', the function 'ErrorHandler' is called
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'StmadcInit', return value from the function HalAdcInit is not equal to HAL_OK 
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'StmadcInit', return value from the function HalAdcInit is equal to HAL_OK 
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'StmadcInit', the function 'HalGpioInit ' is called
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'StmadcInit', the function 'HalAdcConfigChannel' is called
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'StmadcInit', return value from the function HalAdcConfigChannel is not equal to HAL_OK
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'StmadcInit', return value from the function HalAdcConfigChannel is equal to HAL_OK
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'StmadcInit', the function 'HalAdcStart' is called
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'StmadcInit', return value from the function HalAdcStart is not equal to HAL_OK 
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'StmadcInit', return value from the function HalAdcStart is equal to HAL_OK 
+    COMMENT 
+    COMMENT Invalid Class(es)
+    COMMENT   
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hdudispfstmadc_c
+    -- Stub parametrs are made as _no. Since it is not verified in this script.
+    #T_UINT32 HalAdcGetValue(T_ADC_HANDLE _no h_adc); 
+    
+    -- Stub parametrs are made as _no. Since it is not verified in this script.
+    #T_HAL_STATUS HalAdcPollForConversion(T_ADC_HANDLE _no h_adc, T_UINT32 _in timeout); 
+    
+    --To verify the parameter h_adc made as _no
+    #T_HAL_STATUS HalAdcStart(T_ADC_HANDLE _no h_adc)
+    #{
+    # PTU_count_1 = PTU_count_1+1;
+    # if(PTU_count_1==1)                                   // First call of HalAdcStart
+    # {
+    #  PTU_HalAdcStart_out = *h_adc;
+    # }
+    # if(PTU_count_1==2)                                   // Second call of HalAdcStart
+    # {
+    #  PTU_HalAdcStart_out_1 = *h_adc;
+    # }
+    #}
+    #T_HAL_STATUS HalAdcConfigChannel(T_ADC_HANDLE _no h_adc, T_ADC_CHANNEL_CONF _no sConfig)
+    #{
+    # PTU_count_2 = PTU_count_2+1;
+    # if(PTU_count_2==1)                                   // First call of HalAdcConfigChannel
+    # {
+    #   PTU_HalAdcConfigChannel_out = *h_adc;
+    #   *h_adc = PTU_HalAdcConfigChannel_in;
+    #   PTU_sConfig = *sConfig;
+    # }
+    # 
+    # if(PTU_count_2==2)                                   // Second call of HalAdcConfigChannel
+    # {
+    #   PTU_HalAdcConfigChannel_out_1 = *h_adc;
+    #   *h_adc = PTU_HalAdcConfigChannel_in_1;
+    #   PTU_sConfig_1 = *sConfig;
+    # }
+    # 
+    #}
+    #void HalGpioInit(T_GPIO _no GPIOx, T_GPIO_INIT _no GPIO_Init)
+    #{
+    # PTU_GPIOx_out = *GPIOx;
+    # *GPIOx = PTU_GPIOx_in;
+    # PTU_GPIO_Init = *GPIO_Init;
+    #}
+    #T_HAL_STATUS HalAdcInit(T_ADC_HANDLE _no h_adc)
+    #{
+    #  PTU_h_adc = *h_adc;
+    #}
+
+    END DEFINE
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+    
+END SIMUL    
+
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file 
+ENVIRONMENT ENV_hdudispfstmadc_c
+  ARRAY S16_adc_reading,        init = { others => 0 },     ev = init
+END ENVIRONMENT -- ENV_hdudispfstmadc_c
+USE ENV_hdudispfstmadc_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service StmadcInit
+--------------------------------------------------------------------------------
+SERVICE StmadcInit
+SERVICE_TYPE extern
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfstmadc-StmadcInit-DB-LLR-001]
+    COMMENT The function 'StmadcInit' calls the macro ADCX_CLK_ENABLE.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfstmadc-StmadcInit-DB-LLR-002]
+    COMMENT The function 'StmadcInit' calls the macro ADCX_CHANNEL_GPIO_CLK_ENABLE.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfstmadc-StmadcInit-DB-LLR-003]
+    COMMENT The function 'StmadcInit' sets the following.
+    COMMENT  - Sets Instance of Adc Handle to ADCX.
+    COMMENT  - Sets ClockPrescaler of Init of Adc Handle to ADC_CLOCKPRESCALER_PCLK_DIV4.
+    COMMENT  - Sets Resolution of Init of Adc Handle to ADC_RESOLUTION_12B.
+    COMMENT  - Sets ScanConvMode of Init of Adc Handle to DISABLE.
+    COMMENT  - Sets ContinuousConvMode of Init of Adc Handle to DISABLE.
+    COMMENT  - Sets DiscontinuousConvMode of Init of Adc Handle to DISABLE.
+    COMMENT  - Sets NbrOfDiscConversion of Init of Adc Handle to 0.
+    COMMENT  - Sets ExternalTrigConvEdge of Init of Adc Handle to ADC_EXTERNALTRIGCONVEDGE_NONE.
+    COMMENT  - Sets ExternalTrigConv of Init of Adc Handle to ADC_EXTERNALTRIGCONV_T1_CC1.
+    COMMENT  - Sets DataAlign of Init of Adc Handle to ADC_DATAALIGN_RIGHT.
+    COMMENT  - Sets NbrOfConversion of Init of Adc Handle to 1.
+    COMMENT  - Sets DMAContinuousRequests of Init of Adc Handle to DISABLE.
+    COMMENT  - Sets EOCSelection of Init of Adc Handle to DISABLE.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfstmadc-StmadcInit-DB-LLR-004]
+    COMMENT The function 'StmadcInit' does nothing when the return value of the function 'HalAdcInit'
+    COMMENT is equal to HAL_OK.
+    COMMENT Equivalence Class 10, 13
+    COMMENT
+    COMMENT [hdudispfstmadc-StmadcInit-DB-LLR-005]
+    COMMENT The function 'StmadcInit' configures peripheral GPIO as follows.
+    COMMENT  - Sets Pin of GPIO initialization structure to ADCX_CHANNEL_PIN.
+    COMMENT  - Sets Mode of GPIO initialization structure to GPIO_MODE_ANALOG.
+    COMMENT  - Sets Pull of GPIO initialization structure to GPIO_NOPULL.
+    COMMENT  - Calls the function 'HalGpioInit' with ADCX_CHANNEL_GPIO_PORT and reference to 
+    COMMENT    GPIO initialization structure as its parameter.
+    COMMENT Equivalence Class 14  
+    COMMENT
+    COMMENT [hdudispfstmadc-StmadcInit-DB-LLR-006]
+    COMMENT The function 'StmadcInit' configures ADC channel1 as follows.
+    COMMENT  - Sets Channel of ADC channel1 to ADC_CHANNEL_10.
+    COMMENT  - Sets Rank of ADC channel1 to 1.
+    COMMENT  - Sets SamplingTime of ADC channel1 to ADC_SAMPLETIME_3CYCLES.
+    COMMENT  - Sets Offset of ADC channel1 to 0.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfstmadc-StmadcInit-DB-LLR-007]
+    COMMENT The function 'StmadcInit' configures ADC channel2 as follows.
+    COMMENT  - Sets Channel of ADC channel2 to ADC_CHANNEL_11.
+    COMMENT  - Sets Rank of ADC channel2 to 1.
+    COMMENT  - Sets SamplingTime of ADC channel2 to ADC_SAMPLETIME_3CYCLES.
+    COMMENT  - Sets Offset of ADC channel2 to 0.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hdudispfstmadc-StmadcInit-DB-LLR-008]
+    COMMENT The function 'StmadcInit' does nothing when the return value of the function 'HalAdcConfigChannel'
+    COMMENT with its parameter as Adc Handle and reference to ADC channel1 is equal to HAL_OK.
+    COMMENT Equivalence Class 15, 17
+    COMMENT
+    COMMENT [hdudispfstmadc-StmadcInit-DB-LLR-009]
+    COMMENT The function 'StmadcInit' calls the function 'ErrorHandler' when the return value of the function 'HalAdcStart'
+    COMMENT with its parameter as Adc Handle is equal to HAL_ERROR.
+    COMMENT Equivalence Class 11, 18, 19
+    COMMENT
+    COMMENT [hdudispfstmadc-ErrorHandler-DB-LLR-001]
+    COMMENT The function loops infinite.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT </TD> 
+
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            STRUCTURE PTU_GPIOx_in,   init= {others=>PTU_uint32_max}, ev=init
+
+            STRUCTURE PTU_HalAdcConfigChannel_in, init= {Instance => NIL, Init => { ClockPrescaler => 10, Resolution => 20, 
+            &                                         DataAlign => 30, ScanConvMode => 40, EOCSelection => 50, ContinuousConvMode => 60, 
+            &                                         NbrOfConversion => 70, DiscontinuousConvMode => 80, NbrOfDiscConversion => 90, 
+            &                                         ExternalTrigConv => 100, ExternalTrigConvEdge => 110, DMAContinuousRequests => 120 }, 
+            &                                        NbrOfCurrentConversionRank => 130, DMA_Handle => NIL, Lock => HAL_LOCKED, 
+            &                                        State => 140, ErrorCode => 150}, ev=init
+
+            STRUCTURE PTU_HalAdcConfigChannel_in_1, init= {Instance => NIL, Init => { ClockPrescaler => 0, Resolution => 0, 
+            &                                         DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, 
+            &                                         NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, 
+            &                                         ExternalTrigConv => 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, 
+            &                                        NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED, 
+            &                                        State => 0, ErrorCode => 0}, ev=init
+               
+        COMMENT OUTPUT SECTION:
+        
+            VAR PTU_h_adc,     init= {Instance => NIL, Init => { ClockPrescaler => 0, Resolution => 1, 
+            &                                         DataAlign => 1, ScanConvMode => 1, EOCSelection => 1, ContinuousConvMode => 1, 
+            &                                         NbrOfConversion => 0, DiscontinuousConvMode => 1, NbrOfDiscConversion => 1, 
+            &                                         ExternalTrigConv => 1, ExternalTrigConvEdge => 1, DMAContinuousRequests => 1 }, 
+            &                                        NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED, 
+            &                                        State => 0, ErrorCode => 0},     
+            &                                      ev= {Instance => ADCX, Init => { ClockPrescaler => ADC_CLOCKPRESCALER_PCLK_DIV4, Resolution => ADC_RESOLUTION_12B, 
+            &                                         DataAlign => ADC_DATAALIGN_RIGHT, ScanConvMode => DISABLE, EOCSelection => DISABLE, ContinuousConvMode => DISABLE, 
+            &                                         NbrOfConversion => ONE, DiscontinuousConvMode => DISABLE, NbrOfDiscConversion => HAL_OK, 
+            &                                         ExternalTrigConv => ADC_EXTERNALTRIGCONV_T1_CC1, ExternalTrigConvEdge => ADC_EXTERNALTRIGCONVEDGE_NONE, DMAContinuousRequests => DISABLE }, 
+            &                                        NbrOfCurrentConversionRank => init, DMA_Handle => init, Lock => init, 
+            &                                        State => init, ErrorCode => init}
+
+            STRUCTURE PTU_GPIOC,      init= {others=>0},  ev={others=>PTU_uint32_max}
+
+            STRUCTURE PTU_RCC_BASE,   init = {APB2ENR=>0x00000000,AHB1ENR=>0x00100000,others=>0},   
+            &                                ev={APB2ENR=>0x00000400,AHB1ENR=>0x00100004,others=>0}
+            STRUCTURE PTU_GPIOx_out,  init={others=>1}, ev= {others=>0}
+
+
+            STRUCTURE PTU_GPIO_Init,  init={Pin=>0, Mode=>0, Pull=> 0, Speed=>0, Alternate=>0}, 
+            &                              ev={Pin=>ADCX_CHANNEL_PIN, Mode=>GPIO_MODE_ANALOG, Pull=> GPIO_NOPULL, Speed=>0, Alternate=>0}
+
+            STRUCTURE PTU_HalAdcConfigChannel_out,  init= {Instance => NIL, Init => { ClockPrescaler => 0, Resolution => 1, 
+            &                                         DataAlign => 1, ScanConvMode => 1, EOCSelection => 1, ContinuousConvMode => 1, 
+            &                                         NbrOfConversion => 0, DiscontinuousConvMode => 1, NbrOfDiscConversion => 1, 
+            &                                         ExternalTrigConv => 1, ExternalTrigConvEdge => 1, DMAContinuousRequests => 1 }, 
+            &                                        NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED, 
+            &                                        State => 0, ErrorCode => 0},     
+            &                                      ev= {Instance => ADCX, Init => { ClockPrescaler => ADC_CLOCKPRESCALER_PCLK_DIV4, Resolution => ADC_RESOLUTION_12B, 
+            &                                         DataAlign => ADC_DATAALIGN_RIGHT, ScanConvMode => DISABLE, EOCSelection => DISABLE, ContinuousConvMode => DISABLE, 
+            &                                         NbrOfConversion => ONE, DiscontinuousConvMode => DISABLE, NbrOfDiscConversion => HAL_OK, 
+            &                                         ExternalTrigConv => ADC_EXTERNALTRIGCONV_T1_CC1, ExternalTrigConvEdge => ADC_EXTERNALTRIGCONVEDGE_NONE, DMAContinuousRequests => DISABLE }, 
+            &                                        NbrOfCurrentConversionRank => init, DMA_Handle => init, Lock => init, 
+            &                                        State => init, ErrorCode => init}
+
+
+            STRUCTURE PTU_sConfig,                 init= {Channel=>0, Rank=>0, SamplingTime=>0, Offset=>0}, 
+            &                                          ev= {Channel=>ADC_CHANNEL_10, Rank=>ONE, SamplingTime=>ADC_SAMPLETIME_3CYCLES, Offset=>ZERO}
+
+            STRUCTURE PTU_HalAdcStart_out,     init= {Instance => NIL, Init => { ClockPrescaler => 0, Resolution => 0, 
+            &                                         DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, 
+            &                                         NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, 
+            &                                         ExternalTrigConv => 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, 
+            &                                        NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED, 
+            &                                        State => 0, ErrorCode => 0},
+            &                                        ev= {Instance => NIL, Init => { ClockPrescaler => 10, Resolution => 20, 
+            &                                         DataAlign => 30, ScanConvMode => 40, EOCSelection => 50, ContinuousConvMode => 60, 
+            &                                         NbrOfConversion => 70, DiscontinuousConvMode => 80, NbrOfDiscConversion => 90, 
+            &                                         ExternalTrigConv => 100, ExternalTrigConvEdge => 110, DMAContinuousRequests => 120 }, 
+            &                                        NbrOfCurrentConversionRank => 130, DMA_Handle => NIL, Lock => HAL_LOCKED, 
+            &                                        State => 140, ErrorCode => 150}
+
+            STRUCTURE PTU_HalAdcConfigChannel_out_1,  init= {Instance => NIL, Init => { ClockPrescaler => 0, Resolution => 0, 
+            &                                         DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, 
+            &                                         NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, 
+            &                                         ExternalTrigConv => 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, 
+            &                                        NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED, 
+            &                                        State => 0, ErrorCode => 0},
+            &                                        ev= {Instance => NIL, Init => { ClockPrescaler => 10, Resolution => 20, 
+            &                                         DataAlign => 30, ScanConvMode => 40, EOCSelection => 50, ContinuousConvMode => 60, 
+            &                                         NbrOfConversion => 70, DiscontinuousConvMode => 80, NbrOfDiscConversion => 90, 
+            &                                         ExternalTrigConv => 100, ExternalTrigConvEdge => 110, DMAContinuousRequests => 120 }, 
+            &                                        NbrOfCurrentConversionRank => 130, DMA_Handle => NIL, Lock => HAL_LOCKED, 
+            &                                        State => 140, ErrorCode => 150}
+
+
+
+
+            STRUCTURE PTU_HalAdcStart_out_1,   init= {Instance => NIL, Init => { ClockPrescaler => 10, Resolution => 20, 
+            &                                         DataAlign => 30, ScanConvMode => 40, EOCSelection => 50, ContinuousConvMode => 60, 
+            &                                         NbrOfConversion => 70, DiscontinuousConvMode => 80, NbrOfDiscConversion => 90, 
+            &                                         ExternalTrigConv => 100, ExternalTrigConvEdge => 110, DMAContinuousRequests => 120 }, 
+            &                                        NbrOfCurrentConversionRank => 130, DMA_Handle => NIL, Lock => HAL_LOCKED, 
+            &                                        State => 140, ErrorCode => 150},
+            &                                     ev={Instance => NIL, Init => { ClockPrescaler => 0, Resolution => 0, 
+            &                                         DataAlign => 0, ScanConvMode => 0, EOCSelection => 0, ContinuousConvMode => 0, 
+            &                                         NbrOfConversion => 0, DiscontinuousConvMode => 0, NbrOfDiscConversion => 0, 
+            &                                         ExternalTrigConv => 0, ExternalTrigConvEdge => 0, DMAContinuousRequests => 0 }, 
+            &                                        NbrOfCurrentConversionRank => 0, DMA_Handle => NIL, Lock => HAL_UNLOCKED, 
+            &                                        State => 0, ErrorCode => 0}
+
+            STRUCTURE PTU_sConfig_1,      init= {Channel=>0, Rank=>0, SamplingTime=>0, Offset=>0}, 
+            &                                          ev= {Channel=>ADC_CHANNEL_11, Rank=>ONE, SamplingTime=>ADC_SAMPLETIME_3CYCLES, Offset=>ZERO}
+
+
+            VAR PTU_count_2,                init=0,                 ev= 2
+            VAR PTU_count_1,                init=0,                 ev= 2
+         
+        COMMENT INPUT/OUTPUT SECTION:
+            -- Register RCC APB2 peripheral clock enable register, holds Address offset:0x44 
+            VAR RCC->APB2ENR,               init= 0x00000000,       ev= 0x00000400
+
+            -- Register RCC AHB1 peripheral clock register, holds Address offset: 0x30
+            VAR RCC->AHB1ENR,               init= 0x00100000,       ev= 0x00100004
+         
+        --Stub Calls:
+        SIMUL
+                  
+            STUB HalAdcInit()HAL_OK
+            STUB HalGpioInit()
+            STUB HalAdcConfigChannel()HAL_OK
+            STUB HalAdcStart()HAL_ERROR
+
+            STUB HalAdcPollForConversion(ZERO)HAL_OK
+            STUB HalAdcGetValue()0
+            STUB HalAdcConfigChannel()HAL_OK
+            STUB HalAdcStart()HAL_OK
+                                 
+        END SIMUL
+         
+        #StmadcInit();
+        --Function 'StmadcDriver' is called to verify 'S_config2' members
+        #StmadcDriver();
+    END ELEMENT
+
+END TEST -- TEST 4
+END SERVICE -- StmadcInit
+

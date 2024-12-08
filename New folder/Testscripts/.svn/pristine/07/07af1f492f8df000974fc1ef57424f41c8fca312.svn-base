@@ -1,0 +1,2420 @@
+HEADER hducommfhw,Source Code Ver :1.3,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Swathi G
+--
+-- File Name           : hducommfhw.ptu
+--
+-- Test Creation Date  : 08.09.2017
+--
+-- Tested Functions    : HwMemcpy
+--                       HwInit
+--                       HwMemset
+--                       InitIO
+--
+-- Version History             :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME           MODIFICATIONS
+--  ------------        ---------       -----------           -------------
+--  1.1             	08.09.2017       Swathi G              Created the ptu file.
+--  1.2                 10.11.2017       Swathi G              Updated as per #PR100171.
+--  1.3                 14.11.2017       Swathi G              Updated as per #PR100171.
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommfhw.h"  
+##include "hdulibbasicfunc.h"         
+##include "hdulibstm32f4xxrcc.h"      
+##include "hdulibstm32f4xxfsmc.h"
+##include "hdulibstm32f4xxpwr.h"   
+##include "hdulibstm32f4xxflash.h"  
+##include "hdulibmisc.h" 
+##include "hdulibstm32f4xxgpio.h"   
+##include "hducommfintr.h"           
+##include "hducommftbase.h"              
+##include "hdulibcorecm4.h"             
+##include "hdulibstm32f4xx.h"                       
+
+##define SYS_TIC_INTR_PRIO                    15U
+##define PENDSV_INTR_PRIO                     15U
+##define FPU_CNTXT_NTLAZY_MODE                0x80000000U
+##define FP_COPROC_EN                         0x00F00000U
+##define VT_BSE_ADDR_OFFSET                   0x0
+##define PLL_USD_AS_SYSCLK                    0x08
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    --None
+
+-- Declarations of the temporary variable
+
+    --Temporary variables created for the stub 'FsmcNorSramInit'
+    #T_FSMC_NORSRAM_TIMING_INIT PTU_sram_timing_init_struct;
+    #T_FSMC_NORSRAM_INIT PTU_sram_init_struct;
+    
+    --Temporary variables used for the function 'HwMemcpy'
+    #T_UINT8 PTU_p_dest[100],PTU_p_src[100],PTU_index;
+    
+    --Temporary variables used for the Structure 'gpio_init_structure'
+    #T_GPIO_TYPE_INIT PTU_gpio_init_structure[14];
+--------------------------------------------------------------------------------
+BEGIN
+
+    COMMENT Author Name      : Swathi G
+    COMMENT
+    COMMENT File Name        : hducommfhw.ptu
+    COMMENT
+    COMMENT Tested Functions : HwMemset
+    COMMENT                    HwInit
+    COMMENT                    HwMemcpy
+    COMMENT                    InitIO
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT In function 'HwMemcpy', source and destination buffers are assumed to be of same size and 
+    COMMENT buffer size is taken as 100 for testing purpose.
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1.Header file "hdulibcorecm4.h" is modified for testing purpose.
+    COMMENT The macro 'SCB','NVIC','FPU' are modified for stubbing hardware address.
+    COMMENT 
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define SCB                 ((T_SCB_TYPE       *)     SCB_BASE      )  */
+    COMMENT /*#define NVIC                ((T_NVIC_TYPE      *)     NVIC_BASE     )  */
+    COMMENT /*#define FPU                 ((T_FPU_TYPE       *)     FPU_BASE      )  */ 
+    COMMENT
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose */
+    COMMENT   T_SCB_TYPE PTU_SCB;
+    COMMENT   #define SCB    ((T_SCB_TYPE *)&PTU_SCB)
+    COMMENT   T_NVIC_TYPE  PTU_NVIC;
+    COMMENT   #define NVIC                ((T_NVIC_TYPE      *)     &PTU_NVIC    )
+    COMMENT   T_FPU_TYPE PTU_FPU;
+    COMMENT   #define FPU                 ((T_FPU_TYPE       *)     &PTU_FPU     )
+    COMMENT 
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In function "InitIO", the function 'RccAhb3PeriphClockCmd' is called.
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function "InitIO", the function 'RccApb2PeriphClockCmd' is called.
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function "InitIO", the function 'RccAhb1PeriphClockCmd' is called.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function "InitIO", the function 'GpioInit' is called.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function "InitIO", the function 'GpioPinAFConfig' is called.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function "HwInit", the function 'RccDeInit' is called.
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function "HwInit", the function 'RccHseConfig' is called.
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function "HwInit", the function 'RccApb1PeriphClockCmd'is called.
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function "HwInit", the function 'PwrMainRegulatorModeConfig'is called.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function "HwInit", the function 'RccHclkConfig'is called.
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function "HwInit", the function 'RccPclk1Config'is called.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function "HwInit", the function 'RccPclk2Config'is called.
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function "HwInit", the function 'FlashSetLatency'is called.
+    COMMENT 
+    COMMENT Class 14
+    COMMENT In function "HwInit", the function 'FlashInstructionCacheCmd'is called.
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function "HwInit", the function 'FlashDataCacheCmd'is called.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function "HwInit", the function 'FlashPrefetchBufferCmd'is called.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function "HwInit", the function 'RccPllConfig'is called.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function "HwInit", the function 'RccPllCmd'is called. 
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function "HwInit", the function 'RccGetFlagStatus' is called.
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function "HwInit", the function 'RccGetFlagStatus' returns RESET.
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function "HwInit", the function 'RccGetFlagStatus' returns other than RESET.
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function "HwInit", the function 'RccSysClkConfig'is called.
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function "HwInit", the function 'RccGetSysClkSource' is called.
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function "HwInit", the function 'RccGetSysClkSource'returns PLL_USD_AS_SYSCLK
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function "HwInit", the function 'RccGetSysClkSource'returns other than PLL_USD_AS_SYSCLK
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function "HwInit", the function 'IntrInit'is called.
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function "HwInit", the function 'NvicSetVectorTable'is called.
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function "HwInit", the function 'NvicPriorityGroupConfig'is called.
+    COMMENT
+    COMMENT Class 27
+    COMMENT The  function "HwInit", calls the  function 'IntrInstall'.
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function "HwInit", the function 'NvicSetPriority'is called.
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function "HwInit", the function 'RccAhb1PeriphClockCmd'is called.
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function "HwInit", the function 'InitIO'is called.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function "HwInit", the function 'RccWaitForHseStartUp' is called.
+    COMMENT 
+    COMMENT Class 29
+    COMMENT In function "HwInit", the return value of function 'RccWaitForHseStartUp' is equal to ERROR
+    COMMENT 
+    COMMENT Class 43
+    COMMENT In function "HwInit", the return value of function 'RccWaitForHseStartUp' is not equal to ERROR
+    COMMENT 
+    COMMENT Class 33
+    COMMENT The function 'HwMemset', copies specified value to destination buffer.
+    COMMENT 
+    COMMENT Class 34
+    COMMENT The function 'HwMemCpy', copies data from source buffer to destination buffer.
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function "InitIO", the function 'FsmcNorSramInit' is called.   
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function "InitIO", the function 'FsmcNorSramCmd' is called.
+    COMMENT 
+    COMMENT Invalid class(es)
+    COMMENT 
+    COMMENT Class 35
+    COMMENT In function 'HwMemset',the parameter 'p_dest' is NULL
+    COMMENT 
+    COMMENT Class 36
+    COMMENT In function 'HwMemCpy',the parameter 'p_dest' is NULL.
+    COMMENT 
+    COMMENT Class 37
+    COMMENT In function 'HwMemCpy',the parameter 'p_src' is NULL.
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hducommfhw_c 40
+    
+        #void GpioPinAFConfig(T_GPIO_TYPE _in *gpio_x, T_UINT16 _in GPIO_Pinsource, T_UINT8 _in gpio_af);
+
+    END DEFINE  
+
+    DEFINE STUB hducommfhw_c
+    
+        --parameter made as _no.since,local address of the variable cannot be expected.
+        #void GpioInit(T_GPIO_TYPE _in *gpio_x, T_GPIO_TYPE_INIT _no *gpio_init_struct) 
+        #{
+        #  PTU_gpio_init_structure[PTU_index++]= *gpio_init_struct;
+        #}
+
+    END DEFINE  
+   
+    DEFINE STUB hducommfhw_c    
+    
+        #void FsmcNorSramCmd(T_UINT32 _in fsmc_bank, T_FUNCTIONAL_STATE _in new_state); 
+
+        --parameter made as _no.since,local address of the variable cannot be expected.
+        #void FsmcNorSramInit(T_FSMC_NORSRAM_INIT _no *fsmc_norsraminit_struct) 
+        #{
+        #  PTU_sram_init_struct = *fsmc_norsraminit_struct ;
+        #  PTU_sram_timing_init_struct = *(fsmc_norsraminit_struct->fsmc_readwrite_timing_struct);
+        #  PTU_sram_timing_init_struct = *(fsmc_norsraminit_struct->fsmc_write_timing_struct);
+        #}
+               
+        #void RccApb2PeriphClockCmd(T_UINT32 _in rcc_apb2_periph, T_FUNCTIONAL_STATE _in new_state); 
+        
+        #void RccAhb3PeriphClockCmd(T_UINT32 _in rcc_ahb3_periph, T_FUNCTIONAL_STATE _in new_state); 
+        
+        #void RccAhb1PeriphClockCmd(T_UINT32 _in rcc_ahb1_periph, T_FUNCTIONAL_STATE _in new_state); 
+        
+        #void PendSVHandler(void);
+        
+        #void TbaseIntrHandler(void); 
+        
+        #void IntrInstall(T_UINT8 _in u8_index, T_INTR_FN  IntrFunction);
+        
+        #void NvicPriorityGroupConfig(T_UINT32 _in nvic_priority_group); 
+        
+        #void NvicSetVectorTable(T_UINT32 _in nvic_vector_tab, T_UINT32 _in offset); 
+               
+        #void IntrInit(void); 
+        
+        #T_UINT8 RccGetSysClkSource(void); 
+        
+        #void RccSysClkConfig(T_UINT32 _in rcc_sysclk_source); 
+        
+        #T_FLAG_STATUS RccGetFlagStatus(T_UINT8 _in rcc_flag); 
+        
+        #void RccPllCmd(T_FUNCTIONAL_STATE _in new_state); 
+        
+        #void RccPllConfig(T_UINT32 _in rcc_pllsource, T_UINT32 _in pllm, T_UINT32 _in plln, T_UINT32 _in pllp, T_UINT32 _in pllq); 
+        
+        #void FlashPrefetchBufferCmd(T_FUNCTIONAL_STATE _in new_state); 
+        
+        #void FlashDataCacheCmd(T_FUNCTIONAL_STATE _in new_state); 
+        
+        #void FlashInstructionCacheCmd(T_FUNCTIONAL_STATE _in new_state); 
+        
+        #void FlashSetLatency(T_UINT32 _in flash_latency); 
+        
+        #void RccPclk2Config(T_UINT32 _in rcc_hclk); 
+        
+        #void RccPclk1Config(T_UINT32 _in rcc_hclk); 
+        
+        #void RccHclkConfig(T_UINT32 _in rcc_sysclk);
+        
+        #void PwrMainRegulatorModeConfig(T_UINT32 pwr_regulator_voltage); 
+        
+        #void RccApb1PeriphClockCmd(T_UINT32 _in rcc_apb1_periph, T_FUNCTIONAL_STATE _in new_state); 
+                      
+        #T_ERROR_STATUS RccWaitForHseStartUp(void); 
+        
+        #void RccHseConfig(T_UINT8 _in rcc_hse);  
+        
+        #void RccDeInit(void); 
+        
+        #void section(); 
+        
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+--Environment of the file hducommfhw.c
+
+--ENVIRONMENT  ENV_hducommfhw_c
+
+        --None
+
+--END ENVIRONMENT --ENV_hducommfhw_c
+
+--USE ENV_hducommfhw_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HwMemcpy
+--------------------------------------------------------------------------------
+SERVICE HwMemcpy
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    
+    #void *p_dest = PTU_p_dest;
+
+    #void *p_src  = PTU_p_src;
+
+    #T_UINT32 count;
+
+    ENVIRONMENT ENV_HwMemcpy
+    
+        --Holds the destination buffer contents
+        ARRAY PTU_p_dest,      init = {others=>0},     ev = init
+        
+        --Holds the source buffer contents
+        ARRAY PTU_p_src,       init = {others=>0},     ev = init
+    
+        --Holds the number of bytes to transfer from source to destination
+        VAR   count,           init = 0,               ev = init
+    
+    END ENVIRONMENT -- ENV_HwMemcpy
+    
+    USE ENV_HwMemcpy
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfhw-HwMemcpy-CB-LLR-001]
+    COMMENT The function copies the data from p_src buffer into p_dest buffer
+    COMMENT for number of bytes specified by count. 
+    COMMENT Count is  1 (min+1)
+    COMMENT Equivalence Class 34
+    COMMENT 
+    COMMENT </TD>
+
+    ELEMENT
+           
+        COMMENT INPUT SECTION:
+
+            --verify the 'PTU_p_src' buffer            
+            ARRAY PTU_p_src,       init = {others=>0},     ev = init 
+
+            --specifies the number of bytes        
+            VAR count,             init = 1,               ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --verify the 'PTU_p_dest' buffer
+            ARRAY PTU_p_dest,      init = {others=>1},     ev = {0=>0,others=>1}			
+		  
+        -- Stub Calls :
+	SIMUL
+        
+            --No stubs
+                
+	END SIMUL
+            
+	--Calling the Unit Under Test:
+	#HwMemcpy(p_dest, p_src, count);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hducommfhw-HwMemcpy-CB-LLR-001]
+    COMMENT The function copies the data from p_src buffer into p_dest buffer 
+    COMMENT for number of bytes specified by count. 
+    COMMENT Count is  0 (min)
+    COMMENT Equivalence Class 34
+    COMMENT 
+    COMMENT </TD>
+    
+    ELEMENT
+           
+        COMMENT INPUT SECTION:
+
+            --verify the 'PTU_p_src' buffer        
+            ARRAY PTU_p_src,       init = {others=>1},     ev = init 
+
+            --specifies the number of bytes           
+            VAR count,             init = 0,               ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                    
+            --None
+        		
+        COMMENT OUTPUT SECTION:
+
+            --verify the 'PTU_p_dest' buffer
+            ARRAY PTU_p_dest,      init = {others=>0},     ev = {others=>0}
+            
+	-- Stub Calls :
+        SIMUL
+        
+            --No stubs
+               
+        END SIMUL
+
+    --Calling the Unit Under Test:
+    #HwMemcpy(p_dest, p_src, count);
+    
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfhw-HwMemcpy-CB-LLR-001]
+    COMMENT The function copies the data from p_src buffer into p_dest buffer 
+    COMMENT for number of bytes specified by count. 
+    COMMENT Count is  10(nominal)
+    COMMENT Equivalence Class 34
+    COMMENT 
+    COMMENT </TD>
+
+    ELEMENT
+            
+        COMMENT INPUT SECTION:
+
+            --verify the 'PTU_p_src' buffer        
+            ARRAY PTU_p_src,       init = {others=>255},       ev = init 
+
+            --specifies the number of bytes           
+            VAR count,             init = 10,                  ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --None
+        	
+        COMMENT OUTPUT SECTION:
+
+            --verify the 'PTU_p_dest' buffer        
+            ARRAY PTU_p_dest,      init = {others=>254},       ev = {0..9=>255,others=>254}
+            
+        -- Stub Calls :
+        SIMUL
+        
+            --No stubs
+                
+        END SIMUL
+            
+    --Calling the Unit Under Test:
+    #HwMemcpy(p_dest, p_src, count);
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfhw-HwMemcpy-CB-LLR-001]
+    COMMENT The function copies the data from p_src buffer into p_dest buffer 
+    COMMENT for number of bytes specified by count. 
+    COMMENT Count is  99(nominal)
+    COMMENT Equivalence Class 34
+    COMMENT 
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --verify the 'PTU_p_src' buffer              
+            ARRAY PTU_p_src,       init = {others=>254},       ev = init 
+
+            --specifies the number of bytes           
+            VAR count,             init = 99,                  ev = init
+	            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --none
+        	
+        COMMENT OUTPUT SECTION:
+
+            --verify the 'PTU_p_dest' buffer              
+            ARRAY PTU_p_dest,      init = {others=>1},         ev = {0..98=>254,others=>1}
+            
+	-- Stub Calls :
+	SIMUL
+        
+           --No stubs
+                                    
+	END SIMUL
+            
+    --Calling the Unit Under Test:
+    #HwMemcpy(p_dest, p_src, count);
+
+    END ELEMENT
+
+END TEST -- TEST 4
+
+--TEST 5
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hducommfhw-HwMemcpy-CB-LLR-001]
+--    COMMENT This test case is to check the behaviour of the function when p_dest 
+--    COMMENT is null.
+--    COMMENT Equivalence Class 36
+--    COMMENT </TD>
+--
+--    ELEMENT
+-- 
+--        COMMENT INPUT SECTION:    
+--
+--             --none
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--           
+--             --none
+--        
+--        COMMENT OUTPUT SECTION:
+--
+--             --none
+--
+--
+--        -- Stub Calls :
+--        SIMUL
+--        
+--            --No stubs
+--                                    
+--        END SIMUL
+            
+
+--          --Calling the Unit Under Test:
+--         #HwMemcpy(NULL, p_src, count);
+--         END ELEMENT
+--
+--    END TEST -- TEST 5
+
+--TEST 6
+--FAMILY robustness
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hducommfhw-HwMemcpy-CB-LLR-001]
+--    COMMENT This test case is to check the behaviour of the function when p_src
+--    COMMENT is null.
+--    COMMENT Equivalence Class 37
+--    COMMENT 
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--        COMMENT INPUT SECTION:    
+--
+--            --none
+--
+--
+--       COMMENT INPUT/OUTPUT SECTION:
+--          
+--            --none
+--
+--        COMMENT OUTPUT SECTION:
+--
+--            --none
+--
+--    --Calling the Unit Under Test:
+--    #HwMemcpy(p_dest, NULL, count);
+--    END ELEMENT
+--
+--END TEST -- TEST 6
+
+END SERVICE -- HwMemcpy
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HwMemset
+--------------------------------------------------------------------------------
+SERVICE HwMemset
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+        #T_UINT8 *p_dest=PTU_p_dest;
+
+        #T_UINT8 value;
+
+        #T_UINT16 count;
+
+    ENVIRONMENT ENV_HwMemset
+    
+		--Holds the destination buffer contents
+        ARRAY PTU_p_dest,       init = 0,       ev = init
+    
+		--Holds the data to be stored in destination buffer
+        VAR value,              init = 0,       ev = init
+    
+		--Holds the number of bytes of data to transfer from value to destination buffer
+        VAR count,              init = 0,       ev = init
+    
+    END ENVIRONMENT -- ENV_HwMemset
+    
+    USE ENV_HwMemset
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfhw-HwMemset-CB-LLR-001]
+    COMMENT The function copies the data specified in value into p_dest buffer
+    COMMENT for number of bytes specified by count.
+    COMMENT Value is set to 1 (min+1)
+    COMMENT Count is set to 1 (min+1)
+    COMMENT Equivalence Class 33
+    COMMENT 
+    COMMENT </TD>
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+ 
+            --specifies the value with min+1 value
+            VAR value,              init = 1,               ev = init
+
+            --specifies the number of bytes with min+1 value
+            VAR count,              init = 1,               ev = init     
+            
+        COMMENT INPUT\OUTPUT SECTION
+       
+            --None
+
+        COMMENT OUTPUT SECTION:
+ 
+            --verify the 'PTU_p_dest' buffer  
+            ARRAY PTU_p_dest,       init = {others=>0},     ev = {0=>1,others=>0}
+			
+        -- Stub Calls :
+        SIMUL
+        
+            --No stubs
+            
+        END SIMUL
+            
+    --Calling the Unit Under Test:
+    #HwMemset(p_dest, value, count);
+    
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfhw-HwMemset-CB-LLR-001]
+    COMMENT The function copies the data specified in value into p_dest buffer for number of bytes specified by count.
+    COMMENT Value is set to 0(min)
+    COMMENT Count is set to 0(min)
+    COMMENT Equivalence Class 33
+    COMMENT 
+    COMMENT </TD>
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --specifies the value with min value
+            VAR value,              init = 0,               ev = init
+
+            --specifies the number of bytes with min value
+            VAR count,              init = 0,               ev = init 
+            
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            --none
+			
+        COMMENT OUTPUT SECTION:
+ 
+            --verify the 'PTU_p_dest' buffer 
+            ARRAY PTU_p_dest,       init = {others=>1},     ev = {others=>1}
+            
+        SIMUL
+        
+             --No stubs
+             
+        END SIMUL
+            
+    --Calling the Unit Under Test:
+    #HwMemset(p_dest, value, count);
+    
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfhw-HwMemset-CB-LLR-001]
+    COMMENT The function copies the data specified in value into p_dest buffer for number of bytes specified by count.
+    COMMENT Value is set to 255(max)
+    COMMENT Count is set to 100(nominal)
+    COMMENT Equivalence Class 33
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --specifies the value with max value
+            VAR value,              init = 255,             ev = init
+
+            --specifies the number of bytes with nominal value
+            VAR count,              init = 100,             ev = init    
+            
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            --none 
+
+        COMMENT OUTPUT SECTION:
+
+            --verify the 'PTU_p_dest' buffer         
+            ARRAY PTU_p_dest,       init = {others=>0},     ev = {others=>255}
+            
+	-- Stub Calls :
+        SIMUL
+        
+            --No stubs
+            
+        END SIMUL
+            
+        --Calling the Unit Under Test:
+        #HwMemset(p_dest, value, count);
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfhw-HwMemset-CB-LLR-001]
+    COMMENT The function copies the data specified in value into p_dest buffer for number of bytes specified by count.
+    COMMENT Value is set to 254(max-1)
+    COMMENT Count is set to 98(nominal)
+    COMMENT Equivalence Class 33
+    COMMENT 
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --specifies the value with max-1 value
+            VAR value,              init = 254,             ev = init
+
+            --specifies the number of bytes with nominal value
+            VAR count,              init = 98,              ev = init    
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                
+            --none
+			
+        COMMENT OUTPUT SECTION:
+ 
+            --verify the 'PTU_p_dest' buffer 
+            ARRAY PTU_p_dest,       init = {others=>0},     ev = {0..97=>254,others=>0}
+            
+	-- Stub Calls :
+        SIMUL
+        
+             --No stubs
+             
+        END SIMUL
+            
+        --Calling the Unit Under Test:
+        #HwMemset(p_dest, value, count);
+
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hducommfhw-HwMemset-CB-LLR-001]
+    COMMENT The function copies the data specified in value into p_dest buffer for number of bytes specified by count.
+    COMMENT Value is set to 10(nominal)
+    COMMENT Count is set to 10(nominal)
+    COMMENT Equivalence Class 33
+    COMMENT 
+    COMMENT </TD>
+    
+    ELEMENT
+ 
+        COMMENT INPUT SECTION:
+
+            --specifies the value with nominal value
+            VAR value,              init = 10,              ev = init
+
+            --specifies the number of bytes with nominal value
+            VAR count,              init = 10,              ev = init   
+             
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            --none  
+
+        COMMENT OUTPUT SECTION:
+ 
+            --verify the 'PTU_p_dest' buffer 
+            ARRAY PTU_p_dest,       init = {others=>0},     ev = {0..9=>10,others=>0}
+		  
+	-- Stub Calls :
+        SIMUL
+        
+           --No stubs
+                        
+        END SIMUL
+        
+       --Calling the Unit Under Test:
+       #HwMemset(p_dest, value, count);
+
+    END ELEMENT
+
+END TEST -- TEST 5
+
+--TEST 6
+--FAMILY robustness
+--
+--      COMMENT Test Description
+--      COMMENT <TD>
+--      COMMENT [hducommfhw-HwMemset-CB-LLR-001]
+--      COMMENT This test case is to check the behaviour of the function when p_dest is null. 
+--      COMMENT Equivalence Class 35
+--      COMMENT </TD>
+--
+--      ELEMENT
+--
+--          COMMENT INPUT SECTION:
+--
+--              --none
+--
+--          COMMENT INPUT/OUTPUT SECTION:
+--
+--              --none
+--
+--          COMMENT OUTPUT SECTION:
+--
+--              --none
+--
+--        --Calling the Unit Under Test:
+--        #HwMemset(NULL, value, count);
+--
+--    END ELEMENT
+--
+--END TEST -- TEST 6
+
+END SERVICE -- HwMemset
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HwInit
+--------------------------------------------------------------------------------
+SERVICE HwInit
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hducommfhw-HwInit-CB-LLR-001]
+    COMMENT The function calls 'RccDeInit' to reset the RCC Clock Configuration to the default
+    COMMENT reset state.
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-002]
+    COMMENT The function calls 'RccHseConfig' with parameter RCC_HSE_ON to enable the
+    COMMENT External High Speed External clock (HSE)
+    COMMENT Equivalence Class 7
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-003]
+    COMMENT The function calls 'RccWaitForHseStartUp' and does nothing when the 
+    COMMENT return value of the called function is ERROR.
+    COMMENT Equivalence Class 32, 29
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-004]
+    COMMENT The function calls 'RccApb1PeriphClockCmd' with parameters
+    COMMENT RCC_APB1PERIPH_PWR and ENABLE to enable the Low Speed APB(APB1) Peripheral
+    COMMENT Power Interface Clock.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-005]
+    COMMENT The function calls 'PwrMainRegulatorModeConfig' with parameter PWR_REGULATOR_VOLTAGE_SCALE1
+    COMMENT to set Regulator voltage scaling output selection bit to scale 1 mode in the Power Control register.
+    COMMENT Equivalence Class 9
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-006]
+    COMMENT The function calls 'RccHclkConfig' with parameter RCC_SYSCLK_DIV1 to configure 
+    COMMENT the AHB Clock (HCLK) to System Clock(SYSCLK).
+    COMMENT Equivalence Class 10
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-007]
+    COMMENT The function calls 'RccPclk1Config' with parameter RCC_HCLK_DIV4 to configure 
+    COMMENT the Low Speed APB Clock (PCLK1) to HCLK/DEC_FOUR.
+    COMMENT Equivalence Class 11
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-008]
+    COMMENT The function calls 'RccPclk2Config' with parameter RCC_HCLK_DIV2 to configure 
+    COMMENT the High Speed APB Clock (PCLK2) to HCLK/DEC_TWO.
+    COMMENT Equivalence Class 12
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-009]
+    COMMENT The function calls 'FlashSetLatency' with parameter FLASH_LATENCY_5 to set the 
+    COMMENT code latency value.
+    COMMENT Equivalence Class 13
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-010]
+    COMMENT The function calls 'FlashInstructionCacheCmd' with parameter ENABLE to enable the 
+    COMMENT instruction Cache feature.
+    COMMENT Equivalence Class 14
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-011]
+    COMMENT The function calls 'FlashDataCacheCmd' with parameter ENABLE to enable the data 
+    COMMENT Cache feature.
+    COMMENT Equivalence Class 15
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-012]
+    COMMENT The function calls 'FlashPrefetchBufferCmd' with parameter ENABLE to enable pre-fetch 
+    COMMENT buffer.
+    COMMENT Equivalence Class 16
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-013]
+    COMMENT The function calls 'RccPllConfig' with parameters RCC_PLLSOURCE_HSE,
+    COMMENT HW_PLL_M, HW_PLL_N, HW_PLL_P and HW_PLL_Q to configure the main 
+    COMMENT PLL Clock source, multiplication and division factors. 
+    COMMENT Equivalence Class 17
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-014]
+    COMMENT The function calls 'RccPllCmd' with parameter ENABLE to enable main PLL.
+    COMMENT Equivalence Class 18
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-015]
+    COMMENT The function calls 'RccGetFlagStatus' with parameter RCC_FLAG_PLLRDY in order to 
+    COMMENT wait till PLL is ready. Hence,the called function returns other than RESET
+    COMMENT Hence while loop is repeated for 0 time.
+    COMMENT Equivalence Class 20, 38
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-016]
+    COMMENT The function calls 'RccSysClkConfig' with parameter 
+    COMMENT RCC_SYSCLKSOURCE_PLLCLK to set the PLL as System Clock.
+    COMMENT Equivalence Class 21
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-017]
+    COMMENT The function calls 'RccGetSysClkSource' in order to wait till 
+    COMMENT PLL is used as System Clock source. The called function returns 
+    COMMENT PLL_USD_AS_SYSCLK Hence while loop is repeated 0 time.
+    COMMENT Equivalence Class 23, 39
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-018]
+    COMMENT The function calls 'IntrInit' to initialize the interrupt
+    COMMENT vector table in RAM.
+    COMMENT Equivalence Class 24
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-019]
+    COMMENT The function calls 'NvicSetVectorTable' with parameters NVIC_VECTTAB_RAM 
+    COMMENT and VT_BSE_ADDR_OFFSET to set the Vector Table base address at RAM.
+    COMMENT Equivalence Class 25
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-020]
+    COMMENT The function calls 'NvicPriorityGroupConfig' with parameter
+    COMMENT  NVIC_PRIORITYGROUP_4 to configure the group priority and sub-priority.
+    COMMENT Equivalence Class 26
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-021]
+    COMMENT The function calls 'IntrInstall' with parameters INTR_SYS_TICK
+    COMMENT and reference to TbaseIntrHandler to load the reference to the TbaseIntrHandler 
+    COMMENT into the vector table for System Tick Interrupt into RAM
+    COMMENT Equivalence Class 27
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-022]
+    COMMENT The function calls 'NvicSetPriority' with parameters SYSTICK_IRQN and 
+    COMMENT SYS_TIC_INTR_PRIO to set priority of the System Tick Interrupt.
+    COMMENT Equivalence Class 28
+    COMMENT 
+    COMMENT [hducommfhw-HwInit-CB-LLR-023]
+    COMMENT The function sets priority of the PendSV interrupt by calling 'IntrInstall' 
+    COMMENT with parameters INTR_PEND_SV and PendSvHandler.
+    COMMENT Equivalence Class 27
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-024]
+    COMMENT The function calls 'NvicSetPriority' with parameters PENDSV_IRQN 
+    COMMENT and PENDSV_INTR_PRIO to set priority of the PendSV interrupt.
+    COMMENT Equivalence Class 28
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-025]
+    COMMENT The function calls 'RccAhb1PeriphClockCmd' with parameters 
+    COMMENT RCC_AHB1PERIPH_CRC and ENABLE to enable the CRC Peripheral Clock.
+    COMMENT Equivalence Class 30
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-026]
+    COMMENT The function initializes the FPU context save not in lazy mode
+    COMMENT in FPCCR (Floating-Point Context Control register) of FPU.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-027]
+    COMMENT The function enables access privileges for floating-point coprocessors
+    COMMENT in CPACR (Coprocessor Access Control register) of SCB.
+    COMMENT Equivalence Class None    
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-028]
+    COMMENT The function calls 'InitIO' to initialize GPIO pins.
+    COMMENT Equivalence Class 31
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-001]
+    COMMENT The function calls 'RccAhb3PeriphClockCmd'with parameters RCC_AHB3PERIPH_FSMC 
+    COMMENT and ENABLE to enable the FSMC Peripheral Clock.
+    COMMENT Equivalence Class 1
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-002]
+    COMMENT The function calls 'RccApb2PeriphClockCmd' with parameters RCC_APB2PERIPH_SYSCFG 
+    COMMENT and ENABLE to enable the System Configuration Clock.
+    COMMENT Equivalence Class 2
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-004]
+    COMMENT The function calls 'RccAhb1PeriphClockCmd' with parameters RCC_AHB1PERIPH_GPIOA 
+    COMMENT and ENABLE to enable GPIO port A Clock.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-003]
+    COMMENT The function sets GPIO_Speed of gpio init structure to GPIO_SPEED_50MHZ clock 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-005]
+    COMMENT The function calls 'RccAhb1PeriphClockCmd' with parameters RCC_AHB1PERIPH_GPIOB 
+    COMMENT and ENABLE to enable GPIO port B Clock.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-006]
+    COMMENT The function calls 'GpioInit' with parameters GPIOB and reference of gpio init structure 
+    COMMENT to configure pin 2 of GPIO port B .
+    COMMENT gpio_init_struct members are initialized as below
+    COMMENT  a)  sets GPIO_Pin to HW_GPIOB_LED_HB(gpio pin 2), 
+    COMMENT  b)  sets GPIO speed to GPIO_SPEED_50MHZ, 
+    COMMENT  c)  sets GPIO port Mode register(GPIO_Mode) to GPIO_MODE_OUT, 
+    COMMENT  d)  sets GPIO port output type register(GPIO_OType) to GPIO_OTYPE_PP and 
+    COMMENT  e)  sets GPIO port Pull-up/Pull-down register(GPIO_PuPd) to GPIO_PUPD_NOPULL. 
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-007]
+    COMMENT The function calls 'RccAhb1PeriphClockCmd' with parameters RCC_AHB1PERIPH_GPIOC  
+    COMMENT and ENABLE to enable GPIO port C Clock.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-008]
+    COMMENT The function calls 'GpioInit' with parameters GPIOC and reference of gpio init structure to 
+    COMMENT configure pin 12 and 13 of GPIO port C .
+    COMMENT gpio_init_struct members are initialized as below 
+    COMMENT a)  sets GPIO_Pin to HW_GPIOC_SYS_MODE | HW_GPIOC_SYS_SEL,
+    COMMENT b)  sets GPIO speed to GPIO_SPEED_50MHZ, 
+    COMMENT c)  sets GPIO port Mode register(GPIO_Mode) to GPIO_MODE_IN and 
+    COMMENT d)  sets GPIO port Pull-up/Pull-down register(GPIO_PuPd) to GPIO_PUPD_NOPULL.
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-009]
+    COMMENT The function calls 'RccAhb1PeriphClockCmd' with parameters RCC_AHB1PERIPH_GPIOD and ENABLE 
+    COMMENT to enable GPIO port D Clock.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-010]
+    COMMENT The function sets GPIO_Speed of gpio init structure to GPIO_SPEED_50MHZ clock.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-011]
+    COMMENT The function calls 'GpioPinAFConfig' with parameters GPIOD, source pins and GPIO_AF_FSMC to 
+    COMMENT to change the mapping of pins GPIO_PINSOURCE0, GPIO_PINSOURCE1, GPIO_PINSOURCE4,GPIO_PINSOURCE5
+    COMMENT GPIO_PINSOURCE7, GPIO_PINSOURCE8, GPIO_PINSOURCE9, GPIO_PINSOURCE10, GPIO_PINSOURCE14, 
+    COMMENT GPIO_PINSOURCE15 of GPIO port D to FSMC Alternate Function mapping.
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-012]
+    COMMENT The function calls 'GpioInit' with parameters GPIOD and reference of gpio init structure to
+    COMMENT configure pin 0,1,4,5,7to 10,14 and 15 of GPIO port D .
+    COMMENT gpio_init_struct members are initialized as below
+    COMMENT a)  sets GPIO_Pin to HW_GPIOD_D2 | HW_GPIOD_D3 | HW_GPIOD_OE | HW_GPIOD_WE | HW_GPIOD_NE1 
+    COMMENT     |  HW_GPIOD_D13 | HW_GPIOD_D14 |  HW_GPIOD_D15 | HW_GPIOD_D0 | HW_GPIOD_D1, 
+    COMMENT b)  set GPIO port mode register(GPIO_Mode) to GPIO_MODE_AF, 
+    COMMENT c)  sets GPIO port Output Type register(GPIO_OType) to GPIO_OTYPE_PP and 
+    COMMENT d)  sets GPIO port Pull-up/Pull-down register(GPIO_PuPd) to GPIO_PUPD_NOPULL.    
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-013]
+    COMMENT The function calls 'RccAhb1PeriphClockCmd' with parameters RCC_AHB1PERIPH_GPIOE and ENABLE 
+    COMMENT to enable GPIO port E Clock.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-014]
+    COMMENT The function calls 'GpioPinAFConfig' with parameters GPIOE, source pins and GPIO_AF_FSMC 
+    COMMENT to change the mapping of pins GPIO_PINSOURCE0, GPIO_PINSOURCE1, GPIO_PINSOURCE7
+    COMMENT to GPIO_PINSOURCE15 of GPIO port E to FSMC Alternate Function mapping.
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-015]
+    COMMENT The function calls 'GpioInit' with parameters GPIOE and reference of gpio init structure to configure 
+    COMMENT pins 4 to 12 of GPIO port E .
+    COMMENT gpio_init_struct members are initialized as below
+    COMMENT a)  sets GPIO_Pin to HW_GPIOE_BLE | HW_GPIOE_BHE |HW_GPIOE_D4 | HW_GPIOE_D5 | HW_GPIOE_D6 | 
+    COMMENT HW_GPIOE_D7 |  HW_GPIOE_D8 | HW_GPIOE_D9  | HW_GPIOE_D10 | HW_GPIOE_D11 | HW_GPIOE_D12, 
+    COMMENT b)  sets GPIO port Mode register(GPIO_Mode) to GPIO_MODE_AF, 
+    COMMENT c)  sets GPIO port Output Type register(GPIO_OType) to GPIO_OTYPE_PP and 
+    COMMENT d)  sets GPIO port Pull-up/Pull-down register(GPIO_PuPd) to GPIO_PUPD_NOPULL.    
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-016]
+    COMMENT The function calls 'RccAhb1PeriphClockCmd' with parameters RCC_AHB1PERIPH_GPIOF and ENABLE 
+    COMMENT to enable GPIO port F Clock.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-017]
+    COMMENT The function calls 'GpioPinAFConfig' with parameters GPIOF, source pins and GPIO_AF_FSMC to 
+    COMMENT to change the mapping of pins GPIO_PINSOURCE0 to GPIO_PINSOURCE5, GPIO_PINSOURCE12  to GPIO_PINSOURCE15 
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-018]
+    COMMENT The function calls 'GpioInit' with parameters GPIOF and gpio init structure to configure
+    COMMENT pins 0 to 5 and 12 to 15 of GPIO port F.
+    COMMENT gpio_init_struct members are initialized as below
+    COMMENT a)  sets GPIO_Pin to HW_GPIOF_A0 | HW_GPIOF_A1 | HW_GPIOF_A2 | HW_GPIOF_A3 |  
+    COMMENT     HW_GPIOF_A4 | HW_GPIOF_A5 |  HW_GPIOF_A6 | HW_GPIOF_A7 | HW_GPIOF_A8 |  HW_GPIOF_A9 
+    COMMENT b)  sets GPIO port Mode register(GPIO_Mode) to GPIO_MODE_AF, 
+    COMMENT c)  sets GPIO port Output Type register(GPIO_OType) to GPIO_OTYPE_PP and 
+    COMMENT d)  sets GPIO port Pull-up/Pull-down register(GPIO_PuPd) to GPIO_PUPD_NOPULL.    
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-019]
+    COMMENT The function calls 'RccAhb1PeriphClockCmd' with parameters RCC_AHB1PERIPH_GPIOG and ENABLE 
+    COMMENT to enable GPIO port G Clock.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-020]
+    COMMENT The function calls 'GpioPinAFConfig' with parameters GPIOG, source pins and GPIO_AF_FSMC to 
+    COMMENT to change the mapping of pins GPIO_PINSOURCE0 to GPIO_PINSOURCE5 and GPIO_PINSOURCE9 to 
+    COMMENT GPIO_PINSOURCE11 of GPIO port G to FSMC Alternate Function mapping.
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-021]    
+    COMMENT The function calls 'GpioInit'  with parameters GPIOG and reference to gpio init structure 
+    COMMENT with the members to configure pins 0 to 5 and 9 to 11 of GPIO port G by as follows  
+    COMMENT a) set GPIO_Pin to HW_GPIOG_A10 | HW_GPIOG_A11 | HW_GPIOG_A12 | HW_GPIOG_A13 |  
+    COMMENT HW_GPIOG_A14 | HW_GPIOG_A15 |  HW_GPIOG_NE2 | HW_GPIOG_NE3 | HW_GPIOG_NE4  
+    COMMENT b) set GPIO port Mode register(GPIO_Mode) to GPIO_MODE_AF,  
+    COMMENT c) set GPIO port Output Type register(GPIO_OType) to GPIO_OTYPE_PP and  
+    COMMENT d) set GPIO port Pull-up/Pull-down register(GPIO_PuPd) to GPIO_PUPD_NOPULL.  
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-022]
+    COMMENT The function calls 'RccAhb1PeriphClockCmd' with parameters RCC_AHB1PERIPH_GPIOH and ENABLE 
+    COMMENT to enable GPIO port H Clock.
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-023]
+    COMMENT The function configures pin 0 of GPIO port H by calling 'GpioInit' with input parameters 
+    COMMENT GPIOH and reference of gpio_init_struct members are initialized as below
+    COMMENT    a)  sets GPIO_Pin to HW_GPIOH_OSC_IN  
+    COMMENT    b)  sets GPIO port Mode register(GPIO_Mode) to GPIO_MODE_IN, 
+    COMMENT    c)  sets GPIO port Pull-up/Pull-down register(GPIO_PuPd) to GPIO_PUPD_NOPULL. 
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-024]
+    COMMENT The function configures pin 1 of GPIO port H by calling 'GpioInit' with input parameters 
+    COMMENT GPIOH and reference of gpio_init_struct members are initialized as below
+    COMMENT    a)  sets GPIO_Pin to HW_GPIOH_OSC_OUT    
+    COMMENT    b)  sets GPIO port Mode register(GPIO_Mode) to GPIO_MODE_OUT, 
+    COMMENT    c)  sets GPIO port Output Type register(GPIO_OType) to GPIO_OTYPE_OD and  
+    COMMENT    d)  sets GPIO port Pull-up/Pull-down register(GPIO_PuPd) to GPIO_PUPD_NOPULL. 
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-025]
+    COMMENT The function sets fields of FSMC timing register as follows  
+    COMMENT     a) address setuptime field to DEC_ZERO,  
+    COMMENT     b) address hold time field to DEC_ZERO,  
+    COMMENT     c) data setup time field to DEC_TEN,  
+    COMMENT     d) bus turn around duration field to DEC_FIVE,  
+    COMMENT     e) clock division field to DEC_ZERO,  
+    COMMENT     f) data latency field to DEC_ZERO,  
+    COMMENT     g) access mode field to FSMC_ACCESSMODE_A.  
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-026]
+    COMMENT The function sets fields of FSMC control register as follows
+    COMMENT  a) bank field to FSMC_BANK1_NORSRAM2,
+    COMMENT  b) data address mux field to FSMC_DATAADDRESSMUX_DISABLE,
+    COMMENT  c) memory type field to FSMC_MEMORYTYPE_PSRAM,
+    COMMENT  d) memory data width field to FSMC_MEMORYDATAWIDTH_16B,
+    COMMENT  e) burst access mode field to FSMC_BURSTACCESSMODE_DISABLE,
+    COMMENT  f) asynchronous wait field to FSMC_ASYNCHRONOUSWAIT_DISABLE,
+    COMMENT  g) wait signal polarity field to FSMC_WAITSIGNALPOLARITY_LOW,
+    COMMENT  h) wrap mode field to FSMC_WRAPMODE_DISABLE,
+    COMMENT  i) wait signal active field to FSMC_WAIT_SIG_ACTIVE_BEF_WAIT ,
+    COMMENT  j) write operation field to FSMC_WRITEOPERATION_ENABLE,
+    COMMENT  k) wait signal field to FSMC_WAITSIGNAL_DISABLE,
+    COMMENT  l) extended mode field to FSMC_EXTENDEDMODE_DISABLE,
+    COMMENT  m) write burst field to FSMC_WRITEBURST_DISABLE.
+    COMMENT  n) readwrite timingstruct field to reference of fsmc timing struct
+    COMMENT  o) write timingstruct field to reference of fsmc timing struct
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-027]
+    COMMENT The function calls ‘FsmcNorSramInit’ with parameter address of FSMC NOR/SRAM init structure to 
+    COMMENT initialize NORSRAM bank in FSMC.
+    COMMENT Equivalence Class 40
+    COMMENT
+    COMMENT [hducommfhw-InitIO-CB-LLR-028]
+    COMMENT The function calls ‘FsmcNorSramCmd’ with parameters by FSMC_BANK1_NORSRAM2 and ENABLE 
+    COMMENT to enable the first block of bank one of FSMC. 
+    COMMENT Equivalence Class 41
+    COMMENT </TD>   
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --members of the Structure 'sram_timing_init_struct' are initialised           
+            VAR PTU_sram_timing_init_struct.fsmc_address_setuptime,             init = 10,
+            &                                           ev=DEC_ZERO
+            VAR PTU_sram_timing_init_struct.fsmc_address_holdtime,              init = 10,   
+            &                                           ev=DEC_ZERO
+            VAR PTU_sram_timing_init_struct.fsmc_data_setuptime,                init = 10,
+            &                                           ev=DEC_TEN
+            VAR PTU_sram_timing_init_struct.fsmc_bus_turnaround_duration,       init = 10, 
+            &                                           ev=DEC_FIVE
+            VAR PTU_sram_timing_init_struct.fsmc_clk_division,                  init = 10,
+            &                                           ev=DEC_ZERO
+            VAR PTU_sram_timing_init_struct.fsmc_data_latency,                  init = 10,
+            &                                           ev=DEC_ZERO
+            VAR PTU_sram_timing_init_struct.fsmc_access_mode,                   init = 10,
+            &                                           ev=FSMC_ACCESSMODE_A 
+
+            VAR PTU_sram_init_struct.fsmc_bank,                                 init=10,
+            &                                           ev = FSMC_BANK1_NORSRAM2
+
+            VAR PTU_sram_init_struct.fsmc_data_address_mux,                     init = 10,
+            &                                           ev=FSMC_DATAADDRESSMUX_DISABLE           
+
+            VAR PTU_sram_init_struct.fsmc_memory_type,                          init = 10,
+            &                                           ev=FSMC_MEMORYTYPE_PSRAM
+
+            VAR PTU_sram_init_struct.fsmc_memory_datawidth,                     init = 10,  
+            &                                           ev=FSMC_MEMORYDATAWIDTH_16B             
+
+            VAR PTU_sram_init_struct.fsmc_burst_accessmode,                     init = 10,
+            &                                           ev=FSMC_BURSTACCESSMODE_DISABLE           
+
+            VAR PTU_sram_init_struct.fsmc_asynchronous_wait,                    init = 10,  
+            &                                           ev=FSMC_ASYNCHRONOUSWAIT_DISABLE           
+
+            VAR PTU_sram_init_struct.fsmc_waitsignal_polarity,         	        init = 10,  
+            &                                           ev=FSMC_WAITSIGNALPOLARITY_LOW          
+
+            VAR PTU_sram_init_struct.fsmc_wrap_mode,                            init = 10,
+            &                                           ev=FSMC_WRAPMODE_DISABLE           
+
+            VAR PTU_sram_init_struct.fsmc_waitsignal_active,                    init = 10, 
+            &                                           ev=FSMC_WAIT_SIG_ACTIVE_BEF_WAIT       
+
+            VAR PTU_sram_init_struct.fsmc_write_operation,                      init = 10, 
+            &                                           ev=FSMC_WRITEOPERATION_ENABLE     
+
+            VAR PTU_sram_init_struct.fsmc_waitsignal,                           init = 10,
+            &                                           ev=FSMC_WAITSIGNAL_DISABLE          
+
+            VAR PTU_sram_init_struct.fsmc_extended_mode,                        init = 10,
+            &                                           ev=FSMC_EXTENDEDMODE_DISABLE            
+
+            VAR PTU_sram_init_struct.fsmc_write_burst,                          init = 10,
+            &                                           ev=FSMC_WRITEBURST_DISABLE           
+            
+        COMMENT INPUT/OUTPUT SECTION:
+         
+            --None        
+        
+        COMMENT OUTPUT SECTION:
+        
+            --verifing the Stub 'NvicSetPriority'
+            VAR SCB->SHP[11],                                                                   init = 0x1,       ev = 0xF0 
+                    
+            VAR SCB->SHP[10],                                                                   init = 0x10,      ev = 0xF0
+            
+             --initialize the FPU context save not in lazy mode in FPCCR of FPU.
+            VAR FPU->FPCCR,                                                                     init=0,           ev= (T_UINT32)FPU_CNTXT_NTLAZY_MODE
+
+            --enable full access privileges for coprocessors in CPACR of SCB
+            VAR SCB->CPACR,                                                                     init=0,           ev=FP_COPROC_EN
+
+            --temporary variable
+            VAR PTU_index,                             	                                        init=0,           ev=8
+
+            --configure pin 2 of GPIO port B
+            VAR  PTU_gpio_init_structure[0].GPIO_Pin,                                           init=0,           ev=HW_GPIOB_LED_HB
+            VAR  PTU_gpio_init_structure[0].GPIO_Speed,                                         init=GPIO_SPEED_2MHZ,            
+            &                                                                                                     ev=GPIO_SPEED_50MHZ
+            VAR  PTU_gpio_init_structure[0].GPIO_Mode,                                          init=GPIO_MODE_IN,
+            &                                                                                                     ev=GPIO_MODE_OUT
+            VAR  PTU_gpio_init_structure[0].GPIO_OType,                                         init=GPIO_OTYPE_OD,
+            &                                                                                                     ev=GPIO_OTYPE_PP
+            VAR  PTU_gpio_init_structure[0].GPIO_PuPd,                                          init=GPIO_PUPD_UP,
+            &                                                                                                     ev=GPIO_PUPD_NOPULL
+
+            --configures pin 0, 1 and 2 of GPIO port C 
+            VAR  PTU_gpio_init_structure[1].GPIO_Pin,                                           init=0,           
+            &                                                                                                     ev=HW_GPIOC_SYS_MODE | HW_GPIOC_SYS_SEL                      
+            VAR  PTU_gpio_init_structure[1].GPIO_Mode,                                          init=GPIO_MODE_AN,             
+            &                                                                                                     ev=GPIO_MODE_IN                      
+            VAR  PTU_gpio_init_structure[1].GPIO_PuPd,                                          init=GPIO_PUPD_UP,ev=GPIO_PUPD_NOPULL     
+
+            --configures pin 10,11,5,14,15,3,4 of GPIO port C 
+            VAR  PTU_gpio_init_structure[2].GPIO_Pin,                                           init=0,           ev=HW_GPIOD_D2 | HW_GPIOD_D3 |
+            &                                                                                                     HW_GPIOD_OE | HW_GPIOD_WE |
+            &                                                                                                     HW_GPIOD_NE1| HW_GPIOD_D13|
+            &                                                                                                     HW_GPIOD_D14| HW_GPIOD_D15|
+            &                                                                                                     HW_GPIOD_D0 | HW_GPIOD_D1
+            VAR  PTU_gpio_init_structure[2].GPIO_Mode,                                          init=GPIO_MODE_IN,             
+            &                                                                                                     ev=GPIO_MODE_AF  
+            VAR  PTU_gpio_init_structure[2].GPIO_OType,                                         init=GPIO_OTYPE_OD,             
+            &                                                                                                     ev=GPIO_OTYPE_PP
+            VAR  PTU_gpio_init_structure[2].GPIO_PuPd,                                          init=GPIO_PUPD_UP,             
+            &                                                                                                     ev=GPIO_PUPD_NOPULL 
+
+            --configures pin 13 and 12 of GPIO port C
+            VAR  PTU_gpio_init_structure[3].GPIO_Pin,                                           init=0,           ev= HW_GPIOE_BLE | HW_GPIOE_BHE | 
+            &                                                                                                     HW_GPIOE_D4 |  HW_GPIOE_D5 | 
+            &                                                                                                     HW_GPIOE_D6 | HW_GPIOE_D7 | 
+            &                                                                                                     HW_GPIOE_D8 | HW_GPIOE_D9 | 
+            &                                                                                                     HW_GPIOE_D10 | HW_GPIOE_D11 |
+            &                                                                                                     HW_GPIOE_D12
+                                                   
+
+            VAR  PTU_gpio_init_structure[3].GPIO_Mode,                                         init=GPIO_MODE_OUT,             
+            &                                                                                                     ev=GPIO_MODE_AF           
+            VAR  PTU_gpio_init_structure[3].GPIO_PuPd,                                         init=GPIO_PUPD_UP, ev=GPIO_PUPD_NOPULL   
+
+            --configures pin 0,1,4,5,7 to 10,14 and 15 of GPIO port D           
+            VAR  PTU_gpio_init_structure[4].GPIO_Pin,                                          init=0,            ev=HW_GPIOF_A0 | HW_GPIOF_A1 | 
+            &                                                                                                     HW_GPIOF_A2 | HW_GPIOF_A3 | 
+            &                                                                                                     HW_GPIOF_A4 | HW_GPIOF_A5 | 
+            &                                                                                                     HW_GPIOF_A6 | HW_GPIOF_A7 | 
+            &                                                                                                     HW_GPIOF_A8 | HW_GPIOF_A9 
+		
+            VAR  PTU_gpio_init_structure[4].GPIO_Mode,                                         init=GPIO_MODE_IN,
+            &                                                                                                     ev=GPIO_MODE_AF           
+            VAR  PTU_gpio_init_structure[4].GPIO_OType,                                        init=GPIO_OTYPE_OD,            
+            &                                                                                                     ev=GPIO_OTYPE_PP           
+            VAR  PTU_gpio_init_structure[4].GPIO_PuPd,                                         init=GPIO_PUPD_UP,             
+            &                                                                                                     ev=GPIO_PUPD_NOPULL    
+
+            --configure pin 7 to 15 of GPIO port E           
+            VAR  PTU_gpio_init_structure[5].GPIO_Pin,                                          init=0,            ev= HW_GPIOG_A10 | HW_GPIOG_A11 | 
+            &                                                                                                         HW_GPIOG_A12 | HW_GPIOG_A13 | 
+            &                                                                                                         HW_GPIOG_A14 | HW_GPIOG_A15 | 
+            &                                                                                                         HW_GPIOG_NE2 | HW_GPIOG_NE3 |
+            &                                                                                                         HW_GPIOG_NE4            
+            
+            VAR  PTU_gpio_init_structure[5].GPIO_Mode,                                         init=GPIO_MODE_IN,
+            &                                                                                                     ev=GPIO_MODE_AF           
+            VAR  PTU_gpio_init_structure[5].GPIO_OType,                                        init=GPIO_OTYPE_OD,             
+            &                                                                                                     ev=GPIO_OTYPE_PP           
+            VAR  PTU_gpio_init_structure[5].GPIO_PuPd,                                         init=GPIO_PUPD_UP,             
+            &                                                                                                     ev=GPIO_PUPD_NOPULL
+
+            --configures pin 0 to 5 of GPIO port E
+            VAR  PTU_gpio_init_structure[6].GPIO_Pin,                                          init=0,            
+            &                                                                                                      ev=HW_GPIOH_OSC_IN 
+			
+            VAR  PTU_gpio_init_structure[6].GPIO_Mode,                                         init=GPIO_MODE_AF,  ev=GPIO_MODE_IN
+            VAR  PTU_gpio_init_structure[6].GPIO_OType,                                        init=GPIO_OTYPE_OD, ev=GPIO_OTYPE_PP           
+            VAR  PTU_gpio_init_structure[6].GPIO_PuPd,                                         init=GPIO_PUPD_UP,  ev=GPIO_PUPD_NOPULL     
+
+            --configures pin 9 and 10 of GPIO port G           
+            VAR  PTU_gpio_init_structure[7].GPIO_Pin,                                          init=0,             ev= HW_GPIOH_OSC_OUT
+            VAR  PTU_gpio_init_structure[7].GPIO_Mode,                                         init=GPIO_MODE_IN,  ev= GPIO_MODE_OUT         
+            VAR  PTU_gpio_init_structure[7].GPIO_OType,                                        init=GPIO_OTYPE_OD, ev= GPIO_OTYPE_OD         
+            VAR  PTU_gpio_init_structure[7].GPIO_PuPd,                                         init=GPIO_PUPD_UP,  ev= GPIO_PUPD_NOPULL    
+
+		
+	-- Stub Calls :
+        SIMUL
+  
+            --reset the RCC Clock Configuration to the default reset state
+            STUB RccDeInit()
+
+            --enables the External High Speed oscillator
+            STUB RccHseConfig (RCC_HSE_ON)
+
+            --Wait for HSE ready state  
+            STUB RccWaitForHseStartUp()ERROR
+
+            --enables the Low Speed APB(APB1) Peripheral Power Interface
+            STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_PWR, ENABLE)
+
+            --sets Regulator voltage scaling output bit to scale 1 mode in the Power Control register
+            STUB PwrMainRegulatorModeConfig (PWR_REGULATOR_VOLTAGE_SCALE1)
+
+            --configures the AHB Clock (HCLK) to System Clock(SYSCLK)
+            STUB RccHclkConfig (RCC_SYSCLK_DIV1)
+
+            --configures the Low Speed APB Clock (PCLK1) to HCLK/DEC_FOUR
+            STUB RccPclk1Config (RCC_HCLK_DIV4)
+
+            --configures the High Speed APB Clock (PCLK2) to HCLK/DEC_TWO
+            STUB RccPclk2Config (RCC_HCLK_DIV2)
+
+            --sets the code latency value
+            STUB FlashSetLatency (FLASH_LATENCY_5)
+
+            --enables the instruction Cache feature
+            STUB FlashInstructionCacheCmd (ENABLE)
+
+            --enables the data Cache feature
+            STUB FlashDataCacheCmd (ENABLE)
+
+            --enables pre-fetch buffer
+            STUB FlashPrefetchBufferCmd (ENABLE)
+
+            --configures the main PLL Clock source, multiplication and division factors
+            STUB RccPllConfig (RCC_PLLSOURCE_HSE, HW_PLL_M, HW_PLL_N, HW_PLL_P, HW_PLL_Q)
+
+            --enables main PLL
+            STUB RccPllCmd (ENABLE)
+
+            --waits till PLL is ready
+            STUB RccGetFlagStatus (RCC_FLAG_PLLRDY)SET
+
+            --sets the PLL as System Clock
+            STUB RccSysClkConfig (RCC_SYSCLKSOURCE_PLLCLK)
+
+            --waits till PLL is used as System Clock source
+            STUB RccGetSysClkSource()PLL_USD_AS_SYSCLK
+
+            --initializes the interrupt vector table in RAM
+            STUB IntrInit()
+
+            --sets the Vector Table base address at RAM
+            STUB NvicSetVectorTable (NVIC_VECTTAB_RAM, VT_BSE_ADDR_OFFSET)
+
+            --configures the group priority and sub-priority
+            STUB NvicPriorityGroupConfig (NVIC_PRIORITYGROUP_4)
+
+            --loads the reference to the TbaseIntrHandler into the vector table for System Tick Interrupt into RAM
+            STUB IntrInstall (INTR_SYS_TICK, TbaseIntrHandler)
+
+            --sets priority of the PendSV interrupt
+            STUB IntrInstall (INTR_PEND_SV, PendSVHandler)
+
+            --enables the CRC Peripheral Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_CRC, ENABLE)
+
+            -- static function stub calls
+            --enables the FSMC Peripheral Clock
+            STUB RccAhb3PeriphClockCmd (RCC_AHB3PERIPH_FSMC, ENABLE)
+
+            --enables the System Configuration Clock
+            STUB RccApb2PeriphClockCmd (RCC_APB2PERIPH_SYSCFG, ENABLE)
+
+            --enables GPIO port A Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+
+            --enables GPIO port B Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOB, ENABLE)
+
+            --configures GPIO port B
+            STUB GpioInit (GPIOB)
+
+            --configures GPIO port C
+            STUB GpioInit (GPIOC)     
+
+            --enables GPIO port C Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOC, ENABLE)
+
+            --enables GPIO port D Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOD, ENABLE)  
+
+            --changes the mapping of pins of GPIO port D to FSMC
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE0, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE1, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE4, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE5, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE7, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE8, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE9, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE10, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE14, GPIO_AF_FSMC)          
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE15, GPIO_AF_FSMC)
+
+            --configures GPIO port D     
+            STUB GpioInit (GPIOD)
+
+            --enables GPIO port E Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOE, ENABLE)
+
+            --change the mapping of pins of GPIO port E to FSMC     
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE0, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE1, GPIO_AF_FSMC)
+			STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE7, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE8, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE9, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE10, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE11, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE12, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE13, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE14, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE15, GPIO_AF_FSMC)
+
+            --configures GPIO port E     
+            STUB GpioInit (GPIOE)
+
+            --enables GPIO port F Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOF, ENABLE)
+
+            --change the mapping of pins of GPIO port F to FSMC     
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE0, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE1, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE2, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE3, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE4, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE5, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE12, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE13, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE14, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE15, GPIO_AF_FSMC)
+
+            --configures GPIO port F     
+            STUB GpioInit (GPIOF)
+
+            --enables GPIO port G Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOG, ENABLE)
+
+            --change the mapping of pins port G to FSMC
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE0, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE1, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE2, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE3, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE4, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE5, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE9, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE10, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE11, GPIO_AF_FSMC) 
+
+            --configures GPIO port G     
+            STUB GpioInit (GPIOG)
+
+            --enables GPIO port H Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOH, ENABLE)
+
+            --configures GPIO port H     
+            STUB GpioInit (GPIOH)     
+
+		--configures GPIO port H     
+            STUB GpioInit (GPIOH)
+
+            --initializes NORSRAM bank in FSMC
+            STUB FsmcNorSramInit()
+
+            --enables the first block of bank one of FSMC
+            STUB FsmcNorSramCmd(FSMC_BANK1_NORSRAM2,ENABLE)
+    
+        END SIMUL
+     
+        --Calling the Unit Under Test:
+        #HwInit();
+     
+    END ELEMENT
+   
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-015]
+    COMMENT The function calls 'RccGetFlagStatus' in order to wait till PLL is ready.
+    COMMENT hence,the function initially returns RESET and then 2nd time returns SET 
+    COMMENT Hence while loop is repeated for 2 times.
+    COMMENT Equivalence Class 19,21, 38
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-003]
+    COMMENT The function calls 'RccWaitForHseStartUp' function and the called function 
+    COMMENT return's SUCCESS as return value
+    COMMENT Equivalence Class 32, 43
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-017]
+    COMMENT The function calls 'RccGetSysClkSource'
+    COMMENT initially returns RESET and then 2nd time returns PLL_USD_AS_SYSCLK.
+    COMMENT Hence while loop is repeated 2 times.
+    COMMENT Equivalence Class 22,23, 39
+    COMMENT
+    COMMENT </TD>   
+
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            --members of the Structure 'sram_timing_init_struct' are initialised           
+            VAR PTU_sram_timing_init_struct.fsmc_address_setuptime,              init = 10,
+            &                                           ev=DEC_ZERO
+            VAR PTU_sram_timing_init_struct.fsmc_address_holdtime,               init = 10,   
+            &                                           ev=DEC_ZERO
+            VAR PTU_sram_timing_init_struct.fsmc_data_setuptime,                 init = 10,
+            &                                           ev=DEC_TEN
+            VAR PTU_sram_timing_init_struct.fsmc_bus_turnaround_duration,        init = 10, 
+            &                                           ev=DEC_FIVE
+            VAR PTU_sram_timing_init_struct.fsmc_clk_division,                   init = 10,
+            &                                           ev=DEC_ZERO
+            VAR PTU_sram_timing_init_struct.fsmc_data_latency,                   init = 10,
+            &                                           ev=DEC_ZERO
+            VAR PTU_sram_timing_init_struct.fsmc_access_mode,                    init = 10,
+            &                                           ev=FSMC_ACCESSMODE_A 
+
+            VAR PTU_sram_init_struct.fsmc_bank,                                  init=10,
+            &                                           ev = FSMC_BANK1_NORSRAM2
+
+
+            VAR PTU_sram_init_struct.fsmc_data_address_mux,                      init = 10,
+            &                                           ev=FSMC_DATAADDRESSMUX_DISABLE           
+
+            VAR PTU_sram_init_struct.fsmc_memory_type,                           init = 10,
+            &                                           ev=FSMC_MEMORYTYPE_PSRAM
+
+            VAR PTU_sram_init_struct.fsmc_memory_datawidth,                      init = 10,  
+            &                                           ev=FSMC_MEMORYDATAWIDTH_16B             
+
+            VAR PTU_sram_init_struct.fsmc_burst_accessmode,                      init = 10,
+            &                                           ev=FSMC_BURSTACCESSMODE_DISABLE           
+
+            VAR PTU_sram_init_struct.fsmc_asynchronous_wait,           	         init = 10,  
+            &                                           ev=FSMC_ASYNCHRONOUSWAIT_DISABLE           
+
+            VAR PTU_sram_init_struct.fsmc_waitsignal_polarity,                   init = 10,  
+            &                                           ev=FSMC_WAITSIGNALPOLARITY_LOW          
+
+            VAR PTU_sram_init_struct.fsmc_wrap_mode,                             init = 10,
+            &                                           ev=FSMC_WRAPMODE_DISABLE           
+
+            VAR PTU_sram_init_struct.fsmc_waitsignal_active,                     init = 10, 
+            &                                           ev=FSMC_WAIT_SIG_ACTIVE_BEF_WAIT       
+
+            VAR PTU_sram_init_struct.fsmc_write_operation,                       init = 10, 
+            &                                           ev=FSMC_WRITEOPERATION_ENABLE     
+
+            VAR PTU_sram_init_struct.fsmc_waitsignal,                            init = 10,
+            &                                           ev=FSMC_WAITSIGNAL_DISABLE          
+
+            VAR PTU_sram_init_struct.fsmc_extended_mode,                         init = 10,
+            &                                           ev=FSMC_EXTENDEDMODE_DISABLE            
+
+            VAR PTU_sram_init_struct.fsmc_write_burst,                           init = 10,
+            &                                           ev=FSMC_WRITEBURST_DISABLE    
+                 
+        COMMENT INPUT/OUTPUT SECTION:
+         
+            --None
+			
+        COMMENT OUTPUT SECTION:
+            
+            --initialize the FPU context save not in lazy mode in FPCCR of FPU.
+            VAR FPU->FPCCR,                                                          init=0,                  ev = (T_UINT32)FPU_CNTXT_NTLAZY_MODE
+
+            --enable full access privileges for coprocessors in CPACR of SCB
+            VAR SCB->CPACR,                                                          init=0,                  ev=FP_COPROC_EN
+
+            --temporary variable
+            VAR PTU_index,                             	                             init=0,                  ev = 8
+
+            --configure pin 2 of GPIO port B
+            VAR  PTU_gpio_init_structure[0].GPIO_Pin,                                init=0,                  ev=HW_GPIOB_LED_HB
+            VAR  PTU_gpio_init_structure[0].GPIO_Speed,                              init=GPIO_SPEED_2MHZ,            
+            &                                                                                                 ev=GPIO_SPEED_50MHZ
+            VAR  PTU_gpio_init_structure[0].GPIO_Mode,                               init=GPIO_MODE_IN,       ev=GPIO_MODE_OUT
+            VAR  PTU_gpio_init_structure[0].GPIO_OType,                              init=GPIO_OTYPE_OD,
+            &                                                                                                 ev=GPIO_OTYPE_PP
+            VAR  PTU_gpio_init_structure[0].GPIO_PuPd,                               init=GPIO_PUPD_UP,       ev=GPIO_PUPD_NOPULL
+
+            --configures pin 0, 1 and 2 of GPIO port C 
+            VAR  PTU_gpio_init_structure[1].GPIO_Pin,                                init=0,                  ev=HW_GPIOC_SYS_MODE  
+            &                                                                                                    | HW_GPIOC_SYS_SEL                      
+            VAR  PTU_gpio_init_structure[1].GPIO_Mode,                               init=GPIO_MODE_AN,             
+            &                                                                                                 ev=GPIO_MODE_IN                      
+            VAR  PTU_gpio_init_structure[1].GPIO_PuPd,                               init=GPIO_PUPD_UP,       ev=GPIO_PUPD_NOPULL     
+
+            --configures pin 10,11,5,14,15,3,4 of GPIO port C 
+            VAR  PTU_gpio_init_structure[2].GPIO_Pin,                                init=0,                  ev=HW_GPIOD_D2 | HW_GPIOD_D3 |
+            &                                                                                                    HW_GPIOD_OE | HW_GPIOD_WE |
+            &                                                                                                    HW_GPIOD_NE1| HW_GPIOD_D13|
+            &                                                                                                    HW_GPIOD_D14| HW_GPIOD_D15|
+            &                                                                                                    HW_GPIOD_D0 | HW_GPIOD_D1
+            VAR  PTU_gpio_init_structure[2].GPIO_Mode,                               init=GPIO_MODE_IN,             
+            &                                                                                                 ev=GPIO_MODE_AF  
+            VAR  PTU_gpio_init_structure[2].GPIO_OType,                              init=GPIO_OTYPE_OD,             
+            &                                                                                                 ev=GPIO_OTYPE_PP
+            VAR  PTU_gpio_init_structure[2].GPIO_PuPd,                               init=GPIO_PUPD_UP,             
+            &                                                                                                 ev=GPIO_PUPD_NOPULL 
+
+            --configures pin 13 and 12 of GPIO port C
+            VAR  PTU_gpio_init_structure[3].GPIO_Pin,                                init=0,                  ev= HW_GPIOE_BLE | HW_GPIOE_BHE | 
+            &                                                                                                     HW_GPIOE_D4 |  HW_GPIOE_D5 | 
+            &                                                                                                     HW_GPIOE_D6 | HW_GPIOE_D7 | 
+            &                                                                                                     HW_GPIOE_D8 | HW_GPIOE_D9 | 
+            &                                                                                                     HW_GPIOE_D10 | HW_GPIOE_D11 | 
+            &                                                                                                     HW_GPIOE_D12
+			
+            VAR  PTU_gpio_init_structure[3].GPIO_Mode,                               init=GPIO_MODE_OUT,             
+            &                                                                                                 ev=GPIO_MODE_AF           
+            VAR  PTU_gpio_init_structure[3].GPIO_PuPd,                               init=GPIO_PUPD_UP,       ev=GPIO_PUPD_NOPULL   
+
+            --configures pin 0,1,4,5,7 to 10,14 and 15 of GPIO port D           
+            VAR  PTU_gpio_init_structure[4].GPIO_Pin,                                init=0,                  ev=HW_GPIOF_A0 | HW_GPIOF_A1 | 
+            &                                                                                                    HW_GPIOF_A2 | HW_GPIOF_A3 | 
+            &                                                                                                    HW_GPIOF_A4 | HW_GPIOF_A5 | 
+            &                                                                                                    HW_GPIOF_A6 | HW_GPIOF_A7 | 
+            &                                                                                                    HW_GPIOF_A8 | HW_GPIOF_A9 
+		
+            VAR  PTU_gpio_init_structure[4].GPIO_Mode,                               init=GPIO_MODE_IN,
+            &                                                                                                 ev=GPIO_MODE_AF           
+            VAR  PTU_gpio_init_structure[4].GPIO_OType,                              init=GPIO_OTYPE_OD,            
+            &                                                                                                 ev=GPIO_OTYPE_PP           
+            VAR  PTU_gpio_init_structure[4].GPIO_PuPd,                               init=GPIO_PUPD_UP,             
+            &                                                                                                 ev=GPIO_PUPD_NOPULL    
+
+            --configure pin 7 to 15 of GPIO port E           
+            VAR  PTU_gpio_init_structure[5].GPIO_Pin,                                init=0,                  ev= HW_GPIOG_A10 | HW_GPIOG_A11 | 
+            &                                                                                                     HW_GPIOG_A12 | HW_GPIOG_A13 | 
+            &                                                                                                     HW_GPIOG_A14 | HW_GPIOG_A15 | 
+            &                                                                                                     HW_GPIOG_NE2 | HW_GPIOG_NE3 |
+            &                                                                                                     HW_GPIOG_NE4 
+			
+            VAR  PTU_gpio_init_structure[5].GPIO_Mode,                               init=GPIO_MODE_IN,
+            &                                                                                                 ev=GPIO_MODE_AF           
+            VAR  PTU_gpio_init_structure[5].GPIO_OType,                              init=GPIO_OTYPE_OD,             
+            &                                                                                                 ev=GPIO_OTYPE_PP           
+            VAR  PTU_gpio_init_structure[5].GPIO_PuPd,                               init=GPIO_PUPD_UP,             
+            &                                                                                                 ev=GPIO_PUPD_NOPULL
+
+            --configures pin 0 to 5 of GPIO port E
+            VAR  PTU_gpio_init_structure[6].GPIO_Pin,                                init=0,                  ev=HW_GPIOH_OSC_IN 
+			
+            VAR  PTU_gpio_init_structure[6].GPIO_Mode,                               init=GPIO_MODE_AF,       ev=GPIO_MODE_IN
+            VAR  PTU_gpio_init_structure[6].GPIO_OType,                              init=GPIO_OTYPE_OD,      ev=GPIO_OTYPE_PP           
+            VAR  PTU_gpio_init_structure[6].GPIO_PuPd,                               init=GPIO_PUPD_UP,       ev=GPIO_PUPD_NOPULL     
+
+            --configures pin 9 and 10 of GPIO port G           
+            VAR  PTU_gpio_init_structure[7].GPIO_Pin,                                init=0,                  ev= HW_GPIOH_OSC_OUT 
+			
+            VAR  PTU_gpio_init_structure[7].GPIO_Mode,                               init=GPIO_MODE_IN,       ev= GPIO_MODE_OUT         
+            VAR  PTU_gpio_init_structure[7].GPIO_OType,                              init=GPIO_OTYPE_OD,      ev= GPIO_OTYPE_OD         
+            VAR  PTU_gpio_init_structure[7].GPIO_PuPd,                               init=GPIO_PUPD_UP,       ev= GPIO_PUPD_NOPULL    
+
+
+	-- Stub Calls :
+        SIMUL
+
+            --reset the RCC Clock Configuration to the default reset state
+            STUB RccDeInit()
+
+            --enables the External High Speed oscillator
+            STUB RccHseConfig (RCC_HSE_ON)
+
+            --Wait for HSE ready state  
+            STUB RccWaitForHseStartUp()SUCCESS
+
+            --enables the Low Speed APB(APB1) Peripheral Power Interface
+            STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_PWR, ENABLE)
+
+            --sets Regulator voltage scaling output bit to scale 1 mode in the Power Control register
+            STUB PwrMainRegulatorModeConfig (PWR_REGULATOR_VOLTAGE_SCALE1)
+
+            --configures the AHB Clock (HCLK) to System Clock(SYSCLK)
+            STUB RccHclkConfig (RCC_SYSCLK_DIV1)
+
+            --configures the Low Speed APB Clock (PCLK1) to HCLK/DEC_FOUR
+            STUB RccPclk1Config (RCC_HCLK_DIV4)
+
+            --configures the High Speed APB Clock (PCLK2) to HCLK/DEC_TWO
+            STUB RccPclk2Config (RCC_HCLK_DIV2)
+
+            --sets the code latency value
+            STUB FlashSetLatency (FLASH_LATENCY_5)
+
+            --enables the instruction Cache feature
+            STUB FlashInstructionCacheCmd (ENABLE)
+
+            --enables the data Cache feature
+            STUB FlashDataCacheCmd (ENABLE)
+
+            --enables pre-fetch buffer
+            STUB FlashPrefetchBufferCmd (ENABLE)
+
+            --configures the main PLL Clock source, multiplication and division factors
+            STUB RccPllConfig (RCC_PLLSOURCE_HSE, HW_PLL_M, HW_PLL_N, HW_PLL_P, HW_PLL_Q)
+
+            --enables main PLL
+            STUB RccPllCmd (ENABLE)
+
+            --waits till PLL is ready
+            STUB RccGetFlagStatus (RCC_FLAG_PLLRDY)RESET
+            STUB RccGetFlagStatus (RCC_FLAG_PLLRDY)SET
+
+            --sets the PLL as System Clock
+            STUB RccSysClkConfig (RCC_SYSCLKSOURCE_PLLCLK)
+
+            --waits till PLL is used as System Clock source
+            STUB RccGetSysClkSource()RESET
+            STUB RccGetSysClkSource()PLL_USD_AS_SYSCLK
+
+            --initializes the interrupt vector table in RAM
+            STUB IntrInit()
+
+            --sets the Vector Table base address at RAM
+            STUB NvicSetVectorTable (NVIC_VECTTAB_RAM, VT_BSE_ADDR_OFFSET)
+
+            --configures the group priority and sub-priority
+            STUB NvicPriorityGroupConfig (NVIC_PRIORITYGROUP_4)
+
+            --loads the reference to the TbaseIntrHandler into the vector table for System Tick Interrupt into RAM
+            STUB IntrInstall (INTR_SYS_TICK, TbaseIntrHandler)
+
+            --sets priority of the PendSV interrupt
+            STUB IntrInstall (INTR_PEND_SV, PendSVHandler)
+
+            --enables the CRC Peripheral Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_CRC, ENABLE)
+
+	    -- static function stub calls
+            --enables the FSMC Peripheral Clock
+            STUB RccAhb3PeriphClockCmd (RCC_AHB3PERIPH_FSMC, ENABLE)
+
+            --enables the System Configuration Clock
+            STUB RccApb2PeriphClockCmd (RCC_APB2PERIPH_SYSCFG, ENABLE)
+
+            --enables GPIO port A Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+
+            --enables GPIO port B Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOB, ENABLE)
+
+            --configures GPIO port B
+            STUB GpioInit (GPIOB)
+
+            --configures GPIO port C
+            STUB GpioInit (GPIOC)     
+
+            --enables GPIO port C Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOC, ENABLE)
+
+            --enables GPIO port D Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOD, ENABLE)  
+
+            --changes the mapping of pins of GPIO port D to FSMC
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE0, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE1, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE4, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE5, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE7, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE8, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE9, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE10, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE14, GPIO_AF_FSMC)          
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE15, GPIO_AF_FSMC)
+
+            --configures GPIO port D     
+            STUB GpioInit (GPIOD)
+
+            --enables GPIO port E Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOE, ENABLE)
+
+            --change the mapping of pins of GPIO port E to FSMC     
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE0, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE1, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE7, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE8, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE9, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE10, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE11, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE12, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE13, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE14, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE15, GPIO_AF_FSMC)
+
+            --configures GPIO port E     
+            STUB GpioInit (GPIOE)
+
+            --enables GPIO port F Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOF, ENABLE)
+
+            --change the mapping of pins of GPIO port F to FSMC     
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE0, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE1, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE2, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE3, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE4, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE5, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE12, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE13, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE14, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE15, GPIO_AF_FSMC)
+
+            --configures GPIO port F     
+            STUB GpioInit (GPIOF)
+
+            --enables GPIO port G Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOG, ENABLE)
+
+            --change the mapping of pins port G to FSMC
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE0, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE1, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE2, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE3, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE4, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE5, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE9, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE10, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE11, GPIO_AF_FSMC) 
+
+            --configures GPIO port G     
+            STUB GpioInit (GPIOG)
+
+            --enables GPIO port H Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOH, ENABLE)
+
+            --configures GPIO port H     
+            STUB GpioInit (GPIOH)     
+
+            --configures GPIO port H     
+            STUB GpioInit (GPIOH) 
+
+            --initializes NORSRAM bank in FSMC
+            STUB FsmcNorSramInit()
+
+            --enables the first block of bank one of FSMC
+            STUB FsmcNorSramCmd(FSMC_BANK1_NORSRAM2, ENABLE)
+    
+        END SIMUL
+     
+    	--Calling the Unit Under Test:
+    	#HwInit();
+     
+    END ELEMENT
+   
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-015]
+    COMMENT The function calls 'RccGetFlagStatus' in order to wait till PLL is ready.
+    COMMENT hence,the function returns RESET for 0th and 1st time and then 2nd time returns SET 
+    COMMENT Hence while loop is repeated for 3 time.
+    COMMENT Equivalence Class 19,21, 38
+    COMMENT
+    COMMENT [hducommfhw-HwInit-CB-LLR-017]
+    COMMENT The function calls 'RccGetSysClkSource' 
+    COMMENT initially returns RESET for 0th and 1st time and 
+    COMMENT then 2nd time returns PLL_USD_AS_SYSCLK .
+    COMMENT Hence while loop is repeated 3 times.
+    COMMENT Equivalence Class 22,23, 39
+    COMMENT
+    COMMENT </TD>   
+
+     ELEMENT
+ 
+        COMMENT INPUT SECTION:
+ 
+            --members of the Structure 'sram_timing_init_struct' are initialised 
+            VAR PTU_sram_timing_init_struct.fsmc_address_setuptime,   
+            &                                           init=DEC_ZERO,    ev=init
+            VAR PTU_sram_timing_init_struct.fsmc_address_holdtime,   
+            &                                           init=DEC_ZERO,    ev=init
+            VAR PTU_sram_timing_init_struct.fsmc_data_setuptime,
+            &                                           init=DEC_TEN,     ev=init
+            VAR PTU_sram_timing_init_struct.fsmc_bus_turnaround_duration, 
+            &                                           init=DEC_FIVE,    ev=init
+            VAR PTU_sram_timing_init_struct.fsmc_clk_division,
+            &                                           init=DEC_ZERO,    ev=init
+            VAR PTU_sram_timing_init_struct.fsmc_data_latency, 
+            &                                           init=DEC_ZERO,    ev=init
+            VAR PTU_sram_timing_init_struct.fsmc_access_mode,  
+            &                                           init=FSMC_ACCESSMODE_A, 
+            &                                                             ev=init
+            VAR PTU_sram_init_struct.fsmc_bank,         init=FSMC_BANK1_NORSRAM2,            
+            &                                                             ev=init
+            VAR PTU_sram_init_struct.fsmc_data_address_mux,  
+            &                                           init=FSMC_DATAADDRESSMUX_DISABLE,           
+            &                                                             ev=init
+            VAR PTU_sram_init_struct.fsmc_memory_type,  init=FSMC_MEMORYTYPE_PSRAM, 
+            &                                                             ev=init
+            VAR PTU_sram_init_struct.fsmc_memory_datawidth,   
+            &                                           init=FSMC_MEMORYDATAWIDTH_16B,             
+            &                                                             ev=init
+            VAR PTU_sram_init_struct.fsmc_burst_accessmode,   
+            &                                           init=FSMC_BURSTACCESSMODE_DISABLE,           
+            &                                                             ev=init          
+            VAR PTU_sram_init_struct.fsmc_asynchronous_wait,   
+            &                                           init=FSMC_ASYNCHRONOUSWAIT_DISABLE,           
+            &                                                             ev=init          
+            VAR PTU_sram_init_struct.fsmc_waitsignal_polarity,   
+            &                                           init=FSMC_WAITSIGNALPOLARITY_LOW,          
+            &                                                             ev=init          
+            VAR PTU_sram_init_struct.fsmc_wrap_mode,    init=FSMC_WRAPMODE_DISABLE,           
+            &                                                             ev=init          
+            VAR PTU_sram_init_struct.fsmc_waitsignal_active,   
+            &                                           init=FSMC_WAIT_SIG_ACTIVE_BEF_WAIT,        
+            &                                                             ev=init          
+            VAR PTU_sram_init_struct.fsmc_write_operation,  
+            &                                           init=FSMC_WRITEOPERATION_ENABLE,       
+            &                                                             ev=init          
+            VAR PTU_sram_init_struct.fsmc_waitsignal,   init=FSMC_WAITSIGNAL_DISABLE,           
+            &                                                             ev=init          
+            VAR PTU_sram_init_struct.fsmc_extended_mode,init=FSMC_EXTENDEDMODE_DISABLE,            
+            &                                                             ev=init          
+            VAR PTU_sram_init_struct.fsmc_write_burst,  init=FSMC_WRITEBURST_DISABLE,           
+            &                                                             ev=init              
+       
+        COMMENT INPUT/OUTPUT SECTION:
+         
+            --None
+	 
+        COMMENT OUTPUT SECTION:
+            
+            --initialize the FPU context save not in lazy mode in FPCCR of FPU.
+            VAR FPU->FPCCR,                          init=0,           			ev=FPU_CNTXT_NTLAZY_MODE
+
+            --enable full access privileges for coprocessors in CPACR of SCB
+            VAR SCB->CPACR,                          	init=0,           		ev=FP_COPROC_EN
+
+            --temporary variable
+            VAR PTU_index,                             	init=0,         		ev=8
+
+            --configure pin 2 of GPIO port B
+            VAR  PTU_gpio_init_structure[0].GPIO_Pin,  	init=0,         		ev=HW_GPIOB_LED_HB
+            VAR  PTU_gpio_init_structure[0].GPIO_Speed,	init=GPIO_SPEED_2MHZ,            
+            &                                                          			ev=GPIO_SPEED_50MHZ
+            VAR  PTU_gpio_init_structure[0].GPIO_Mode, 	init=GPIO_MODE_IN,		ev=GPIO_MODE_OUT
+            VAR  PTU_gpio_init_structure[0].GPIO_OType,	init=GPIO_OTYPE_OD,
+            &                                                          			ev=GPIO_OTYPE_PP
+            VAR  PTU_gpio_init_structure[0].GPIO_PuPd, 	init=GPIO_PUPD_UP,		ev=GPIO_PUPD_NOPULL
+
+            --configures pin 0, 1 and 2 of GPIO port C 
+            VAR  PTU_gpio_init_structure[1].GPIO_Pin,   init=0,           		ev=HW_GPIOC_SYS_MODE 
+            &                                                                		| HW_GPIOC_SYS_SEL
+            VAR  PTU_gpio_init_structure[1].GPIO_Mode,  init=GPIO_MODE_AN,             
+            &                                                             		ev=GPIO_MODE_IN                      
+            VAR  PTU_gpio_init_structure[1].GPIO_PuPd,  init=GPIO_PUPD_UP,		ev=GPIO_PUPD_NOPULL     
+
+            --configures pin 10,11,5,14,15,3,4 of GPIO port C 
+            VAR  PTU_gpio_init_structure[2].GPIO_Pin,   init=0,           		ev=HW_GPIOD_D2 | HW_GPIOD_D3 |
+            &                                                                   	HW_GPIOD_OE | HW_GPIOD_WE |
+            &                                                                   	HW_GPIOD_NE1| HW_GPIOD_D13|
+            &                                                                   	HW_GPIOD_D14| HW_GPIOD_D15|
+            &                                               				HW_GPIOD_D0 | HW_GPIOD_D1
+            VAR  PTU_gpio_init_structure[2].GPIO_Mode,  init=GPIO_MODE_IN,             
+            &                                                             		ev=GPIO_MODE_AF  
+            VAR  PTU_gpio_init_structure[2].GPIO_OType, init=GPIO_OTYPE_OD,             
+            &                                                             		ev=GPIO_OTYPE_PP
+            VAR  PTU_gpio_init_structure[2].GPIO_PuPd,  init=GPIO_PUPD_UP,             
+            &                                                             		ev=GPIO_PUPD_NOPULL 
+
+            --configures pin 13 and 12 of GPIO port C
+            VAR  PTU_gpio_init_structure[3].GPIO_Pin,   init=0,           		ev= HW_GPIOE_BLE | HW_GPIOE_BHE | 
+            &                                           				HW_GPIOE_D4 |  HW_GPIOE_D5 | 
+            &                                            				HW_GPIOE_D6 | HW_GPIOE_D7 | 
+            &                                            				HW_GPIOE_D8 | HW_GPIOE_D9 | 
+            &                                            				HW_GPIOE_D10 | HW_GPIOE_D11 | 
+            &                                            				HW_GPIOE_D12 
+			
+            VAR  PTU_gpio_init_structure[3].GPIO_Mode,  init=GPIO_MODE_OUT,             
+            &                                                             		ev=GPIO_MODE_AF           
+            VAR  PTU_gpio_init_structure[3].GPIO_PuPd, 	init=GPIO_PUPD_UP, 		ev=GPIO_PUPD_NOPULL   
+
+            --configures pin 0,1,4,5,7 to 10,14 and 15 of GPIO port D           
+            VAR  PTU_gpio_init_structure[4].GPIO_Pin,   init=0,           		ev=HW_GPIOF_A0 | HW_GPIOF_A1 | 
+            &                                           				HW_GPIOF_A2 | HW_GPIOF_A3 | 
+            &                                            				HW_GPIOF_A4 | HW_GPIOF_A5 | 
+            &                                            				HW_GPIOF_A6 | HW_GPIOF_A7 | 
+            &                                            				HW_GPIOF_A8 | HW_GPIOF_A9  
+			
+            VAR  PTU_gpio_init_structure[4].GPIO_Mode,  init=GPIO_MODE_IN,
+            &                                                             		ev=GPIO_MODE_AF           
+            VAR  PTU_gpio_init_structure[4].GPIO_OType, init=GPIO_OTYPE_OD,            
+            &                                                             		ev=GPIO_OTYPE_PP           
+            VAR  PTU_gpio_init_structure[4].GPIO_PuPd,  init=GPIO_PUPD_UP,             
+            &                                                             		ev=GPIO_PUPD_NOPULL    
+
+            --configure pin 7 to 15 of GPIO port E           
+            VAR  PTU_gpio_init_structure[5].GPIO_Pin,   init=0,           		ev= HW_GPIOG_A10 | HW_GPIOG_A11 | 
+            &                                                                  		HW_GPIOG_A12 | HW_GPIOG_A13 | 
+            &                                            				HW_GPIOG_A14 | HW_GPIOG_A15 | 
+            &                                            				HW_GPIOG_NE2 | HW_GPIOG_NE3 |
+            &                                            				HW_GPIOG_NE4
+	    
+            VAR  PTU_gpio_init_structure[5].GPIO_Mode,  init=GPIO_MODE_IN,
+            &                                                             		ev=GPIO_MODE_AF           
+            VAR  PTU_gpio_init_structure[5].GPIO_OType, init=GPIO_OTYPE_OD,             
+            &                                                             		ev=GPIO_OTYPE_PP           
+            VAR  PTU_gpio_init_structure[5].GPIO_PuPd,  init=GPIO_PUPD_UP,             
+            &                                                             		ev=GPIO_PUPD_NOPULL
+
+            --configures pin 0 to 5 of GPIO port E
+            VAR  PTU_gpio_init_structure[6].GPIO_Pin,   init=0,            		ev=HW_GPIOH_OSC_IN    
+			
+            VAR  PTU_gpio_init_structure[6].GPIO_Mode,  init=GPIO_MODE_AF, 		ev=GPIO_MODE_IN
+            VAR  PTU_gpio_init_structure[6].GPIO_OType, init=GPIO_OTYPE_OD,		ev=GPIO_OTYPE_PP           
+            VAR  PTU_gpio_init_structure[6].GPIO_PuPd,  init=GPIO_PUPD_UP, 		ev=GPIO_PUPD_NOPULL     
+
+            --configures pin 9 and 10 of GPIO port G           
+            VAR  PTU_gpio_init_structure[7].GPIO_Pin,   init=0,             	ev= HW_GPIOH_OSC_OUT   
+			
+            VAR  PTU_gpio_init_structure[7].GPIO_Mode,  init=GPIO_MODE_IN,  	ev= GPIO_MODE_OUT         
+            VAR  PTU_gpio_init_structure[7].GPIO_OType, init=GPIO_OTYPE_OD, 	ev= GPIO_OTYPE_OD         
+            VAR  PTU_gpio_init_structure[7].GPIO_PuPd,  init=GPIO_PUPD_UP,  	ev= GPIO_PUPD_NOPULL       
+
+	   
+	-- Stub Calls :
+        SIMUL
+
+            --reset the RCC Clock Configuration to the default reset state
+            STUB RccDeInit()
+
+            --enables the External High Speed oscillator
+            STUB RccHseConfig (RCC_HSE_ON)
+
+            --Wait for HSE ready state  
+            STUB RccWaitForHseStartUp()SUCCESS
+
+            --enables the Low Speed APB(APB1) Peripheral Power Interface
+            STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_PWR, ENABLE)
+
+            --sets Regulator voltage scaling output bit to scale 1 mode in the Power Control register
+            STUB PwrMainRegulatorModeConfig (PWR_REGULATOR_VOLTAGE_SCALE1)
+
+            --configures the AHB Clock (HCLK) to System Clock(SYSCLK)
+            STUB RccHclkConfig (RCC_SYSCLK_DIV1)
+
+            --configures the Low Speed APB Clock (PCLK1) to HCLK/DEC_FOUR
+            STUB RccPclk1Config (RCC_HCLK_DIV4)
+
+            --configures the High Speed APB Clock (PCLK2) to HCLK/DEC_TWO
+            STUB RccPclk2Config (RCC_HCLK_DIV2)
+
+            --sets the code latency value
+            STUB FlashSetLatency (FLASH_LATENCY_5)
+
+            --enables the instruction Cache feature
+            STUB FlashInstructionCacheCmd (ENABLE)
+
+            --enables the data Cache feature
+            STUB FlashDataCacheCmd (ENABLE)
+
+            --enables pre-fetch buffer
+            STUB FlashPrefetchBufferCmd (ENABLE)
+
+            --configures the main PLL Clock source, multiplication and division factors
+            STUB RccPllConfig (RCC_PLLSOURCE_HSE, HW_PLL_M, HW_PLL_N, HW_PLL_P, HW_PLL_Q)
+
+            --enables main PLL
+            STUB RccPllCmd (ENABLE)
+
+            --waits till PLL is ready
+            STUB RccGetFlagStatus (RCC_FLAG_PLLRDY)RESET
+            STUB RccGetFlagStatus (RCC_FLAG_PLLRDY)RESET
+            STUB RccGetFlagStatus (RCC_FLAG_PLLRDY)SET
+
+            --sets the PLL as System Clock
+            STUB RccSysClkConfig (RCC_SYSCLKSOURCE_PLLCLK)
+
+            --waits till PLL is used as System Clock source
+            STUB RccGetSysClkSource()RESET
+            STUB RccGetSysClkSource()RESET
+            STUB RccGetSysClkSource()PLL_USD_AS_SYSCLK
+
+            --initializes the interrupt vector table in RAM
+            STUB IntrInit()
+
+            --sets the Vector Table base address at RAM
+            STUB NvicSetVectorTable (NVIC_VECTTAB_RAM, VT_BSE_ADDR_OFFSET)
+
+            --configures the group priority and sub-priority
+            STUB NvicPriorityGroupConfig (NVIC_PRIORITYGROUP_4)
+
+            --loads the reference to the TbaseIntrHandler into the vector table for System Tick Interrupt into RAM
+            STUB IntrInstall (INTR_SYS_TICK, TbaseIntrHandler)
+
+            --sets priority of the System Tick Interrupt 
+            --STUB NvicSetPriority (SYSTICK_IRQN, SYS_TIC_INTR_PRIO)
+            --sets priority of the PendSV interrupt
+            STUB IntrInstall (INTR_PEND_SV, PendSVHandler)
+
+            --sets priority of the System Tick Interrupt 
+           -- STUB NvicSetPriority (PENDSV_IRQN, PENDSV_INTR_PRIO)
+
+            --enables the CRC Peripheral Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_CRC, ENABLE)
+
+            -- static function stub calls
+            --enables the FSMC Peripheral Clock
+            STUB RccAhb3PeriphClockCmd (RCC_AHB3PERIPH_FSMC, ENABLE)
+
+            --enables the System Configuration Clock
+            STUB RccApb2PeriphClockCmd (RCC_APB2PERIPH_SYSCFG, ENABLE)
+
+            --enables GPIO port A Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+
+            --enables GPIO port B Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOB, ENABLE)
+
+            --configures GPIO port B
+            STUB GpioInit (GPIOB)
+
+            --configures GPIO port C
+            STUB GpioInit (GPIOC)
+
+            --enables GPIO port C Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOC, ENABLE)
+
+            --enables GPIO port D Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOD, ENABLE)  
+
+            --changes the mapping of pins of GPIO port D to FSMC
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE0, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE1, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE4, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE5, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE7, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE8, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE9, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE10, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE14, GPIO_AF_FSMC)          
+            STUB GpioPinAFConfig (GPIOD, GPIO_PINSOURCE15, GPIO_AF_FSMC)
+
+            --configures GPIO port D     
+            STUB GpioInit (GPIOD)
+
+            --enables GPIO port E Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOE, ENABLE)
+
+            --change the mapping of pins of GPIO port E to FSMC     
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE0, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE1, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE7, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE8, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE9, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE10, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE11, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE12, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE13, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE14, GPIO_AF_FSMC)
+            STUB GpioPinAFConfig (GPIOE, GPIO_PINSOURCE15, GPIO_AF_FSMC)
+
+            --configures GPIO port E     
+            STUB GpioInit (GPIOE)
+
+            --enables GPIO port F Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOF, ENABLE)
+
+            --change the mapping of pins of GPIO port F to FSMC     
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE0, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE1, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE2, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE3, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE4, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE5, GPIO_AF_FSMC)    
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE12, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE13, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE14, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOF, GPIO_PINSOURCE15, GPIO_AF_FSMC)
+
+            --configures GPIO port F     
+            STUB GpioInit (GPIOF)
+
+            --enables GPIO port G Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOG, ENABLE)
+
+            --change the mapping of pins port G to FSMC
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE0, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE1, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE2, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE3, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE4, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE5, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE9, GPIO_AF_FSMC)  
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE10, GPIO_AF_FSMC) 
+            STUB GpioPinAFConfig (GPIOG, GPIO_PINSOURCE11, GPIO_AF_FSMC) 
+
+            --configures GPIO port G     
+            STUB GpioInit (GPIOG)
+
+            --enables GPIO port H Clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOH, ENABLE)
+
+            --configures GPIO port H     
+            STUB GpioInit (GPIOH)     
+
+            --configures GPIO port H     
+            STUB GpioInit (GPIOH) 
+
+            --initializes NORSRAM bank in FSMC
+            STUB FsmcNorSramInit()
+
+            --enables the first block of bank one of FSMC
+            STUB FsmcNorSramCmd(FSMC_BANK1_NORSRAM2, ENABLE)
+    
+        END SIMUL
+     
+    	--Calling the Unit Under Test:
+    	#HwInit();
+     
+    END ELEMENT
+   
+END TEST -- TEST 3
+
+END SERVICE -- HwInit

@@ -1,0 +1,284 @@
+HEADER hducommfpbit,Source Code Ver :1.4, TestScript Ver :1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Samhitha Prasad L C
+--
+-- File Name           : hducommfpbit_2.ptu
+--
+-- Test Creation Date  : 30.10.2017 
+--
+-- Tested Functions    : ProcessorTest
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE           TESTER NAME        		MODIFICATIONS
+-- ------------        ---------           -----------        		-------------
+--    1.1              30.10.2017          Samhitha Prasad L C      Created the ptu file
+--    1.2 			   10.11.2017		   Samhitha Prasad L C		Updated as per #PR100171
+--    1.3 			   14.11.2017	       Samhitha Prasad L C	    Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommfpbit.h"           
+##include "hdulibbasicfunc.h"        
+##include "hducommfwdog.h"           
+##include "hducommfmemmap.h"         
+##include "hdulibstm32f4xxcrc.h"     
+##include "hducommfarinc825.h"     
+
+##define PROCESSOR_ERR_VAL  8U
+##define FLIGHT_CRC_ERR_VAL 4U
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern T_UINT32 Proc_test_res;
+    #extern void ProcessorTest(void);
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name         : Samhitha Prasad L C
+	COMMENT 
+	COMMENT File Name           : hducommfpbit_2.ptu
+	COMMENT 
+	COMMENT Tested Functions    : ProcessorTest
+	COMMENT 	
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT
+	COMMENT Assumption(s):
+	COMMENT None
+	COMMENT 
+	COMMENT Constraint(s):
+	COMMENT
+	COMMENT 1. Header file "hducommfmemmap.h" is modified for testing purpose.
+	COMMENT The macro 'MEMMAP_PRI_APP_ADDR' is modified for stubbing hardware address.
+	COMMENT /*Commented for testing purpose*/
+	COMMENT /*#define MEMMAP_PRI_APP_ADDR        ( MEMMAP_PRI_APP_START) */
+	COMMENT
+	COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT T_UINT32   PTU_MEMMAP_PRI_APP_ADDR ;
+	COMMENT #define MEMMAP_PRI_APP_ADDR        ((T_UINT32)&PTU_MEMMAP_PRI_APP_ADDR)
+	COMMENT 
+	COMMENT 2. Header file "hducommfmemmap.h" is modified for testing purpose.
+	COMMENT The macro 'MEMMAP_PRI_APP_CRC_ADDR' is modified for stubbing hardware address.
+	COMMENT /*Commented for testing purpose*/
+	COMMENT /*#define MEMMAP_PRI_APP_CRC_ADDR    	( MEMMAP_PRI_APP_START
+    COMMENT                         				   + MEMMAP_PRI_APP_SIZE \
+    COMMENT                         				   - MEMMAP_CRC_LEN)*/
+	COMMENT
+	COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT T_UINT32   PTU_MEMMAP_PRI_APP_CRC_ADDR;
+	COMMENT #define MEMMAP_PRI_APP_CRC_ADDR       ((T_UINT32)&PTU_MEMMAP_PRI_APP_CRC_ADDR)
+	COMMENT
+	COMMENT 3. In function 'SRamTest' for loop can not be tested for 0 and 1 time.
+	COMMENT	since it is controlled with macro's DEC_ZERO and RAM_SIZE.
+	COMMENT
+	COMMENT
+	COMMENT 4. In function 'NvRamTest' for loop can not be tested for 0 and 1 time.
+	COMMENT	since it is controlled with macro's DEC_ZERO and NVRAM_SIZE.
+	COMMENT
+	COMMENT 5. PTU 'hducommfpbit' has been split into two to test Proc_test_res of  
+	COMMENT requirement 'hducommfpbit-ProcessorTest-CB-LLR-003'.
+	COMMENT
+	COMMENT </AC>
+	
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT
+	COMMENT Valid Class(es)
+	COMMENT Class 1
+	COMMENT In the Function 'ProcessorTest','AluTest'is called.
+	COMMENT
+	COMMENT	Class 2
+	COMMENT In the Function 'ProcessorTest','Proc_test_res'is equal to FAILED.
+	COMMENT
+	COMMENT Class 3
+	COMMENT In the Function 'ProcessorTest','Proc_test_res'is not equal to FAILED.
+	COMMENT 
+	COMMENT Class 4
+	COMMENT In the Function 'PbitCheck','ProcessorTest'is called.
+	COMMENT 
+	COMMENT Class 5
+	COMMENT In the Function 'PbitCheck','SRamTest'is called.
+	COMMENT 
+	COMMENT Class 6
+	COMMENT In the Function 'PbitCheck','NvRamTest'is called.
+	COMMENT
+	COMMENT Class 7
+	COMMENT In the Function 'CrcCheck','CrcResetDr'is called.
+	COMMENT 
+	COMMENT Class 8
+	COMMENT In the Function 'CrcCheck','CrcCalcBlockCrc'is called.	 
+	COMMENT 
+	COMMENT Class 9
+	COMMENT In the Function 'CrcCheck',calculated crc is equal to actual crc.
+	COMMENT 
+	COMMENT Class 10
+	COMMENT In the Function 'CrcCheck',calculated crc is not equal to actual crc.
+	COMMENT
+	COMMENT Class 11
+	COMMENT In function "SRamTest", Sram_buffer_check is equal to 'CHECK_5A5A'.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In function "SRamTest", Sram_buffer_check is equal to 'CHECK_A5A5'.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function "NvRamTest", Nvram_buffer_check is equal to 'CHECK_5A5A'.
+	COMMENT
+	COMMENT Class 14
+	COMMENT In function "NvRamTest", Nvram_buffer_check is equal to 'CHECK_A5A5'.                                                                                 
+    COMMENT
+    COMMENT Class 15
+	COMMENT In function "SRamTest", Sram_buffer_check is not equal to 'CHECK_5A5A'.
+	COMMENT
+	COMMENT Class 16
+	COMMENT In function "SRamTest", Sram_buffer_check is not equal to 'CHECK_A5A5'.
+	COMMENT 
+	COMMENT	Class 17
+	COMMENT In function "NvRamTest", Nvram_buffer_check is not equal to 'CHECK_5A5A'.
+	COMMENT
+	COMMENT	Class 18
+	COMMENT In function "NvRamTest", Nvram_buffer_check is not equal to 'CHECK_A5A5'.
+	COMMENT
+	COMMENT Invalid Class(es) 
+	COMMENT
+	COMMENT None
+	COMMENT 
+	COMMENT  </ECD>
+	
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hducommfpbit_c
+
+    	#T_UINT32 CrcCalcBlockCrc(T_UINT32 _in *pbuffer, T_UINT32 _in buffer_length);
+    	
+    	#void CrcResetDr(void); 
+    	
+    	#void AluTest(void) 
+    	#{
+    	# Proc_test_res = TRUE;
+    	#}
+    	
+    	#void WdogKickWatchDog(void); 
+    	    	
+    	#void section(); 
+    
+	END DEFINE
+
+ELSE_SIMUL
+
+	--No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommfpbit.c
+ENVIRONMENT ENV_hducommfpbit_c
+
+	ARRAY Nvram_buffer_check,		init = { others => 0 },		ev = init
+	
+	VAR Proc_test_res,				init = 0,					ev = init
+	
+	VAR Processor_err_stat,			init = 0,					ev = init
+	
+	VAR Sram_err_stat,				init = 0,					ev = init
+	
+	ARRAY Sram_buffer_check,		init = { others => 0 },		ev = init
+	
+	VAR Applicatn_err_stat,			init = 0,					ev = init
+	
+	VAR Nvram_err_stat,				init = 0,					ev = init
+	
+	VAR Pbit_error_status,			init = 0,					ev = init
+  
+END ENVIRONMENT -- ENV_hducommfpbit_c
+USE ENV_hducommfpbit_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service ProcessorTest
+--------------------------------------------------------------------------------
+SERVICE ProcessorTest
+SERVICE_TYPE extern
+
+TEST 2
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hducommfpbit-ProcessorTest-CB-LLR-003]
+	COMMENT The function does nothing when  the value of 'Proc_test_res' is not equal to FAILED. 
+	COMMENT Equivalence Class 3
+	COMMENT </TD>
+
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+        
+			--Initalizing  Proc_test_res to failed.				   		  
+			VAR Proc_test_res,							init=FAILED,			ev=TRUE
+			
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--NONE	
+			
+			
+		COMMENT OUTPUT SECTION:
+			
+			-- None
+				
+		-- Stub calls
+		SIMUL
+		    
+        	--to perform the arithmetical and logical operations on registers
+        	STUB AluTest()
+
+        END SIMUL
+        
+	-- Calling the unit under test	
+	#ProcessorTest();
+
+	END ELEMENT
+
+END TEST -- TEST 2
+    
+END SERVICE -- ProcessorTest
+
+

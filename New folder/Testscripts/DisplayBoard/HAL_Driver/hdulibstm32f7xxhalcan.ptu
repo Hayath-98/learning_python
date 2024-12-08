@@ -1,0 +1,3562 @@
+HEADER hdulibstm32f7xxhalcan, Source Code Ver : 1.4 , TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name      	: Gowrima E
+--
+-- File Name        	: hdulibstm32f7xxhalcan.ptu
+--
+-- Test Creation Date  	: 31.10.2017
+--
+-- Tested Functions 	: HalCanInit
+--			  			  HalCanConfigFilter
+--			  			  HalCanTransmit
+--			  			  HalCanReceive
+--
+-- Version History      :
+--
+-- TEST-VERSION      TEST-DATE   		TESTER NAME   		MODIFICATIONS
+-- ------------      ---------	        -----------	        -------------
+-- 1.1          	 31.10.2017         Gowrima E         	Created the PTU file.
+-- 1.2          	 10.11.2017         Gowrima E           Updated as per PR100171
+-- 1.3          	 14.11.2017         Gowrima E           Updated as per PR100171
+-- 1.4			   	 03.10.2020         Harshitha R         Updated as per PR#100281	
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibstm32f746xx.h" 
+##include "hdulibstm32f7xxhalcan.h" 
+##include "hdulibstm32f7xxhalconf.h" 
+##include "hdulibstm32f7xxhal.h" 
+##include "hdulibstm32f7xx.h" 
+##include "hdulibbasictypes.h" 
+##include "hdulibstm32f7xxhaldef.h"  
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	--None
+	
+-- Declarations of the temporary variable
+
+    --This variable is created to verify the member pTxMsg of the structure h_can
+	#T_CAN_TX_MSG_TYPE    PTU_pTxMsg;     
+	
+	--This variable is created to verify the member pRxMsg of the structure h_can
+  	#T_CAN_RX_MSG_TYPE    PTU_pRxMsg;
+  	
+  	--This variable is created to verify the member Instance of the structure h_can
+  	#T_CAN PTU_Instance;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      :	Gowrima E 
+	COMMENT
+	COMMENT File Name        : 	hdulibstm32f7xxhalcan.c
+	COMMENT
+	COMMENT Tested Functions : 	HalCanInit
+	COMMENT						HalCanConfigFilter
+	COMMENT						HalCanTransmit
+	COMMENT						HalCanReceive
+	COMMENT
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT
+	COMMENT Assumption(s):
+	COMMENT None
+	COMMENT
+	COMMENT Constraint(s):
+	COMMENT 
+	COMMENT 1.Source file "hdulibstm32f7xxhalcan.c" is modified for terminating infinite loop in 
+	COMMENT functions HalCanTransmit, and HalCanReceive
+	COMMENT  
+	COMMENT  Snippet of code is added in the above listed functions:
+	COMMENT 
+	COMMENT  /*local variable declared for testing purpose*/
+	COMMENT    T_UINT16 PTU_count =0;
+	COMMENT
+	COMMENT	   /*Modified for testing purpose to terminate infinite loop*/
+	COMMENT	      PTU_count++;
+	COMMENT	      if(PTU_count == 4)
+	COMMENT	      {
+	COMMENT	         break;
+	COMMENT	      }
+	COMMENT	      else
+	COMMENT	      {
+	COMMENT	        /*nothing*/
+	COMMENT       }
+	COMMENT  
+	COMMENT 2.Following Test script related warnings are observed during Target Execution for volatile 
+	COMMENT keyword member/variable:
+	COMMENT   warning #191-D: type qualifier is meaningless on cast type
+	COMMENT 
+    COMMENT 3.‘do-while’ loop present inside the macro __HAL_UNLOCK cannot be covered for TRUE condition and 
+    COMMENT   ‘2 loops or more’ times since it is controlled by Macro ZERO in functions 'HalCanInit', 
+    COMMENT   'HalCanTransmit', 'HalCanReceive'
+    COMMENT   Therefore 100% coverage cannot be achieved
+    COMMENT
+    COMMENT 4. 'while loop' can't be covered for FALSE condition and ‘2 loops or more’ times for variable 
+    COMMENT "h_can->Instance->MSR" in LLR "hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-018"
+    COMMENT of function "HalCanInit" is controlled by macro "CAN_MSR_INAK".
+    COMMENT
+    COMMENT 5. 'while loop' can't be covered for FALSE condition and ‘0 loop’ time for macro
+   	COMMENT __HAL_CAN_TRANSMIT_STATUS since it is controlled by local variable "transmit_mailbox"
+    COMMENT in function "HalCanTransmit"
+    COMMENT
+    COMMENT 6. 'while loop' can't be covered for FALSE condition and ‘0 time loop’ time for macro
+   	COMMENT __HAL_CAN_MSG_PENDING since it is controlled by macro "CAN_FIFO0"
+    COMMENT in function "HalCanReceive"
+	COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT 
+	COMMENT Valid Class(es)
+	COMMENT
+	COMMENT Class 1  
+	COMMENT In function "HalCanInit", h_can is equal to NULL
+	COMMENT 
+	COMMENT Class 2 
+	COMMENT In function "HalCanInit", h_can is not equal to NULL
+	COMMENT 
+	COMMENT Class 3 
+	COMMENT In function "HalCanInit", state of h_can is equal to HAL_CAN_STATE_RESET
+	COMMENT 
+	COMMENT Class 4  
+	COMMENT In function "HalCanInit", state of h_can is not equal to HAL_CAN_STATE_RESET
+	COMMENT 
+	COMMENT Class 5  
+	COMMENT In function "HalCanInit", MSR of Instance of h_can value bitwise AND with CAN_MSR_INAK
+	COMMENT is equal to CAN_MSR_INAK 
+	COMMENT 	
+	COMMENT Class 6 
+	COMMENT In function "HalCanInit", MSR of Instance of h_can value bitwise AND with CAN_MSR_INAK 
+	COMMENT is not equal to CAN_MSR_INAK
+	COMMENT 
+	COMMENT Class 7	
+	COMMENT In function "HalCanInit", returned value of function HALGetTick is subtracted from 
+	COMMENT tick_start is greater than CAN_TIMEOUT_VALUE
+	COMMENT 
+	COMMENT Class 8	
+	COMMENT In function "HalCanInit", returned value of function HALGetTick is subtracted from 
+	COMMENT tick_start is lesser than CAN_TIMEOUT_VALUE
+	COMMENT 
+	COMMENT Class 9	
+	COMMENT In function "HalCanInit", returned value of function HALGetTick is subtracted from 
+	COMMENT tick_start is equal to CAN_TIMEOUT_VALUE
+	COMMENT 
+	COMMENT Class 10
+	COMMENT In function "HalCanInit", TTCM of Init of h_can is equal to ENABLE 
+	COMMENT 
+	COMMENT Class 11
+	COMMENT In function "HalCanInit", TTCM of Init of h_can is not equal to ENABLE 
+	COMMENT 
+	COMMENT Class 12
+	COMMENT In function "HalCanInit", ABOM of Init of h_can is equal to ENABLE
+	COMMENT 
+	COMMENT Class 13
+	COMMENT In function "HalCanInit", ABOM of Init of h_can is not equal to ENABLE
+	COMMENT 
+	COMMENT Class 14
+	COMMENT In function "HalCanInit", AWUM of Init of h_can is equal to ENABLE
+	COMMENT 
+	COMMENT Class 15 
+	COMMENT In function "HalCanInit", AWUM of Init of h_can is not equal to ENABLE
+	COMMENT 
+	COMMENT Class 16
+	COMMENT In function "HalCanInit", NART of Init of h_can is equal to ENABLE
+	COMMENT 
+	COMMENT Class 17
+	COMMENT In function "HalCanInit", NART of Init of h_can is not equal to ENABLE
+	COMMENT 
+	COMMENT Class 18
+	COMMENT In function "HalCanInit", RFLM of Init of h_can is equal to ENABLE
+	COMMENT 
+	COMMENT Class 19
+	COMMENT In function "HalCanInit", RFLM of Init of h_can is not equal to ENABLE
+	COMMENT 
+	COMMENT Class 20
+	COMMENT In function "HalCanInit", TXFP of Init of h_can is equal to ENABLE
+	COMMENT 
+	COMMENT Class 21
+	COMMENT In function "HalCanInit", TXFP of Init of h_can is not equal to ENABLE
+	COMMENT 
+	COMMENT Class 22
+	COMMENT The function "HalCanTransmit", TSR of Instance of h_can with CAN_TSR_TME0 is
+	COMMENT equal to CAN_TSR_TME0
+	COMMENT 
+	COMMENT Class 23
+	COMMENT The function "HalCanTransmit", TSR of Instance of h_can with CAN_TSR_TME0 is
+	COMMENT not equal to CAN_TSR_TME0
+	COMMENT 
+	COMMENT Class 24
+	COMMENT The function "HalCanTransmit", TSR of Instance of h_can with CAN_TSR_TME1 is 
+	COMMENT equal to CAN_TSR_TME1
+	COMMENT 
+	COMMENT Class 25
+	COMMENT The function "HalCanTransmit", TSR of Instance of h_can with CAN_TSR_TME1 is not 
+	COMMENT equal to CAN_TSR_TME1
+	COMMENT 
+	COMMENT Class 26
+	COMMENT The function "HalCanTransmit", TSR of Instance of h_can with CAN_TSR_TME2 is 
+	COMMENT equal to CAN_TSR_TME2
+	COMMENT 
+	COMMENT Class 27
+	COMMENT The function "HalCanTransmit", TSR of Instance of h_can with CAN_TSR_TME2 is not
+	COMMENT equal to CAN_TSR_TME2
+	COMMENT 
+	COMMENT Class 28
+	COMMENT The function "HalCanTransmit", the value of IDE of pTxMsg of h_can is equal to
+	COMMENT CAN_ID_STD.
+	COMMENT 
+	COMMENT Class 29
+	COMMENT The function "HalCanTransmit", the value of IDE of pTxMsg of h_can is not equal to 
+	COMMENT CAN_ID_STD.
+	COMMENT 
+	COMMENT Class 30
+	COMMENT The function "HalCanTransmit", time_out is equal to HAL_MAX_DELAY
+	COMMENT 
+	COMMENT Class 31
+	COMMENT The function "HalCanTransmit", time_out is not equal to HAL_MAX_DELAY
+	COMMENT 
+	COMMENT Class 32
+	COMMENT The function "HalCanTransmit",time_out is equal to ZERO 
+	COMMENT 
+	COMMENT Class 33
+	COMMENT The function "HalCanTransmit",time_out is not equal to ZERO 
+	COMMENT 
+	COMMENT Class 34
+	COMMENT The function "HalCanReceive", value of State of  h_can is equal to HAL_CAN_STATE_BUSY_TX.
+	COMMENT 
+	COMMENT Class 35
+	COMMENT The function "HalCanReceive", value of State of  h_can is not equal to HAL_CAN_STATE_BUSY_TX.
+	COMMENT 
+	COMMENT Class 36
+	COMMENT The function "HalCanReceive", calls HALGetTick
+	COMMENT 
+	COMMENT Class 37
+	COMMENT The function "HalCanReceive", return value from macro __HAL_CAN_MSG_PENDING with 
+	COMMENT parameter h_can and fifo_number is equal to ZERO
+	COMMENT 
+	COMMENT Class 38
+	COMMENT The function "HalCanReceive", return value from macro __HAL_CAN_MSG_PENDING with 
+	COMMENT parameter h_can and fifo_number is not equal to ZERO
+	COMMENT 
+	COMMENT Class 39
+	COMMENT The function "HalCanReceive", calls the macro __HAL_UNLOCK 
+	COMMENT 
+	COMMENT Class 40
+	COMMENT The function "HalCanReceive", time_out is equal to HAL_MAX_DELAY
+	COMMENT 
+	COMMENT Class 41
+	COMMENT The function "HalCanReceive", time_out is not equal to HAL_MAX_DELAY
+	COMMENT 
+	COMMENT Class 42
+	COMMENT The function "HalCanReceive", time_out is ZERO 
+	COMMENT 
+	COMMENT Class 43
+	COMMENT The function "HalCanReceive", time_out is other than ZERO 
+	COMMENT 
+	COMMENT Class 44
+	COMMENT The function "HalCanReceive", return value of function HALGetTick subtracted with 
+	COMMENT tick start is greater than time_out
+	COMMENT 
+	COMMENT Class 45
+	COMMENT The function "HalCanReceive", return value of function HALGetTick subtracted with 
+	COMMENT tick start is less than time_out
+	COMMENT   
+	COMMENT Class 46
+	COMMENT The function "HalCanReceive", return value of function HALGetTick subtracted with 
+	COMMENT tick start is equal to time_out
+	COMMENT 
+	COMMENT Class 47
+	COMMENT The function "HalCanReceive", IDE of pRxMsg of h_can is equal to CAN_ID_STD.
+	COMMENT 
+	COMMENT Class 48
+	COMMENT The function "HalCanReceive", IDE of pRxMsg of h_can is not equal to CAN_ID_STD.
+	COMMENT 
+	COMMENT Class 49
+	COMMENT The function "HalCanReceive", fifo number is equal to CAN_FIFO0
+	COMMENT 
+	COMMENT Class 50
+	COMMENT The function "HalCanReceive", fifo number is not equal to CAN_FIFO0
+	COMMENT 
+	COMMENT Class 51
+	COMMENT The function "HalCanReceive", value of State of h_can is equal to HAL_CAN_STATE_BUSY_TX_RX
+	COMMENT 
+	COMMENT Class 52
+	COMMENT The function "HalCanReceive", value of State of h_can is not equal to 
+	COMMENT HAL_CAN_STATE_BUSY_TX_RX
+	COMMENT 
+	COMMENT Class 64	
+	COMMENT The function "HalCanConfigFilter", value of FilterScale of filter_config is equal 
+	COMMENT to CAN_FILTERSCALE_16BIT
+	COMMENT 
+	COMMENT Class 65	
+	COMMENT The function "HalCanConfigFilter", value of FilterScale of filter_config is not 
+	COMMENT equal to CAN_FILTERSCALE_16BIT
+	COMMENT 
+	COMMENT Class 66	
+	COMMENT The function "HalCanConfigFilter", value of FilterScale of filter_config is equal 
+	COMMENT to CAN_FILTERSCALE_32BIT	
+	COMMENT 
+	COMMENT Class 67	
+	COMMENT The function "HalCanConfigFilter", value of FilterScale of filter_config is not equal
+	COMMENT to CAN_FILTERSCALE_32BIT	
+	COMMENT 
+	COMMENT Class 68	
+	COMMENT The function "HalCanConfigFilter", FilterMode of filter_config is equal to 
+	COMMENT CAN_FILTERMODE_IDMASK	
+	COMMENT 
+	COMMENT Class 69	
+	COMMENT The function "HalCanConfigFilter", FilterMode of filter_config is not equal to
+	COMMENT CAN_FILTERMODE_IDMASK	
+	COMMENT 
+	COMMENT Class 70	
+	COMMENT The function "HalCanConfigFilter", FilterFIFOAssignment of filter_config is equal to
+	COMMENT CAN_FILTER_FIFO0
+	COMMENT 
+	COMMENT Class 71	
+	COMMENT The function "HalCanConfigFilter", FilterFIFOAssignment of filter_config is not equal
+	COMMENT to CAN_FILTER_FIFO0
+	COMMENT 
+	COMMENT Class 72	
+	COMMENT The function "HalCanConfigFilter", FilterFIFOAssignment of filter_config is equal to 
+	COMMENT CAN_FILTER_FIFO1	
+	COMMENT 
+	COMMENT Class 73	
+	COMMENT The function "HalCanConfigFilter", FilterFIFOAssignment of filter_config is not equal 
+	COMMENT to CAN_FILTER_FIFO1		
+	COMMENT 
+	COMMENT Class 74
+	COMMENT The function "HalCanConfigFilter", FilterActivation of filter_config is equal to ENABLE	
+	COMMENT 
+	COMMENT Class 75	
+	COMMENT The function "HalCanConfigFilter", FilterActivation of filter_config is not equal to ENABLE
+	
+	COMMENT Invalid Class(es)
+	COMMENT Class 60
+	COMMENT The function "HalCanTransmit",Invalid Reference is passed to h_can parameter
+	COMMENT 
+	COMMENT Class 61
+	COMMENT The function "HalCanReceive",Invalid Reference is passed to h_can parameter
+	COMMENT 
+	COMMENT Class 62
+	COMMENT The function "HalCanConfigFilter",Invalid Reference is passed to h_can parameter
+	COMMENT 
+	COMMENT Class 63
+	COMMENT The function "HalCanConfigFilter",Invalid Reference is passed to filter_config parameter
+	COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdulibstm32f7xxhalcan_c
+	
+    	#T_UINT32 HALGetTick(void); 
+    	#void HalCanMspInit(T_CAN_HANDLE _in *h_can);
+    	
+	END DEFINE
+
+ELSE_SIMUL
+
+-- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+--No special things that have to be done on the host to run the test.
+
+--ELSE
+
+--No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdulibstm32f7xxhalcan.c
+
+--ENVIRONMENT ENV_hdulibstm32f7xxhalcan_c
+
+--None
+
+--END ENVIRONMENT -- ENV_hdulibstm32f7xxhalcan_c
+
+--USE ENV_hdulibstm32f7xxhalcan_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalCanTransmit
+--------------------------------------------------------------------------------
+SERVICE HalCanTransmit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_HANDLE h_can;
+    #T_UINT32 time_out;
+    -- By function returned type declaration
+    #T_HAL_STATUS ret_HalCanTransmit;
+
+    ENVIRONMENT ENV_HalCanTransmit
+   
+		STRUCTURE PTU_Instance,		init = {others => 0}, 				ev = init
+
+   		STRUCTURE h_can,			init = { Instance => &PTU_Instance, Init => { Prescaler => 0, 
+	        						&		Mode => 0, SJW => 0, BS1 => 0, BS2 => 0, TTCM => 0, 
+	        						& 		ABOM => 0, AWUM => 0, NART => 0, RFLM => 0, TXFP 
+	        						&		 => 0 }, pTxMsg => &PTU_pTxMsg, pRxMsg => &PTU_pRxMsg, 
+        							&		State => HAL_CAN_STATE_RESET, Lock => HAL_UNLOCKED, 
+        							&		ErrorCode => 0 },			ev = init
+
+        VAR time_out,				init = 0,							ev = init
+        
+        VAR ret_HalCanTransmit,		init = HAL_OK,						ev = init
+        
+    END ENVIRONMENT -- ENV_HalCanTransmit
+    
+    USE ENV_HalCanTransmit
+    
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-001]
+	COMMENT The function sets the value of the transmit mailbox to CAN_TXMAILBOX_0,
+	COMMENT  when
+	COMMENT a) one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal
+	COMMENT to CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal 
+	COMMENT to CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal 
+	COMMENT to CAN_TSR_TME2 and
+	COMMENT b) the value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal 
+	COMMENT to CAN_TSR_TME0
+	COMMENT Tested for MCDC TFF
+	COMMENT Equivalence Class 22, 25, 27
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-004]
+	COMMENT The function sets the value of TIR of sTxMailBox with index transmit mailbox of Instance
+	COMMENT of h_can to 
+	COMMENT the value obtained by performing bitwise AND on TIR of sTxMailBox with index transmit
+	COMMENT mailbox of Instance 
+	COMMENT of h_can and CAN_TI0R_TXRQ, when one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal 
+	COMMENT to CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal
+	COMMENT to CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal
+	COMMENT to CAN_TSR_TME2.
+	COMMENT Equivalence Class 22, 25, 27	
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-005]
+	COMMENT The function sets the value of TIR of sTxMailBox with index transmit mailbox of Instance
+	COMMENT of h_can to the value obtained by performing bitwise OR following values:
+	COMMENT 1. TIR of sTxMailBox with index transmit mailbox of Instance of h_can.
+	COMMENT 2. Left shifting the value of StdId of pTxMsg of h_can by TWENTY_ONE.
+	COMMENT 3. RTR of pTxMsg of h_can.
+	COMMENT When one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal to
+	COMMENT CAN_TSR_TME0 and the value of IDE of pTxMsg of h_can is equal to CAN_ID_STD.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal to
+	COMMENT CAN_TSR_TME1 and the value of IDE of pTxMsg of h_can is equal to CAN_ID_STD.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal to
+	COMMENT CAN_TSR_TME2 and the value of IDE of pTxMsg of h_can is equal to CAN_ID_STD.
+	COMMENT Equivalence Class 28, 25, 27
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-007]
+	COMMENT The function does the following to set the DLC:
+	COMMENT 1. Set the value of DLC of pTxMsg of h_can to the value obtained by masking the
+	COMMENT same by FIFTEEN.
+	COMMENT 2. Set the value of TDTR of sTxMailBox with index transmit mailbox of Instance of h_can
+	COMMENT to the value obtained by masking the same with HEX_FFFFFFF0.
+	COMMENT 3. Set the value of TDTR of sTxMailBox with index transmit mailbox of Instance of h_can
+	COMMENT to the value obtained by performing the bitwise OR on the TDTR of sTxMailBox with index
+	COMMENT ktransmit mailbox of Instance of h_can and  DLC of pTxMsg of h_can. 
+	COMMENT When one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal
+	COMMENT to CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal
+	COMMENT to CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal
+	COMMENT to CAN_TSR_TME2.
+	COMMENT Equivalence Class 22, 25, 27
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-008]
+	COMMENT The function does the following to set the data field:
+	COMMENT A. Set the value of TDLR of sTxMailBox with index transmit mailbox of Instance of h_can 
+	COMMENT to the value obtained by performing the bitwise OR on
+	COMMENT 1. Value obtained by left shifting index THREE of Data of pTxMsg of h_can by TWENTY_FOUR.
+	COMMENT 2. Value obtained by left shifting index TWO of Data of pTxMsg of h_can by SIXTEEN.
+	COMMENT 3. Value obtained by left shifting index ONE of Data of pTxMsg of h_can by EIGHT.
+	COMMENT 4. Value of index ZERO of Data of pTxMsg of h_can
+	COMMENT B.  Set the value of TDHR of sTxMailBox with index transmit mailbox of Instance of h_can
+	COMMENT to the value obtained by performing the bitwise OR on
+	COMMENT 1. Value obtained by left shifting index SEVEN of Data of pTxMsg of h_can by TWENTY_FOUR.
+	COMMENT 2. Value obtained by left shifting index SIX of Data of pTxMsg of h_can by SIXTEEN.
+	COMMENT 3. Value obtained by left shifting index FIVE of Data of pTxMsg of h_can by EIGHT.
+	COMMENT 4. Value of index FOUR of Data of pTxMsg of h_can.
+	COMMENT When one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal 
+	COMMENT to CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal 
+	COMMENT to CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal
+	COMMENT to CAN_TSR_TME2.
+	COMMENT Equivalence Class 22, 25, 27
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-009]
+	COMMENT The function sets the value of TIR of sTxMailBox with index transmit mailbox of Instance
+	COMMENT of h_can to the value obtained by performing bitwise OR on TIR of sTxMailBox with index
+	COMMENT transmit mailbox of Instance of h_can and CAN_TI0R_TXRQ and set the value returned by the 
+	COMMENT function HALGetTick to tick start  , when one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal to
+	COMMENT CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal to
+	COMMENT CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal to
+	COMMENT CAN_TSR_TME2.
+	COMMENT Equivalence Class 22, 25, 27
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-010]
+	COMMENT The function shall do the following till the returned value from macro 
+	COMMENT __HAL_CAN_TRANSMIT_STATUS with parameter h_can and transmit mailbox is equal to ZERO:
+	COMMENT 1. Set the value of State of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT 2. Call the macro __HAL_UNLOCK with h_can as parameter.
+	COMMENT 3. Returns HAL_TIMEOUT.
+	COMMENT When
+	COMMENT     (a) time_out is not equal to HAL_MAX_DELAY and 
+	COMMENT     (b) time_out is equal to ZERO or returned value of function HALGetTick is subtracted
+	COMMENT by tick_start is greater than time_out and,
+	COMMENT when one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal to
+	COMMENT CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal to
+	COMMENT CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal to
+	COMMENT CAN_TSR_TME2.
+	COMMENT Tested for MCDC TF
+	COMMENT Equivalence Class 22, 31, 32, 25, 27
+	COMMENT </TD>
+	
+	ELEMENT
+
+    COMMENT INPUT SECTION:
+	
+		--Holds time_out value
+		VAR time_out,									init = 0x0,					ev = init
+		
+		--Holds TSR of PTU_Instance value
+		VAR PTU_Instance.TSR,							init = CAN_TSR_TME0, 		ev = init
+		
+		--Holds member values of structure 'PTU_pTxMsg'
+		VAR PTU_pTxMsg.IDE, 							init = CAN_ID_STD,			ev = init 
+
+		VAR PTU_pTxMsg.StdId,							init = 0x0,					ev = init 
+
+		VAR PTU_pTxMsg.RTR,								init = 0x0,					ev = init
+
+		ARRAY PTU_pTxMsg.Data,							init = 0x0,					ev = init  	
+   
+    COMMENT INPUT/OUTPUT SECTION:
+    
+    	--Holds DLC of PTU_pTxMsg value
+		VAR PTU_pTxMsg.DLC,								init = 0x0,					ev = 0x0 
+
+		--Holds member values of structure 'PTU_Instance.sTxMailBox[0]'
+		VAR PTU_Instance.sTxMailBox[0].TIR, 			init = 0x0,					ev = CAN_TI0R_TXRQ
+
+		VAR PTU_Instance.sTxMailBox[0].TDTR,			init = 0x0,					ev = 0x0
+
+    COMMENT OUTPUT SECTION:
+
+		--Holds member values of structure 'PTU_Instance.sTxMailBox[0]'
+		VAR PTU_Instance.sTxMailBox[0].TDLR,			init = 0x1,					ev = 0x0
+
+		VAR PTU_Instance.sTxMailBox[0].TDHR,			init = 0x1,					ev = 0x0
+		
+		--Holds State of h_can value
+		VAR h_can.State,								init = HAL_CAN_STATE_RESET,	ev = HAL_CAN_STATE_TIMEOUT
+
+		--Holds Lock of h_can value
+		VAR h_can.Lock, 								init = HAL_LOCKED,			ev = HAL_UNLOCKED
+		
+		-- Holds the return value of function HalCanTransmit
+		VAR ret_HalCanTransmit,							init = HAL_OK,				ev = HAL_TIMEOUT
+    
+    -- Stub Calls
+	SIMUL
+
+		--provides a tick value in millisecond
+		STUB HALGetTick () 2
+		
+	END SIMUL 
+        
+	-- Calling the Unit Under Test :    
+	#ret_HalCanTransmit = HalCanTransmit(&h_can, time_out);
+	
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-002]
+	COMMENT The function sets the value of the transmit mailbox to CAN_TXMAILBOX_1,
+	COMMENT  when
+	COMMENT a) one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal
+	COMMENT to CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal
+	COMMENT to CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal
+	COMMENT to CAN_TSR_TME2 and
+	COMMENT b) the value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal
+	COMMENT to CAN_TSR_TME1
+	COMMENT Equivalence Class 23, 24, 27
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-010]
+	COMMENT The function shall do the following till the returned value from macro 
+	COMMENT __HAL_CAN_TRANSMIT_STATUS with parameter h_can and transmit mailbox is equal to ZERO:
+	COMMENT 1. Set the value of State of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT 2. Call the macro __HAL_UNLOCK with h_can as parameter.
+	COMMENT 3. Returns HAL_TIMEOUT.
+	COMMENT When
+	COMMENT     (a) time_out is not equal to HAL_MAX_DELAY and 
+	COMMENT     (b) time_out is equal to ZERO or returned value of function HALGetTick is subtracted
+	COMMENT by tick_start is greater than time_out and,
+	COMMENT when one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal to
+	COMMENT CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal to 
+	COMMENT CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal to
+	COMMENT CAN_TSR_TME2.
+	COMMENT Tested for MCDC FF and FT
+	COMMENT Equivalence Class 23, 24, 27, 31, 33
+	COMMENT </TD>
+
+	ELEMENT
+
+    COMMENT INPUT SECTION:
+		
+		--Holds time_out value
+		VAR time_out,							init = 0x1,							ev = init
+		
+		--Holds TSR of PTU_Instance value
+		VAR PTU_Instance.TSR,					init = CAN_TSR_TME1, 				ev = init
+		
+		--Holds member values of structure 'PTU_pTxMsg'
+		VAR PTU_pTxMsg.IDE, 					init = CAN_ID_STD,					ev = init 
+
+		VAR PTU_pTxMsg.StdId,					init = 0x7FF,						ev = init 
+
+		VAR PTU_pTxMsg.RTR,						init = 0x1,							ev = init
+
+		ARRAY PTU_pTxMsg.Data[0..7],			init = 0xFF,						ev = init  	
+    
+    COMMENT INPUT/OUTPUT SECTION:
+    	
+    	--Holds DLC of PTU_pTxMsg value
+		VAR PTU_pTxMsg.DLC,						init = 0x8,							ev = 0x8 
+
+		--Holds member values of structure 'PTU_Instance.sTxMailBox[1]'
+		VAR PTU_Instance.sTxMailBox[1].TIR, 	init = 0x0,							ev = 0xFFE00001
+
+		VAR PTU_Instance.sTxMailBox[1].TDTR,	init = (T_UINT32)0xFFFF0001,		ev = (T_UINT32)0xFFFF0008
+
+    COMMENT OUTPUT SECTION:
+
+		--Holds member values of structure 'PTU_Instance.sTxMailBox[1]'
+		VAR PTU_Instance.sTxMailBox[1].TDLR,	init = 0x0,							ev = 0xFFFFFFFF
+
+		VAR PTU_Instance.sTxMailBox[1].TDHR,	init = 0x0,							ev = 0xFFFFFFFF
+
+		--Holds State of h_can value
+		VAR h_can.State,						init = HAL_CAN_STATE_RESET,			ev = HAL_CAN_STATE_TIMEOUT
+		
+		--Holds Lock of h_can value
+		VAR h_can.Lock, 						init = HAL_LOCKED,					ev = HAL_UNLOCKED
+		
+		-- Holds the return value of function HalCanTransmit
+		VAR ret_HalCanTransmit,					init = HAL_OK,						ev = HAL_TIMEOUT
+    
+   	-- Stub Calls
+	SIMUL
+		
+		--provides a tick value in millisecond
+   		STUB HALGetTick() 0x5
+   		
+   		STUB HALGetTick() 0x5
+	        
+    	STUB HALGetTick() 0x10
+    
+    END SIMUL
+    
+    -- Calling the Unit Under Test :  
+	#ret_HalCanTransmit = HalCanTransmit(&h_can, time_out);
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-003]
+	COMMENT The function shall set the value of the transmit mailbox to CAN_TXMAILBOX_2,
+	COMMENT  when
+	COMMENT a) one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal
+	COMMENT to CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal
+	COMMENT to CAN_TSR_TME1.
+	COMMENT       3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2
+	COMMENT is equal to CAN_TSR_TME2 and
+	COMMENT b) the value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal
+	COMMENT to CAN_TSR_TME2
+	COMMENT Equivalence Class 26, 23, 25
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-006]
+	COMMENT The function set the value of TIR of sTxMailBox with index transmit mailbox of Instance
+	COMMENT of h_can to the value obtained by performing bitwise OR following values:
+	COMMENT 1. TIR of sTxMailBox with index transmit mailbox of Instance of h_can.
+	COMMENT 2. Left shifting the value of ExtId of pTxMsg of h_can by THREE.
+	COMMENT 3. IDE of pTxMsg of h_can.
+	COMMENT 4. RTR of pTxMsg of h_can.
+	COMMENT When one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal
+	COMMENT to CAN_TSR_TME0 and the value of IDE of pTxMsg of h_can is not equal to CAN_ID_STD.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal
+	COMMENT to CAN_TSR_TME1 and the value of IDE of pTxMsg of h_can is not equal to CAN_ID_STD.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal
+	COMMENT to CAN_TSR_TME2 and the value of IDE of pTxMsg of h_can is not equal to CAN_ID_STD.
+	COMMENT Equivalence Class 29, 26, 23, 25
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-010]
+	COMMENT The function does nothing
+	COMMENT When
+	COMMENT     (a) time_out is equal to HAL_MAX_DELAY and 
+	COMMENT when one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal
+	COMMENT to CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal
+	COMMENT to CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal
+	COMMENT to CAN_TSR_TME2.
+	COMMENT Tested for MCDC FF and FT
+	COMMENT Equivalence Class 26, 23, 25, 30
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-011]
+	COMMENT The function shall return HAL_OK when one of the following is true:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal
+	COMMENT to CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal
+	COMMENT to CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal
+	COMMENT to CAN_TSR_TME2.
+	COMMENT Equivalence Class 26, 23, 25
+	COMMENT </TD>
+	
+	ELEMENT
+
+    COMMENT INPUT SECTION:
+		--Holds time_out value	
+		VAR time_out,							init = HAL_MAX_DELAY,			ev = init
+
+		--Holds TSR of PTU_Instance value
+		VAR PTU_Instance.TSR,					init = CAN_TSR_TME2, 			ev = init
+
+		--Holds member values of structure 'PTU_pTxMsg'
+		VAR PTU_pTxMsg.IDE, 					init = 0x1,						ev = init 
+
+		VAR PTU_pTxMsg.ExtId,					init = 0x1FFFFFFF,				ev = init 
+
+		VAR PTU_pTxMsg.RTR,						init = 0x1,						ev = init
+
+		ARRAY PTU_pTxMsg.Data[0..7],			init = 0xF0,					ev = init  	
+    
+    COMMENT INPUT/OUTPUT SECTION:
+    	
+    	--Holds DLC of PTU_pTxMsg value
+		VAR PTU_pTxMsg.DLC,						init = 0x5,						ev = 0x5
+		
+		--Holds member values of structure 'PTU_Instance.sTxMailBox[2]'
+		VAR PTU_Instance.sTxMailBox[2].TIR, 	init = (T_UINT32)0xFFFFFFFF, 	ev = (T_UINT32)0xFFFFFFF9
+
+		VAR PTU_Instance.sTxMailBox[2].TDTR,	init = (T_UINT32)0xFFFF0000,	ev = (T_UINT32)0xFFFF0005
+
+    COMMENT OUTPUT SECTION:
+
+		--Holds member values of structure 'PTU_Instance.sTxMailBox[2]'
+		VAR PTU_Instance.sTxMailBox[2].TDLR,	init = 0x0,						ev = 0xF0F0F0F0
+
+		VAR PTU_Instance.sTxMailBox[2].TDHR,	init = 0x0,						ev = 0xF0F0F0F0
+
+		-- Holds the return value of function HalCanTransmit
+		VAR ret_HalCanTransmit,					init = HAL_TIMEOUT,				ev = HAL_OK
+
+   	-- Stub Calls
+	SIMUL  
+	
+	  --provides a tick value in millisecond
+  	  STUB HALGetTick() 0x5
+
+    END SIMUL
+    
+    -- Calling the Unit Under Test :  
+	#ret_HalCanTransmit = HalCanTransmit(&h_can, time_out);
+	END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-012]
+	COMMENT The function returns HAL_ERROR when all the following conditions are false:
+	COMMENT 1.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME0 is equal
+	COMMENT to CAN_TSR_TME0.
+	COMMENT 2.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME1 is equal
+	COMMENT to CAN_TSR_TME1.
+	COMMENT 3.	The value obtained by masking TSR of Instance of h_can with CAN_TSR_TME2 is equal
+	COMMENT to CAN_TSR_TME2.
+	COMMENT Equivalence Class 23, 25, 27
+	COMMENT </TD>
+	
+	ELEMENT
+
+    COMMENT INPUT SECTION:
+	--Holds time_out value	
+	VAR time_out,							init = HAL_MAX_DELAY,				ev = init
+	
+	--Holds TSR of PTU_Instance value
+	VAR PTU_Instance.TSR,					init = 0x1, 						ev = init
+	    
+    COMMENT INPUT/OUTPUT SECTION:
+    --None
+    
+    COMMENT OUTPUT SECTION:
+    
+    -- Holds the return value of function HalCanTransmit
+    VAR ret_HalCanTransmit,					init = HAL_TIMEOUT,					ev = HAL_ERROR
+    
+    -- Calling the Unit Under Test :  
+	#ret_HalCanTransmit = HalCanTransmit(&h_can, time_out);
+	
+	END ELEMENT
+
+END TEST -- TEST 4
+
+--TEST 5
+--FAMILY robustness
+--
+--	COMMENT Test Description
+--	COMMENT <TD>
+--	COMMENT [hdulibstm32f7xxhalcan-HalCanTransmit-DB-LLR-001]
+--  COMMENT This test case is evaluated by giving the invalid reference to input parameter h_can.
+--  COMMENT Equivalence Class 60
+--  COMMENT 
+--	COMMENT </TD>
+--	ELEMENT
+--
+--    COMMENT INPUT SECTION:
+--	--None
+--	    
+--    COMMENT INPUT/OUTPUT SECTION:
+--    --None
+--    
+--    COMMENT OUTPUT SECTION:
+--    --None
+--    
+--	  --provides a tick value in millisecond
+--    STUB HALGetTick() 5
+--    
+--	#ret_HalCanTransmit = HalCanTransmit(NULL, time_out);
+--	
+--	END ELEMENT
+--
+--END TEST -- TEST 5
+
+END SERVICE -- HalCanTransmit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalCanConfigFilter
+--------------------------------------------------------------------------------
+SERVICE HalCanConfigFilter
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_HANDLE h_can;
+    #T_CAN_FILTER_CONF_TYPE filter_config;
+    -- By function returned type declaration
+    #T_HAL_STATUS ret_HalCanConfigFilter;
+
+    ENVIRONMENT ENV_HalCanConfigFilter
+
+        STRUCTURE h_can,			init = { Instance => &PTU_Instance, Init => { Prescaler => 0, 
+                                    &       Mode => 0, SJW => 0, BS1 => 0, BS2 => 0, TTCM => 0, 
+                                    &		ABOM => 0, AWUM => 0, NART => 0, RFLM => 0, TXFP => 0 },
+                                    &       pTxMsg => &PTU_pTxMsg, pRxMsg => &PTU_pRxMsg, State => 
+                                    &       HAL_CAN_STATE_RESET, Lock => HAL_UNLOCKED, ErrorCode => 0 },   
+                                    &		ev = init
+
+        STRUCTURE filter_config,    init = { FilterIdHigh => 0, FilterIdLow => 0,
+        							&	   FilterMaskIdHigh => 0, FilterMaskIdLow => 0, 
+                                    &      FilterFIFOAssignment => 0, FilterNumber => 0, FilterMode => 0, 
+                                    &      FilterScale => 0, FilterActivation => 0, BankNumber => 0 },  
+                                    &	   ev = init
+                                                                                                                
+        VAR ret_HalCanConfigFilter,          init = HAL_OK,                   				ev = init          
+        
+    END ENVIRONMENT -- ENV_HalCanConfigFilter
+    
+    USE ENV_HalCanConfigFilter
+    
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-001]
+    COMMENT The function does the following:
+    COMMENT 1. Sets the value of filter nbr bit pos to left shifting ONE by value of FilterNumber
+    COMMENT of filter_config.
+    COMMENT 2. Sets the value of can ip to CAN1.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-002]
+    COMMENT The function initialises mode for the filter by setting the value of FMR of can ip to the 
+    COMMENT value obtained by performing bitwise OR on FMR of can ip and CAN_FMR_FINIT.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-003]
+    COMMENT The function does the following to select the start slave bank:
+    COMMENT 1. Sets the value of FMR of can ip to the value obtained by performing bitwise AND on 
+    COMMENT FMR of can ip 
+    COMMENT and negetaed value of CAN_FMR_CAN2SB.
+    COMMENT 2. Sets the value of FMR of can ip to the value obtained by performing bitwise OR on
+    COMMENT FMR of can ip 
+    COMMENT and left shifting BankNumber of filter_config by EIGHT.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-004]
+    COMMENT The function sets the value of FA1R of can ip to the value obtained by performing 
+    COMMENT bitwise AND on FA1R of can ip 
+    COMMENT and negation of filter nbr bit pos to deactivate the filter.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-005]
+    COMMENT The function does the following when value of FilterScale of filter_config is equal
+    COMMENT to CAN_FILTERSCALE_16BIT:
+    COMMENT 1. Sets the value of FS1R of can ip to the value obtained by performing bitwise AND on 
+    COMMENT FS1R of can ip and 
+    COMMENT negation of filter nbr bit pos.
+    COMMENT 2. Sets the value of FR1 of sFilterRegister with index FilterNumber of filter_config of
+    COMMENT can ip to 
+    COMMENT the the value obtained by performing bitwise OR on following value:
+    COMMENT         a. Left shifting by SIXTEEN the value obtained by Bitwise AND of HEX_FFFF and 
+    COMMENT FilterMaskIdLow of filter_config.  
+    COMMENT         b. Bitwise AND of HEX_FFFF and FilterIdLow of filter_config. 
+    COMMENT 3.  Sets the value of FR2 of sFilterRegister with index FilterNumber of filter_config 
+    COMMENT of can ip to 
+    COMMENT the the value obtained by performing bitwise OR on following value:
+    COMMENT         a. Left shifting by SIXTEEN the value obtained by Bitwise AND of HEX_FFFF and 
+    COMMENT FilterMaskIdHigh of filter_config.  
+    COMMENT         b. Bitwise AND of HEX_FFFF and FilterIdHigh of filter_config. 
+    COMMENT Equivalence Class 64
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-006]
+    COMMENT The function does nothing when value of FilterScale of filter_config is not equal to 
+    COMMENT CAN_FILTERSCALE_32BIT
+    COMMENT Equivalence Class 67
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-007]
+    COMMENT The function sets the value of FM1R of can ip to the value obtained by performing 
+    COMMENT bitwise AND on FM1R of can ip and negation of filter nbr bit pos, when FilterMode
+    COMMENT of filter_config is equal to CAN_FILTERMODE_IDMASK.
+    COMMENT Equivalence Class 68
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-009]
+    COMMENT The function sets the value of FFA1R of can ip to the value obtained by performing 
+    COMMENT bitwise AND on FFA1R of can ip
+    COMMENT and negation of filter nbr bit pos, when FilterFIFOAssignment of filter_config is 
+    COMMENT equal to CAN_FILTER_FIFO0.
+    COMMENT Equivalence Class 70
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-010]
+    COMMENT The function does nothing when FilterFIFOAssignment of filter_config is not equal
+    COMMENT to CAN_FILTER_FIFO1.
+    COMMENT Equivalence Class 73
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-011]
+    COMMENT The function sets the value of FA1R of can ip to the value obtained by performing
+    COMMENT bitwise OR on FA1R of can ip and filter nbr bit pos, when FilterActivation
+    COMMENT of filter_config is equal to ENABLE.
+    COMMENT Equivalence Class 74
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-012]
+    COMMENT The function does the following:
+    COMMENT 1. Sets the value of FMR of can ip to the value obtained by performing bitwise
+    COMMENT AND on FMR of can ip 
+    COMMENT and negation of CAN_FMR_FINIT.
+    COMMENT 2. Returns HAL_OK.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT This test case is written to check minimum value for the variables FilterNumber, 
+    COMMENT BankNumber, FilterMaskIdLow, FilterIdLow, FilterMaskIdHigh and FilterIdHigh
+    COMMENT </TD>
+    
+    ELEMENT
+
+	COMMENT INPUT SECTION:
+		
+		--Holds member values of structure 'filter_config'
+		VAR filter_config.FilterNumber,           init = 0x0,                      ev = init
+		
+		VAR filter_config.BankNumber,             init = 0x0,                      ev = init
+		
+		VAR filter_config.FilterScale,            init = CAN_FILTERSCALE_16BIT,    ev = init
+		
+		VAR filter_config.FilterMaskIdLow,        init = 0x0,                      ev = init
+		
+		VAR filter_config.FilterIdLow,            init = 0x0,                      ev = init
+		
+		VAR filter_config.FilterMaskIdHigh,       init = 0x0,                      ev = init
+		
+		VAR filter_config.FilterIdHigh,           init = 0x0,                      ev = init
+		
+		VAR filter_config.FilterMode,             init = CAN_FILTERMODE_IDMASK,    ev = init
+		
+		VAR filter_config.FilterFIFOAssignment,   init = CAN_FILTER_FIFO0,         ev = init
+		
+		VAR filter_config.FilterActivation,       init = ENABLE,                   ev = init
+		
+	COMMENT INPUT/OUTPUT SECTION:
+	
+		--Holds member values of structure 'PTU_CAN1'
+		VAR PTU_CAN1.FMR,						init = 0x0,							ev = 0x0
+
+		VAR PTU_CAN1.FA1R,						init = 0x0FFFFFFF,					ev = 0x0FFFFFFF
+
+		VAR PTU_CAN1.FS1R,						init = 0x0FFFFFFF,					ev = 0x0FFFFFFE
+
+		VAR PTU_CAN1.FM1R,						init = 0x0FFFFFFF,					ev = 0x0FFFFFFE
+
+		VAR PTU_CAN1.FFA1R,						init = 0x0FFFFFFF,					ev = 0x0FFFFFFE
+		
+	COMMENT OUTPUT SECTION:
+		
+		--Holds member values of structure 'PTU_CAN1.sFilterRegister[0]'
+		VAR PTU_CAN1.sFilterRegister[0].FR1,	init = 0x1,							ev = 0x0
+				
+		VAR PTU_CAN1.sFilterRegister[0].FR2,	init = 0x1,							ev = 0x0
+	
+		--Holds the return value of function HalCanConfigFilter
+		VAR ret_HalCanConfigFilter,             init = HAL_ERROR,                   ev = HAL_OK
+		
+	--Calling the Unit Under Test:
+    #ret_HalCanConfigFilter = HalCanConfigFilter(&h_can, &filter_config);
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>        
+	COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-001]
+    COMMENT The function does the following:
+    COMMENT 1. Sets the value of filter nbr bit pos to left shifting ONE by value of FilterNumber
+    COMMENT of filter_config.
+    COMMENT 2. Sets the value of can ip to CAN1.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-002]
+    COMMENT The function initialises mode for the filter by setting the value of FMR of can ip to the 
+    COMMENT value obtained by performing bitwise OR on FMR of can ip and CAN_FMR_FINIT.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-003]
+    COMMENT The function do the following to select the start slave bank:
+    COMMENT 1. Sets the value of FMR of can ip to the value obtained by performing bitwise AND on  
+    COMMENT FMR of can ip and negetaed value of CAN_FMR_CAN2SB.
+    COMMENT 2. Sets the value of FMR of can ip to the value obtained by performing bitwise OR on 
+    COMMENT FMR of can ip and left shifting BankNumber of filter_config by EIGHT.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-004]
+    COMMENT The function sets the value of FA1R of can ip to the value obtained by performing bitwise
+    COMMENT AND on FA1R of can ip 
+    COMMENT and negation of filter nbr bit pos to deactivate the filter.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-005]
+    COMMENT The function do the following when value of FilterScale of filter_config is equal to 
+    COMMENT CAN_FILTERSCALE_16BIT:
+    COMMENT 1. Sets the value of FS1R of can ip to the value obtained by performing bitwise AND 
+    COMMENT on FS1R of can ip and 
+    COMMENT negation of filter nbr bit pos.
+    COMMENT 2. Sets the value of FR1 of sFilterRegister with index FilterNumber of filter_config
+    COMMENT of can ip to 
+    COMMENT the the value obtained by performing bitwise OR on following value:
+    COMMENT         a. Left shifting by SIXTEEN the value obtained by Bitwise AND of HEX_FFFF and 
+    COMMENT FilterMaskIdLow of filter_config.  
+    COMMENT         b. Bitwise AND of HEX_FFFF and FilterIdLow of filter_config. 
+    COMMENT 3.  Sets the value of FR2 of sFilterRegister with index FilterNumber of filter_config 
+    COMMENT of can ip to 
+    COMMENT the the value obtained by performing bitwise OR on following value:
+    COMMENT         a. Left shifting by SIXTEEN the value obtained by Bitwise AND of HEX_FFFF and
+    COMMENT FilterMaskIdHigh of filter_config.  
+    COMMENT         b. Bitwise AND of HEX_FFFF and FilterIdHigh of filter_config. 
+    COMMENT Equivalence Class 64
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-006]
+    COMMENT The function does nothing when value of FilterScale of filter_config is not equal to
+    COMMENT CAN_FILTERSCALE_32BIT
+    COMMENT Equivalence Class 67
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-007]
+    COMMENT The function sets the value of FM1R of can ip to the value obtained by performing 
+    COMMENT bitwise AND on FM1R of can ip and negation of filter nbr bit pos, when FilterMode
+    COMMENT of filter_config is equal to CAN_FILTERMODE_IDMASK.
+    COMMENT Equivalence Class 68
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-009]
+    COMMENT The function sets the value of FFA1R of can ip to the value obtained by performing 
+    COMMENT bitwise AND on FFA1R of can ip
+    COMMENT and negation of filter nbr bit pos, when FilterFIFOAssignment of filter_config is 
+    COMMENT equal to CAN_FILTER_FIFO0.
+    COMMENT Equivalence Class 70
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-010]
+    COMMENT The function does nothing when FilterFIFOAssignment of filter_config is not equal
+    COMMENT to CAN_FILTER_FIFO1.
+    COMMENT Equivalence Class 73
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-011]
+    COMMENT The function sets the value of FA1R of can ip to the value obtained by performing 
+    COMMENT bitwise OR on FA1R of can ip 
+    COMMENT and filter nbr bit pos, when FilterActivation of filter_config is equal to ENABLE.
+    COMMENT Equivalence Class 74
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-012]
+    COMMENT The function do the following:
+    COMMENT 1. Sets the value of FMR of can ip to the value obtained by performing bitwise AND  
+    COMMENT on FMR of can ip and negation of CAN_FMR_FINIT.
+    COMMENT 2. Returns HAL_OK.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT This test case is written to check nominal value for the variables FilterNumber, 
+    COMMENT BankNumber, FilterMaskIdLow, FilterIdLow, FilterMaskIdHigh and FilterIdHigh                                
+    COMMENT </TD>
+    
+	ELEMENT
+	
+	COMMENT INPUT SECTION:
+                                
+		--Holds member values of structure 'filter_config'
+		VAR filter_config.FilterNumber,			init = 0xF,                          ev = init
+        
+        VAR filter_config.BankNumber,           init = 0xF,                          ev = init
+        
+        VAR filter_config.FilterScale,          init = CAN_FILTERSCALE_16BIT,        ev = init
+        
+        VAR filter_config.FilterMaskIdLow,      init = 0xFF,                         ev = init
+        
+        VAR filter_config.FilterIdLow,          init = 0xFF,                         ev = init
+        
+        VAR filter_config.FilterMaskIdHigh,     init = 0xFF,                         ev = init
+        
+        VAR filter_config.FilterIdHigh,         init = 0xFF,                         ev = init
+        
+        VAR filter_config.FilterMode,           init = CAN_FILTERMODE_IDMASK,        ev = init
+        
+        VAR filter_config.FilterFIFOAssignment, init = CAN_FILTER_FIFO0,             ev = init
+        
+        VAR filter_config.FilterActivation,     init = ENABLE,                       ev = init
+
+	COMMENT INPUT/OUTPUT SECTION:
+		
+		--Holds member values of structure 'PTU_CAN1'
+		VAR PTU_CAN1.FMR,						init = 0x0,							ev = 0xF00
+
+		VAR PTU_CAN1.FA1R,						init = 0x0FFFFFFF,					ev = 0x0FFFFFFF
+
+		VAR PTU_CAN1.FS1R,						init = 0x0FFFFFFF,					ev = 0xFFF7FFF
+
+		VAR PTU_CAN1.FM1R,						init = 0x0FFFFFFF,					ev = 0xFFF7FFF
+
+		VAR PTU_CAN1.FFA1R,						init = 0x0FFFFFFF,					ev = 0xFFF7FFF
+		
+	COMMENT OUTPUT SECTION:	
+		
+		--Holds member values of structure 'PTU_CAN1.sFilterRegister[15]'
+		VAR PTU_CAN1.sFilterRegister[15].FR1,	init = 0x1,							ev = 0xFF00FF
+
+		VAR PTU_CAN1.sFilterRegister[15].FR2,	init = 0x1,							ev = 0xFF00FF
+		
+		--Holds the return value of function HalCanConfigFilter
+		VAR ret_HalCanConfigFilter,             init = HAL_ERROR,                   ev = HAL_OK
+		        
+        --Calling the Unit Under Test:
+        #ret_HalCanConfigFilter = HalCanConfigFilter(&h_can, &filter_config);
+        
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-005]
+	COMMENT The function do the following when value of FilterScale of filter_config is not equal
+	COMMENT to CAN_FILTERSCALE_16BIT
+	COMMENT Equivalence Class 65
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-006]
+    COMMENT The function do the following when value of FilterScale of filter_config is equal 
+    COMMENT to CAN_FILTERSCALE_32BIT:
+    COMMENT 1. Sets the value of FS1R of can ip to the value obtained by performing bitwise OR on
+    COMMENT FS1R of can ip and 
+    COMMENT filter nbr bit pos.
+    COMMENT 2. Sets the value of FR1 of sFilterRegister with index FilterNumber of filter_config
+    COMMENT of can ip to the the 
+    COMMENT value obtained by performing bitwise OR on following value:
+    COMMENT        a. Left shifting by SIXTEEN the value obtained by Bitwise AND of HEX_FFFF and
+    COMMENT FilterIdHigh of filter_config.  
+    COMMENT        b. Bitwise AND of HEX_FFFF and FilterIdLow of filter_config. 
+    COMMENT 3.  Sets the value of FR2 of sFilterRegister with index FilterNumber of filter_config
+    COMMENT of can ip to the the 
+    COMMENT value obtained by performing bitwise OR on following value:
+    COMMENT        a. Left shifting by SIXTEEN the value obtained by Bitwise AND of HEX_FFFF and
+    COMMENT FilterMaskIdHigh of filter_config.  
+    COMMENT        b. Bitwise AND of HEX_FFFF and FilterMaskIdLow of filter_config. 
+    COMMENT Equivalence Class 66
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-008]
+    COMMENT The function sets the value of FM1R of can ip to the value obtained by performing bitwise  
+    COMMENT OR on FM1R of can ip and filter nbr bit pos, when FilterMode of filter_config is not equal
+    COMMENT to CAN_FILTERMODE_IDMASK.
+    COMMENT Equivalence Class 69
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-009]
+    COMMENT The function does nothing when FilterFIFOAssignment of filter_config is not equal to
+    COMMENT CAN_FILTER_FIFO0.
+	COMMENT Equivalence Class 71
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-010]
+    COMMENT The function sets the value of FFA1R of can ip to the value obtained by performing bitwise
+    COMMENT OR on FFA1R of can ip and filter nbr bit pos, when FilterFIFOAssignment of filter_config
+    COMMENT is equal to CAN_FILTER_FIFO1. 
+    COMMENT Equivalence Class 72
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-011]
+    COMMENT The function does nothing when FilterActivation of filter_config is not equal to ENABLE.
+    COMMENT Equivalence Class 75
+    COMMENT 
+    COMMENT This test case is written to check maximum value for the variables FilterNumber, 
+    COMMENT BankNumber, FilterMaskIdLow, FilterIdLow, FilterMaskIdHigh and FilterIdHigh
+    COMMENT </TD>
+    
+    ELEMENT    
+    
+	COMMENT INPUT SECTION:
+		
+		--Holds member values of structure 'filter_config'
+		VAR filter_config.FilterNumber,        	   init = 0x1B,                         ev = init
+		
+		VAR filter_config.BankNumber,              init = 0x1C,                         ev = init
+		
+		VAR filter_config.FilterScale,             init = CAN_FILTERSCALE_32BIT,        ev = init
+		
+		VAR filter_config.FilterMaskIdLow,         init = 0xFFFF,                       ev = init
+		
+		VAR filter_config.FilterIdLow,             init = 0xFFFF,                       ev = init
+		
+		VAR filter_config.FilterMaskIdHigh,        init = 0xFFFF,                       ev = init
+		
+		VAR filter_config.FilterIdHigh,            init = 0xFFFF,                       ev = init
+		
+		VAR filter_config.FilterMode,              init = 0x1,                          ev = init
+		
+		VAR filter_config.FilterFIFOAssignment,    init = CAN_FILTER_FIFO1,             ev = init
+		
+		VAR filter_config.FilterActivation,        init = 0x0,                          ev = init
+
+	COMMENT INPUT/OUTPUT SECTION:
+	
+		--Holds member values of structure 'PTU_CAN1'
+		VAR PTU_CAN1.FMR,							init = 0x0,							ev = 0x1C00
+
+		VAR PTU_CAN1.FA1R,							init = 0x0FFFFFFF,					ev = 0x7FFFFFF
+
+		VAR PTU_CAN1.FS1R,							init = 0x0FFFFFFF,					ev = 0xFFFFFFF
+
+		VAR PTU_CAN1.FM1R,							init = 0x0FFFFFFF,					ev = 0xFFFFFFF
+
+		VAR PTU_CAN1.FFA1R,							init = 0x0FFFFFFF,					ev = 0xFFFFFFF
+		
+	COMMENT OUTPUT SECTION:
+		
+		--Holds member values of structure 'PTU_CAN1.sFilterRegister[27]'
+		VAR PTU_CAN1.sFilterRegister[27].FR1,		init = 0x1,							ev = 0xFFFFFFFF
+				
+		VAR PTU_CAN1.sFilterRegister[27].FR2,		init = 0x1,							ev = 0xFFFFFFFF
+        
+        --Holds the return value of function HalCanConfigFilter
+        VAR ret_HalCanConfigFilter,                 init = HAL_ERROR,                   ev = HAL_OK
+        
+        --Calling the Unit Under Test:
+        #ret_HalCanConfigFilter = HalCanConfigFilter(&h_can, &filter_config);
+	END ELEMENT
+
+END TEST -- TEST 3
+
+--  TEST 4
+--  FAMILY robustness
+--
+--	COMMENT Test Description
+--	COMMENT <TD>
+--  COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-001]
+--  COMMENT This test case is evaluated by giving the invalid reference to input parameter h_can.
+--  COMMENT Equivalence Class 62
+--  COMMENT </TD>
+--
+--  	ELEMENT
+--
+--		COMMENT INPUT SECTION:
+--			--None
+--
+--		COMMENT INPUT/OUTPUT SECTION:
+--			--None
+--
+--		COMMENT OUTPUT SECTION:
+--			--None
+--
+--        --Calling the Unit Under Test:                     
+--        #ret_HalCanConfigFilter = HalCanConfigFilter(NULL, &filter_config);
+--        END ELEMENT
+--
+--  END TEST -- TEST 4
+--  
+--  TEST 5
+--  FAMILY robustness
+--
+--	COMMENT Test Description
+--	COMMENT <TD>
+--  COMMENT [hdulibstm32f7xxhalcan-HalCanConfigFilter-DB-LLR-001]
+--  COMMENT This test case is evaluated by giving the invalid reference to input parameter 
+--  COMMENT filter_config.
+--  COMMENT Equivalence Class 63
+--  COMMENT </TD>
+--
+--  	ELEMENT
+--
+--		COMMENT INPUT SECTION:
+--			--None
+--
+--		COMMENT INPUT/OUTPUT SECTION:
+--			--None
+--
+--		COMMENT OUTPUT SECTION:
+--			--None
+--
+--        --Calling the Unit Under Test:                     
+--        #ret_HalCanConfigFilter = HalCanConfigFilter(&h_can, NULL);
+--        END ELEMENT
+--
+--  END TEST -- TEST 5
+    
+END SERVICE -- HalCanConfigFilter
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalCanInit
+--------------------------------------------------------------------------------
+SERVICE HalCanInit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_HANDLE h_can;
+    -- By function returned type declaration
+    #T_HAL_STATUS ret_HalCanInit;
+
+    ENVIRONMENT ENV_HalCanInit
+
+    	STRUCTURE PTU_Instance,		init = {others => 0},									ev = init
+		
+		STRUCTURE h_can,			init = { Instance => &PTU_Instance, Init => { Prescaler => 0, 
+			        				&		Mode => 0, SJW => 0, BS1 => 0, BS2 => 0, TTCM => 0, 
+			        				&		ABOM => 0, AWUM => 0, NART => 0, RFLM => 0, TXFP => 0 },
+			        				&		pTxMsg => &PTU_pTxMsg, pRxMsg => &PTU_pRxMsg, State => 
+		        					&		HAL_CAN_STATE_RESET, Lock => HAL_UNLOCKED, ErrorCode => 0 },	
+		        					&		ev = init
+		
+
+        
+        VAR ret_HalCanInit,			init = HAL_OK,											ev = init
+        
+    END ENVIRONMENT -- ENV_HalCanInit
+    
+    USE ENV_HalCanInit
+    
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-001]
+	COMMENT The function returns HAL_ERROR, when h_can is equal to NULL.
+	COMMENT Equivalence Class 1
+	COMMENT 
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+		--None
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+        --None
+        	
+    COMMENT OUTPUT SECTION:
+    	-- Holds the return value of function HalCanInit
+        VAR ret_HalCanInit,			init = HAL_OK,								ev = HAL_ERROR
+        
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(NULL);
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-001]
+	COMMENT The function does nothing, when h_can is not equal to NULL.
+	COMMENT Equivalence Class 2
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-002]
+	COMMENT The function does the following when value of state of h_can is equal to 
+	COMMENT HAL_CAN_STATE_RESET
+	COMMENT 1. Sets the value of Lock of h_can to HAL_UNLOCKED
+	COMMENT 2. Calls the function HalCanMspInit with address of h_can as parameter.
+	COMMENT Equivalence Class 3
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-003]
+	COMMENT The function does the following
+	COMMENT 1.	Sets the value of State of h_can to HAL_CAN_STATE_BUSY.
+	COMMENT 2.	Sets the value of MCR of Instance of h_can to the value obtained by performing 
+	COMMENT bitwise AND on MCR of Instance of h_can and COMMENT negation of CAN_MCR_SLEEP.
+	COMMENT 3.	Sets the value MCR of Instance of h_can to the value obtained by performing bitwise
+	COMMENT OR on MCR of Instance of h_can and COMMENT CAN_MCR_INRQ.
+	COMMENT 4.	Sets value of tick start to the value returned by the function HALGetTick.
+	COMMENT Equivalence Class None
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-004]
+	COMMENT	The function does the following until the value obtained by performing bitwise AND on 
+	COMMENT MSR of Instance of h_can and CAN_MSR_INAK COMMENT	is equal to CAN_MSR_INAK (1 iteration)
+	COMMENT	1.	Sets the value of State of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT	2.	Calls the macro __HAL_UNLOCK with parameter h_can.
+	COMMENT	3.	Returns HAL_TIMEOUT.
+	COMMENT	When the value returned from HALGetTick is subtracted from tick_start is greater than
+	COMMENT CAN_TIMEOUT_VALUE 
+	COMMENT	Equivalence Class 6, 7 
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+    	--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x0,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_RESET,		ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x00000002,				ev = 0x00000001
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,				ev = HAL_UNLOCKED
+    	
+    	-- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_OK,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--configures the hardware resources
+			STUB HalCanMspInit(&h_can)
+
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x15
+			        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-002]
+	COMMENT The function does nothing when value of state of h_can is not equal to HAL_CAN_STATE_RESET
+	COMMENT Equivalence Class 4
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-004]
+	COMMENT	The function does the following until the value obtained by performing bitwise AND on
+	COMMENT MSR of Instance of h_can and CAN_MSR_INAK COMMENT	is equal to CAN_MSR_INAK (2 iteration)
+	COMMENT	1.	Sets the value of State of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT	2.	Calls the macro __HAL_UNLOCK with parameter h_can.
+	COMMENT	3.	Returns HAL_TIMEOUT.
+	COMMENT	When the value returned from HALGetTick is subtracted from tick_start is greater than 
+	COMMENT CAN_TIMEOUT_VALUE 
+	COMMENT and 
+	COMMENT In 1st iteration:
+	COMMENT The function does nothing when value returned from HALGetTick is subtracted from 
+	COMMENT tick_start is lesser than
+	COMMENT CAN_TIMEOUT_VALUE
+	COMMENT 
+	COMMENT In 2nd iteration:
+	COMMENT The function returns HAL_TIMEOUT when the value returned from HALGetTick is subtracted 
+	COMMENT from tick_start is greater than 
+	COMMENT CAN_TIMEOUT_VALUE
+	COMMENT	Equivalence Class 6, 7, 8
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+    	--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x0,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_READY,		ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x00000002,				ev = 0x00000001
+        	
+    COMMENT OUTPUT SECTION:
+   		--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,				ev = HAL_UNLOCKED
+    
+    	-- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_OK,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x13
+
+			STUB HALGetTick() 0x15
+			        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-004]
+	COMMENT	The function does the following until the value obtained by performing bitwise AND 
+	COMMENT on MSR of Instance of h_can and CAN_MSR_INAK COMMENT	is equal to CAN_MSR_INAK 
+	COMMENT (2 iteration)
+	COMMENT	1.	Sets the value of State of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT	2.	Calls the macro __HAL_UNLOCK with parameter h_can.
+	COMMENT	3.	Returns HAL_TIMEOUT.
+	COMMENT	When the value returned from HALGetTick is subtracted from tick_start is greater 
+	COMMENT than CAN_TIMEOUT_VALUE 
+	COMMENT and 
+	COMMENT In 1st iteration:
+	COMMENT The function does nothing when value returned from HALGetTick is subtracted from 
+	COMMENT tick_start is equal to
+	COMMENT CAN_TIMEOUT_VALUE
+	COMMENT 
+	COMMENT In 2nd iteration:
+	COMMENT The function returns HAL_TIMEOUT when the value returned from HALGetTick is subtracted 
+	COMMENT from tick_start is greater than 
+	COMMENT CAN_TIMEOUT_VALUE
+	COMMENT	Equivalence Class 6, 7, 9
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+    	--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x0,							ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_RESET,			ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x00000002,					ev = 0x00000001
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+    	
+    	-- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_OK,						ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--configures the hardware resources
+			STUB HalCanMspInit(&h_can)
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+
+			STUB HALGetTick() 0x15
+			        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-004]
+	COMMENT	The function does nothing when the value obtained by performing bitwise AND on MSR of
+	COMMENT Instance of h_can and CAN_MSR_INAK 	
+	COMMENT is equal to CAN_MSR_INAK (0 iteration)
+	COMMENT	Equivalence Class 5
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-005]
+	COMMENT The function sets the  value of MCR of Instance of h_can to the value obtained by 
+	COMMENT performing bitwise OR on MCR of Instance of COMMENT h_can and CAN_MCR_TTCM. 
+	COMMENT When value of TTCM of Init of h_can is equal to ENABLE and the value obtained from masking 
+	COMMENT MSR of Instance of h_can  with COMMENT CAN_MSR_INAK is CAN_MSR_INAK. 
+	COMMENT	Equivalence Class 5, 10
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-017]
+	COMMENT The function does the following:
+	COMMENT 1. Sets value of BTR of Instance of h_can to the value obtained by performing bitwise OR
+	COMMENT on the following: 
+	COMMENT 	i. Mode of Init of h_can.
+	COMMENT 	ii. SJW of Init of h_can.
+	COMMENT 	iii. BS1 of Init of h_can.
+	COMMENT 	iv. BS2 of Init of h_can.
+	COMMENT 	v. Subtracting ONE from Prescaler of Init of h_can.
+	COMMENT 	2. The function sets the value of MCR of Instance of h_can to the value obtained by
+	COMMENT performing bitwise AND on MCR of 	
+	COMMENT 	Instance of h_can and negation CAN_MCR_INRQ.
+	COMMENT 	3. Sets the value of tick start to the value returned by the function HALGetTick.
+	COMMENT 	when the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is
+	COMMENT CAN_MSR_INAK.
+	COMMENT	Equivalence Class 5	
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-018]  
+	COMMENT The funtion do the following till the value obtained by performing bitwise AND on MSR of
+	COMMENT Instance of h_can and CAN_MSR_INAK is 
+	COMMENT equal to CAN_MSR_INAK:
+	COMMENT 1. Sets the value of state of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT 2. Calls the macro __HAL_UNLOCK with h_can as paratmeter 
+	COMMENT 3. Returns the value of HAL_TIMEOUT.
+	COMMENT When the value of tick start is subtracted by the return value of HALGetTick is greater
+	COMMENT than CAN_TIMEOUT_VALUE. 
+	COMMENT when the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is 
+	COMMENT CAN_MSR_INAK (1 iteration)
+	COMMENT Equivalence Class 5, 7
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+		--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,						ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.TTCM,			init = ENABLE,					ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,	ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,				ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,					ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,				ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,					ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,		ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,						ev = 0x80
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,				ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,				ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,				ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick () 0xA
+			
+			STUB HALGetTick () 0xA
+
+			STUB HALGetTick () 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-006]
+	COMMENT The function sets value of MCR of Instance of h_can to the value obtained by performing
+	COMMENT bitwise AND on MCR of Instance of h_can 
+	COMMENT and negation of CAN_MCR_TTCM. 
+	COMMENT When value of TTCM of Init of h_can is not equal to ENABLE and the value obtained from 
+	COMMENT masking MSR of Instance of h_can with COMMENT CAN_MSR_INAK is CAN_MSR_INAK.  
+	COMMENT	Equivalence Class 5, 11
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-018]  
+	COMMENT The funtion do the following till the value obtained by performing bitwise AND on MSR of
+	COMMENT Instance of h_can and CAN_MSR_INAK is COMMENT equal to CAN_MSR_INAK:
+	COMMENT 1. Sets the value of state of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT 2. Calls the macro __HAL_UNLOCK with h_can as paratmeter 
+	COMMENT 3. Returns the value of HAL_TIMEOUT.
+	COMMENT When the value of tick start is subtracted by the return value of HALGetTick is greater
+	COMMENT than CAN_TIMEOUT_VALUE. 
+	COMMENT when the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is 
+	COMMENT CAN_MSR_INAK (2 iteration)
+	COMMENT and 
+	COMMENT In 1st iteration:
+	COMMENT The function does nothing when the value of tick start is subtracted by the return value
+	COMMENT of HALGetTick is lesser than 
+	COMMENT CAN_TIMEOUT_VALUE
+	COMMENT 
+	COMMENT In 2nd iteration:
+	COMMENT The function returns HAL_TIMEOUT when the value of tick start is subtracted by the return
+	COMMENT value of HALGetTick is greater than COMMENT CAN_TIMEOUT_VALUE
+	COMMENT Equivalence Class 5, 7, 8
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+    	--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,						ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.TTCM,			init = DISABLE,					ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,	ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,				ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,					ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,				ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,					ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,		ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x1,						ev = 0x0
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,				ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,				ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,				ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+			
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x13
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-007]
+	COMMENT The function sets the value of MCR of Instance of h_can to the value obtained by 
+	COMMENT performing bitwise OR on MCR of Instance of COMMENT h_can and CAN_MCR_ABOM , 
+	COMMENT when
+	COMMENT 1) the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is CAN_MSR_INAK
+	COMMENT 2) automatic bus-off management is enabled (ABOM of Init of h_can is equal to ENABLE)
+	COMMENT Equivalence Class 5, 12
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-018]  
+	COMMENT The funtion do the following till the value obtained by performing bitwise AND on MSR 
+	COMMENT of Instance of h_can and CAN_MSR_INAK is COMMENT equal to CAN_MSR_INAK:
+	COMMENT 1. Sets the value of state of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT 2. Calls the macro __HAL_UNLOCK with h_can as paratmeter 
+	COMMENT 3. Returns the value of HAL_TIMEOUT.
+	COMMENT When the value of tick start is subtracted by the return value of HALGetTick is greater
+	COMMENT than CAN_TIMEOUT_VALUE. 
+	COMMENT when the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is
+	COMMENT CAN_MSR_INAK (2 iteration)
+	COMMENT and 
+	COMMENT In 1st iteration:
+	COMMENT The function does nothing when the value of tick start is subtracted by the return value
+	COMMENT of HALGetTick is equal to 
+	COMMENT CAN_TIMEOUT_VALUE
+	COMMENT 
+	COMMENT In 2nd iteration:
+	COMMENT The function returns HAL_TIMEOUT when the value of tick start is subtracted by the return
+	COMMENT value of HALGetTick is greater than COMMENT CAN_TIMEOUT_VALUE
+	COMMENT Equivalence Class 5, 7, 9
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+    	--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,							ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.ABOM,			init = ENABLE,						ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,		ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,					ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,						ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,					ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,			ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,							ev = 0x40
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,					ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+			
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-008]
+	COMMENT The function sets the value of MCR of Instance of h_can to the value obtained by 
+	COMMENT performing bitwise AND on MCR of Instance of COMMENT h_can and negation of CAN_MCR_ABOM ,
+	COMMENT when
+	COMMENT 1) the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is 
+	COMMENT CAN_MSR_INAK
+	COMMENT 2) automatic bus-off management is disabled (ABOM of Init of h_can is not equal to ENABLE). 
+	COMMENT Equivalence Class 5, 13
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+    	--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,							ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.ABOM,			init = DISABLE,						ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,		ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,					ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,						ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,					ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,			ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,							ev = 0x0
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,					ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+			
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-009]
+	COMMENT The function sets the value of MCR of Instance of h_can to the value obtained by 
+	COMMENT performing bitwise OR on MCR of Instance of COMMENT h_can and CAN_MCR_AWUM ,
+	COMMENT when
+	COMMENT 1) the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is CAN_MSR_INAK
+	COMMENT 2) automatic wake-up mode is enabled (AWUM of Init of h_can is equal to ENABLE). 
+	COMMENT Equivalence Class 5, 14
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+   	 	--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,						ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.AWUM,			init = ENABLE,					ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,	ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,				ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,					ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,				ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,					ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,		ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,						ev = 0x20
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,				ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,				ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,				ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+			
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 9
+
+TEST 10
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-010]
+	COMMENT The function sets the value of MCR of Instance of h_can to the value obtained by 
+	COMMENT performing bitwise AND on MCR of Instance of COMMENT h_can and negation of CAN_MCR_AWUM , 
+	COMMENT when 
+	COMMENT 1) the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is CAN_MSR_INAK
+	COMMENT 2) automatic wake-up mode is disabled (AWUM of Init of h_can is not equal to ENABLE).  
+	COMMENT Equivalence Class 5, 15
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+    	--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,							ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.AWUM,			init = DISABLE,						ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,		ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,					ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,						ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,					ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,			ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,							ev = 0x0
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,					ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 10
+
+TEST 11
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-011]
+	COMMENT The function sets the value of MCR of Instance of h_can to the value obtained by
+	COMMENT performing bitwise OR on MCR of Instance of COMMENT h_can and CAN_MCR_NART , 
+	COMMENT when
+	COMMENT 1) the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is CAN_MSR_INAK
+	COMMENT 2) no automatic retransmission is enabled (NART of Init of h_can is equal to ENABLE).  
+	COMMENT Equivalence Class 5, 16
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+		--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,							ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.NART,			init = ENABLE,						ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,		ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,					ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,						ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,					ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,			ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,							ev = 0x10
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,					ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+			
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 11
+
+TEST 12
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-012]
+	COMMENT The function sets the value of MCR of Instance of h_can to the value obtained by
+	COMMENT performing bitwise AND on MCR of Instance of COMMENT h_can and negation of CAN_MCR_NART , when 
+	COMMENT 1) the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is CAN_MSR_INAK
+	COMMENT 2) no automatic retransmission is disabled (NART of Init of h_can is not equal to ENABLE). 
+	COMMENT Equivalence Class 5, 17
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+    	--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,							ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.NART,			init = DISABLE,						ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,		ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,					ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,						ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,					ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,			ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,							ev = 0x0
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,					ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+			
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 12
+
+TEST 13
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-013]
+	COMMENT The function sets the value of MCR of Instance of h_can to the value obtained by
+	COMMENT performing bitwise OR on MCR of Instance COMMENT of h_can and CAN_MCR_RFLM , 
+	COMMENT when
+	COMMENT 1) the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is CAN_MSR_INAK
+	COMMENT 2) receive FIFO locked mode  is enabled (RFLM of Init of h_can is equal to ENABLE). 
+	COMMENT Equivalence Class 5, 18
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+		--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,							ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.RFLM,			init = ENABLE,						ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,		ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,					ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,						ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,					ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,			ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,							ev = 0x8
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,					ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+			
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 13
+
+TEST 14
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-014]
+	COMMENT The function sets the value of MCR of Instance of h_can to the value obtained by
+	COMMENT performing bitwise AND on MCR of Instance of COMMENT h_can and negation of CAN_MCR_RFLM , when
+	COMMENT 1) the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is CAN_MSR_INAK
+	COMMENT 2) receive FIFO locked mode  is disabled (RFLM of Init of h_can is not equal to ENABLE).
+	COMMENT Equivalence Class 5, 19
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+		--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,							ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.RFLM,			init = DISABLE,						ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,		ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,					ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,						ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,					ev = init
+
+		VAR h_can.Init.Prescaler,		init = 0x3FF,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,			ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,							ev = 0x0
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,					ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit 
+    	VAR ret_HalCanInit,				init = HAL_ERROR,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+			
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 14
+
+TEST 15
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-015]
+	COMMENT The function sets the value of MCR of Instance of h_can to the value obtained by
+	COMMENT performing bitwise OR on MCR of Instance of COMMENT h_can and CAN_MCR_TXFP, 
+	COMMENT when
+	COMMENT 1) the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is CAN_MSR_INAK
+	COMMENT 2) transmit FIFO priority is enabled (TXFP of Init of h_can is equal to ENABLE). 
+	COMMENT Equivalence Class 5, 20
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+   		--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,							ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.TXFP,			init = ENABLE,						ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,		ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,					ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,						ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,					ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,			ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,							ev = 0x4
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,					ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+			
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 15
+
+TEST 16
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanInit-DB-LLR-016]
+	COMMENT The function sets the value of MCR of Instance of h_can to the value obtained by
+	COMMENT performing bitwise AND on MCR of Instance of COMMENT h_can and negationof CAN_MCR_TXFP, when
+	COMMENT 1) the value obtained from masking MSR of Instance of h_can with CAN_MSR_INAK is CAN_MSR_INAK
+	COMMENT 2) transmit FIFO priority is disabled (TXFP of Init of h_can is not equal to ENABLE).
+	COMMENT Equivalence Class 5, 21
+	COMMENT
+    COMMENT </TD>
+    ELEMENT
+        
+    COMMENT INPUT SECTION:
+    	--Holds MSR of PTU_Instance value
+		VAR PTU_Instance.MSR,			init = 0x1,							ev = init
+		
+		--Holds member values of structure 'h_can.Init'
+		VAR h_can.Init.TXFP,			init = DISABLE,						ev = init
+		
+		VAR h_can.Init.Mode,			init = (T_UINT32)0xC0000000,		ev = init
+		
+		VAR h_can.Init.SJW,				init = 0x3000000,					ev = init
+
+		VAR h_can.Init.BS1,				init = 0xF0000,						ev = init
+
+		VAR h_can.Init.BS2,				init = 0x700000,					ev = init
+		
+		VAR h_can.Init.Prescaler,		init = 0x3FF,						ev = init
+        	
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+        VAR h_can.State,				init = HAL_CAN_STATE_ERROR,			ev = HAL_CAN_STATE_TIMEOUT
+        
+        --Holds MCR of PTU_Instance value
+        VAR PTU_Instance.MCR,			init = 0x0,							ev = 0x0
+        	
+    COMMENT OUTPUT SECTION:
+    	--Holds Lock of h_can value
+        VAR h_can.Lock,  				init = HAL_LOCKED,					ev = HAL_UNLOCKED
+        
+        --Holds BTR of PTU_Instance value
+        VAR PTU_Instance.BTR,			init = 0x01230000,					ev = 0xC37F03FE
+        
+        -- Holds the return value of function HalCanInit
+    	VAR ret_HalCanInit,				init = HAL_ERROR,					ev = HAL_TIMEOUT
+
+    -- Stub Calls :
+		SIMUL
+			
+			--provides a tick value in millisecond
+			STUB HALGetTick() 0xA
+			
+			STUB HALGetTick() 0xA
+
+			STUB HALGetTick() 0x14
+			
+			STUB HALGetTick() 0x15
+		        		
+		END SIMUL    
+    
+    --Calling the Unit Under Test:
+    #ret_HalCanInit = HalCanInit(&h_can);
+        
+    END ELEMENT
+
+END TEST -- TEST 16
+
+END SERVICE -- HalCanInit
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalCanReceive
+--------------------------------------------------------------------------------
+SERVICE HalCanReceive
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_HANDLE h_can;
+    #T_UINT8 fifo_number;
+    #T_UINT32 time_out;
+    -- By function returned type declaration
+    #T_HAL_STATUS ret_HalCanReceive;
+
+    ENVIRONMENT ENV_HalCanReceive
+
+		STRUCTURE PTU_Instance,		init = {others => 0}, ev = init
+
+   		STRUCTURE h_can,			init = { Instance => &PTU_Instance, Init => { Prescaler => 0, 
+	        						&		Mode => 0, SJW => 0, BS1 => 0, BS2 => 0, TTCM => 0, 
+	        						&		ABOM => 0, AWUM => 0, NART => 0, RFLM => 0, TXFP => 0 },
+	        						&		pTxMsg => &PTU_pTxMsg, pRxMsg => &PTU_pRxMsg, State => 
+        							&		HAL_CAN_STATE_RESET, Lock => HAL_UNLOCKED, ErrorCode => 0 },		
+        							&		ev = init
+    							
+        VAR fifo_number,			init = 0,											ev = init
+        
+        VAR time_out,				init = 0,											ev = init
+        
+        VAR ret_HalCanReceive,		init = HAL_OK,										ev = init
+        
+    END ENVIRONMENT -- ENV_HalCanReceive
+    
+    USE ENV_HalCanReceive
+    
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-001]
+	COMMENT The function  set the value of State of h_can to HAL_CAN_STATE_BUSY_TX_RX, when the  
+	COMMENT value of State of h_can is equal to HAL_CAN_STATE_BUSY_TX.
+	COMMENT Equivalence Class 34
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-003]
+	COMMENT The function set tick start to the return value of the function HALGetTick.
+	COMMENT Equivalence Class 36
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-004]
+	COMMENT The function does the following till the return value from macro  
+	COMMENT __HAL_CAN_MSG_PENDING with parameter h_can and fifo_number is equal to ZERO:
+	COMMENT	1. Set the value of State of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT	2. Call the macro __HAL_UNLOCK with h_can as parameter.
+	COMMENT	3. Returns HAL_TIMEOUT.
+	COMMENT	when all of the below conditions are satisfied
+	COMMENT a) time_out is not equal to HAL_MAX_DELAY
+	COMMENT b) time_out is ZERO or return value of function HALGetTick subtracted with tick start
+	COMMENT is greater than time_out. 
+	COMMENT Tested for MCDC TX
+	COMMENT Equivalence Class 37, 39, 41, 42
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+    	--Holds fifo_number value
+		VAR fifo_number,				init = CAN_FIFO0,				ev = init
+
+		--Holds time_out value
+		VAR time_out,					init = 0x0,						ev = init
+   
+    COMMENT INPUT/OUTPUT SECTION:
+    	--Holds State of h_can value
+   	 	VAR h_can.State,				init = HAL_CAN_STATE_BUSY_TX,	ev = HAL_CAN_STATE_TIMEOUT
+        
+    COMMENT OUTPUT SECTION:
+		--Holds Lock of h_can value
+		VAR h_can.Lock, 				init = HAL_LOCKED,				ev = HAL_UNLOCKED
+		
+		-- Holds the return value of function HalCanReceive
+		VAR ret_HalCanReceive,			init = HAL_ERROR,				ev = HAL_TIMEOUT    
+    
+    -- Stub Calls :
+	SIMUL
+		
+		--provides a tick value in millisecond
+		STUB HALGetTick() 2
+		
+	END SIMUL 
+	
+		--Calling the Unit Under Test:
+		#ret_HalCanReceive = HalCanReceive(&h_can, fifo_number, time_out);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-004]
+	COMMENT The function does the following till the return value from macro __HAL_CAN_MSG_PENDING
+	COMMENT with parameter h_can and fifo_number is equal to ZERO:
+	COMMENT	1. Set the value of State of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT	2. Call the macro __HAL_UNLOCK with h_can as parameter.
+	COMMENT	3. Returns HAL_TIMEOUT.
+	COMMENT	when all of the below conditions are satisfied
+	COMMENT a) time_out is not equal to HAL_MAX_DELAY
+	COMMENT b) time_out is ZERO or return value of function HALGetTick subtracted with tick start 
+	COMMENT is greater than time_out.
+	COMMENT Tested for MCDC FF and FT
+	COMMENT Equivalence Class 41, 43, 44, 45
+	COMMENT </TD>
+
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+		--Holds fifo_number value
+		VAR fifo_number,					init = CAN_FIFO1,				ev = init
+
+		--Holds time_out value
+		VAR time_out,						init = 0xFF,					ev = init
+   
+    COMMENT INPUT/OUTPUT SECTION:
+		--Holds State of h_can value
+		VAR h_can.State,					init = HAL_CAN_STATE_BUSY_TX,	ev = HAL_CAN_STATE_TIMEOUT
+        
+    COMMENT OUTPUT SECTION:
+		
+		--Holds Lock of h_can value
+    	VAR h_can.Lock, 					init = HAL_LOCKED,				ev = HAL_UNLOCKED
+    
+		-- Holds the return value of function HalCanReceive
+		VAR ret_HalCanReceive,				init = HAL_ERROR,				ev = HAL_TIMEOUT    
+    
+    -- Stub Calls :
+	SIMUL
+		
+		--provides a tick value in millisecond
+		STUB HALGetTick() 0x2
+		
+		STUB HALGetTick() 0x2
+		
+		STUB HALGetTick() 0x105
+		
+	END SIMUL   
+	
+	--Calling the Unit Under Test:
+    #ret_HalCanReceive = HalCanReceive(&h_can, fifo_number, time_out);
+    
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-002]
+	COMMENT The function set the value of State of  h_can to HAL_CAN_STATE_BUSY_RX, when the value
+	COMMENT of State of  h_can is not equal to HAL_CAN_STATE_BUSY_TX.
+	COMMENT Equivalence Class 35
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-004]
+	COMMENT The function does nothing return value from macro __HAL_CAN_MSG_PENDING with parameter
+	COMMENT h_can and fifo_number is equal to ZERO
+	COMMENT	when all of the below conditions are satisfied
+	COMMENT a) time_out is equal to HAL_MAX_DELAY
+	COMMENT b) time_out is ZERO or return value of function HALGetTick subtracted with tick start
+	COMMENT is greater than time_out. 	
+	COMMENT Equivalence Class 40
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-005]
+	COMMENT The function set the value of IDE of pRxMsg of h_can to the value obtained by masking 
+	COMMENT FOUR by RIR of sFIFOMailBox with index fifo_number of Instance of h_can.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-006]
+	COMMENT The function set the value of StdId of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on HEX_7FF and right shifting RIR of sFIFOMailBox with index
+	COMMENT fifo number of Instance of h_can by TWENTY_ONE when IDE of pRxMsg of h_can is equal
+	COMMENT to CAN_ID_STD.
+	COMMENT Equivalence Class 47
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-008]
+	COMMENT The function set the value of RTR of pRxMsg of h_can to the value obtained by performing
+	COMMENT bitwise AND on following values:
+	COMMENT a.	TWO
+	COMMENT b.	RIR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT Equivalence Class None
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-009]
+	COMMENT The function set the value of DLC of pRxMsg of h_can to the value obtained by performing
+	COMMENT bitwise AND on following values to get the DLC:
+	COMMENT a.	FIFTEEN
+	COMMENT b.	RDTR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-010]
+	COMMENT The function set the value of FMI of pRxMsg of h_can to the value obtained by performing
+	COMMENT bitwise AND on following values to get the FMI:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDTR of sFIFOMailBox with index fifo number of Instance of h_can by 
+	COMMENT EIGHT.			
+	COMMENT Equivalence Class None
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-011]
+	COMMENT The function does the following values to get the data:
+	COMMENT 1.	Set the value of Data with index ZERO of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	RDLR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT 2.	Set the value of Data with index ONE of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can 
+	COMMENT by EIGHT.
+	COMMENT 3.	Set the value of Data with index TWO of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can by 
+	COMMENT SIXTEEN.
+	COMMENT 4.	Set the value of Data with index TWO of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can by 
+	COMMENT TWENTY_FOUR.
+	COMMENT 5.	Set the value of Data with index FOUR of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	RDHRof sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT 6.	Set the value of Data with index FIVE of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can by
+	COMMENT EIGHT.
+	COMMENT 7.	Set the value of Data with index SIX of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can by 
+	COMMENT SIXTEEN.
+	COMMENT 8.	Set the value of Data with index SEVEN of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can by 
+	COMMENT TWENTY_FOUR.
+	COMMENT Equivalence Class 
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-012]
+	COMMENT The function call the macro __HAL_CAN_FIFO_RELEASE with parameter as h_can and CAN_FIFO0,
+	COMMENT when fifo number is equal to CAN_FIFO0.
+	COMMENT Equivalence Class 49
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-015]
+	COMMENT The function set the value of State of h_can to HAL_CAN_STATE_READY, when the value of
+	COMMENT State of h_can is not equal to HAL_CAN_STATE_BUSY_TX_RX.
+	COMMENT Equivalence Class 52
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-016]
+	COMMENT The function call the macro __HAL_UNLOCK with h_can as parameter and returns HAL_OK. 
+	COMMENT Equivalence Class 39
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+		--Holds fifo_number value
+		VAR fifo_number,						init = CAN_FIFO0,					ev = init
+
+		--Holds time_out value
+		VAR time_out,							init = HAL_MAX_DELAY,				ev = init
+
+		--Holds member values of structure 'PTU_Instance.sFIFOMailBox[0]'
+		VAR PTU_Instance.sFIFOMailBox[0].RIR,	init = 0x0,							ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[0].RDTR,	init = 0x0,							ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[0].RDLR,	init = 0x0,							ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[0].RDHR,	init = 0x0,							ev = init
+    
+    COMMENT INPUT/OUTPUT SECTION:
+		--Holds State of h_can value
+		VAR h_can.State,						init = HAL_CAN_STATE_BUSY_TX_RX,	ev = HAL_CAN_STATE_READY
+
+		--Holds IDE of PTU_pRxMsg value
+		VAR PTU_pRxMsg.IDE,						init = 0x1,							ev = CAN_ID_STD
+    
+    COMMENT OUTPUT SECTION:
+		--Holds member values of structure 'PTU_Instance.sFIFOMailBox[0]'
+		ARRAY PTU_pRxMsg.Data,					init = 0x1,							ev = 0x0
+
+		VAR PTU_pRxMsg.StdId, 					init = 0x1,							ev = 0x0
+
+		VAR PTU_pRxMsg.DLC,						init = 0x1,							ev = 0x0
+
+		VAR PTU_pRxMsg.FMI,						init = 0x1,							ev = 0x0
+
+		VAR PTU_pRxMsg.RTR,						init = 0x1,							ev = 0x0
+
+		VAR PTU_Instance.RF0R,					init = 0x0,							ev = 0x20
+
+		-- Holds the return value of function HalCanReceive
+		VAR ret_HalCanReceive,					init = HAL_ERROR,					ev = HAL_OK    
+    
+    -- Stub Calls :
+	SIMUL
+		
+		--provides a tick value in millisecond
+		STUB HALGetTick() 2
+		
+	END SIMUL   
+	
+		--Calling the Unit Under Test:
+		#ret_HalCanReceive = HalCanReceive(&h_can, fifo_number, time_out);
+		
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-004]
+	COMMENT The function does nothing return value from macro __HAL_CAN_MSG_PENDING with parameter
+	COMMENT h_can and fifo_number is not equal to ZERO	
+	COMMENT Equivalence Class 38
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-013]
+	COMMENT The function call the macro __HAL_CAN_FIFO_RELEASE with parameter as h_can and CAN_FIFO1,
+	COMMENT when fifo number is not equal to CAN_FIFO0.
+	COMMENT Equivalence Class 50
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-014]
+	COMMENT The function set the value of State of h_can to HAL_CAN_STATE_BUSY_TX, when the value of
+	COMMENT State of h_can is equal to HAL_CAN_STATE_BUSY_TX_RX.
+	COMMENT Equivalence Class 51
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+		--Holds fifo_number value
+		VAR fifo_number,						init = CAN_FIFO1,						ev = init
+
+		--Holds time_out value
+		VAR time_out,							init = HAL_MAX_DELAY,					ev = init
+
+		--Holds member values of structure 'PTU_Instance.sFIFOMailBox[0]'
+		VAR PTU_Instance.sFIFOMailBox[0].RIR,	init = 0x1,								ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[0].RDTR,	init = 0x1,								ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[0].RDLR,	init = 0x1,								ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[0].RDHR,	init = 0x1,								ev = init
+    
+    COMMENT INPUT/OUTPUT SECTION:
+		--Holds State of h_can value
+		VAR h_can.State,				init = HAL_CAN_STATE_BUSY_TX,			ev = HAL_CAN_STATE_BUSY_TX
+
+		VAR PTU_pRxMsg.IDE,				init = 0x0,								ev = 0x0
+    
+    COMMENT OUTPUT SECTION:
+		--Holds member values of structure 'PTU_pRxMsg'
+		ARRAY PTU_pRxMsg.Data,					init = 0x1,								ev = 0x0
+
+		VAR PTU_pRxMsg.StdId, 					init = 0x1,								ev = 0x0
+
+		VAR PTU_pRxMsg.DLC,						init = 0x1,								ev = 0x0
+
+		VAR PTU_pRxMsg.FMI,						init = 0x1,								ev = 0x0
+
+		VAR PTU_pRxMsg.RTR,						init = 0x1,								ev = 0x0
+
+		--Holds RF1R of PTU_Instance value
+		VAR PTU_Instance.RF1R,					init = 0x0,								ev = 0x20
+
+		-- Holds the return value of function HalCanReceive
+		VAR ret_HalCanReceive,					init = HAL_ERROR,						ev = HAL_OK    
+    
+    -- Stub Calls :
+	SIMUL
+		
+		--provides a tick value in millisecond
+		STUB HALGetTick() 2
+		
+	END SIMUL   
+	
+		--Calling the Unit Under Test:
+		#ret_HalCanReceive = HalCanReceive(&h_can, fifo_number, time_out);
+    
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-007]
+	COMMENT The function sets the value of ExtId of pRxMsg of h_can to the value obtained by performing 
+	COMMENT bitwise AND on HEX_1FFFFFFF and right shifting RIR of sFIFOMailBox with index fifo number 
+	COMMENT of Instance of h_can by THREE when IDE of pRxMsg of h_can is not equal to CAN_ID_STD.
+	COMMENT Equivalence Class 48
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-008]
+	COMMENT The function set the value of RTR of pRxMsg of h_can to the value obtained by performing 
+	COMMENT bitwise AND on following values:
+	COMMENT a.	TWO
+	COMMENT b.	RIR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT Equivalence Class None
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-009]
+	COMMENT The function set the value of DLC of pRxMsg of h_can to the value obtained by performing
+	COMMENT bitwise AND on following values to get the DLC:
+	COMMENT a.	FIFTEEN
+	COMMENT b.	RDTR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-010]
+	COMMENT The function set the value of FMI of pRxMsg of h_can to the value obtained by performing
+	COMMENT bitwise AND on following values to get the FMI:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDTR of sFIFOMailBox with index fifo number of Instance of h_can by
+	COMMENT EIGHT.			
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-011]
+	COMMENT The function does the following values to get the data:
+	COMMENT 1.	Set the value of Data with index ZERO of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	RDLR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT 2.	Set the value of Data with index ONE of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can
+	COMMENT by EIGHT.
+	COMMENT 3.	Set the value of Data with index TWO of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can
+	COMMENT by SIXTEEN.
+	COMMENT 4.	Set the value of Data with index TWO of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can 
+	COMMENT by TWENTY_FOUR.
+	COMMENT 5.	Set the value of Data with index FOUR of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	RDHRof sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT 6.	Set the value of Data with index FIVE of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can by
+	COMMENT EIGHT.
+	COMMENT 7.	Set the value of Data with index SIX of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can
+	COMMENT by SIXTEEN.
+	COMMENT 8.	Set the value of Data with index SEVEN of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can
+	COMMENT by TWENTY_FOUR.
+	COMMENT This test case is written for nominal value.
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+		--Holds fifo_number value
+		VAR fifo_number,						init = CAN_FIFO1,				ev = init
+
+		--Holds time_out value
+		VAR time_out,							init = HAL_MAX_DELAY,			ev = init
+
+		--Holds member values of structure 'PTU_Instance.sFIFOMailBox[1]'
+		VAR PTU_Instance.sFIFOMailBox[1].RIR,	init = 0x4,						ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[1].RDTR,	init = 0x4,						ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[1].RDLR,	init = 0x4,						ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[1].RDHR,	init = 0x4,						ev = init
+    
+    COMMENT INPUT/OUTPUT SECTION:
+		--Holds State of h_can value
+		VAR h_can.State,						init = HAL_CAN_STATE_BUSY_TX,	ev = HAL_CAN_STATE_BUSY_TX
+
+		--Holds IDE of PTU_pRxMsg value
+		VAR PTU_pRxMsg.IDE,						init = 0x1,						ev = 0x4
+
+    COMMENT OUTPUT SECTION:
+		--Holds member values of structure 'PTU_pRxMsg'
+		VAR PTU_pRxMsg.Data[0],					init = 0x1,						ev = 0x4
+
+		VAR PTU_pRxMsg.Data[1],					init = 0x1,						ev = 0x0
+
+		VAR PTU_pRxMsg.Data[2],					init = 0x1,						ev = 0x0
+
+		VAR PTU_pRxMsg.Data[3],					init = 0x1,						ev = 0x0
+
+		VAR PTU_pRxMsg.Data[4],					init = 0x1,						ev = 0x4
+
+		VAR PTU_pRxMsg.Data[5],					init = 0x1,						ev = 0x0
+
+		VAR PTU_pRxMsg.Data[6],					init = 0x1,						ev = 0x0
+
+		VAR PTU_pRxMsg.Data[7],					init = 0x1,						ev = 0x0
+
+		VAR PTU_pRxMsg.StdId, 					init = 0x0,						ev = 0x0
+
+		VAR PTU_pRxMsg.DLC,						init = 0x0,						ev = 0x4
+
+		VAR PTU_pRxMsg.FMI,						init = 0x1,						ev = 0x0
+
+		VAR PTU_pRxMsg.RTR,						init = 0x1,						ev = 0x0
+
+		--Holds RF1R of PTU_Instance value
+		VAR PTU_Instance.RF1R,					init = 0x0,						ev = 0x20
+
+		-- Holds the return value of function HalCanReceive
+		VAR ret_HalCanReceive,					init = HAL_ERROR,				ev = HAL_OK    
+    
+    -- Stub Calls :
+	SIMUL
+		
+		--provides a tick value in millisecond
+		STUB HALGetTick() 2
+		
+	END SIMUL   
+	
+		--Calling the Unit Under Test:
+		#ret_HalCanReceive = HalCanReceive(&h_can, fifo_number, time_out);
+		
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-008]
+	COMMENT The function set the value of RTR of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	TWO
+	COMMENT b.	RIR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT Equivalence Class None
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-009]
+	COMMENT The function set the value of DLC of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values to get the DLC:
+	COMMENT a.	FIFTEEN
+	COMMENT b.	RDTR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-010]
+	COMMENT The function set the value of FMI of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values to get the FMI:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDTR of sFIFOMailBox with index fifo number of Instance of
+	COMMENT h_can by EIGHT.			
+	COMMENT Equivalence Class None
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-011]
+	COMMENT The function does the following values to get the data:
+	COMMENT 1.	Set the value of Data with index ZERO of pRxMsg of h_can to the value obtained
+	COMMENT by performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	RDLR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT 2.	Set the value of Data with index ONE of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can 
+	COMMENT by EIGHT.
+	COMMENT 3.	Set the value of Data with index TWO of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can
+	COMMENT by SIXTEEN.
+	COMMENT 4.	Set the value of Data with index TWO of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can
+	COMMENT by TWENTY_FOUR.
+	COMMENT 5.	Set the value of Data with index FOUR of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	RDHRof sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT 6.	Set the value of Data with index FIVE of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can 
+	COMMENT by EIGHT.
+	COMMENT 7.	Set the value of Data with index SIX of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can
+	COMMENT by SIXTEEN.
+	COMMENT 8.	Set the value of Data with index SEVEN of pRxMsg of h_can to the value obtained
+	COMMENT by performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can
+	COMMENT by TWENTY_FOUR.
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+		--Holds fifo_number value
+		VAR fifo_number,						init = CAN_FIFO1,				ev = init
+
+		--Holds time_out value
+		VAR time_out,							init = HAL_MAX_DELAY,			ev = init
+
+		--Holds member values of structure 'PTU_Instance.sFIFOMailBox[1]'
+		VAR PTU_Instance.sFIFOMailBox[1].RIR,	init = (T_UINT32)0xFFFFFFFE,	ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[1].RDTR,	init = (T_UINT32)0xFFFFFFFE,	ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[1].RDLR,	init = (T_UINT32)0xFFFFFFFE,	ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[1].RDHR,	init = (T_UINT32)0xFFFFFFFE,	ev = init
+    
+    COMMENT INPUT/OUTPUT SECTION:
+		--Holds State of h_can value
+		VAR h_can.State,						init = HAL_CAN_STATE_BUSY_TX,	ev = HAL_CAN_STATE_BUSY_TX
+
+		--Holds IDE of PTU_pRxMsg value
+		VAR PTU_pRxMsg.IDE,						init = 0x1,						ev = 0x4
+    
+    COMMENT OUTPUT SECTION:
+    	--Holds member values of structure 'PTU_pRxMsg'
+		VAR PTU_pRxMsg.Data[0],					init = 0x1,						ev = 0xFE
+
+		VAR PTU_pRxMsg.Data[1],					init = 0x1,						ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[2],					init = 0x1,						ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[3],					init = 0x1,						ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[4],					init = 0x1,						ev = 0xFE
+
+		VAR PTU_pRxMsg.Data[5],					init = 0x1,						ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[6],					init = 0x1,						ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[7],					init = 0x1,						ev = 0xFF
+
+		VAR PTU_pRxMsg.StdId, 					init = 0x0,						ev = 0x0
+
+		VAR PTU_pRxMsg.DLC,						init = 0x0,						ev = 0xE
+
+		VAR PTU_pRxMsg.FMI,						init = 0x1,						ev = 0xFF
+
+		VAR PTU_pRxMsg.RTR,						init = 0x1,						ev = 0x2
+
+		--Holds RF1R of PTU_Instance value
+		VAR PTU_Instance.RF1R,					init = 0x0,						ev = 0x20
+
+		-- Holds the return value of function HalCanReceive
+		VAR ret_HalCanReceive,					init = HAL_ERROR,				ev = HAL_OK    
+    
+    -- Stub Calls :
+	SIMUL
+		
+		--provides a tick value in millisecond
+		STUB HALGetTick() 2
+		
+	END SIMUL   
+	
+		--Calling the Unit Under Test:
+		#ret_HalCanReceive = HalCanReceive(&h_can, fifo_number, time_out);
+		
+    END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-008]
+	COMMENT The function set the value of RTR of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	TWO
+	COMMENT b.	RIR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT Equivalence Class None
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-009]
+	COMMENT The function set the value of DLC of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values to get the DLC:
+	COMMENT a.	FIFTEEN
+	COMMENT b.	RDTR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-010]
+	COMMENT The function set the value of FMI of pRxMsg of h_can to the value obtained by performing
+	COMMENT bitwise AND on following values to get the FMI:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDTR of sFIFOMailBox with index fifo number of Instance of h_can 
+	COMMENT by EIGHT.			
+	COMMENT Equivalence Class None
+	COMMENT 
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-011]
+	COMMENT The function does the following values to get the data:
+	COMMENT 1.	Set the value of Data with index ZERO of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	RDLR of sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT 2.	Set the value of Data with index ONE of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can 
+	COMMENT by EIGHT.
+	COMMENT 3.	Set the value of Data with index TWO of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can
+	COMMENT by SIXTEEN.
+	COMMENT 4.	Set the value of Data with index TWO of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDLR of sFIFOMailBox with index fifo number of Instance of h_can 
+	COMMENT by TWENTY_FOUR.
+	COMMENT 5.	Set the value of Data with index FOUR of pRxMsg of h_can to the value obtained 
+	COMMENT by performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	RDHRof sFIFOMailBox with index fifo number of Instance of h_can.
+	COMMENT 6.	Set the value of Data with index FIVE of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can by
+	COMMENT EIGHT.
+	COMMENT 7.	Set the value of Data with index SIX of pRxMsg of h_can to the value obtained by 
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can 
+	COMMENT by SIXTEEN.
+	COMMENT 8.	Set the value of Data with index SEVEN of pRxMsg of h_can to the value obtained by
+	COMMENT performing bitwise AND on following values:
+	COMMENT a.	HEX_FF
+	COMMENT b.	Right shifting RDHR of sFIFOMailBox with index fifo number of Instance of h_can
+	COMMENT by TWENTY_FOUR.
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+	
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+		--Holds fifo_number value
+		VAR fifo_number,						init = CAN_FIFO1,					ev = init
+
+		--Holds time_out value
+		VAR time_out,							init = HAL_MAX_DELAY,				ev = init
+
+		--Holds member values of structure 'PTU_Instance.sFIFOMailBox[1]'
+		VAR PTU_Instance.sFIFOMailBox[1].RIR,	init = (T_UINT32)0xFFFFFFFF,		ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[1].RDTR,	init = (T_UINT32)0xFFFFFFFF,		ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[1].RDLR,	init = (T_UINT32)0xFFFFFFFF,		ev = init
+
+		VAR PTU_Instance.sFIFOMailBox[1].RDHR,	init = (T_UINT32)0xFFFFFFFF,		ev = init
+    
+    COMMENT INPUT/OUTPUT SECTION:
+		--Holds State of h_can value
+		VAR h_can.State,						init = HAL_CAN_STATE_BUSY_TX,	ev = HAL_CAN_STATE_BUSY_TX
+
+		--Holds IDE of PTU_pRxMsg value
+		VAR PTU_pRxMsg.IDE,						init = 0x1,							ev = 0x4
+
+    COMMENT OUTPUT SECTION:
+		--Holds member values of structure 'PTU_pRxMsg'
+		VAR PTU_pRxMsg.Data[0],					init = 0x1,							ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[1],					init = 0x1,							ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[2],					init = 0x1,							ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[3],					init = 0x1,							ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[4],					init = 0x1,							ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[5],					init = 0x1,							ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[6],					init = 0x1,							ev = 0xFF
+
+		VAR PTU_pRxMsg.Data[7],					init = 0x1,							ev = 0xFF
+
+		VAR PTU_pRxMsg.StdId, 					init = 0x0,							ev = 0x0
+
+		VAR PTU_pRxMsg.DLC,						init = 0x0,							ev = 0xF
+
+		VAR PTU_pRxMsg.FMI,						init = 0x1,							ev = 0xFF
+
+		VAR PTU_pRxMsg.RTR,						init = 0x1,							ev = 0x2
+
+		--Holds RF1R of PTU_Instance value
+		VAR PTU_Instance.RF1R,					init = 0x0,							ev = 0x20
+
+		-- Holds the return value of function HalCanReceive
+		VAR ret_HalCanReceive,					init = HAL_ERROR,					ev = HAL_OK    
+
+    -- Stub Calls :
+	SIMUL
+		
+		--provides a tick value in millisecond
+		STUB HALGetTick() 2
+		
+	END SIMUL   
+	
+		--Calling the Unit Under Test:
+		#ret_HalCanReceive = HalCanReceive(&h_can, fifo_number, time_out);
+		
+    END ELEMENT
+
+END TEST -- TEST 7
+
+--TEST 8
+--FAMILY robustness
+--	COMMENT Test Description
+--	COMMENT <TD>
+--	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-001]
+--  COMMENT This test case is evaluated by giving the invalid reference to input parameter h_can.
+--  COMMENT Equivalence Class 61
+--	COMMENT </TD>	
+--
+--  ELEMENT
+--    
+--		COMMENT INPUT SECTION:
+--
+--    		--None
+--    
+--    	COMMENT INPUT/OUTPUT SECTION:
+--
+--   		--None
+--    
+--    	COMMENT OUTPUT SECTION:
+--
+--    		--None
+--    
+--    	-- Stub Calls :
+--	  	SIMUL
+--
+--			--None
+--		
+--	  	END SIMUL   
+--	  
+--    --Calling the Unit Under Test:
+--    #ret_HalCanReceive = HalCanReceive(NULL, fifo_number, time_out);
+--
+--    END ELEMENT
+--
+--END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdulibstm32f7xxhalcan-HalCanReceive-DB-LLR-004]
+	COMMENT The function does the following till the return value from macro __HAL_CAN_MSG_PENDING
+	COMMENT with parameter h_can and fifo_number is equal to ZERO:
+	COMMENT	1. Set the value of State of h_can to HAL_CAN_STATE_TIMEOUT.
+	COMMENT	2. Call the macro __HAL_UNLOCK with h_can as parameter.
+	COMMENT	3. Returns HAL_TIMEOUT.
+	COMMENT	when all of the below conditions are satisfied
+	COMMENT a) time_out is not equal to HAL_MAX_DELAY
+	COMMENT b) time_out is ZERO or return value of function HALGetTick subtracted with tick start
+	COMMENT is greater than time_out.
+	COMMENT Tested for MCDC FF and FT
+	COMMENT Equivalence Class 41, 43, 44, 46
+	COMMENT </TD>
+
+    ELEMENT
+    
+    COMMENT INPUT SECTION:
+		--Holds fifo_number value
+		VAR fifo_number,					init = CAN_FIFO1,				ev = init
+
+		--Holds time_out value
+		VAR time_out,						init = 0xFF,					ev = init
+   
+    COMMENT INPUT/OUTPUT SECTION:
+		--Holds State of h_can value
+		VAR h_can.State,					init = HAL_CAN_STATE_BUSY_TX,	ev = HAL_CAN_STATE_TIMEOUT
+        
+    COMMENT OUTPUT SECTION:
+		
+		--Holds Lock of h_can value
+    	VAR h_can.Lock, 					init = HAL_LOCKED,				ev = HAL_UNLOCKED
+    
+		-- Holds the return value of function HalCanReceive
+		VAR ret_HalCanReceive,				init = HAL_ERROR,				ev = HAL_TIMEOUT    
+    
+    -- Stub Calls :
+	SIMUL
+		
+		--provides a tick value in millisecond
+		STUB HALGetTick() 0xFF
+		
+		STUB HALGetTick() 0x1FE
+		
+		STUB HALGetTick() 0xFFFF
+		
+	END SIMUL   
+	
+	--Calling the Unit Under Test:
+    #ret_HalCanReceive = HalCanReceive(&h_can, fifo_number, time_out);
+    
+    END ELEMENT
+
+END TEST -- TEST 9
+
+END SERVICE -- HalCanReceive
+
+

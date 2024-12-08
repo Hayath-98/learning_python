@@ -1,0 +1,1133 @@
+HEADER hducommfinit, Source Code Ver : 1.7 , TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         :    Priyanka N
+--
+-- File Name           :    hducommfinit.ptu
+--
+-- Test Creation Date  :    27.10.2017
+--
+-- Tested Functions    :    InitTask
+--                          InitInit
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+-- ------------        ---------       -----------        -------------
+--     1.1             27.10.2017       Priyanka N        Created the PTU file.
+--     1.2             11.11.2017       Priyanka N        Updated as per #PR100171
+--     1.3             10.04.2018       Hemalatha S       Updated as per #PR100201
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommfinit.h"
+##include "hdulibbasicfunc.h"
+##include "hducommfa429.h"
+##include "hducommfapp.h"
+##include "hducommfarinc825.h"
+##include "hducommfhw.h"
+##include "hducommfoscfg.h"
+##include "hducommftbase.h"
+##include "hducommfwdog.h"
+##include "hducommfxram.h"
+##include "hducommfoscpu.h"
+##include "hducommfucos.h"
+##include "hducommfcbit.h"
+##include "hducommfpbit.h"
+##include "hducommflog.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #T_UINT8 Nvram_err_stat;
+    #T_UINT8 Sram_err_stat;
+    #T_UINT8 Applicatn_err_stat;
+    #T_UINT8 Processor_err_stat;
+    #T_UINT8 Pbit_error_status;
+
+-- Declarations of the temporary variables
+
+   -- Temporary variables used to verify return value of stub "OsSemCreate"  
+    #T_OS_EVENT *PTU_ret_OsSemCreate;
+
+    -- Temporary variable created to verify "TbaseTaskSignaling" parameter
+    #T_OS_EVENT *PTU_ps_semaphore;
+    
+    -- Temporary variable created to verify parameter "pevent" in function "OsSemPend"
+    #T_OS_EVENT *PTU_p_event;
+    
+    -- Temporary variable created to access the pointer variables.
+    # T_UINT8 PTU_error;
+
+    -- Temporary variable created to verify the parameter "p_dest" in function "HwMemset"
+    #T_UINT8 PTU_s_tx_message[8];
+    
+    -- Temporary variable created for loop usage
+    #T_UINT8 PTU_i;
+    
+    -- Temporary variable created to verify the parameter "ps_xm" in function "A825Xmit"
+    #T_A825_MESSAGE PTU_ps_xm;
+    # T_UINT8 *PTU_temp;
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hducommfinit.ptu
+    COMMENT
+    COMMENT Tested Functions : InitTask
+    COMMENT                    InitInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT 1. In Source file "hducommfinit.c", Snippet of code is added in first while loop of function 'InitTask'
+    COMMENT to terminate the infinite loop
+    COMMENT
+    COMMENT T_UINT16 PTU_count1 =0; /*local variable declared for testing purpose*/
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT  .......
+    COMMENT 
+    COMMENT  /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT  PTU_count1++;
+    COMMENT  if(PTU_count1 == 4)
+    COMMENT  {
+    COMMENT    break;
+    COMMENT  } 
+    COMMENT    else
+    COMMENT  {
+    COMMENT    ;/*Do nothing*/
+    COMMENT  }
+    COMMENT }/*End of while loop*/
+    COMMENT Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition.
+    COMMENT
+    COMMENT 2. In Source file "hducommfinit.c", Snippet of code is added in second while loop of function 'InitTask'
+    COMMENT  to terminate the infinite loop
+    COMMENT
+    COMMENT T_UINT16 PTU_count2 =0; /*local variable declared for testing purpose*/
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT  /* hducommfinit-InitTask-CB-LLR-007 */
+    COMMENT  .......
+    COMMENT  /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT  PTU_count2++;
+    COMMENT  if(PTU_count2 == 4)
+    COMMENT  {
+    COMMENT    break;
+    COMMENT  } 
+    COMMENT    else
+    COMMENT  {
+    COMMENT    ;/*Do nothing*/
+    COMMENT  }
+    COMMENT }/*End of while loop*/
+    COMMENT Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition.
+    COMMENT
+    COMMENT 3. Header file "hdulibstm32f4xx.h" is modified for testing purpose. The macro 'GPIOB' is modified for stubbing hardware address.
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define GPIOB                 ((T_GPIO_TYPE *) GPIOB_BASE)*/
+    COMMENT
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_GPIO_TYPE PTU_GPIOB;
+    COMMENT #define GPIOB                 ((T_GPIO_TYPE *)& PTU_GPIOB)
+    COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function 'InitInit', calls the function 'OsSemCreate'.
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function 'InitInit', calls the function 'TbaseTaskSignaling'.
+    COMMENT
+    COMMENT Class 3
+    COMMENT Function 'InitInit', calls the function 'OsTaskCreate'.
+    COMMENT 
+    COMMENT Class 4
+    COMMENT Function 'InitInit', calls the function 'InitTask'.
+    COMMENT
+    COMMENT Class 5
+    COMMENT Function 'InitTask', calls the function 'TbaseInit'.
+    COMMENT
+    COMMENT Class 6
+    COMMENT Function 'InitTask', calls the function 'WdogKickWatchDog'.
+    COMMENT
+    COMMENT Class 7
+    COMMENT Function 'InitTask', calls the function 'XramInit'.
+    COMMENT
+    COMMENT Class 8
+    COMMENT Function 'InitTask', calls the function 'A825Init'.
+    COMMENT
+    COMMENT Class 9
+    COMMENT Function 'InitTask', calls the function 'A429Init'.
+    COMMENT
+    COMMENT Class 10
+    COMMENT Function 'InitTask', calls the function 'AppInit'.
+    COMMENT
+    COMMENT Class 11
+    COMMENT Function 'InitTask', calls the function 'OsSemPend'.
+    COMMENT
+    COMMENT Class 12
+    COMMENT Function 'InitTask', 'GpioToggleBits' is called through the macro 'HW_LED_HB_TOGGLE'.
+    COMMENT
+    COMMENT Class 13
+    COMMENT Function 'InitTask', calls the function 'WdogInit'.
+    COMMENT
+    COMMENT Class 14
+    COMMENT Function 'InitTask', calls the function 'CbitInit'.
+    COMMENT 
+    COMMENT Class 15
+    COMMENT Function 'InitTask',Pbit_error_status is not equal to DEC_ONE
+    COMMENT 
+    COMMENT Class 16
+    COMMENT Function 'InitTask',Pbit_error_status is equal to DEC_ONE
+    COMMENT
+    COMMENT Class 17
+    COMMENT Function 'InitTask', calls the function 'HwMemset'.
+    COMMENT
+    COMMENT Class 18
+    COMMENT Function 'InitTask', calls the function 'A825Xmit'.
+    COMMENT
+    COMMENT Class 19
+    COMMENT Function 'InitTask', 'GpioSetBits' is called through the macro 'HW_LED_HB_ON'.
+    COMMENT
+    COMMENT Class 20
+    COMMENT Function 'InitTask', calls the function 'LogInit'.
+    COMMENT
+    COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+DEFINE STUB hducommfinit_c
+
+    --Parameter 'task' is made as _no since,local address of the variable cannot be expected.
+    #T_UINT8 OsTaskCreate(void _no (*ptask)(void* dptr), void _in *p_data, void _in *pt_os, T_UINT8 _in u8_prio)
+    #{
+    #   (*ptask)(p_data);
+    #}
+
+    --Parameter 'ps_semaphore' is made as _no since,local address of the variable cannot be expected.
+    #void TbaseTaskSignaling(T_UINT16 _in u16_task_ticks, T_OS_EVENT _no *ps_semaphore)
+    #{
+    # PTU_ps_semaphore = ps_semaphore;
+    #}
+
+    #T_OS_EVENT* OsSemCreate(T_UWORD _in value);
+    #void GpioToggleBits(T_GPIO_TYPE _in *gpio_x, T_UINT16 _in gpio_pin);
+ 
+    --Parameters 'pevent' and 'error' are made as _no since,local address of the variable cannot be expected.
+    #void OsSemPend(T_OS_EVENT _no *pevent, T_UWORD _in timeout, T_UINT8 _no *error)
+    #{
+    # PTU_p_event = pevent;
+    # PTU_error = *error;
+    #}  
+
+    #void GpioSetBits(T_GPIO_TYPE _in *gpio_x, T_UINT16 _in gpio_pin);
+
+    --Parameter 'ps_xm' is made as _no since,local address of the variable cannot be expected.
+    #T_A825_XMIT_RESULT A825Xmit(T_A825_MESSAGE _no *ps_xm)
+    # {
+    # PTU_ps_xm = *ps_xm;
+    # }
+
+    --Parameter 'p_dest' is made as _no since,local address of the variable cannot be expected.
+    #void HwMemset(void _no *p_dest, T_UINT8 _in value, T_UINT32 _in count)
+    #{
+    # PTU_temp = (T_UINT8*)p_dest;
+    # for(PTU_i=0;PTU_i<count;PTU_i++)
+    # {
+    # *PTU_temp = value;
+    # PTU_s_tx_message[PTU_i] = *PTU_temp;
+    # PTU_temp++;
+    # }
+    #}
+
+    #void CbitInit(void);
+    #void AppInit(void);
+    #void A429Init(void);
+    #void A825Init(void);
+    #void XramInit(void);
+    #void TbaseInit(void);
+    #void WdogInit(void);
+    #void LogInit(void);
+
+END DEFINE
+
+DEFINE STUB hducommfinit_c 15
+
+    --Called 12 times to refresh the Watchdog at regular intervals after each initialization and in idle state
+    #void WdogKickWatchDog(void);
+
+END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+    -- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+    -- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommfinit.c
+
+ENVIRONMENT ENV_hducommfinit_c
+
+-- Initializing an array before used.
+ARRAY Init_task_stk,        init = { others => 0 },     ev = init
+  
+END ENVIRONMENT -- ENV_hducommfinit_c
+
+USE ENV_hducommfinit_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service InitInit
+--------------------------------------------------------------------------------
+SERVICE InitInit
+SERVICE_TYPE extern
+
+    TEST 1
+    FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hducommfinit-InitInit-CB-LLR-001]
+    COMMENT The function "InitInit" installs task signalling parameters for init task by calling 'TbaseTaskSignaling' with the 
+    COMMENT parameters INIT_TASK_TICKS as Task Ticks and return value of function OsSemCreate with parameter DEC_ZERO.
+    COMMENT Equivalence Class 1, 2
+    COMMENT
+    COMMENT [hducommfinit-InitInit-CB-LLR-002]
+    COMMENT The function "InitInit" creates InitTask as the first task to run by calling 'OsTaskCreate'  with parameters 
+    COMMENT pointer to function InitTask, HW_NULL, base address of a stack for array Init Task and INIT_TASK_PRIO.
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hducommfinit-InitTask-CB-LLR-001]
+    COMMENT Function "InitTask" initializes time base of the system by calling 'TbaseInit'.
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hducommfinit-InitTask-CB-LLR-002]
+    COMMENT Function "InitTask" refresh the Watchdog at regular intervals after each initialization 
+    COMMENT and in idle state by calling 'WdogKickWatchDog'.
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hducommfinit-InitTask-CB-LLR-003]
+    COMMENT Function "InitTask" initializes external RAM by calling 'XramInit'.
+    COMMENT Equivalence Class 7
+    COMMENT
+    COMMENT [hducommfinit-InitTask-CB-LLR-004]
+    COMMENT Function "InitTask" initializes the Arinc 825 Bus by calling 'A825Init'.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hducommfinit-InitTask-CB-LLR-005]
+    COMMENT Function "InitTask" initializes the A429 Bus by calling 'A429Init'.
+    COMMENT Equivalence Class 9
+    COMMENT
+    COMMENT [hducommfinit-InitTask-CB-LLR-006]
+    COMMENT Function "InitTask" initializes application task by calling 'AppInit'.
+    COMMENT Equivalence Class 10
+    COMMENT
+    COMMENT [hducommfinit-InitTask-CB-LLR-007]
+    COMMENT Function "InitTask" loops infinitely and perform the following operations within loop  
+    COMMENT a)Pends on Semaphore by calling OsSemPend with parameter (allocated semaphore, 0, pointer to error message)
+    COMMENT b)Calls WdogKickWatchDog to reload Watchdog counter.  
+    COMMENT c)Calls GpioToggleBits with reference to GPIO port B (GPIOB) and GPIO pin 2 (HW_GPIOB_LED_HB) as parameters
+    COMMENT to toggle the heartbeat LED.
+    COMMENT Equivalence Class 12, 6, 11
+    COMMENT
+    COMMENT [hducommfinit-InitTask-CB-LLR-008]
+    COMMENT Function initializes the Independent Watchdog by calling 'WdogInit'.
+    COMMENT Equivalence Class 13
+    COMMENT
+    COMMENT [hducommfinit-InitTask-CB-LLR-009]
+    COMMENT Function calls the CbitInit to initialize CBIT task.
+    COMMENT Equivalence Class 14
+    COMMENT
+    COMMENT [hducommfinit-InitTask-CB-LLR-010]
+    COMMENT Function does nothing when Pbit_error_status is not equal to DEC_ONE  
+    COMMENT Equivalence Class 15
+    COMMENT 
+    COMMENT [hducommfinit-InitTask-CB-LLR-011]
+    COMMENT Function initializes the log task by calling the function 'LogInit'.
+    COMMENT Equivalence Class 20
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            -- Temporary variable 'PTU_ret_OsSemCreate' initialized before usage
+            VAR PTU_ret_OsSemCreate , init = 10 ,           ev = init
+  
+            -- Global variable 'Pbit_error_status' is initialized with value ZERO
+            VAR Pbit_error_status ,     init = (T_UINT8)0 ,         ev = init       
+
+            -- Global variable 'Init_task_stk' initialized with minimum values
+            ARRAY Init_task_stk , init = { others => (T_UINT32)0x0} , ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            -- Holds the address of 'PTU_ret_OsSemCreate' 
+            VAR PTU_ps_semaphore ,  init = NULL ,           ev = &PTU_ret_OsSemCreate
+        
+            -- Holds the address of 'PTU_ret_OsSemCreate' 
+            VAR PTU_p_event ,       init = NULL ,           ev = &PTU_ret_OsSemCreate
+
+        COMMENT OUTPUT SECTION:
+
+            -- Temporary variable 'PTU_error' initialized before usage
+            VAR PTU_error ,       init = 10 ,  ev = DEC_ZERO
+            
+        -- Stub Calls :
+        SIMUL
+            
+            -- Creates and initializes the Semaphore.
+            STUB OsSemCreate(DEC_ZERO)&PTU_ret_OsSemCreate
+
+            -- Install task signaling parameters
+            STUB TbaseTaskSignaling(INIT_TASK_TICKS)
+            
+            -- Creates OS Task
+            STUB OsTaskCreate(HW_NULL,&Init_task_stk[INIT_TASK_STK_SIZE],INIT_TASK_PRIO)OS_NO_ERR
+            
+            -- Calculates the reload value for the independent watchdog timer
+            STUB WdogInit()
+            
+            -- Initialize the system tick interrupt period
+            STUB TbaseInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Initializes external NVRAM
+            STUB XramInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Performs initialization necessary for ARINC 825 communication
+            STUB A825Init()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Initializes FSMC, initializes transmit and receive channels, task signaling
+            --parameters and creates the ARINC 429 task.
+            STUB A429Init()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Installs application task semaphore into timebase and creates the application OS task.
+            STUB AppInit()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            --Initialize log task
+            STUB LogInit()
+            
+            -- Reload watchdog counter          
+            STUB WdogKickWatchDog()
+            
+            -- initialize CBIT task
+            STUB CbitInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Waits on a Semaphore
+            STUB OsSemPend(DEC_ZERO)
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Toggles the specified GPIO pins.
+            STUB GpioToggleBits(GPIOB,HW_GPIOB_LED_HB)
+
+            -- Waits on a Semaphore
+            STUB OsSemPend(DEC_ZERO)
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Toggles the specified GPIO pins.
+            STUB GpioToggleBits(GPIOB,HW_GPIOB_LED_HB)
+            
+            -- Waits on a Semaphore
+            STUB OsSemPend(DEC_ZERO)
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Toggles the specified GPIO pins.
+            STUB GpioToggleBits(GPIOB,HW_GPIOB_LED_HB)
+ 
+            -- Waits on a Semaphore
+            STUB OsSemPend(DEC_ZERO)
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Toggles the specified GPIO pins.
+            STUB GpioToggleBits(GPIOB,HW_GPIOB_LED_HB)
+       
+        END SIMUL
+         
+        -- Calling the Unit Under Test :
+        #InitInit();
+            
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommfinit-InitTask-CB-LLR-010]
+    COMMENT The function does the following if Pbit_error_status is DEC_ONE
+    COMMENT i)Sets the parameters of A825 message as follows. 
+    COMMENT - lcc of A825 message to NOC.
+    COMMENT - sfid of  BID of sID of A825 message to HOWELL_DAU_FID.
+    COMMENT - rsd of  BID of sID of A825 message to DEC_ZERO.
+    COMMENT - lcl of  BID of sID of A825 message to DEC_ONE.
+    COMMENT - pvt of  BID of sID of A825 message to DEC_ONE.
+    COMMENT - rci of  BID of  sID of A825 message to DEC_ZERO.
+    COMMENT - u8PaySize of A825 message to DEC_ONE.
+    COMMENT ii) payload to result of bitwise OR of Processor_err_stat , Applicatn_err_stat, Sram_err_stat and Nvram_err_stat.
+    COMMENT iii) The function loops infinitely and does the following:
+    COMMENT - Calls HwMemset with payload of  A825 message, DEC_ZERO and DEC_EIGHT as parameter.
+    COMMENT - Sets doc of BID of sID of  A825 message  to PBIT_ERROR.
+    COMMENT - Sets payload[0] of  A825 message  to  payload.
+    COMMENT - Calls the function A825Xmit with A825 message as parameter.
+    COMMENT - Calls GpioSetBits with GPIOB, HW_GPIOB_LED_HB as parameters to study on the heart beat LED
+    COMMENT - Calls the function WdogKickWatchDog 
+    COMMENT Equivalence Class 16, 17, 18, 19
+    COMMENT Global variables values are exercised for minimum values
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+            -- Temporary variable 'PTU_ret_OsSemCreate' initialized before usage
+            VAR PTU_ret_OsSemCreate ,   init = 10 ,             ev = init
+            
+            -- Global variable 'Pbit_error_status' is initialized with value ZERO
+            VAR Pbit_error_status ,     init = (T_UINT8)DEC_ONE ,   ev = init
+
+            -- Global variable 'Processor_err_stat' is initialized with value ZERO
+            VAR Processor_err_stat ,    init = (T_UINT8)0 ,         ev = init
+
+            -- Global variable 'Applicatn_err_stat' is initialized with value ZERO
+            VAR Applicatn_err_stat ,    init = (T_UINT8)0 ,         ev = init
+
+            -- Global variable 'Sram_err_stat' is initialized with value ZERO
+            VAR Sram_err_stat ,     init = (T_UINT8)0 ,         ev = init
+
+            -- Global variable 'Nvram_err_stat' is initialized with value ZERO
+            VAR Nvram_err_stat ,    init = (T_UINT8)0 ,         ev = init
+
+            -- Global variable 'Init_task_stk' initialized with nominal values
+            ARRAY Init_task_stk , init = { others => (T_UINT32)0xFF} , ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            -- Holds the address of 'PTU_ret_OsSemCreate' 
+            VAR PTU_ps_semaphore ,  init = NULL ,           ev = &PTU_ret_OsSemCreate
+        
+            -- Holds the address of 'PTU_ret_OsSemCreate' 
+            VAR PTU_p_event ,       init = NULL ,           ev = &PTU_ret_OsSemCreate
+
+        COMMENT OUTPUT SECTION:
+
+            -- Temporary variable 'PTU_error' initialized before usage
+            VAR PTU_error ,       init = 10 ,  ev = DEC_ZERO
+
+            -- Parameter of stub "HwMemset" is updated with value zero
+            VAR PTU_s_tx_message ,  init = { others => 10 } ,   ev = { others => 0 }
+            
+            -- structure members 'lcc' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.lcc ,     init = EEC ,            ev = NOC
+
+            -- structure members 'sfid' are verified through the Parameter of stub "A825Xmit"            
+            VAR PTU_ps_xm.sID.BID.sfid ,init = 0 ,          ev = HOWELL_DAU_FID
+
+            -- structure members 'rsd' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.rsd , init = 1 ,          ev = DEC_ZERO
+
+            -- structure members 'lcl' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.lcl , init = 0 ,          ev = DEC_ONE
+
+            -- structure members 'pvt' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.pvt , init = 0 ,          ev = DEC_ONE
+
+            -- structure members 'rci' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.rci , init = 1 ,          ev = 0
+
+            -- structure members 'u8PaySize' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.u8PaySize ,   init = 0 ,          ev = DEC_ONE
+
+            -- structure members 'doc' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.doc , init = CBIT_ERROR ,          ev = PBIT_ERROR
+
+            -- structure members 'u8PayLoad' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.u8PayLoad[0] ,init = 10 ,             ev = 0
+
+        -- Stub Calls :
+        SIMUL
+            
+            -- Creates and initializes the Semaphore.
+            STUB OsSemCreate(DEC_ZERO)&PTU_ret_OsSemCreate
+
+            -- Install task signaling parameters
+            STUB TbaseTaskSignaling(INIT_TASK_TICKS)
+            
+            -- Creates OS Task
+            STUB OsTaskCreate(HW_NULL,&Init_task_stk[INIT_TASK_STK_SIZE],INIT_TASK_PRIO)OS_NO_ERR
+            
+            -- Calculates the reload value for the independent watchdog timer
+            STUB WdogInit()
+            
+            -- Initialize the system tick interrupt period
+            STUB TbaseInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Initializes external NVRAM
+            STUB XramInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Performs initialization necessary for ARINC 825 communication
+            STUB A825Init()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Initializes FSMC, initializes transmit and receive channels, task signaling
+            --parameters and creates the ARINC 429 task.
+            STUB A429Init()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Installs application task semaphore into timebase and creates the application OS task.
+            STUB AppInit()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            --Initialize log task
+            STUB LogInit()
+            
+            -- Reload watchdog counter          
+            STUB WdogKickWatchDog()
+                        
+            -- initialize CBIT task
+            STUB CbitInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Waits on a Semaphore
+            STUB OsSemPend 1..4=>(DEC_ZERO)
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Toggles the specified GPIO pins.
+            STUB GpioToggleBits 1..4=>(GPIOB,HW_GPIOB_LED_HB)
+            
+            -- Function copies value to destination buffer.
+            STUB HwMemset 1..4=>(DEC_ZERO,DEC_EIGHT)
+
+            -- function builds a CAN message from the user supplied ARINC 825 message
+            STUB A825Xmit 1..4=>()(T_A825_XMIT_RESULT)0
+
+            -- function sets the selected data port bits.
+            STUB GpioSetBits 1..4=>(GPIOB,HW_GPIOB_LED_HB)
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+        END SIMUL
+         
+        -- Calling the Unit Under Test :
+        #InitInit();
+            
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommfinit-InitTask-CB-LLR-010]
+    COMMENT The function does the following if Pbit_error_status is DEC_ONE
+    COMMENT i)Sets the parameters of A825 message as follows. 
+    COMMENT - lcc of A825 message to NOC.
+    COMMENT - sfid of  BID of sID of A825 message to HOWELL_DAU_FID.
+    COMMENT - rsd of  BID of sID of A825 message to DEC_ZERO.
+    COMMENT - lcl of  BID of sID of A825 message to DEC_ONE.
+    COMMENT - pvt of  BID of sID of A825 message to DEC_ONE.
+    COMMENT - rci of  BID of  sID of A825 message to DEC_ZERO.
+    COMMENT - u8PaySize of A825 message to DEC_ONE.
+    COMMENT ii) payload to result of bitwise OR of Processor_err_stat , Applicatn_err_stat, Sram_err_stat and Nvram_err_stat.
+    COMMENT iii) The function loops infinitely and does the following:
+    COMMENT - Calls HwMemset with payload of  A825 message, DEC_ZERO and DEC_EIGHT as parameter.
+    COMMENT - Sets doc of BID of sID of  A825 message  to PBIT_ERROR.
+    COMMENT - Sets payload[0] of  A825 message  to  payload.
+    COMMENT - Calls the function A825Xmit with A825 message as parameter.
+    COMMENT - Calls GpioSetBits with GPIOB, HW_GPIOB_LED_HB as parameters to study on the heart beat LED
+    COMMENT - Calls the function WdogKickWatchDog 
+    COMMENT Equivalence Class 16, 17, 18, 19
+    COMMENT Global variables values are exercised for nominal values
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            -- Temporary variable 'PTU_ret_OsSemCreate' initialized before usage
+            VAR PTU_ret_OsSemCreate ,       init = 10 ,             ev = init
+            
+            -- Global variable 'Pbit_error_status' is initialized with value ZERO
+            VAR Pbit_error_status ,         init = (T_UINT8)DEC_ONE ,   ev = init
+
+            -- Global variable 'Processor_err_stat' is initialized with value ZERO
+            VAR Processor_err_stat ,        init = (T_UINT8)25 ,        ev = init
+
+            -- Global variable 'Applicatn_err_stat' is initialized with value ZERO
+            VAR Applicatn_err_stat ,        init = (T_UINT8)25 ,        ev = init
+
+            -- Global variable 'Sram_err_stat' is initialized with value ZERO
+            VAR Sram_err_stat ,         init = (T_UINT8)25 ,        ev = init
+
+            -- Global variable 'Nvram_err_stat' is initialized with value ZERO
+            VAR Nvram_err_stat ,        init = (T_UINT8)25 ,        ev = init
+
+            -- Global variable 'Init_task_stk' initialized with maximum values
+            ARRAY Init_task_stk , init = { others => (T_UINT32)0xFFFFFFFF} , ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            -- Holds the address of 'PTU_ret_OsSemCreate' 
+            VAR PTU_ps_semaphore ,      init = NULL ,           ev = &PTU_ret_OsSemCreate
+        
+            -- Holds the address of 'PTU_ret_OsSemCreate' 
+            VAR PTU_p_event ,           init = NULL ,           ev = &PTU_ret_OsSemCreate
+
+        COMMENT OUTPUT SECTION:
+
+            -- Temporary variable 'PTU_error' initialized before usage
+            VAR PTU_error ,       init = 10 ,  ev = DEC_ZERO
+
+            -- Parameter of stub "HwMemset" is updated with value zero
+            VAR PTU_s_tx_message ,      init = { others => 10 } ,   ev = { others => 0 }
+
+            -- structure members 'lcc' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.lcc ,         init = EEC ,            ev = NOC
+
+            -- structure members 'sfid' are verified through the Parameter of stub "A825Xmit"            
+            VAR PTU_ps_xm.sID.BID.sfid ,    init = 10 ,          ev = HOWELL_DAU_FID
+
+            -- structure members 'rsd' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.rsd ,     init = 1 ,          ev = DEC_ZERO
+
+            -- structure members 'lcl' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.lcl ,     init = 0 ,          ev = DEC_ONE
+
+            -- structure members 'pvt' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.pvt ,     init = 0 ,          ev = DEC_ONE
+
+            -- structure members 'rci' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.rci ,     init = 1 ,          ev = 0
+
+            -- structure members 'u8PaySize' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.u8PaySize ,       init = 0 ,          ev = DEC_ONE
+
+            -- structure members 'doc' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.doc ,     init = CBIT_ERROR ,          ev = PBIT_ERROR
+
+            -- structure members 'u8PayLoad' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.u8PayLoad[0] ,    init = 10 ,             ev = 25
+    
+        -- Stub Calls :
+        SIMUL
+            
+            -- Creates and initializes the Semaphore.
+            STUB OsSemCreate(DEC_ZERO)&PTU_ret_OsSemCreate
+
+            -- Install task signaling parameters
+            STUB TbaseTaskSignaling(INIT_TASK_TICKS)
+            
+            -- Creates OS Task
+            STUB OsTaskCreate(HW_NULL,&Init_task_stk[INIT_TASK_STK_SIZE],INIT_TASK_PRIO)OS_NO_ERR
+            
+            -- Calculates the reload value for the independent watchdog timer
+            STUB WdogInit()
+            
+            -- Initialize the system tick interrupt period
+            STUB TbaseInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Initializes external NVRAM
+            STUB XramInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Performs initialization necessary for ARINC 825 communication
+            STUB A825Init()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Initializes FSMC, initializes transmit and receive channels, task signaling
+            --parameters and creates the ARINC 429 task.
+            STUB A429Init()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Installs application task semaphore into timebase and creates the application OS task.
+            STUB AppInit()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            --Initialize log task
+            STUB LogInit()
+            
+            -- Reload watchdog counter          
+            STUB WdogKickWatchDog()
+                        
+            -- initialize CBIT task
+            STUB CbitInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Waits on a Semaphore
+            STUB OsSemPend 1..4=>(DEC_ZERO)
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Toggles the specified GPIO pins.
+            STUB GpioToggleBits 1..4=>(GPIOB,HW_GPIOB_LED_HB)
+            
+            -- Function copies value to destination buffer.
+            STUB HwMemset 1..4=>(DEC_ZERO,DEC_EIGHT)
+
+            -- function builds a CAN message from the user supplied ARINC 825 message
+            STUB A825Xmit 1..4=>()(T_A825_XMIT_RESULT)0
+
+            -- function sets the selected data port bits.
+            STUB GpioSetBits 1..4=>(GPIOB,HW_GPIOB_LED_HB)
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+        END SIMUL
+         
+        -- Calling the Unit Under Test :
+        #InitInit();
+            
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hducommfinit-InitTask-CB-LLR-010]
+    COMMENT The function does the following if Pbit_error_status is DEC_ONE
+    COMMENT i)Sets the parameters of A825 message as follows. 
+    COMMENT - lcc of A825 message to NOC.
+    COMMENT - sfid of  BID of sID of A825 message to HOWELL_DAU_FID.
+    COMMENT - rsd of  BID of sID of A825 message to DEC_ZERO.
+    COMMENT - lcl of  BID of sID of A825 message to DEC_ONE.
+    COMMENT - pvt of  BID of sID of A825 message to DEC_ONE.
+    COMMENT - rci of  BID of  sID of A825 message to DEC_ZERO.
+    COMMENT - u8PaySize of A825 message to DEC_ONE.
+    COMMENT ii) payload to result of bitwise OR of Processor_err_stat , Applicatn_err_stat, Sram_err_stat and Nvram_err_stat.
+    COMMENT iii) The function loops infinitely and does the following:
+    COMMENT - Calls HwMemset with payload of  A825 message, DEC_ZERO and DEC_EIGHT as parameter.
+    COMMENT - Sets doc of BID of sID of  A825 message  to PBIT_ERROR.
+    COMMENT - Sets payload[0] of  A825 message  to  payload.
+    COMMENT - Calls the function A825Xmit with A825 message as parameter.
+    COMMENT - Calls GpioSetBits with GPIOB, HW_GPIOB_LED_HB as parameters to study on the heart beat LED
+    COMMENT - Calls the function WdogKickWatchDog 
+    COMMENT Equivalence Class 16, 17, 18, 19
+    COMMENT Global variables values are exercised for maximum values
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+        
+            -- Temporary variable 'PTU_ret_OsSemCreate' initialized before usage
+            VAR PTU_ret_OsSemCreate ,       init = 10 ,                     ev = init
+            
+            -- Global variable 'Pbit_error_status' is initialized with value ZERO
+            VAR Pbit_error_status ,         init = (T_UINT8)DEC_ONE ,       ev = init
+
+            -- Global variable 'Processor_err_stat' is initialized with value ZERO
+            VAR Processor_err_stat ,        init = (T_UINT8)255 ,           ev = init
+
+            -- Global variable 'Applicatn_err_stat' is initialized with value ZERO
+            VAR Applicatn_err_stat ,        init = (T_UINT8)255 ,           ev = init
+
+            -- Global variable 'Sram_err_stat' is initialized with value ZERO
+            VAR Sram_err_stat ,             init = (T_UINT8)255 ,           ev = init
+
+            -- Global variable 'Nvram_err_stat' is initialized with value ZERO
+            VAR Nvram_err_stat ,            init = (T_UINT8)255 ,           ev = init
+
+            -- Global variable 'Init_task_stk' initialized with nominal values
+            ARRAY Init_task_stk ,       init = { others => (T_UINT32)0xFF} , ev = init
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            -- Holds the address of 'PTU_ret_OsSemCreate' 
+            VAR PTU_ps_semaphore ,      init = NULL ,           ev = &PTU_ret_OsSemCreate
+        
+            -- Holds the address of 'PTU_ret_OsSemCreate' 
+            VAR PTU_p_event ,           init = NULL ,           ev = &PTU_ret_OsSemCreate
+
+        COMMENT OUTPUT SECTION:
+
+            -- Temporary variable 'PTU_error' initialized before usage
+            VAR PTU_error ,       init = 10 ,  ev = DEC_ZERO
+
+            -- Parameter of stub "HwMemset" is updated with value zero
+            VAR PTU_s_tx_message ,      init = { others => 10 } ,   ev = { others => 0 }
+
+            -- structure members 'lcc' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.lcc ,         init = EEC ,            ev = NOC
+        
+            -- structure members 'sfid' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.sfid ,    init = 10 ,          ev = HOWELL_DAU_FID
+
+            -- structure members 'rsd' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.rsd ,     init = 1 ,          ev = DEC_ZERO
+
+            -- structure members 'lcl' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.lcl ,     init = 0 ,          ev = DEC_ONE
+
+            -- structure members 'pvt' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.pvt ,     init = 0 ,          ev = DEC_ONE
+
+            -- structure members 'rci' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.rci ,     init = 1 ,          ev = 0
+
+            -- structure members 'u8PaySize' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.u8PaySize ,       init = 0 ,          ev = DEC_ONE
+
+            -- structure members 'doc' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.sID.BID.doc ,     init = CBIT_ERROR ,          ev = PBIT_ERROR
+
+            -- structure members 'u8PayLoad' are verified through the Parameter of stub "A825Xmit"
+            VAR PTU_ps_xm.u8PayLoad[0] ,    init = 10 ,             ev = 255
+
+        -- Stub Calls :
+        SIMUL
+            
+            -- Creates and initializes the Semaphore.
+            STUB OsSemCreate(DEC_ZERO)&PTU_ret_OsSemCreate
+
+            -- Install task signaling parameters
+            STUB TbaseTaskSignaling(INIT_TASK_TICKS)
+            
+            -- Creates OS Task
+            STUB OsTaskCreate(HW_NULL,&Init_task_stk[INIT_TASK_STK_SIZE],INIT_TASK_PRIO)OS_NO_ERR
+            
+            -- Calculates the reload value for the independent watchdog timer
+            STUB WdogInit()
+            
+            -- Initialize the system tick interrupt period
+            STUB TbaseInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Initializes external NVRAM
+            STUB XramInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Performs initialization necessary for ARINC 825 communication
+            STUB A825Init()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Initializes FSMC, initializes transmit and receive channels, task signaling
+            --parameters and creates the ARINC 429 task.
+            STUB A429Init()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Installs application task semaphore into timebase and creates the application OS task.
+            STUB AppInit()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            --Initialize log task
+            STUB LogInit()
+            
+            -- Reload watchdog counter          
+            STUB WdogKickWatchDog()
+                        
+            -- initialize CBIT task
+            STUB CbitInit()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Waits on a Semaphore
+            STUB OsSemPend 1..4=>(DEC_ZERO)
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+            
+            -- Toggles the specified GPIO pins.
+            STUB GpioToggleBits 1..4=>(GPIOB,HW_GPIOB_LED_HB)
+            
+            -- Function copies value to destination buffer.
+            STUB HwMemset 1..4=>(DEC_ZERO,DEC_EIGHT)
+
+            -- function builds a CAN message from the user supplied ARINC 825 message
+            STUB A825Xmit 1..4=>()(T_A825_XMIT_RESULT)0
+
+            -- function sets the selected data port bits.
+            STUB GpioSetBits 1..4=>(GPIOB,HW_GPIOB_LED_HB)
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+            -- Reload watchdog counter
+            STUB WdogKickWatchDog()
+
+        END SIMUL
+         
+        -- Calling the Unit Under Test :
+        #InitInit();
+            
+    END ELEMENT
+
+END TEST -- TEST 4
+
+END SERVICE -- InitInit
+

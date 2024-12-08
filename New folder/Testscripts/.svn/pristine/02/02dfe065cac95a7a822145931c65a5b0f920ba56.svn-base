@@ -1,0 +1,1507 @@
+HEADER hdulibstm32f4xxflash, Source Code Ver :1.2, TestScript Ver : 1.3
+-------------------------------------------------------------------------------
+-- Author Name         : Akshay R K
+--
+-- File Name           : hdulibstm32f4xxflash.ptu 
+--
+-- Test creation Date  : 30.10.2017
+--
+-- Tested Functions    : FlashWaitForLastOperation
+--						 FlashUnlock
+--                       FlashInstructionCacheCmd
+--                       FlashSetLatency
+--						 FlashProgramWord
+--                       FlashGetStatusBusy
+--                       FlashDataCacheCmd
+--						 FlashLock
+--                       FlashPrefetchBufferCmd
+--						 FlashClearFlag
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE         TESTER NAME        MODIFICATIONS
+--  ------------        ---------         -----------        -------------
+--  1.1                 30.10.2017         Akshay R K  		Created ptu file
+--  1.2					10.11.2017		   Akshay R K		Updated as per #PR100171
+--  1.3					14.11.2017		   Akshay R K		Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibbasicfunc.h"      
+##include "hdulibstm32f4xxflash.h" 
+##include "hdulibstm32f4xx.h"    
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	--None
+	
+-- Declarations of the temporary variables of the tested file
+
+	--None
+	
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Akshay R K
+    COMMENT
+    COMMENT File Name        : hdulibstm32f4xxflash.ptu
+    COMMENT
+    COMMENT Tested Functions : FlashWaitForLastOperation
+	COMMENT                    FlashUnlock
+	COMMENT                    FlashInstructionCacheCmd
+	COMMENT                    FlashSetLatency
+	COMMENT                    FlashProgramWord
+	COMMENT                    FlashGetStatusBusy
+	COMMENT                    FlashDataCacheCmd
+	COMMENT                    FlashLock
+	COMMENT                    FlashPrefetchBufferCmd
+	COMMENT                    FlashClearFlag
+	COMMENT						   
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+	COMMENT 1.Header file "hdulibstm32f4xxflash.h" is modified for testing purpose. 
+    COMMENT The macro 'ACR_BYTE0_ADDRESS' is modified for stubbing hardware address.
+    COMMENT 
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define ACR_BYTE0_ADDRESS             ((T_UINT32)0x40023C00)*/
+    COMMENT 
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_UINT32 PTU_ACR_BYTE0_ADDRESS;
+    COMMENT #define ACR_BYTE0_ADDRESS             ((T_UINT32)&PTU_ACR_BYTE0_ADDRESS)/* FLASH Status */
+    COMMENT 
+    COMMENT 2.Header file "hdulibstm32f4xx.h" is modified for testing purpose. 
+    COMMENT The macro 'FLASH' is modified for stubbing hardware address.
+	COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define FLASH               ((T_FLASH_TYPE *) FLASH_R_BASE)*/
+    COMMENT 
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_FLASH_TYPE PTU_FLASH;
+    COMMENT #define FLASH               ((T_FLASH_TYPE *) &PTU_FLASH)
+    COMMENT 
+    COMMENT
+	COMMENT 3.Source file "hdulibstm32f4xxflash.c" is modified for testing
+    COMMENT The while(FLASH_BUSY == status) is modified to come out of busy state 
+    COMMENT and to terminate the infinite loop .
+	COMMENT
+    COMMENT Snippet of code is added in function 'FlashWaitForLastOperation':
+    COMMENT /*local variable declared for testing purpose*/
+    COMMENT T_UINT16 PTU_count =0 ;
+    COMMENT 
+    COMMENT do
+    COMMENT {
+    COMMENT     .................
+    COMMENT 
+    COMMENT    /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT    PTU_count++;
+    COMMENT    if(PTU_count == 3)
+    COMMENT    {
+    COMMENT         break;
+    COMMENT    } 
+    COMMENT    else
+    COMMENT    {
+    COMMENT         /*nothing*/
+    COMMENT    }
+    COMMENT }while(FLASH_BUSY == status)    
+    COMMENT
+	COMMENT 4.During the testscript generation following warnings were obtained 
+	COMMENT
+	COMMENT  In function 'SRV2_FLASHUNLOCK':
+	COMMENT  warning: this decimal constant is unsigned only in ISO C90
+	COMMENT  warning: this decimal constant is unsigned only in ISO C90
+	COMMENT  warning: this decimal constant is unsigned only in ISO C90
+	COMMENT  In function 'SRV5_FLASHPROGRAMWORD':
+	COMMENT  warning: this decimal constant is unsigned only in ISO C90
+	COMMENT  warning: this decimal constant is unsigned only in ISO C90
+	COMMENT  warning: this decimal constant is unsigned only in ISO C90
+	COMMENT  In function 'SRV8_FLASHLOCK':
+	COMMENT  warning: this decimal constant is unsigned only in ISO C90
+	COMMENT  warning: this decimal constant is unsigned only in ISO C90
+	COMMENT  warning: this decimal constant is unsigned only in ISO C90
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+	COMMENT Valid Class(es)
+	COMMENT
+	COMMENT Class 1
+    COMMENT In function "FlashPrefetchBufferCmd",the parameter 'new_state' is ENABLE.
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function "FlashPrefetchBufferCmd",the parameter 'new_state' is DISABLE.
+	COMMENT
+	COMMENT Class 3
+    COMMENT In function "FlashInstructionCacheCmd",the parameter 'new_state' is ENABLE.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function "FlashInstructionCacheCmd",the parameter 'new_state' is DISABLE.
+	COMMENT
+	COMMENT Class 5
+    COMMENT In function "FlashDataCacheCmd",the parameter 'new_state' is ENABLE.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function "FlashDataCacheCmd",the parameter 'new_state' is DISABLE.
+	COMMENT
+	COMMENT Class 7
+	COMMENT In function "FlashUnlock",LOCK bit is  set
+	COMMENT
+	COMMENT Class 8
+	COMMENT In function "FlashUnlock",LOCK bit is reset
+	COMMENT
+	COMMENT Class 9
+    COMMENT In function "FlashProgramWord",calls the function "FlashWaitForLastOperation".
+	COMMENT
+	COMMENT Class 16
+    COMMENT In function "FlashGetStatusBusy", BSY bit in FLASH SR is set.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function "FlashGetStatusBusy", BSY bit in FLASH SR is not set.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function "FlashWaitForLastOperation",calls the function "FlashGetStatusBusy".
+    COMMENT
+    COMMENT Class 19
+    COMMENT The function "FlashGetStatusBusy" returns FLASH_BUSY.
+    COMMENT
+    COMMENT Class 20
+    COMMENT The function "FlashGetStatusBusy" returns FLASH_COMPLETE.
+	COMMENT 
+	COMMENT Class 21
+    COMMENT The function "FlashWaitForLastOperation" returns FLASH_BUSY
+	COMMENT 
+	COMMENT Class 22
+    COMMENT The function "FlashWaitForLastOperation" returns FLASH_COMPLETE
+	COMMENT 
+	COMMENT Class 23
+	COMMENT In function "FlashProgramWord", the status of "FlashWaitForLastOperation" 
+	COMMENT	function is FLASH_COMPLETE
+	COMMENT
+	COMMENT Class 24
+	COMMENT In function "FlashProgramWord", the status of "FlashWaitForLastOperation" 
+	COMMENT	function is other than FLASH_COMPLETE
+	COMMENT
+	COMMENT Class 25
+    COMMENT The function "FlashProgramWord" returns FLASH_BUSY
+	COMMENT
+	COMMENT Class 26
+    COMMENT The function "FlashProgramWord" returns FLASH_COMPLETE
+	COMMENT
+    COMMENT Invalid Class(es)
+	COMMENT None
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdulibstm32f4xxflash_c
+
+		-- No stubs
+
+	END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+--Environment of the file hdulibstm32f4xxflash.c
+
+--ENVIRONMENT ENV_hdulibstm32f4xxflash_c
+
+    --None
+
+--END ENVIRONMENT --ENV_hdulibstm32f4xxflash_c
+
+--USE ENV_hdulibstm32f4xxflash_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service FlashWaitForLastOperation
+--------------------------------------------------------------------------------
+SERVICE FlashWaitForLastOperation
+SERVICE_TYPE extern
+
+    -- By function returned type declaration
+    #T_FLASH_STATUS ret_FlashWaitForLastOperation;
+
+    ENVIRONMENT ENV_FlashWaitForLastOperation
+	
+		VAR ret_FlashWaitForLastOperation,		init = FLASH_BUSY,			 ev = init
+	
+		VAR FLASH->SR,                          init = 0x00000000, 			 ev = init 
+	
+    END ENVIRONMENT -- ENV_FlashWaitForLastOperation
+	
+    USE ENV_FlashWaitForLastOperation
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxflash-FlashWaitForLastOperation-CB-LLR-001]
+    COMMENT The function 'FlashWaitForLastOperation' calls 'FlashGetStatusBusy' 
+	COMMENT	till the FLASH status is FLASH_BUSY
+    COMMENT Equivalence Class 18,19
+	COMMENT
+    COMMENT [hdulibstm32f4xxflash-FlashWaitForLastOperation-CB-LLR-002]
+    COMMENT The function 'FlashWaitForLastOperation' returns FLASH status
+    COMMENT (i.e BSY bit in FLASH_SR is set). 
+    COMMENT Equivalence Class 21
+    COMMENT </TD>
+
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the Status register value(BSY bit is set to 1)
+            VAR FLASH->SR,                   		 init = 0x00010000,                   ev = init
+
+		COMMENT OUTPUT SECTION:
+
+            --Holds the return value of function 'FlashWaitForLastOperation'
+            VAR ret_FlashWaitForLastOperation,  	 init = FLASH_ERROR_PGS ,             ev = FLASH_BUSY
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_FlashWaitForLastOperation = FlashWaitForLastOperation( );
+
+	END ELEMENT
+
+END TEST -- TEST 1
+
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxflash-FlashWaitForLastOperation-CB-LLR-002]
+    COMMENT The function 'FlashWaitForLastOperation' returns FLASH status
+    COMMENT (i.e BSY bit in FLASH_SR is reset). 
+	COMMENT Equivalence Class 22
+    COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the Status register value(BSY bit is set to 0)
+			VAR FLASH->SR,                    		init = 0x00000000,                   ev = init
+
+		COMMENT OUTPUT SECTION:
+
+            --Holds the return value of function 'FlashWaitForLastOperation'
+            VAR ret_FlashWaitForLastOperation,  	init = FLASH_BUSY ,                  ev = FLASH_COMPLETE
+            
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_FlashWaitForLastOperation = FlashWaitForLastOperation( );
+
+	END ELEMENT
+
+END TEST  -- TEST 2
+
+END SERVICE -- FlashWaitForLastOperation
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service FlashUnlock
+--------------------------------------------------------------------------------
+SERVICE FlashUnlock
+SERVICE_TYPE extern
+
+
+    ENVIRONMENT ENV_FlashUnlock
+	
+		VAR   FLASH->CR,            			init = 0x00000000,                ev = init
+     
+		VAR   FLASH->KEYR,						init = 0x00000000,				  ev = init
+		
+	END ENVIRONMENT -- ENV_FlashUnlock
+    
+	USE ENV_FlashUnlock
+
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxflash-FlashUnlock-CB-LLR-001]
+    COMMENT This function 'FlashUnlock' unlocks the FLASH control register access 
+	COMMENT	when FLASH->CR(Lock bit)is set
+    COMMENT Equivalence Class 7
+    COMMENT </TD>
+
+	ELEMENT
+		COMMENT INPUT SECTION:
+
+			--Holds the control register value(Lock bit is set to 1)
+            VAR FLASH->CR,              		init = 0x80000000,				ev = init 
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--Holds the FLASH_KEYR register value
+            VAR FLASH->KEYR,   	        		init = 0x00000000,				ev = FLASH_KEY2
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+         #FlashUnlock();
+       
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxflash-FlashUnlock-CB-LLR-001]
+    COMMENT The function 'FlashUnlock' does nothing when FLASH->CR(Lock bit)is reset
+    COMMENT when new_state is ENABLE.
+    COMMENT Equivalence Class 8
+    COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the control register value(Lock bit is set to 0)
+            VAR FLASH->CR,              	 	 init = 0x00000000,					ev = init 
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the FLASH_KEYR register value
+            VAR FLASH->KEYR,      	    		 init = 0x00000000,					ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+		-- Calling the Unit Under Test :
+		#FlashUnlock();
+       
+	END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- FlashUnlock
+--------------------------------------------------------------------------------
+-- Declaration of the service FlashInstructionCacheCmd
+--------------------------------------------------------------------------------
+SERVICE FlashInstructionCacheCmd
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_FUNCTIONAL_STATE new_state;
+
+    ENVIRONMENT ENV_FlashInstructionCacheCmd
+	
+		VAR new_state,						init = DISABLE,					ev = init
+		
+		VAR   FLASH->ACR,           		init = 0x00000000,				ev = init
+    
+	END ENVIRONMENT -- ENV_FlashInstructionCacheCmd
+    
+	USE ENV_FlashInstructionCacheCmd
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxflash-FlashInstructionCacheCmd-CB-LLR-001]
+    COMMENT The function 'FlashInstructionCacheCmd' enables the Instruction Cache 
+	COMMENT	by setting bit 9 in ACR when new_state is ENABLE.
+	COMMENT Equivalence Class 3
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Specifies the new state of the Instruction Buffer
+            VAR new_state,              	init = ENABLE,				ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds FLASH_ACR register value(9th bit is set to 1)
+            VAR FLASH->ACR,    		       	init = 0x00000000,			ev = 0x00000200
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #FlashInstructionCacheCmd(new_state);
+
+    END ELEMENT
+   
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxflash-FlashInstructionCacheCmd-CB-LLR-002]
+    COMMENT The function 'FlashInstructionCacheCmd' disables the Instruction Cache 
+	COMMENT	by resetting bit 9 in ACR when new_state is DISABLE.
+	COMMENT Equivalence Class 4
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Specifies the new state of the Instruction Buffer
+            VAR new_state,              	init = DISABLE ,            ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds FLASH_ACR register value(9th bit is set to 0)
+            VAR FLASH->ACR,           		init = 0x00001F07,          ev = 0x00001D07
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :      
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #FlashInstructionCacheCmd(new_state);
+
+    END ELEMENT
+   
+END TEST  -- TEST 2
+
+END SERVICE -- FlashInstructionCacheCmd
+--------------------------------------------------------------------------------
+-- Declaration of the service FlashSetLatency
+--------------------------------------------------------------------------------
+SERVICE FlashSetLatency
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT32 flash_latency;
+
+    ENVIRONMENT ENV_FlashSetLatency
+	
+		VAR flash_latency,				init = 0,				ev = init
+    
+	END ENVIRONMENT -- ENV_FlashSetLatency
+    
+	USE ENV_FlashSetLatency
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxflash-FlashSetLatency-CB-LLR-001]
+    COMMENT The function 'FlashSetLatency' sets the code latency value flash_latency in ACR register.
+	COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Specifies the FLASH Latency value
+            VAR flash_latency,								 init = FLASH_LATENCY_5,			ev = init 
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the the Latency value
+            VAR *((T_VLT_UINT8 *)ACR_BYTE0_ADDRESS), 	     init = 0xF,						ev = FLASH_LATENCY_5
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #FlashSetLatency(flash_latency);
+
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+END SERVICE -- FlashSetLatency
+--------------------------------------------------------------------------------
+-- Declaration of the service FlashProgramWord
+--------------------------------------------------------------------------------
+SERVICE FlashProgramWord
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT32 address;
+    #T_UINT32 data;
+    
+	-- temprory variable created to verify the service parameters .
+    #T_UINT32 PTU_temp;
+	
+    -- By function returned type declaration
+    #T_FLASH_STATUS ret_FlashProgramWord;
+
+    ENVIRONMENT ENV_FlashProgramWord
+    
+    	VAR PTU_temp,						init = 0,								ev = init
+
+		VAR data,		    				init = 0,								ev = init
+	
+		VAR ret_FlashProgramWord,			init = FLASH_BUSY,						ev = init
+		
+		VAR FLASH->SR,						init = 0x00000000,		ev = init
+	
+    END ENVIRONMENT -- ENV_FlashProgramWord
+	
+    USE ENV_FlashProgramWord
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f4xxflash-FlashProgramWord-CB-LLR-001]
+	COMMENT The function 'FlashProgramWord' does the following task 
+	COMMENT when status of FlashWaitForLastOperation function is FLASH_COMPLETE:
+	COMMENT 1. Clears the PSIZE bits
+	COMMENT 2. Sets the PSIZE bits of Flash CR with FLASH_PSIZE_WORD
+	COMMENT 3. Sets the PG bit of Flash CR with FLASH_CR_PG
+	COMMENT 4. Copies the data to be programmed into address   
+	COMMENT 5. Calls the function FlashWaitForLastOperation 
+	COMMENT	   and waits for the operation to be completed 
+	COMMENT 6. Disables the PG bit of Flash CR
+	COMMENT Equivalence Class 9,23
+	COMMENT
+	COMMENT [hdulibstm32f4xxflash-FlashProgramWord-CB-LLR-002]
+	COMMENT The function 'FlashProgramWord' returns FLASH status
+	COMMENT Equivalence Class 26
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+            --Holds the Status register value(BSY bit is set to 0)
+            VAR FLASH->SR,                init = 0x00000000,         		ev = init
+			
+            --Holds the data to be programmed(nominal)
+            VAR data,		         	  init = 5,							ev = init
+			
+		COMMENT OUTPUT SECTION:
+		
+			--Holds the return value of function 'FlashProgramWord'
+            VAR ret_FlashProgramWord,     init = FLASH_ERROR_PGS ,			ev = FLASH_COMPLETE
+		
+		COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the control register value
+            VAR FLASH->CR,		  		  init = 0x80000000,				ev = 0x80000200
+            
+            --Variable to verify content of address stored in variable address
+            VAR PTU_temp,		  		  init = 0,							ev = data
+		
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_FlashProgramWord = FlashProgramWord((T_UINT32)&PTU_temp, data);
+		
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f4xxflash-FlashProgramWord-CB-LLR-002]
+	COMMENT The function 'FlashProgramWord' returns FLASH status
+	COMMENT Equivalence Class 24,25
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--Holds the Status register value(BSY bit is set to 1)
+			VAR FLASH->SR,                init = FLASH_FLAG_BSY,			ev = init
+
+		COMMENT OUTPUT SECTION:
+		
+			--Holds the return value of function 'FlashProgramWord'
+			VAR ret_FlashProgramWord,     init = FLASH_ERROR_PGS ,			ev = FLASH_BUSY
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_FlashProgramWord = FlashProgramWord((T_UINT32)&PTU_temp, data);
+		
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f4xxflash-FlashProgramWord-CB-LLR-001]
+	COMMENT The function 'FlashProgramWord' does the following task 
+	COMMENT when status of FlashWaitForLastOperation function is FLASH_COMPLETE:
+	COMMENT 1. Clears the PSIZE bits
+	COMMENT 2. Sets the PSIZE bits of Flash CR with FLASH_PSIZE_WORD
+	COMMENT 3. Sets the PG bit of Flash CR with FLASH_CR_PG
+	COMMENT 4. Copies the data to be programmed into address (tested for minimum value)
+	COMMENT 5. Calls the function FlashWaitForLastOperation and waits for the operation to be completed 
+	COMMENT 6. Disables the PG bit of Flash CR
+	COMMENT Equivalence Class 9,23
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+            --Holds the Status register value
+            VAR FLASH->SR,                init = 0x00000000,         		ev = init
+			
+            --Holds the data to be programmed(minimum)
+            VAR data,		         	  init = 0,			 				ev = init
+		
+		COMMENT OUTPUT SECTION:
+
+			--Holds the return value of function 'FlashProgramWord'
+            VAR ret_FlashProgramWord,     init = FLASH_ERROR_PGS ,			ev = FLASH_COMPLETE
+		
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--Holds the control register value
+            VAR FLASH->CR,		  		  init = 0x80000000,				ev = 0x80000200
+            
+            --Variable to verify content of address stored in variable address
+            VAR PTU_temp,		  		  init = 0,							ev = data
+		
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_FlashProgramWord = FlashProgramWord((T_UINT32)&PTU_temp, data);
+		
+	END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f4xxflash-FlashProgramWord-CB-LLR-001]
+	COMMENT The function 'FlashProgramWord' does the following task 
+	COMMENT when status of 'FlashWaitForLastOperation' function is FLASH_COMPLETE:
+	COMMENT 1. Clears the PSIZE bits
+	COMMENT 2. Sets the PSIZE bits of Flash CR with FLASH_PSIZE_WORD
+	COMMENT 3. Sets the PG bit of Flash CR with FLASH_CR_PG
+	COMMENT 4. Copies the data to be programmed into address (tested for maximum value)
+	COMMENT 5. Calls the function FlashWaitForLastOperation and waits for the operation to be completed 
+	COMMENT 6. Disables the PG bit of Flash CR
+	COMMENT Equivalence Class 9,23
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+            --Holds the Status register value
+            VAR FLASH->SR,                init = 0x00000000,         		ev = init
+			
+            --Holds the data to be programmed(maximum)
+            VAR data,		         	  init = (T_UINT32)0xEFFFFFFF,			 	ev = init
+						
+		COMMENT OUTPUT SECTION:
+
+			--Holds the return value of function 'FlashProgramWord'
+            VAR ret_FlashProgramWord,     init = FLASH_ERROR_PGS ,         	ev = FLASH_COMPLETE
+		
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--Holds the control register value
+            VAR FLASH->CR,		  		  init = 0x80000000,				ev = 0x80000200
+            
+            --Variable to verify content of address stored in variable address
+            VAR PTU_temp,		  		  init = 0,							ev = data
+		
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_FlashProgramWord = FlashProgramWord((T_UINT32)&PTU_temp, data);
+		
+	END ELEMENT
+
+END TEST -- TEST 4
+
+END SERVICE -- FlashProgramWord
+--------------------------------------------------------------------------------
+-- Declaration of the service FlashGetStatusBusy
+--------------------------------------------------------------------------------
+SERVICE FlashGetStatusBusy
+SERVICE_TYPE extern
+
+    -- By function returned type declaration
+    #T_FLASH_STATUS ret_FlashGetStatusBusy;
+
+    ENVIRONMENT ENV_FlashGetStatusBusy
+	
+		VAR ret_FlashGetStatusBusy,			init = FLASH_BUSY,			ev = init
+		
+		VAR FLASH->SR,                  	init = 0x00000000,			ev = init
+	
+    END ENVIRONMENT -- ENV_FlashGetStatusBusy
+	
+    USE ENV_FlashGetStatusBusy
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxflash-FlashGetStatusBusy-CB-LLR-001]
+    COMMENT The function 'FlashGetStatusBusy' returns flash status other than FLASH_COMPLETE 
+	COMMENT	when flash memory operation is ongoing
+	COMMENT Equivalence Class 16
+	COMMENT
+	COMMENT [hdulibstm32f4xxflash-FlashGetStatusBusy-CB-LLR-002]
+    COMMENT The function 'FlashGetStatusBusy' returns flash status as FLASH_BUSY 
+	COMMENT	when BSY bit in FLASH SR is  set
+	COMMENT Equivalence Class 16,19
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the Status register value(BSY bit is set to 1)
+            VAR FLASH->SR,                  	init = FLASH_FLAG_BSY,			ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of function 'FlashGetStatusBusy'
+            VAR ret_FlashGetStatusBusy,			init = FLASH_ERROR_PGS,			ev = FLASH_BUSY
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_FlashGetStatusBusy = FlashGetStatusBusy( );
+
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdulibstm32f4xxflash-FlashGetStatusBusy-CB-LLR-001]
+    COMMENT The function 'FlashGetStatusBusy' returns flash status as FLASH_COMPLETE 
+	COMMENT	when No flash memory operation is ongoing (BSY bit in FLASH->SR is not set)
+    COMMENT FLASH->SR is initialized to 0x00000000
+	COMMENT Equivalence Class 17,20
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds the Status register value(BSY bit is set to 0)
+            VAR FLASH->SR,						init = 0x00000000,				ev = init
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds the return value of function 'FlashGetStatusBusy'
+            VAR ret_FlashGetStatusBusy,			init =FLASH_ERROR_PGS,			ev = FLASH_COMPLETE
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_FlashGetStatusBusy = FlashGetStatusBusy( );
+
+    END ELEMENT
+   
+END TEST  -- TEST 2
+
+END SERVICE -- FlashGetStatusBusy
+--------------------------------------------------------------------------------
+-- Declaration of the service FlashDataCacheCmd
+--------------------------------------------------------------------------------
+SERVICE FlashDataCacheCmd
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_FUNCTIONAL_STATE new_state;
+
+    ENVIRONMENT ENV_FlashDataCacheCmd
+	
+		VAR   new_state,				init = DISABLE,					ev = init
+		
+		VAR   FLASH->ACR,   			init = 0x00000000,				ev = init
+	
+    END ENVIRONMENT -- ENV_FlashDataCacheCmd
+	
+    USE ENV_FlashDataCacheCmd
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxflash-FlashDataCacheCmd-CB-LLR-001]
+    COMMENT The function 'FlashDataCacheCmd' enables the Data Cache by setting bit 10 in ACR
+    COMMENT when new_state is ENABLE.
+	COMMENT Equivalence Class 5
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Specifies the new state of the Data Buffer
+            VAR new_state,              		init = ENABLE ,				ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --Holds FLASH_ACR register value(10th bit is set to 1)
+            VAR FLASH->ACR,   	        		init = 0x00000000,			ev = 0x00000400
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #FlashDataCacheCmd(new_state);
+
+    END ELEMENT
+   
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxflash-FlashDataCacheCmd-CB-LLR-002]
+    COMMENT The function 'FlashDataCacheCmd' disables the Data Cache by resetting bit 10 in ACR
+	COMMENT Equivalence Class 6
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Specifies the new state of the Data Buffer
+            VAR new_state,              	init = DISABLE,				ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds FLASH_ACR register value(10th bit is set to 0)
+            VAR FLASH->ACR,      	     	init = 0x00001F07,			ev = 0x00001B07
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #FlashDataCacheCmd(new_state);
+
+   END ELEMENT
+
+END TEST  -- TEST 2
+
+END SERVICE -- FlashDataCacheCmd
+--------------------------------------------------------------------------------
+-- Declaration of the service FlashLock
+--------------------------------------------------------------------------------
+SERVICE FlashLock
+SERVICE_TYPE extern
+
+
+    ENVIRONMENT ENV_FlashLock
+		
+		 VAR FLASH->CR,					init = 0x00000000,			ev = 0x00000100
+    
+	END ENVIRONMENT -- ENV_FlashLock
+    
+	USE ENV_FlashLock
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxflash-FlashLock-CB-LLR-001]
+    COMMENT The function 'FlashLock' set the LOCK Bit to lock the FLASH registers access
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --None
+           
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holda the control register value(lock bit is set to 1)
+            VAR FLASH->CR,   			init = 0x80000000,			ev = FLASH_CR_LOCK
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #FlashLock();
+
+    END ELEMENT
+   
+END TEST  -- TEST 1       
+	
+END SERVICE -- FlashLock
+--------------------------------------------------------------------------------
+-- Declaration of the service FlashPrefetchBufferCmd
+--------------------------------------------------------------------------------
+SERVICE FlashPrefetchBufferCmd
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_FUNCTIONAL_STATE new_state;
+
+    ENVIRONMENT ENV_FlashPrefetchBufferCmd
+	
+		VAR new_state,						init = DISABLE,						ev = init
+			
+		VAR FLASH->ACR,   					init = 0x00000000,					ev = 0x00000100
+    
+	END ENVIRONMENT -- ENV_FlashPrefetchBufferCmd
+    
+	USE ENV_FlashPrefetchBufferCmd
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxflash-FlashPrefetchBufferCmd-CB-LLR-001]
+    COMMENT The function 'FlashPrefetchBufferCmd' enables the prefetch buffer 
+	COMMENT	by setting bit 8 in ACR when new_state is ENABLE.
+	COMMENT Equivalence Class 1
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Specifies the new state of the Prefetch Buffer
+            VAR new_state,              		init = ENABLE,					 ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds FLASH_ACR register value(8th bit is set to 1)
+            VAR FLASH->ACR,   	        		init = 0x00000000,				 ev = 0x00000100
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #FlashPrefetchBufferCmd(new_state);
+
+    END ELEMENT
+   
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxflash-FlashPrefetchBufferCmd-CB-LLR-002]
+    COMMENT The function 'FlashPrefetchBufferCmd' disables the prefetch buffer by resetting bit 8 in ACR
+    COMMENT when new_state is DISABLE.
+	COMMENT Equivalence Class 2
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Specifies the new state of the Prefetch Buffer
+            VAR new_state,              		init = DISABLE,				ev = init 
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds FLASH_ACR register value(8th bit is set to 0)
+            VAR FLASH->ACR,  	         		init = 0x00001F07,			ev = 0x00001E07
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #FlashPrefetchBufferCmd(new_state);
+
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+END SERVICE -- FlashPrefetchBufferCmd
+--------------------------------------------------------------------------------
+-- Declaration of the service FlashClearFlag
+--------------------------------------------------------------------------------
+SERVICE FlashClearFlag
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT32 flash_flag;
+
+    ENVIRONMENT ENV_FlashClearFlag
+	
+		VAR flash_flag,					init = 0x00000000,					ev = init
+	
+    END ENVIRONMENT -- ENV_FlashClearFlag
+	
+    USE ENV_FlashClearFlag
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxflash-FlashClearFlag-CB-LLR-001]
+    COMMENT The function 'FlashClearFlag' clear the flags 
+	COMMENT	by setting SR register with flash_flag
+	COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--specifies the FLASH flags to clear
+			VAR flash_flag,					init = FLASH_FLAG_EOP,					ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the FLASH_SR register value
+            VAR FLASH->SR,					init = 0x00000000,						ev = FLASH_FLAG_EOP
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+         #FlashClearFlag(flash_flag);
+
+    END ELEMENT
+   
+END TEST  -- TEST 1	
+	
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxflash-FlashClearFlag-CB-LLR-001]
+    COMMENT The function 'FlashClearFlag' clear the flags by setting SR register with flash_flag
+	COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+			--specifies the FLASH flags to clear
+            VAR flash_flag,					init = FLASH_FLAG_OPERR,					ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the FLASH_SR register value
+            VAR FLASH->SR,					init = 0x00000000,							ev = FLASH_FLAG_OPERR
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+         #FlashClearFlag(flash_flag);
+
+    END ELEMENT
+   
+END TEST  -- TEST 2	
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxflash-FlashClearFlag-CB-LLR-001]
+    COMMENT The function 'FlashClearFlag' clear the flags by setting SR register 
+	COMMENT	with flash_flag(FLASH_FLAG_WRPERR as a parameter)
+	COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+			--specifies the FLASH flags to clear
+            VAR flash_flag,					init = FLASH_FLAG_WRPERR,				ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the FLASH_SR register value
+            VAR FLASH->SR,					init = 0x00000000,						ev = FLASH_FLAG_WRPERR
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+         #FlashClearFlag(flash_flag);
+
+    END ELEMENT
+   
+END TEST  -- TEST 3	
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxflash-FlashClearFlag-CB-LLR-001]
+    COMMENT The function 'FlashClearFlag' clear the flags by setting SR register 
+	COMMENT	with flash_flag(FLASH_FLAG_PGAERR as a parameter)
+	COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+			--specifies the FLASH flags to clear
+            VAR flash_flag,						init = FLASH_FLAG_PGAERR,				ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the FLASH_SR register value
+            VAR FLASH->SR,						init = 0x00000000,						ev = FLASH_FLAG_PGAERR
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+         #FlashClearFlag(flash_flag);
+
+    END ELEMENT
+   
+END TEST  -- TEST 4	
+	
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxflash-FlashClearFlag-CB-LLR-001]
+    COMMENT The function 'FlashClearFlag' clear the flags by setting SR register 
+	COMMENT	with flash_flag(FLASH_FLAG_PGPERR as a parameter)
+	COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+			--specifies the FLASH flags to clear
+            VAR flash_flag,					init = FLASH_FLAG_PGPERR,				ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the FLASH_SR register value
+            VAR FLASH->SR,					init = 0x00000000,						ev = FLASH_FLAG_PGPERR
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+         #FlashClearFlag(flash_flag);
+
+    END ELEMENT
+   
+END TEST  -- TEST 5	
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxflash-FlashClearFlag-CB-LLR-001]
+    COMMENT The function 'FlashClearFlag' clear the flags by setting SR register 
+	COMMENT	with flash_flag(FLASH_FLAG_PGSERR as a parameter)
+	COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+			--specifies the FLASH flags to clear
+            VAR flash_flag,						init = FLASH_FLAG_PGSERR,				ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds the FLASH_SR register value
+            VAR FLASH->SR,						init = 0x00000000,						ev = FLASH_FLAG_PGSERR
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+         #FlashClearFlag(flash_flag);
+
+    END ELEMENT
+   
+END TEST  -- TEST 6
+
+END SERVICE -- FlashClearFlag
+

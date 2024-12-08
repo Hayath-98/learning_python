@@ -1,0 +1,456 @@
+HEADER hducommbintr, Source Code Ver : 1.2 , TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name      	: Santosh Mithari
+--
+-- File Name        	: hducommbintr_1.ptu
+--
+-- Test Creation Date  	: 30.10.2017
+--
+-- Tested Functions 	: IntrInstall
+--                     	  IntrInit
+--
+-- Version History      :
+--
+-- TEST-VERSION         TEST-DATE         TESTER NAME           MODIFICATIONS
+-- ------------        -----------        -----------           -------------
+--    1.1               30.10.2017        Santosh Mithari       Created the PTU file			
+--    1.2               10.11.2017        Santosh Mithari       Updated as per #PR100171
+--    1.3            	14.11.2017	  Santosh Mithari       Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommbintr.h"     
+##include "hdulibbasicfunc.h"     
+##include "hducommbcrt0.h"     
+##include "hducommbhw.h"       
+##include "hducommfoscfg.h"  
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+	
+	-- None
+
+-- Declarations of the temporary variable of the tested file
+	
+	--dummy variables used in function IntrInit
+	#T_UINT8 PTU_temp;
+	
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      : Santosh Mithari
+    COMMENT
+    COMMENT File Name        : hducommbintr_1.ptu
+    COMMENT
+    COMMENT Tested Functions : IntrInstall
+    COMMENT                    IntrInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1.In function  'IntrInit', "for" loop cannot be covered for 0 and 1 time since 
+    COMMENT   it is controlled by ENUM INTR_MAX.
+    COMMENT
+    COMMENT 2.PTU has been split into 2 to test static functions by enabling internal services.
+    COMMENT
+    COMMENT 3.Internal Services is enabled in PTU 'hducommbintr_2.ptu' in order to test the 
+    COMMENT   following LLRs 
+    COMMENT "hducommbintr-ResetFunc-CB-LLR-001"
+    COMMENT "hducommbintr-HardFault-CB-LLR-001"
+    COMMENT "hducommbintr-MemManage-CB-LLR-001"
+    COMMENT "hducommbintr-BusFault-CB-LLR-001"
+    COMMENT "hducommbintr-SpuriousInterrupt-CB-LLR-001"
+    COMMENT "hducommbintr-UsageFault-CB-LLR-001"
+    COMMENT "hducommbintr-NonMaskable-CB-LLR-001"
+    COMMENT  which are implemented in static functions 'ResetFunc','HardFault','MemManage',
+    COMMENT 'BusFault','SpuriousInterrupt','UsageFault',and 'NonMaskable' respectively.
+    COMMENT
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+    COMMENT In the Function "IntrInstall", u8_index  is less than INTR_MAX
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In the Function "IntrInstall", u8_index  is equal to INTR_MAX
+    COMMENT
+    COMMENT Class 3
+    COMMENT In the Function "IntrInstall", u8_index  is greater than INTR_MAX
+    COMMENT
+    COMMENT Class 4
+    COMMENT In the Function "IntrInit", the Interrupt Vector Table in ROM with corresponding 
+    COMMENT index is not empty.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In the Function "IntrInit", the Interrupt Vector Table in ROM with corresponding 
+    COMMENT index is empty.
+    COMMENT
+    COMMENT Class 6
+    COMMENT The Function "ResetFunc" calls function 'Crt0TransferData'.
+    COMMENT
+	COMMENT Invalid Class(es)
+	COMMENT 
+    COMMENT Class 7
+    COMMENT In the Function "IntrInstall", invalid reference is passed to 'intr_function'.
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+     DEFINE STUB hducommbintr_c
+
+		#void Crt0TransferData(void); 
+           	
+		--Dummy function created to verify parameter 'intr_function' in function 'IntrInstall'.		
+		#void Dummy_Function(void);
+           	
+     END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+--Environment of the file hducommbintr.c
+
+--ENVIRONMENT ENV_hducommbintr_c
+
+	--None
+
+--END ENVIRONMENT -- ENV_hducommbintr_c
+
+--USE ENV_hducommbintr_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service IntrInstall
+--------------------------------------------------------------------------------
+SERVICE IntrInstall
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    
+    #T_UINT8 u8_index;
+    #T_INTR_FN intr_function;
+
+    ENVIRONMENT ENV_IntrInstall
+    
+    VAR u8_index,			init = 0,		ev = init
+    VAR intr_function,		init = NIL,		ev = init
+    
+    END ENVIRONMENT -- ENV_IntrInstall
+    
+    USE ENV_IntrInstall
+
+    
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-IntrInstall-CB-LLR-001]
+	COMMENT The function 'IntrInstall' stores the intr_function into index u8_index of the Interrupt 
+	COMMENT Vector Table in RAM when u8_index is less than INTR_MAX(minimum value).
+	COMMENT Equivalence Class 1
+	COMMENT </TD> 
+
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+
+			--interrupt number index in the vector table is provided with min value
+			VAR u8_index,				init = INTR_STACK_POINTER,		ev = init
+
+			--Dummy function is assigned to function pointer.
+			VAR intr_function,			init = &Dummy_Function,			ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+		
+		-- Stub Calls:
+		SIMUL
+			
+			--No stubs
+	
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+	 	#IntrInstall(u8_index, intr_function);
+
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-IntrInstall-CB-LLR-001]
+	COMMENT The function 'IntrInstall' does nothing when u8_index is equal to INTR_MAX(max value).
+	COMMENT Equivalence Class 2
+	COMMENT </TD> 
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--interrupt number index in the vector table is provided with max value
+			VAR u8_index,				init = INTR_MAX,			ev = init
+
+			--Dummy function is assigned to function pointer.
+			VAR intr_function,			init = &Dummy_Function,		ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+		
+		-- Stub Calls:
+		SIMUL   
+			
+			--No stubs
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#IntrInstall(u8_index, intr_function);
+
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-IntrInstall-CB-LLR-001]
+	COMMENT The function 'IntrInstall' stores the intr_function into index u8_index of the Interrupt 
+	COMMENT Vector Table in RAM when u8_index is less than INTR_MAX(nominal value).	
+	COMMENT Equivalence Class 1
+	COMMENT </TD> 
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--interrupt number index in the vector table is provided with nominal value
+			VAR u8_index,				init = INTR_SDIO,				ev = init
+
+			--Dummy function is assigned to function pointer.
+			VAR intr_function,			init =&Dummy_Function,			ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+		-- Stub Calls:
+		SIMUL
+			
+			--No stubs
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#IntrInstall(u8_index, intr_function);
+
+	END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-IntrInstall-CB-LLR-001]
+	COMMENT The function 'IntrInstall' does nothing when u8_index is greater than INTR_MAX(max+1 value).
+	COMMENT Equivalence Class 3
+	COMMENT </TD> 
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--interrupt number index in the vector table is provided with max+1 value
+			VAR u8_index,				init =(INTR_MAX+1),			ev = init
+
+			--Dummy function is assigned to function pointer.
+			VAR intr_function,			init = &Dummy_Function,		ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+		
+		-- Stub Calls:
+		SIMUL   
+			
+			--No stubs
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#IntrInstall(u8_index, intr_function);
+
+	END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY robustness
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-IntrInstall-CB-LLR-001]
+	COMMENT This case is written to pass invalid reference to intr_function.
+	COMMENT Equivalence Class 7
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--interrupt number index in the vector table is provided with nominal value
+			VAR u8_index,				init = INTR_SDIO,				ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+		-- Stub Calls:
+		SIMUL
+			
+			--No stubs
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#IntrInstall(u8_index, NULL);
+
+	END ELEMENT
+
+END TEST -- TEST 5
+
+END SERVICE -- IntrInstall
+
+--------------------------------------------------------------------------------
+-- Declaration of the service IntrInit
+--------------------------------------------------------------------------------
+SERVICE IntrInit
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommbintr-IntrInit-CB-LLR-001]
+	COMMENT The function 'IntrInit' stores the interrupt functions of particular index from the  
+	COMMENT interrupt Vector Table in ROM into the corresponding index of the interrupt Vector 
+	COMMENT Table in RAM for index INTR_RESET to INTR_MAX when the interrupt Vector Table in ROM 
+	COMMENT	for corresponding index is not empty.
+	COMMENT Equivalence Class 4
+	COMMENT
+	COMMENT [hducommbintr-IntrInit-CB-LLR-002]
+	COMMENT The function 'IntrInit' stores the reference of the function SpuriousInterrupt into the 
+	COMMENT corresponding index of the interrupt Vector Table in RAM for index INTR_RESET 
+	COMMENT to INTR_MAX when the interrupt Vector Table in ROM for corresponding index is empty.
+	COMMENT Equivalence Class 5
+	COMMENT </TD> 
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--dummy variable initialised for execution
+			VAR PTU_temp, 		init = 0x10,			ev = init
+			
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL   
+
+			--No stubs
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+        #IntrInit();
+
+	END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- IntrInit
+

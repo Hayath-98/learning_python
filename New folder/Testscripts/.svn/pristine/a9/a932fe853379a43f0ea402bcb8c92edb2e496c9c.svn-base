@@ -1,0 +1,1808 @@
+HEADER hdudispftext,Source Code Ver :1.10,TestScript Ver : 1.6
+--------------------------------------------------------------------------------
+-- Author Name         : Vinothini M
+--
+-- File Name           : hdudispftext_1.ptu
+--
+-- Test Creation Date  : 28.10.2017
+--
+-- Tested Functions    : TextDispString
+--
+--
+-- Version History             :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME           MODIFICATIONS
+--  ------------        ---------       -----------           -------------
+--      1.1             17.10.2017      Vinothini M         Created the ptu file.
+--      1.2             10.11.2017      Vinothini M         Updated as per #PR100171.
+--      1.3             14.11.2017      Vinothini M         Updated as per #PR100171.
+--      1.4             28.07.2020      Swaroopa N       	Updated as per #PR100267.   
+--      1.5             20.08.2020      Swaroopa N       	Updated as per #PR100267.   
+--      1.6             03.10.2020      Vignesh Sunil       Updated as per #PR100281.   
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+##include "hdudispfdma2d.h"    
+##include "hdudispffonts.h"    
+##include "hdudispfrterror.h"  
+##include "hdudispftext.h"     
+##include "hdudispfwidgets.h"  
+##include "hdudispfconfig.h"   
+##include "hdudispfforeground.h" 
+##include "hdulibbasictypes.h"   
+##include "hdudispfpanel.h"
+##include "hdudispfgrapp.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+--------------------------------------------------------------------------------
+    #T_INT16 S16_panel_width; 
+    #T_INT16 S16_panel_height; 
+    #void *Vp_fgfb2; 
+    #T_ELANDSCAPEORPORTRIAT E_orientation; 
+    # volatile  T_INT32 Itm_rx_buffer; 
+    #extern T_CHAR glob_file_name[];
+	# T_PAGE Page_settings;
+	# T_PARAM_TABLE Parameters_reading[256];
+	# T_TEXT Page_txt[30];
+	#T_UINT8 Text_cnt;
+    #T_APPDATA_PANELSTRUCT *Appdata_appdata; 
+    #T_DISPLAYSIZE Display_size; 
+
+-- Declaration of temporary variables  
+
+    -- temporary variable used in execution of test
+    # T_UINT8 PTU_tmp;
+    
+    -- temporary structure declared for receiving the address
+    # T_BFC_FONT PTU_FontsGetFont;
+
+    -- temporary structure declared for passing the address
+    # T_UINT8 PTU_pData8;
+
+    -- Created to verify the 1st parameter of RterrWidget
+    # char PTU_pc_file_in_1[200],PTU_pc_file_out_1[200];
+    # T_UINT8 PTU_temp;
+
+    -- Created to verify the 3rd parameter of RterrWidget
+   # char PTU_pc_message_in_1[200],PTU_pc_message_out_1[200];
+
+     
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Vinothini M
+    COMMENT
+    COMMENT File name        : hdudispftext_1.ptu
+    COMMENT
+    COMMENT Tested functions : TextDispString
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT 1. Source file "hdudispftext.c" is modified for testing purpose to verify the file name
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT
+    COMMENT 2.Warning "enumerated type mixed with another type" is obtained when parameter 
+    COMMENT    '(enum T_EPENCOLOR)type' of e_pen_color
+    COMMENT    '(enum T_ETXFONT)type' of e_tx_font 
+    COMMENT    is exercised with value "CAS_WHITE+1" and "E_BEZEL_FONT+1" to test LLR 
+    COMMENT    "hdudispftext-TextDrawChar-DB-LLR-010" and "hdudispftext-TextDispString-DB-LLR-001"
+    COMMENT    in PTU "hdudispftext_1.ptu", "hdudispftext_5.ptu" and "hdudispftext_6.ptu".
+    COMMENT
+    COMMENT 3. Testscript is split into 19 due to static dependency
+    COMMENT</AC>
+
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'TextAllocat', the function 'RterrWidget' is called. 
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In function 'TextAllocat', Text_objects_installed is equal to MAX_TEXT_OBJECTS.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function 'TextAllocat', Text_objects_installed is not equal to MAX_TEXT_OBJECTS.
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In function 'TextDraw', the function 'TextDispString' is called.
+    COMMENT 
+    COMMENT Class 5
+    COMMENT In function 'TextDispString', the function 'FontsGetFont' is called.
+    COMMENT 
+    COMMENT Class 6
+    COMMENT In function 'TextDispString', the function 'DispStringAt' is called.
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In function 'TextDispString', the function 'FontsGetStringWidth' is called.
+    COMMENT 
+    COMMENT Class 8
+    COMMENT In function 'TextDispString', the function 'FontsGetFontHeight' is called.
+    COMMENT     
+    COMMENT Class 9
+    COMMENT In function 'TextDispString', e_tx_align is equal to ALIGN_CENTER.
+    COMMENT     
+    COMMENT Class 10
+    COMMENT In function 'TextDispString', e_tx_align is not equal to ALIGN_CENTER.
+    COMMENT 
+    COMMENT Class 11
+    COMMENT In function 'TextDispString', e_tx_align is equal to ALIGN_CENTER_LEFT.
+    COMMENT 
+    COMMENT Class 12
+    COMMENT In function 'TextDispString', e_tx_align is not equal to ALIGN_CENTER_LEFT.
+    COMMENT 
+    COMMENT Class 14
+    COMMENT In function 'DispStringAt', e_tx_flash is equal to TX_FLASH.
+    COMMENT 
+    COMMENT Class 15
+    COMMENT In function 'DispStringAt', e_tx_flash is not equal to TX_FLASH.
+    COMMENT 
+    COMMENT Class 16
+    COMMENT In function 'DispStringAt', the function 'TextDrawChar' is called.
+    COMMENT 
+    COMMENT Class 17
+    COMMENT In function 'TextDrawChar', the function 'Pu8GetCharBitMap' is called.
+    COMMENT 
+    COMMENT Class 18
+    COMMENT In function 'TextDrawChar', the function 'PsGetCharInfo' is called.
+    COMMENT 
+    COMMENT Class 19
+    COMMENT In function 'TextDrawChar', the function 'Dma2dDrawChar' is called.
+    COMMENT 
+    COMMENT Class 20
+    COMMENT In function 'TextDrawChar', E_orientation is equal to E_LAND_SCAPE.
+    COMMENT 
+    COMMENT Class 21
+    COMMENT In function 'TextDrawChar', E_orientation is not equal to E_LAND_SCAPE.
+    COMMENT 
+    COMMENT Class 22
+    COMMENT In function 'TextDrawChar', e_color is equal to CAS_RED.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'TextDrawChar', e_color is not equal to CAS_RED .
+    COMMENT 
+    COMMENT Class 26
+    COMMENT In function 'TextDrawChar', E_orientation is equal to E_PORTRAIT.
+    COMMENT 
+    COMMENT Class 27
+    COMMENT In function 'TextDrawChar', E_orientation is not equal to E_PORTRAIT.
+    COMMENT 
+    COMMENT Class 28
+    COMMENT In function 'DispStringAt', e_txv is not equal to V_REVERSE.
+    COMMENT 
+    COMMENT Class 29
+    COMMENT In function 'DispStringAt', e_txv is equal to V_REVERSE.
+    COMMENT 
+    COMMENT Class 30
+    COMMENT In function 'DispStringAt', return value of EGetFlashState is equal to FLASH_OFF.
+    COMMENT 
+    COMMENT Class 31
+    COMMENT In function 'DispStringAt', return value of EGetFlashState is not equal to FLASH_OFF.
+    COMMENT 
+    COMMENT Class 32
+    COMMENT In function 'TextDraw', u16_text_ctr is lesser than Text objects installed.
+    COMMENT     
+    COMMENT Class 33
+    COMMENT In function 'TextDraw', u16_text_ctr is greater than Text objects installed.
+    COMMENT 
+    COMMENT Class 47
+    COMMENT In function 'TextDraw', u16_text_ctr is equal to Text objects installed.
+    COMMENT 
+    COMMENT Class 37
+    COMMENT In function 'DispStringAt', the function 'VHadFlash' is called.
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'TextDrawChar',result of bitwise AND of u8_char and EXTRACT_8_BIT is equal to TRUE.
+    COMMENT 
+    COMMENT Class 39
+    COMMENT In function 'TextDrawChar',result of bitwise AND of u8_char and EXTRACT_8_BIT is equal to FALSE.
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'DispStringAt', u8_achar is equal to ZERO.
+    COMMENT 
+    COMMENT Class 41
+    COMMENT In function 'DispStringAt', u8_achar is not equal to ZERO.
+    COMMENT 
+    COMMENT Class 42
+    COMMENT In function 'DispStringAt', character is equal to newline character.
+    COMMENT 
+    COMMENT Class 43
+    COMMENT In function 'DispStringAt', character is equal to Carriage Return character.
+    COMMENT 
+    COMMENT Class 44
+    COMMENT In function 'DispStringAt', character is not equal to newline character.
+    COMMENT 
+    COMMENT Class 45
+    COMMENT In function 'DispStringAt', character is not equal to Carriage Return character.
+    COMMENT 
+    COMMENT Class 46
+    COMMENT In function 'DispStringAt', PsGetCharInfo function is called.
+    COMMENT 
+	COMMENT Class 49
+    COMMENT In function 'TextAllocatPdi', Text_installed is greater than MAX_TEXT_PDI_OBJECTS.
+    COMMENT 
+	COMMENT Class 50
+    COMMENT In function 'TextAllocatPdi', Text_installed is less than MAX_TEXT_PDI_OBJECTS.
+    COMMENT
+	COMMENT Class 51
+    COMMENT In function 'TextAllocatPdi', Text_installed is equal to MAX_TEXT_PDI_OBJECTS.
+	COMMENT
+	COMMENT Class 52
+    COMMENT In function 'TextAllocatPdi', the function 'RterrWidget' is called.
+	COMMENT
+	COMMENT Calss 54
+	COMMENT In function 'TextDrawPDI', label of Text_settings of Page_settings is equal to label of Parameters_reading.
+	COMMENT
+	COMMENT Calss 55
+	COMMENT In function 'TextDrawPDI', label of Text_settings of Page_settings is not equal to label of Parameters_reading.
+	COMMENT
+	COMMENT Calss 56
+	COMMENT In function 'TextDrawPDI', stat of reading of Parameters_reading is equal to PARAM_OK.
+	COMMENT
+	COMMENT Calss 57
+	COMMENT In function 'TextDrawPDI', stat of reading of Parameters_reading is not equal to PARAM_OK.
+	COMMENT
+	COMMENT Calss 58
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is equal to DDW.
+	COMMENT
+	COMMENT Calss 59
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is not equal to DDW.
+	COMMENT
+	COMMENT Calss 60
+	COMMENT In function 'TextDrawPDI', member r of reading of Parameters_reading is rightshift by ONE is equal to ZERO. 
+	COMMENT
+	COMMENT Calss 61
+	COMMENT In function 'TextDrawPDI', member r of reading of Parameters_reading is rightshift by ONE is not equal to ZERO. 
+	COMMENT
+	COMMENT Calss 62
+	COMMENT In function 'TextDrawPDI', calls the function TextDispString. 
+	COMMENT
+	COMMENT Calss 63
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is equal to BNR.
+	COMMENT
+	COMMENT Calss 64
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is not equal to BNR.
+	COMMENT
+	COMMENT class 65
+	COMMENT IN function 'TextDrawPDI', fread of reading of Parameters_reading is greater than txt_cross_val of Text_settings of Page_settings.
+	COMMENT
+	COMMENT class 66
+	COMMENT IN function 'TextDrawPDI', fread of reading of Parameters_reading is less than txt_cross_val of Text_settings of Page_settings.
+	COMMENT
+	COMMENT class 67
+	COMMENT IN function 'TextDrawPDI', fread of reading of Parameters_reading is equal to txt_cross_val of Text_settings of Page_settings.
+	COMMENT 
+	COMMENT class 68
+	COMMENT IN function 'TextDrawPDI',psDisRegion of ps_txt is equal to NULL.
+	COMMENT
+	COMMENT class 69
+	COMMENT IN function 'TextDrawPDI',psDisRegion of ps_txt is not equal to NULL.
+	COMMENT
+	COMMENT Calss 70
+	COMMENT In function 'TextDrawPDI', calls the function WidgetsRedX. 
+	COMMENT
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT     
+    COMMENT Class 34
+    COMMENT In function 'TextDrawChar', p_font is equal to NULL.
+    COMMENT 
+    COMMENT Class 35
+    COMMENT In function 'TextDispString', pc_string is equal to NULL.
+    COMMENT 
+    COMMENT Class 36
+    COMMENT In function 'TextAllocat', pps_handle_add and pu8_string are equal to NULL.
+    COMMENT 
+    COMMENT Class 48
+    COMMENT In function 'DispStringAt', p_font is equal to NULL.
+    COMMENT 
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+
+    DEFINE STUB hdudispftext_c
+
+        -- Created to verify the parameter 'pu8_string' of function 'FontsGetStringWidth'
+        #T_UINT8 PTU_IN_pu8_string,PTU_OUT_pu8_string[50];
+        -- Created to verify the return value of function 'Pu8GetCharBitMap'
+        #T_UINT8 PTU_Pu8GetCharBitMap;
+        -- Created to verify the parameters 'character_data and write_loc' of function 'Dma2dDrawChar'
+        #void *PTU_Dma2dDrawChar;
+        #void *PTU_write_loc;
+        -- Created to verify the parameters 'ps_font' of function 'Pu8GetCharBitMap'
+        #T_BFC_FONT *PTU_IN_Pu8GetCharBitMap;
+        -- Created to verify the parameters 'ps_font' of function 'PsGetCharInfo'
+        #T_BFC_FONT *PTU_IN_PsGetCharInfo;
+        -- Created to provide address for variable Vp_fgfb2 
+        #T_UINT8 PTU_Vp_fgfb2; 
+        -- Created to verify the return value of function 'PsGetCharInfo'
+        #T_BFC_CHARINFO PTU_PsGetCharInfo;
+
+        -- Created to verify the 'ps_dis_region and pps_poly_red_x;' of function 'TextDraw'	 
+	 # T_SDISREGION PTU_ps_dis_region;
+	 # T_SPOLY PTU_pps_poly_red_x;
+        
+    --Parameter pc_file, pc_message is made as _no and is verified explicitly
+    #void RterrWidget(char _no pc_file[200], T_INT32 _in s32_line_number, char _no pc_message[200])
+        #{
+        # 
+        #  PTU_temp = 0;
+        #  while(pc_file[PTU_temp]!= ZERO)
+        #  {
+        #    PTU_pc_file_in_1[PTU_temp]= pc_file[PTU_temp];
+        #    PTU_temp = PTU_temp+1;
+        #  }
+        #    PTU_pc_file_in_1[PTU_temp]= ZERO;
+        #
+        #  PTU_temp = 0;
+        #  while(pc_message[PTU_temp]!= ZERO)
+        #  {
+        #    PTU_pc_message_in_1[PTU_temp]= pc_message[PTU_temp];
+        #    PTU_temp = PTU_temp+1;
+        #  }
+        #    PTU_pc_message_in_1[PTU_temp]= ZERO;
+        #
+        #  PTU_temp = 0;
+        #  while(PTU_pc_file_out_1[PTU_temp]!= ZERO)
+        #  {
+        #   pc_file[PTU_temp]       = PTU_pc_file_out_1[PTU_temp];
+        #   PTU_temp = PTU_temp+1;
+        #  }
+        #   pc_file[PTU_temp]= ZERO;
+        #
+        #  PTU_temp = 0;
+        #  while(PTU_pc_message_out_1[PTU_temp]!= ZERO)
+        #  {
+        #    pc_message[PTU_temp] = PTU_pc_message_out_1[PTU_temp];
+        #    PTU_temp = PTU_temp+1;
+        #  }
+        #   pc_message[PTU_temp]= ZERO;
+        #}
+        #T_INT16 FontsGetFontHeight(T_ETXFONT _in e_tx_font); 
+        
+        --Parameters_reading pu8_string is made as _no and is verified explicitly
+        #T_INT16 FontsGetStringWidth(T_UINT8 _no pu8_string, T_ETXFONT _in e_tx_font)
+        #{
+        #   PTU_IN_pu8_string =(T_UINT8)*pu8_string;
+        #   pu8_string = (T_UINT8 *)PTU_OUT_pu8_string;
+        #}
+        #T_BFC_FONT* FontsGetFont(T_ETXFONT _in e_tx_font);
+        #T_EFLASHSTATE EGetFlashState(void); 
+        #void VHadFlash(void); 
+
+        --Parameters_reading character_data and write_loc are made as _no and is verified explicitly
+        #void Dma2dDrawChar(void _no *character_data, void _no *write_loc, T_UINT32 _in u32_width, T_UINT32 _in u32_height, T_UINT16 _in e_color)
+        #{
+        #  PTU_Dma2dDrawChar = (void *)character_data;
+        #  PTU_write_loc = (T_UINT16 *)write_loc;
+        #}
+        
+        --Parameter ps_font is made as _no and is verified explicitly
+        # const  T_BFC_CHARINFO* PsGetCharInfo(T_BFC_FONT _no ps_font, T_UINT8 _in u8_char)
+        #{
+        #   PTU_IN_PsGetCharInfo = ps_font;
+        #   ps_font = &PTU_FontsGetFont;
+        #}
+        
+        --Parameter ps_font is made as _no and is verified explicitly
+        # const  T_UINT8* Pu8GetCharBitMap(T_BFC_FONT _no *ps_font, T_UINT8 _in u8_char) 
+        #{
+        #   PTU_IN_Pu8GetCharBitMap = ps_font;
+        #   ps_font = &PTU_FontsGetFont;
+        #}
+
+	 --Parameter ps_dis_region and  pps_poly_red_x is made as _no and  verified explicitly
+	 #void WidgetsRedX(T_SDISREGION  _no ps_dis_region, T_SPOLY  _no **pps_poly_red_x)
+	 #{
+	 # PTU_ps_dis_region = *ps_dis_region;
+	 # PTU_pps_poly_red_x = *((T_SPOLY *)pps_poly_red_x);
+	 #}
+	 
+    #T_UINT8 CompareLimit(T_FLOAT  _in val, T_FLOAT  _in range, T_UINT8  _in operator);	 
+
+    END DEFINE
+    
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+--Environment of the hdudispftext.c
+
+--ENVIRONMENT ENV_hdudispftext_c
+
+    --None
+
+--END ENVIRONMENT -- ENV_hdudispftext_c
+--USE ENV_hdudispftext_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TextDispString
+--------------------------------------------------------------------------------
+SERVICE TextDispString
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_INT8  pc_string[100];
+
+    --Local variable declaration
+    --created to verify the member 'pProp' of structure T_BFC_FONT
+    #T_BFC_FONT_PROP PTU_pProp;
+	#T_UINT16 u16_x;
+
+   -- ENVIRONMENT ENV_TextDispString
+   
+   -- None
+   
+   -- END ENVIRONMENT -- ENV_TextDispString
+   -- USE ENV_TextDispString
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for max values and pc_string with nominal values.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-001]
+    COMMENT The function TextDispString sets ps font to return value of FontsGetFont 
+    COMMENT  with parameter e_tx_font.
+    COMMENT 
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdudispftext-TextDispString-DB-LLR-002]
+    COMMENT The function TextDispString sets u16_x to u16_x minus return value of 
+    COMMENT FontsGetStringWidth with parameter pc_string and e_tx_font divide 
+    COMMENT by TWO and set u16_y to u16_y minus return value of FontsGetFontHeight
+    COMMENT with parameter e_tx_font divide by TWO when e_tx_align is equal to ALIGN_CENTER.
+    COMMENT
+    COMMENT Equivalence Class 7,8,9,12
+    COMMENT
+    COMMENT [hdudispftext-TextDispString-DB-LLR-004]
+    COMMENT The function TextDispString calls DispStringAt function with parameters 
+    COMMENT pc_string, u16_x, u16_y, ps font, e_pen_color, e_tx_flash and e_txv.
+    COMMENT
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-001]
+    COMMENT Function DispStringAt sets char to content of pc_string plus one,
+    COMMENT When char is not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-002]
+    COMMENT Function DispStringAt sets char to Result of bitwise OR of char and SET_8_BIT ,
+    COMMENT When e_txv is V_REVERSE and  till char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 29,41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-003]
+    COMMENT Function DispStringAt calls function VHadFlash,
+    COMMENT When e_tx_flash is TX_FLASH and till char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 37,14,41,44,45
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-004]
+    COMMENT Function DispStringAt sets char to result of bitwise XOR of char and TOGGLE_8_BIT,
+    COMMENT When e_tx_flash is TX_FLASH, return value of function EGetFlashState is equal to FLASH_OFF, e_txv is V_REVERSE.
+    COMMENT
+    COMMENT Equivalence Class 30,29
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-005]
+    COMMENT Function DispStringAt set u16_x to u16_x plus return value of TextDrawChar with parameter character, u16_x, u16_y, ps_font and e_pen_color,
+    COMMENT pointer of character information to return value of function PsGetCharInfo and
+    COMMENT length to sum of length and Width of pointer of character information.
+    COMMENT
+    COMMENT Equivalence Class 16,46
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+            VAR pc_string[0],      init = 125,                              ev = init
+            VAR pc_string[1],      init = 0,                                ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,                    ev = init
+            VAR S16_panel_width,       init = 0,                                ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,    ev = init
+        
+            -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,     init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+        
+            STRUCTURE PTU_PsGetCharInfo,    init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+        
+            VAR PTU_OUT_pu8_string,         init = {0=>35,others=>0},                          ev = init
+
+
+        COMMENT OUTPUT SECTION:
+            VAR PTU_IN_Pu8GetCharBitMap,   init =  &PTU_PsGetCharInfo,          ev = &PTU_FontsGetFont
+            VAR PTU_IN_pu8_string,         init = 32,                           ev = pc_string[0]
+            VAR PTU_Dma2dDrawChar,         init = &PTU_Dma2dDrawChar,           ev = &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,             init = (T_UINT16 *)(Vp_fgfb2),  ev = (T_UINT16 *)((T_UINT32)Vp_fgfb2+131030)
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_BEZEL_FONT)(T_BFC_FONT*) &PTU_FontsGetFont
+            STUB FontsGetStringWidth 1=> (E_BEZEL_FONT) 40
+            STUB FontsGetFontHeight 1=> (E_BEZEL_FONT) 40
+            STUB Pu8GetCharBitMap(125)&PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo 1..2=> (125)&PTU_PsGetCharInfo
+            STUB VHadFlash()
+            STUB EGetFlashState() FLASH_OFF
+            STUB Dma2dDrawChar(0,0,CAS_WHITE)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, (T_UINT16)65535, (T_UINT16)65535, E_BEZEL_FONT, CAS_WHITE, TX_FLASH, V_REVERSE, ALIGN_CENTER);
+        END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for minimum values and 
+    COMMENT the parameter pc_string with value '\r'.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-001]
+    COMMENT The function TextDispString sets ps font to return value of FontsGetFont 
+    COMMENT  with parameter e_tx_font.
+    COMMENT 
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdudispftext-TextDispString-DB-LLR-003]
+    COMMENT Function TextDispString sets u16_y to u16_y minus return value of FontsGetFontHeight divide by TWO,
+    COMMENT when e_tx_align is equal to ALIGN_CENTER_LEFT.
+    COMMENT
+    COMMENT Equivalence Class 8,10,11
+    COMMENT
+    COMMENT [hdudispftext-TextDispString-DB-LLR-004]
+    COMMENT The function TextDispString calls DispStringAt function with parameters 
+    COMMENT pc_string, u16_x, u16_y, ps font, e_pen_color, e_tx_flash and e_txv.
+    COMMENT
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-001]
+    COMMENT Function DispStringAt sets char to content of pc_string plus one,
+    COMMENT When char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-005]
+    COMMENT Function DispStringAt set u16_x to u16_x plus return value of TextDrawChar with parameter character, u16_x, u16_y, ps_font and e_pen_color,
+    COMMENT pointer of character information to return value of function PsGetCharInfo and
+    COMMENT length to sum of length and Width of pointer of character information.
+    COMMENT
+    COMMENT Equivalence Class 16,46
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-007]
+    COMMENT Function DispStringAt set u16_x to result of u16_x subtract with length
+    COMMENT and reset the length to ZERO when character is Carriage Return character. 
+    COMMENT
+    COMMENT Equivalence Class 43
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            VAR pc_string[0],      init = (T_INT8)-128,             ev = init
+            VAR pc_string[1],      init = '\r',                ev = init
+	    VAR pc_string[2],      init = 0,                ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,    ev = init
+            VAR S16_panel_width,       init = 0,                ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE,     ev = init
+        
+            -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+        
+            STRUCTURE PTU_PsGetCharInfo,  init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+        
+            VAR PTU_IN_pu8_string,      init = 32,              ev = init
+            VAR PTU_OUT_pu8_string,     init = {0=>(T_UINT8)255,1=>35,others=>0},             ev = init
+
+
+        COMMENT OUTPUT SECTION:
+            --None 
+
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_NO_FONT)(T_BFC_FONT*) &PTU_FontsGetFont
+            STUB FontsGetFontHeight 1=> (E_NO_FONT) (T_INT16)(-32768)
+            STUB Pu8GetCharBitMap((T_UINT8)-128)&PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo 1..2=> ((T_UINT8)-128)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar 2=> (0,0,BLACK)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, 0, 0, E_NO_FONT, BLACK, TX_NO_FLASH, V_NORMAL, ALIGN_CENTER_LEFT);
+        END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for minimum values and 
+    COMMENT the parameter pc_string with value '\n', e_tx_font and e_pen_color with max+1.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-001]
+    COMMENT The function TextDispString sets ps font to return value of FontsGetFont 
+    COMMENT  with parameter e_tx_font.
+    COMMENT
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdudispftext-TextDispString-DB-LLR-004]
+    COMMENT The function TextDispString calls DispStringAt function with parameters 
+    COMMENT pc_string, u16_x, u16_y, ps font, e_pen_color, e_tx_flash and e_txv.
+    COMMENT
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-003]
+    COMMENT Function DispStringAt calls function VHadFlash,
+    COMMENT When e_tx_flash is TX_FLASH and till char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 37,14,41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-004]
+    COMMENT Function DispStringAt sets char to result of bitwise XOR of char and TOGGLE_8_BIT,When e_tx_flash is TX_FLASH, 
+    COMMENT return value of function EGetFlashState is not equal to FLASH_OFF, e_txv is not equal to V_REVERSE.
+    COMMENT
+    COMMENT Equivalence Class 31
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-005]
+    COMMENT Function DispStringAt set u16_x to u16_x plus return value of TextDrawChar with parameter character, u16_x, u16_y, ps_font and e_pen_color.,
+    COMMENT pointer of character information to return value of function PsGetCharInfo and
+    COMMENT length to sum of length and Width of pointer of character information.
+    COMMENT
+    COMMENT Equivalence Class 16,46
+    COMMENT      
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-006]
+    COMMENT Function DispStringAt  set u16_y to result of addition of u16_y, FontHeight
+    COMMENT of ps_font and ONE when character is newline character. 
+    COMMENT
+    COMMENT Equivalence Class 42
+    COMMENT    
+    COMMENT </TD> 
+    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            VAR pc_string[0],      init = (T_INT8)127,             ev = init
+            VAR pc_string[1],      init = '\n',                ev = init
+	    VAR pc_string[2],      init = 0,                ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,        ev = init
+            VAR S16_panel_width,       init = 0,                    ev = init
+            VAR S16_panel_height,       init = 0,                   ev = init
+            VAR E_orientation,         init = E_PORTRAIT,           ev = init
+        
+            -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+        
+            STRUCTURE PTU_PsGetCharInfo,  init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+        
+            VAR PTU_OUT_pu8_string,     init = {0=>35,1=>35,others=>0},                  ev = init
+
+
+        COMMENT OUTPUT SECTION:
+            --None 
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+                
+            --Stub Calls:
+        SIMUL
+            STUB FontsGetFont(E_BEZEL_FONT+1)(T_BFC_FONT*) &PTU_FontsGetFont
+            STUB Pu8GetCharBitMap(127)&PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo 1..2=> (127)&PTU_PsGetCharInfo
+            STUB VHadFlash 1=> ()
+            STUB EGetFlashState 1=> () FLASH_ON
+            STUB Dma2dDrawChar(0,0,CAS_WHITE+1)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, 0, 0, E_BEZEL_FONT+1, CAS_WHITE+1, TX_FLASH, V_NORMAL, ALIGN_LEFT);
+        END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 7
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for minimum and nominal values.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-001]
+    COMMENT The function TextDispString sets ps font to return value of FontsGetFont 
+    COMMENT  with parameter e_tx_font.
+    COMMENT
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispftext-TextDispString-DB-LLR-004]
+    COMMENT The function TextDispString calls DispStringAt function with parameters 
+    COMMENT pc_string, u16_x, u16_y, ps font, e_pen_color, e_tx_flash and e_txv.
+    COMMENT
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-001]
+    COMMENT Function DispStringAt sets char to content of pc_string plus one,
+    COMMENT When char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-003]
+    COMMENT Function DispStringAt calls function VHadFlash,
+    COMMENT When e_tx_flash is TX_FLASH and till char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 37,14,41,44,45
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-005]
+    COMMENT Function DispStringAt set u16_x to u16_x plus return value of TextDrawChar with parameter character, u16_x, u16_y, ps_font and e_pen_color.,
+    COMMENT pointer of character information to return value of function PsGetCharInfo and
+    COMMENT length to sum of length and Width of pointer of character information.
+    COMMENT
+    COMMENT Equivalence Class 16,46
+    COMMENT
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+            VAR pc_string[0..1],   init = 80,                   ev = init
+            VAR pc_string[2],      init = 0,                    ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,        ev = init
+            VAR S16_panel_width,       init = 0,                    ev = init
+            VAR S16_panel_height,       init = 0,                   ev = init
+            VAR E_orientation,         init = E_PORTRAIT,           ev = init
+            
+                -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                    & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+        
+            
+            VAR PTU_OUT_pu8_string,     init = {0=>35,1=>35,2=>35,others=>0},                  ev = init
+            VAR PTU_IN_pu8_string,      init = 32,                  ev = init
+    
+    
+        COMMENT OUTPUT SECTION:
+                --None 
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_BEZEL_FONT+1)(T_BFC_FONT*) &PTU_FontsGetFont
+            STUB VHadFlash()
+            STUB EGetFlashState() FLASH_OFF
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, 0, 0, E_BEZEL_FONT+1, CAS_REV_RED, TX_FLASH, V_NORMAL, ALIGN_LEFT);
+        END ELEMENT
+
+END TEST -- TEST 7
+    
+TEST 11
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for minimum values.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-001]
+    COMMENT The function TextDispString sets ps font to return value of FontsGetFont 
+    COMMENT  with parameter e_tx_font.
+    COMMENT
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-001]
+    COMMENT The function DispStringAt does not set character to content of pc_string plus one  
+    COMMENT  for 0th loop.
+    COMMENT
+    COMMENT Equivalence Class 40
+    COMMENT 
+    COMMENT [hdudispftext-TextDispString-DB-LLR-004]
+    COMMENT The function TextDispString calls DispStringAt function with parameters 
+    COMMENT pc_string, u16_x, u16_y, ps font, e_pen_color, e_tx_flash and e_txv.
+    COMMENT 
+    COMMENT Equivalence Class 6
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+            VAR pc_string[0],      init = 0,                ev = init
+            VAR pc_string[1],      init = 0,                ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,        ev = init
+            VAR S16_panel_width,       init = 0,                ev = init
+            VAR S16_panel_height,       init = 0,               ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE,     ev = init
+            
+                -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                    & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+        
+            STRUCTURE PTU_PsGetCharInfo,  init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            
+            VAR PTU_OUT_pu8_string,         init = {0=>35,others=>0},        ev = init
+            VAR PTU_IN_pu8_string,          init = 32,        ev = init
+    
+    
+        COMMENT OUTPUT SECTION:
+                --None 
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_BEZEL_FONT+1)(T_BFC_FONT*) &PTU_FontsGetFont
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, 0, 0, E_BEZEL_FONT+1, CAS_RED, TX_FLASH, V_NORMAL, ALIGN_LEFT);
+        END ELEMENT
+
+END TEST -- TEST 11
+    
+TEST 12
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This testcase is exercised for maximum value output of the stub 'FontsGetFontHeight'.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-003]
+    COMMENT Function TextDispString sets u16_y to u16_y minus return value of FontsGetFontHeight divide by TWO,
+    COMMENT when e_tx_align is equal to ALIGN_CENTER_LEFT.
+    COMMENT 
+    COMMENT Equivalence Class 11
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+            
+        COMMENT INPUT SECTION:
+            VAR pc_string[0],      init = (T_INT8)-128,             ev = init
+            VAR pc_string[1],      init = 0,                ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,    ev = init
+            VAR S16_panel_width,       init = 0,                ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE,     ev = init
+            
+                -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                    & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+            
+            STRUCTURE PTU_PsGetCharInfo,  init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            
+            VAR PTU_IN_pu8_string,      init = 32,          ev = init
+            VAR PTU_OUT_pu8_string,     init = {0=>(T_UINT8)255,others=>0},         ev = init
+    
+    
+        COMMENT OUTPUT SECTION:
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_PsGetCharInfo,     ev = &PTU_FontsGetFont
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,      ev = &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = &PTU_write_loc,          ev =&PTU_Vp_fgfb2
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_NO_FONT)(T_BFC_FONT*) &PTU_FontsGetFont
+            STUB FontsGetFontHeight 1=> (E_NO_FONT) (T_INT16)32767
+            STUB Pu8GetCharBitMap((T_UINT8)-128)&PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo 1..2=> ((T_UINT8)-128)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar 2=> (0,0,BLACK)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, 0, 0, E_NO_FONT, BLACK, TX_NO_FLASH, V_NORMAL, ALIGN_CENTER_LEFT);
+        END ELEMENT
+
+END TEST -- TEST 12
+
+TEST 13
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This testcase is exercised for maximum value output of the stub 'FontsGetStringWidth' and pc_string.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-002]
+    COMMENT The function TextDispString sets u16_x to u16_x minus return value of 
+    COMMENT FontsGetStringWidth with parameter pc_string and e_tx_font divide 
+    COMMENT by TWO and set u16_y to u16_y minus return value of FontsGetFontHeight
+    COMMENT with parameter e_tx_font divide by TWO when e_tx_align is equal to ALIGN_CENTER.
+    COMMENT 
+    COMMENT Equivalence Class 9
+    COMMENT 
+    COMMENT </TD> 
+    
+
+        ELEMENT
+            
+        COMMENT INPUT SECTION:
+            VAR pc_string[0],      init = (T_INT8)127,                  ev = init
+            VAR pc_string[1],      init = 0,                    ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,        ev = init
+            VAR S16_panel_width,       init = 0,                    ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,    ev = init
+            
+                -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                    & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+        
+            STRUCTURE PTU_PsGetCharInfo,  init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            
+            VAR PTU_OUT_pu8_string,         init = {0=>35,others=>0},        ev = init
+    
+    
+        COMMENT OUTPUT SECTION:
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_PsGetCharInfo,     ev = &PTU_FontsGetFont
+            VAR PTU_IN_pu8_string,          init = 32,                      ev = pc_string[0]
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,      ev= &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = (T_UINT16 *) (Vp_fgfb2),      ev= (T_UINT16 *) ((T_UINT32)Vp_fgfb2+98304)
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_BEZEL_FONT)(T_BFC_FONT*) &PTU_FontsGetFont
+            STUB FontsGetStringWidth 1=> (E_BEZEL_FONT) (T_INT16)32767
+            STUB FontsGetFontHeight 1=> (E_BEZEL_FONT) 40
+            STUB Pu8GetCharBitMap(127)&PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo 1..2=> (127)&PTU_PsGetCharInfo
+            STUB VHadFlash()
+            STUB EGetFlashState() FLASH_OFF
+            STUB Dma2dDrawChar(0,0,CAS_WHITE)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, (T_UINT16)65535, (T_UINT16)65535, E_BEZEL_FONT, CAS_WHITE, TX_FLASH, V_REVERSE, ALIGN_CENTER);
+        END ELEMENT
+
+END TEST -- TEST 13
+
+-- Test case is commented since it is crashing
+--TEST 14
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT [hdudispftext-TextDispString-DB-LLR-002]
+--    COMMENT In function TextDispString, Parameter 'pc_string' is exercised for NULL value. 
+--    COMMENT 
+--    COMMENT Equivalence Class 35,36
+--    COMMENT      
+--    COMMENT </TD> 
+--    
+--
+--        ELEMENT
+--        
+--    COMMENT INPUT SECTION:
+--            --None 
+--    COMMENT OUTPUT SECTION:
+--        -- None
+--        
+--    COMMENT INPUT/OUTPUT SECTION:
+--            --None 
+--            
+--        --Stub Calls:
+--        SIMUL
+--            --None 
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test        
+--            #TextDispString(NULL, (T_UINT16)65535, (T_UINT16)65535, E_BEZEL_FONT, CAS_WHITE, TX_FLASH, V_REVERSE, ALIGN_CENTER);
+--        END ELEMENT
+--
+-- END TEST -- TEST 14
+        
+TEST 15
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This testcase is exercised for minimum value output of the stub 'FontsGetStringWidth'.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-002]
+    COMMENT The function TextDispString sets u16_x to u16_x minus return value of 
+    COMMENT FontsGetStringWidth with parameter pc_string and e_tx_font divide 
+    COMMENT by TWO and set u16_y to u16_y minus return value of FontsGetFontHeight
+    COMMENT with parameter e_tx_font divide by TWO when e_tx_align is equal to ALIGN_CENTER.
+    COMMENT 
+    COMMENT Equivalence Class 9
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+            VAR pc_string[0],      init = 125,                  ev = init
+            VAR pc_string[1],      init = 0,                    ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,        ev = init
+            VAR S16_panel_width,       init = 0,                    ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,    ev = init
+            
+                -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                    & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+            
+            STRUCTURE PTU_PsGetCharInfo,  init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            
+            VAR PTU_OUT_pu8_string,         init = {0=>35,others=>0},              ev = init
+
+
+        COMMENT OUTPUT SECTION:
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_PsGetCharInfo,     ev = &PTU_FontsGetFont
+            VAR PTU_IN_pu8_string,          init = 32,                      ev = pc_string[0]
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,      ev= &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = (T_UINT16 *) (Vp_fgfb2),      ev= (T_UINT16 *) ((T_UINT32)Vp_fgfb2+32766)
+            
+        COMMENT INPUT/OUTPUT SECTION:
+                --None 
+                
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_BEZEL_FONT)(T_BFC_FONT*) &PTU_FontsGetFont
+            STUB FontsGetStringWidth 1=> (E_BEZEL_FONT) (T_INT16)-32768,
+            STUB FontsGetFontHeight 1=> (E_BEZEL_FONT) 40
+            STUB Pu8GetCharBitMap(125)&PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo 1..2=> (125)&PTU_PsGetCharInfo
+            STUB VHadFlash()
+            STUB EGetFlashState() FLASH_OFF
+            STUB Dma2dDrawChar(0,0,CAS_WHITE)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, (T_UINT16)65535, (T_UINT16)65535, E_BEZEL_FONT, CAS_WHITE, TX_FLASH, V_REVERSE, ALIGN_CENTER);
+        END ELEMENT
+
+END TEST -- TEST 15
+    
+-- Test case is commented since it is crashing
+--TEST 16
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT Note: In this testcase parameter "ps_font" of function "DispStringAt" is exercised 
+--    COMMENT for NULL value through the return value of function 'FontsGetFont'.
+--    COMMENT
+--    COMMENT In this testcase function parameters are exercised for nominal values.
+--    COMMENT [hdudispftext-TextDispString-DB-LLR-001]
+--    COMMENT The function TextDispString sets ps font to return value of FontsGetFont 
+--    COMMENT  with parameter e_tx_font.
+--    COMMENT 
+--    COMMENT Equivalence Class 5
+--    COMMENT
+--    COMMENT [hdudispftext-TextDispString-DB-LLR-002]
+--    COMMENT The function TextDispString sets u16_x to u16_x minus return value of 
+--    COMMENT FontsGetStringWidth with parameter pc_string and e_tx_font divide 
+--    COMMENT by TWO and set u16_y to u16_y minus return value of FontsGetFontHeight
+--    COMMENT with parameter e_tx_font divide by TWO when e_tx_align is equal to ALIGN_CENTER.
+--    COMMENT
+--    COMMENT Equivalence Class 7,8,9
+--    COMMENT
+--    COMMENT [hdudispftext-TextDispString-DB-LLR-004]
+--    COMMENT The function TextDispString calls DispStringAt function with parameters 
+--    COMMENT pc_string, u16_x, u16_y, ps font, e_pen_color, e_tx_flash and e_txv.
+--    COMMENT
+--    COMMENT Equivalence Class 6,48
+--    COMMENT
+--    COMMENT [hdudispftext-DispStringAt-DB-LLR-001]
+--    COMMENT Function DispStringAt sets char to content of pc_string plus one,
+--    COMMENT When char is not equal to ZERO.
+--    COMMENT
+--    COMMENT Equivalence Class 41
+--    COMMENT
+--    COMMENT [hdudispftext-DispStringAt-DB-LLR-002]
+--    COMMENT Function DispStringAt sets char to Result of bitwise OR of char and SET_8_BIT ,
+--    COMMENT When e_txv is V_REVERSE and  till char not equal to ZERO.
+--    COMMENT
+--    COMMENT Equivalence Class 29,41
+--    COMMENT
+--    COMMENT [hdudispftext-DispStringAt-DB-LLR-003]
+--    COMMENT Function DispStringAt calls function VHadFlash,
+--    COMMENT When e_tx_flash is TX_FLASH and till char not equal to ZERO.
+--    COMMENT
+--    COMMENT Equivalence Class 37,14,41,44,45
+--    COMMENT
+--    COMMENT [hdudispftext-DispStringAt-DB-LLR-004]
+--    COMMENT Function DispStringAt sets char to result of bitwise XOR of char and TOGGLE_8_BIT,
+--    COMMENT When e_tx_flash is TX_FLASH, return value of function EGetFlashState is equal to FLASH_OFF, e_txv is V_REVERSE.
+--    COMMENT
+--    COMMENT Equivalence Class 30,29
+--    COMMENT
+--    COMMENT [hdudispftext-DispStringAt-DB-LLR-005]
+--    COMMENT Function DispStringAt set u16_x to u16_x plus return value of TextDrawChar with parameter character, u16_x, u16_y, ps_font and e_pen_color,
+--    COMMENT pointer of character information to return value of function PsGetCharInfo and
+--    COMMENT length to sum of length and Width of pointer of character information.
+--    COMMENT
+--    COMMENT Equivalence Class 16
+--    COMMENT      
+--    COMMENT </TD> 
+--    
+--
+--        ELEMENT
+--        
+--        COMMENT INPUT SECTION:
+--            VAR pc_string[0],      init = 125,                              ev = init
+--            VAR pc_string[1],      init = 0,                                ev = init
+--            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,                    ev = init
+--            VAR S16_panel_width,       init = 0,                                ev = init
+--            VAR E_orientation,         init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,    ev = init
+--        
+--            -- initialization of temporary structure
+--            STRUCTURE PTU_FontsGetFont,     init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+--                                                & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+--        
+--            STRUCTURE PTU_PsGetCharInfo,    init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+--        
+--            VAR PTU_OUT_pu8_string,         init = {0=>35,others=>0},                          ev = init
+--
+--
+--        COMMENT OUTPUT SECTION:
+--            VAR PTU_IN_Pu8GetCharBitMap,   init =  &PTU_PsGetCharInfo,          ev = &PTU_FontsGetFont
+--            VAR PTU_IN_pu8_string,         init = 32,                           ev = pc_string[0]
+--            VAR PTU_Dma2dDrawChar,         init = &PTU_Dma2dDrawChar,           ev = &PTU_Pu8GetCharBitMap 
+--            VAR PTU_write_loc,             init = (T_UINT16 *)((T_UINT32)Vp_fgfb2+131030),  ev = init
+--        
+--        COMMENT INPUT/OUTPUT SECTION:
+--            --None 
+--            
+--        --Stub Calls:
+--        SIMUL
+--            STUB FontsGetFont (E_BEZEL_FONT)(T_BFC_FONT*) NULL
+--            STUB FontsGetStringWidth 1=> (E_BEZEL_FONT) 40
+--            STUB FontsGetFontHeight 1=> (E_BEZEL_FONT) 40
+--            STUB Pu8GetCharBitMap(125)&PTU_Pu8GetCharBitMap
+--            STUB PsGetCharInfo 1..2=> (125)&PTU_PsGetCharInfo
+--            STUB VHadFlash()
+--            STUB EGetFlashState() FLASH_OFF
+--            STUB Dma2dDrawChar(0,0,CAS_WHITE)
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test        
+--            #TextDispString((T_INT8*)pc_string, (T_UINT16)65535, (T_UINT16)65535, E_BEZEL_FONT, CAS_WHITE, TX_FLASH, V_REVERSE, ALIGN_CENTER);
+--        END ELEMENT
+--
+--END TEST -- TEST 16
+
+TEST 17
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This testcase is exercised for maximum value output of the stub 'FontsGetFontHeight'.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-005]
+    COMMENT Function TextDispString sets u16_x to return value of FontsGetStringWidth minus by return ,
+    COMMENT value of FontsGetStringWidth when e_tx_align is equal to ALIGN_RIGHT.
+    COMMENT 
+    COMMENT Equivalence Class 11
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+            
+        COMMENT INPUT SECTION:
+            VAR pc_string[0],      init = (T_INT8)128,             ev = init
+            VAR pc_string[1],      init = 0,                ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,    ev = init
+            VAR S16_panel_width,       init = 0,                ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE,     ev = init
+			
+            VAR Display_size,         init = E_10_INCH,     ev = init
+            
+                -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                    & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+            
+            STRUCTURE PTU_PsGetCharInfo,  init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            
+            VAR PTU_IN_pu8_string,      init = 32,          ev = pc_string[0]
+            VAR PTU_OUT_pu8_string,     init = {0=>(T_UINT8)255,others=>0},         ev = init
+    
+    
+        COMMENT OUTPUT SECTION:
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_PsGetCharInfo,     ev = &PTU_FontsGetFont
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,      ev = &PTU_Pu8GetCharBitMap 
+            --VAR PTU_write_loc,              init = &PTU_write_loc,          ev =&PTU_Vp_fgfb2
+			--VAR u16_x,						init = 10,						ev = 10
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_NO_FONT)(T_BFC_FONT*) &PTU_FontsGetFont
+			STUB FontsGetStringWidth 1=> (E_NO_FONT) (T_INT16)65535
+            STUB Pu8GetCharBitMap((T_UINT8)-128)&PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo 1..2=> ((T_UINT8)-128)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar 2=> (0,0,BLACK)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, 0, 0, E_NO_FONT, BLACK, TX_NO_FLASH, V_NORMAL, ALIGN_RIGHT);
+        END ELEMENT
+
+END TEST -- TEST 17
+
+
+TEST 18
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for minimum and nominal values.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-001]
+    COMMENT The function TextDispString sets ps font to return value of FontsGetFont 
+    COMMENT  with parameter e_tx_font.
+    COMMENT
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispftext-TextDispString-DB-LLR-004]
+    COMMENT The function TextDispString calls DispStringAt function with parameters 
+    COMMENT pc_string, u16_x, u16_y, ps font, e_pen_color, e_tx_flash and e_txv.
+    COMMENT
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-001]
+    COMMENT Function DispStringAt sets char to content of pc_string plus one,
+    COMMENT When char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-003]
+    COMMENT Function DispStringAt calls function VHadFlash,
+    COMMENT When e_tx_flash is TX_FLASH and till char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 37,14,41,44,45
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-005]
+    COMMENT Function DispStringAt set u16_x to u16_x plus return value of TextDrawChar with parameter character, u16_x, u16_y, ps_font and e_pen_color.,
+    COMMENT pointer of character information to return value of function PsGetCharInfo and
+    COMMENT length to sum of length and Width of pointer of character information.
+    COMMENT
+    COMMENT Equivalence Class 16,46
+    COMMENT
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+            VAR pc_string[0..1],   init = '\n',                   ev = init
+            VAR pc_string[2],      init = 0,                    ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,        ev = init
+            VAR S16_panel_width,       init = 0,                    ev = init
+            VAR S16_panel_height,       init = 0,                   ev = init
+            VAR E_orientation,         init = E_PORTRAIT,           ev = init
+            
+                -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                    & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+        
+            
+            VAR PTU_OUT_pu8_string,     init = {0=>35,1=>35,2=>35,others=>0},                  ev = init
+            VAR PTU_IN_pu8_string,      init = 32,                  ev = init
+    
+    
+        COMMENT OUTPUT SECTION:
+                --None 
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_BEZEL_FONT+1)(T_BFC_FONT*) &PTU_FontsGetFont
+            --STUB VHadFlash()
+            --STUB EGetFlashState() FLASH_OFF
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, 0, 0, E_BEZEL_FONT+1, CAS_REV_RED, TX_FLASH, V_NORMAL, ALIGN_LEFT);
+        END ELEMENT
+
+END TEST -- TEST 18
+
+
+TEST 19
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for minimum and nominal values.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-001]
+    COMMENT The function TextDispString sets ps font to return value of FontsGetFont 
+    COMMENT  with parameter e_tx_font.
+    COMMENT
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispftext-TextDispString-DB-LLR-004]
+    COMMENT The function TextDispString calls DispStringAt function with parameters 
+    COMMENT pc_string, u16_x, u16_y, ps font, e_pen_color, e_tx_flash and e_txv.
+    COMMENT
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-001]
+    COMMENT Function DispStringAt sets char to content of pc_string plus one,
+    COMMENT When char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-003]
+    COMMENT Function DispStringAt calls function VHadFlash,
+    COMMENT When e_tx_flash is TX_FLASH and till char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 37,14,41,44,45
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-005]
+    COMMENT Function DispStringAt set u16_x to u16_x plus return value of TextDrawChar with parameter character, u16_x, u16_y, ps_font and e_pen_color.,
+    COMMENT pointer of character information to return value of function PsGetCharInfo and
+    COMMENT length to sum of length and Width of pointer of character information.
+    COMMENT
+    COMMENT Equivalence Class 16,46
+    COMMENT
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+            VAR pc_string[0..1],   init = '\r',                   ev = init
+            VAR pc_string[2],      init = 0,                    ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,        ev = init
+            VAR S16_panel_width,       init = 0,                    ev = init
+            VAR S16_panel_height,       init = 0,                   ev = init
+            VAR E_orientation,         init = E_PORTRAIT,           ev = init
+            
+                -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                    & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+        
+            
+            VAR PTU_OUT_pu8_string,     init = {0=>35,1=>35,2=>35,others=>0},                  ev = init
+            VAR PTU_IN_pu8_string,      init = 32,                  ev = init
+    
+    
+        COMMENT OUTPUT SECTION:
+                --None 
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_BEZEL_FONT+1)(T_BFC_FONT*) &PTU_FontsGetFont
+            --STUB VHadFlash()
+            --STUB EGetFlashState() FLASH_OFF
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, 0, 0, E_BEZEL_FONT+1, CAS_REV_RED, TX_FLASH, V_NORMAL, ALIGN_LEFT);
+        END ELEMENT
+
+END TEST -- TEST 19
+
+
+TEST 20
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for max values and pc_string with nominal values.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-001]
+    COMMENT The function TextDispString sets ps font to return value of FontsGetFont 
+    COMMENT  with parameter e_tx_font.
+    COMMENT 
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdudispftext-TextDispString-DB-LLR-002]
+    COMMENT The function TextDispString sets u16_x to u16_x minus return value of 
+    COMMENT FontsGetStringWidth with parameter pc_string and e_tx_font divide 
+    COMMENT by TWO and set u16_y to u16_y minus return value of FontsGetFontHeight
+    COMMENT with parameter e_tx_font divide by TWO when e_tx_align is equal to ALIGN_CENTER.
+    COMMENT
+    COMMENT Equivalence Class 7,8,9,12
+    COMMENT
+    COMMENT [hdudispftext-TextDispString-DB-LLR-004]
+    COMMENT The function TextDispString calls DispStringAt function with parameters 
+    COMMENT pc_string, u16_x, u16_y, ps font, e_pen_color, e_tx_flash and e_txv.
+    COMMENT
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-001]
+    COMMENT Function DispStringAt sets char to content of pc_string plus one,
+    COMMENT When char is not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-002]
+    COMMENT Function DispStringAt sets char to Result of bitwise OR of char and SET_8_BIT ,
+    COMMENT When e_txv is V_REVERSE and  till char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 29,41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-003]
+    COMMENT Function DispStringAt calls function VHadFlash,
+    COMMENT When e_tx_flash is TX_FLASH and till char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 37,14,41,44,45
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-004]
+    COMMENT Function DispStringAt sets char to result of bitwise XOR of char and TOGGLE_8_BIT,
+    COMMENT When e_tx_flash is TX_FLASH, return value of function EGetFlashState is equal to FLASH_OFF, e_txv is V_REVERSE.
+    COMMENT
+    COMMENT Equivalence Class 30,29
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-005]
+    COMMENT Function DispStringAt set u16_x to u16_x plus return value of TextDrawChar with parameter character, u16_x, u16_y, ps_font and e_pen_color,
+    COMMENT pointer of character information to return value of function PsGetCharInfo and
+    COMMENT length to sum of length and Width of pointer of character information.
+    COMMENT
+    COMMENT Equivalence Class 16,46
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+            VAR pc_string[0],      init = '\r',                              ev = init
+            VAR pc_string[1],      init = 0,                                ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,                    ev = init
+            VAR S16_panel_width,       init = 0,                                ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,    ev = init
+        
+            -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,     init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+        
+            STRUCTURE PTU_PsGetCharInfo,    init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+        
+            VAR PTU_OUT_pu8_string,         init = {0=>35,others=>0},                          ev = init
+
+
+        COMMENT OUTPUT SECTION:
+            --VAR PTU_IN_Pu8GetCharBitMap,   init =  &PTU_PsGetCharInfo,          ev = &PTU_FontsGetFont
+            VAR PTU_IN_pu8_string,         init = 32,                           ev = pc_string[0]
+           -- VAR PTU_Dma2dDrawChar,         init = &PTU_Dma2dDrawChar,           ev = &PTU_Pu8GetCharBitMap 
+            --VAR PTU_write_loc,             init = (T_UINT16 *)(Vp_fgfb2),  ev = (T_UINT16 *)((T_UINT32)Vp_fgfb2+131030)
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_BEZEL_FONT)(T_BFC_FONT*) &PTU_FontsGetFont
+            STUB FontsGetStringWidth 1=> (E_BEZEL_FONT) 40
+            STUB FontsGetFontHeight 1=> (E_BEZEL_FONT) 40
+            --STUB Pu8GetCharBitMap(125)&PTU_Pu8GetCharBitMap
+           -- STUB PsGetCharInfo 1..2=> (125)&PTU_PsGetCharInfo
+            --STUB VHadFlash()
+           -- STUB EGetFlashState() FLASH_OFF
+            --STUB Dma2dDrawChar(0,0,CAS_WHITE)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, (T_UINT16)65535, (T_UINT16)65535, E_BEZEL_FONT, CAS_WHITE, TX_FLASH, V_REVERSE, ALIGN_CENTER);
+        END ELEMENT
+
+END TEST -- TEST 20
+
+
+TEST 21
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase function parameters are exercised for max values and pc_string with nominal values.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-001]
+    COMMENT The function TextDispString sets ps font to return value of FontsGetFont 
+    COMMENT  with parameter e_tx_font.
+    COMMENT 
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdudispftext-TextDispString-DB-LLR-002]
+    COMMENT The function TextDispString sets u16_x to u16_x minus return value of 
+    COMMENT FontsGetStringWidth with parameter pc_string and e_tx_font divide 
+    COMMENT by TWO and set u16_y to u16_y minus return value of FontsGetFontHeight
+    COMMENT with parameter e_tx_font divide by TWO when e_tx_align is equal to ALIGN_CENTER.
+    COMMENT
+    COMMENT Equivalence Class 7,8,9,12
+    COMMENT
+    COMMENT [hdudispftext-TextDispString-DB-LLR-004]
+    COMMENT The function TextDispString calls DispStringAt function with parameters 
+    COMMENT pc_string, u16_x, u16_y, ps font, e_pen_color, e_tx_flash and e_txv.
+    COMMENT
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-001]
+    COMMENT Function DispStringAt sets char to content of pc_string plus one,
+    COMMENT When char is not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-002]
+    COMMENT Function DispStringAt sets char to Result of bitwise OR of char and SET_8_BIT ,
+    COMMENT When e_txv is V_REVERSE and  till char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 29,41
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-003]
+    COMMENT Function DispStringAt calls function VHadFlash,
+    COMMENT When e_tx_flash is TX_FLASH and till char not equal to ZERO.
+    COMMENT
+    COMMENT Equivalence Class 37,14,41,44,45
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-004]
+    COMMENT Function DispStringAt sets char to result of bitwise XOR of char and TOGGLE_8_BIT,
+    COMMENT When e_tx_flash is TX_FLASH, return value of function EGetFlashState is equal to FLASH_OFF, e_txv is V_REVERSE.
+    COMMENT
+    COMMENT Equivalence Class 30,29
+    COMMENT
+    COMMENT [hdudispftext-DispStringAt-DB-LLR-005]
+    COMMENT Function DispStringAt set u16_x to u16_x plus return value of TextDrawChar with parameter character, u16_x, u16_y, ps_font and e_pen_color,
+    COMMENT pointer of character information to return value of function PsGetCharInfo and
+    COMMENT length to sum of length and Width of pointer of character information.
+    COMMENT
+    COMMENT Equivalence Class 16,46
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+            VAR pc_string[0],      init = '\n',                              ev = init
+            VAR pc_string[1],      init = 0,                                ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,                    ev = init
+            VAR S16_panel_width,       init = 0,                                ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,    ev = init
+        
+            -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,     init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+        
+            STRUCTURE PTU_PsGetCharInfo,    init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+        
+            VAR PTU_OUT_pu8_string,         init = {0=>35,others=>0},                          ev = init
+
+
+        COMMENT OUTPUT SECTION:
+            --VAR PTU_IN_Pu8GetCharBitMap,   init =  &PTU_PsGetCharInfo,          ev = &PTU_FontsGetFont
+            VAR PTU_IN_pu8_string,         init = 32,                           ev = pc_string[0]
+           -- VAR PTU_Dma2dDrawChar,         init = &PTU_Dma2dDrawChar,           ev = &PTU_Pu8GetCharBitMap 
+           -- VAR PTU_write_loc,             init = (T_UINT16 *)(Vp_fgfb2),  ev = (T_UINT16 *)((T_UINT32)Vp_fgfb2+131030)
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_BEZEL_FONT)(T_BFC_FONT*) &PTU_FontsGetFont
+            STUB FontsGetStringWidth 1=> (E_BEZEL_FONT) 40
+            STUB FontsGetFontHeight 1=> (E_BEZEL_FONT) 40
+            --STUB Pu8GetCharBitMap(125)&PTU_Pu8GetCharBitMap
+            --STUB PsGetCharInfo 1..2=> (125)&PTU_PsGetCharInfo
+            --STUB VHadFlash()
+           -- STUB EGetFlashState() FLASH_OFF
+            --STUB Dma2dDrawChar(0,0,CAS_WHITE)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, (T_UINT16)65535, (T_UINT16)65535, E_BEZEL_FONT, CAS_WHITE, TX_FLASH, V_REVERSE, ALIGN_CENTER);
+        END ELEMENT
+
+END TEST -- TEST 21
+
+TEST 22
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This testcase is exercised for maximum value output of the stub 'FontsGetFontHeight'.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-005]
+    COMMENT Function TextDispString sets u16_x to return value of FontsGetStringWidth minus by return ,
+    COMMENT value of FontsGetStringWidth when e_tx_align is equal to ALIGN_RIGHT.
+    COMMENT 
+    COMMENT Equivalence Class 11
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+            
+        COMMENT INPUT SECTION:
+            VAR pc_string[0],      init = (T_INT8)128,             ev = init
+            VAR pc_string[1],      init = 0,                ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,    ev = init
+            VAR S16_panel_width,       init = 0,                ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE,     ev = init
+			
+            VAR Display_size,         init = E_7_INCH,     ev = init
+            
+                -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                    & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+            
+            STRUCTURE PTU_PsGetCharInfo,  init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            
+            VAR PTU_IN_pu8_string,      init = 32,          ev = pc_string[0]
+            VAR PTU_OUT_pu8_string,     init = {0=>(T_UINT8)255,others=>0},         ev = init
+    
+    
+        COMMENT OUTPUT SECTION:
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_PsGetCharInfo,     ev = &PTU_FontsGetFont
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,      ev = &PTU_Pu8GetCharBitMap 
+            --VAR PTU_write_loc,              init = &PTU_write_loc,          ev =&PTU_Vp_fgfb2
+			--VAR u16_x,						init = 10,						ev = 10
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_NO_FONT)(T_BFC_FONT*) &PTU_FontsGetFont
+			STUB FontsGetStringWidth 1=> (E_NO_FONT) (T_INT16)65535
+            STUB Pu8GetCharBitMap((T_UINT8)-128)&PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo 1..2=> ((T_UINT8)-128)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar 2=> (0,0,BLACK)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, 0, 0, E_NO_FONT, BLACK, TX_NO_FLASH, V_NORMAL, ALIGN_RIGHT);
+        END ELEMENT
+
+END TEST -- TEST 22
+
+
+TEST 23
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This testcase is exercised for maximum value output of the stub 'FontsGetFontHeight'.
+    COMMENT [hdudispftext-TextDispString-DB-LLR-005]
+    COMMENT Function TextDispString sets u16_x to return value of FontsGetStringWidth minus by return ,
+    COMMENT value of FontsGetStringWidth when e_tx_align is equal to ALIGN_RIGHT.
+    COMMENT 
+    COMMENT Equivalence Class 11
+    COMMENT      
+    COMMENT </TD> 
+    
+
+        ELEMENT
+            
+        COMMENT INPUT SECTION:
+            VAR pc_string[0],      init = (T_INT8)128,             ev = init
+            VAR pc_string[1],      init = 0,                ev = init
+            VAR Vp_fgfb2,              init = &PTU_Vp_fgfb2,    ev = init
+            VAR S16_panel_width,       init = 0,                ev = init
+            VAR E_orientation,         init = E_LAND_SCAPE,     ev = init
+			
+            VAR Display_size,         init = E_5_INCH,     ev = init
+            
+                -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, 
+                                                    & p_var_type => { pProp =>&PTU_pProp } },  ev=init
+            
+            STRUCTURE PTU_PsGetCharInfo,  init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            
+            VAR PTU_IN_pu8_string,      init = 32,          ev = init
+            VAR PTU_OUT_pu8_string,     init = {0=>(T_UINT8)255,others=>0},         ev = init
+    
+    
+        COMMENT OUTPUT SECTION:
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_PsGetCharInfo,     ev = &PTU_FontsGetFont
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,      ev = &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = &PTU_write_loc,          ev =&PTU_Vp_fgfb2
+			--VAR u16_x,						init = 10,						ev = 10
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_NO_FONT)(T_BFC_FONT*) &PTU_FontsGetFont
+			--STUB FontsGetStringWidth 1..2=> (E_NO_FONT) (T_INT16)65535
+            STUB Pu8GetCharBitMap((T_UINT8)-128)&PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo 1..2=> ((T_UINT8)-128)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar 2=> (0,0,BLACK)
+        END SIMUL
+
+        -- Calling the Unit Under Test        
+            #TextDispString((T_INT8*)pc_string, 0, 0, E_NO_FONT, BLACK, TX_NO_FLASH, V_NORMAL, ALIGN_RIGHT);
+        END ELEMENT
+
+END TEST -- TEST 23
+
+
+END SERVICE -- TextDispString
+
+
+
+
+
+
+
+
+
+
+
+

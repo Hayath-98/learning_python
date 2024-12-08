@@ -1,0 +1,1103 @@
+HEADER hdudispfa825comm1,Source Code Ver : 1.4,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Samhitha Prasad
+--
+-- File Name           : hdudispfa825comm1.ptu
+--
+-- Test Creation Date  : 21.10.2017
+--
+-- Tested Functions    : A825CommInit1
+--                       A825CommTask1
+--                       
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE        TESTER NAME    		    MODIFICATIONS
+-- ------------        ---------        -----------    		    -------------
+--    1.1              21.10.2017       Samhitha Prasad L C 	Created the ptu file.    
+--    1.2 			   11.11.2017	    Samhitha Prasad L C	    Updated as per #PR100171
+--    1.3 			   14.11.2017	    Samhitha Prasad L C	    Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfapp.h"        
+##include "hdudispfcas.h"        
+##include "hdudispfcbit.h"       
+##include "hdudispfdauprofile.h" 
+##include "hdudispfresource.h"   
+##include "hdudispfucos.h"       
+##include "hdudispfarinc825.h"   
+##include "hdudispfa825comm.h"   
+##include "hdulibbasictypes.h" 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+	
+	#T_OS_EVENT *Sem_a8251_commtask; 
+    
+-- Declaration of temporary variable
+
+	-- temporary structure to verify local structure
+	#T_A825_MESSAGE PTU_s_mess;
+	
+	--Variable created to verify function OsSemPend    
+	#T_OS_EVENT *PTU_p_event;    
+    #T_UINT8 PTU_err;
+    
+    --Variable created to pass valid address through OsSemPend    
+    #T_OS_EVENT  PTU_os_pend;
+	
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT  Author Names					:Samhitha Prasad L C
+	COMMENT
+	COMMENT  File Name						:hdudispfa825comm1.ptu
+	COMMENT
+	COMMENT  Tested Functions				:A825CommInit1
+	COMMENT                     			 A825CommTask1
+	COMMENT
+	COMMENT  Assumptions and Constraints
+	COMMENT  <AC>
+	COMMENT  Assumption(s):
+	COMMENT  None 
+	COMMENT
+	COMMENT  Constraint(s):
+	COMMENT  1. Source file 'hdudispfa825comm1.c' is modified for testing purpose.
+	COMMENT  While(TRUE) is modified for terminating the infinite loop.
+	COMMENT
+	COMMENT  Code snippet added in function 'A825CommTask1'
+	COMMENT
+	COMMENT  T_UINT16 PTU_count =0; /*local variable declared for testing purpose*/
+	COMMENT  
+	COMMENT  while(TRUE)
+	COMMENT  {
+	COMMENT   	....
+	COMMENT     /*Modified for testing purpose to terminate infinite loop*/
+	COMMENT		PTU_count++;
+	COMMENT		if(PTU_count == 4)
+	COMMENT		{
+	COMMENT			break;
+	COMMENT		}
+	COMMENT		else
+	COMMENT		{		
+	COMMENT			/*nothing*/
+	COMMENT		}
+	COMMENT  }/*End of while loop*/
+	COMMENT
+	COMMENT	 Hence while loop cannot be covered for 0 and 1 time and FALSE condition cannot be achieved.
+	COMMENT
+	COMMENT  </AC>
+	
+	COMMENT  Equivalence Class Description
+	COMMENT  <ECD>
+	COMMENT  
+	COMMENT  Valid Class(es)
+	COMMENT 
+	COMMENT  Class 1
+	COMMENT  In Function 'A825CommInit1', 'OsTaskCreate' is called.
+	COMMENT
+	COMMENT  Class 2
+	COMMENT  In function 'A825CommTask1', 'OsSemPend' is called.
+	COMMENT
+	COMMENT  Class 3
+	COMMENT  In function 'A825CommTask1', 'A8251GetMessage' returns A825_RX_QUEUE_EMPTY.
+	COMMENT
+	COMMENT  Class 4
+	COMMENT  In function 'A825CommTask1', 'A8251GetMessage' returns other than A825_RX_QUEUE_EMPTY.
+	COMMENT
+	COMMENT  Class 5
+	COMMENT  In function 'A825CommTask1', 'AppU32NOC' is called.
+	COMMENT 
+	COMMENT  Class 6
+	COMMENT  In function 'A825CommTask1', 'AppU32NSC' is called.
+	COMMENT
+	COMMENT  Class 7
+	COMMENT  In function 'A825CommTask1', sfid of BID of sID of A825 message structure is equal to HOWELL_DAU_FID.
+	COMMENT
+	COMMENT  Class 8
+	COMMENT  In function 'A825CommTask1', sfid of BID of sID of A825 message structure is not equal to HOWELL_DAU_FID.
+	COMMENT
+	COMMENT  Class 9
+	COMMENT  In function 'A825CommTask1', sid of PID of sID of A825 message structure is equal to EISDSPLYGATEWAY_SID.
+	COMMENT
+	COMMENT  Class 10
+	COMMENT  In function 'A825CommTask1', sid of PID of sID of A825 message structure is not equal to EISDSPLYGATEWAY_SID.
+	COMMENT
+	COMMENT  Class 11
+	COMMENT  In function 'A825CommTask1', sid of PID of sID of A825 message structure is equal to MULTICAST_SID.
+	COMMENT
+	COMMENT  Class 12
+	COMMENT  In function 'A825CommTask1', sid of PID of sID of A825 message structure is not equal to MULTICAST_SID.
+	COMMENT
+	COMMENT  Class 13
+	COMMENT  In function 'A825CommTask1', sid of PID of sID of A825 message structure is equal to MY_SID.
+	COMMENT
+	COMMENT  CLass 14
+	COMMENT  In function 'A825CommTask1', sid of PID of sID of A825 message structure is not equal to MY_SID.
+	COMMENT
+	COMMENT  Class 15
+	COMMENT  In function 'A825CommTask1', smt of PID of sID of A825 message structure is not equal to zero.
+	COMMENT
+	COMMENT  Class 16
+	COMMENT  In function 'A825CommTask1', smt of PID of sID of A825 message structure is equal to zero.
+	COMMENT
+	COMMENT  Class 17
+	COMMENT  The function 'A825CommTask1' calls 'A8251GetMessage' .
+	COMMENT
+	COMMENT Class 18
+	COMMENT The function 'A825CommInit1' calls 'A825CommTask1' .
+	COMMENT
+	COMMENT  Invalid Class(es)
+	COMMENT  None
+	COMMENT  </ECD>
+	
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdudispfa825comm1_c
+		-- task is made _no to pass a valid function address
+		#T_UBYTE OsTaskCreate(void _no ( *  task)(void* pd), void * _in pdata, void * _in pstk, T_UBYTE  _in prio)
+		#{
+		# (* task)( pdata);
+		#}
+		
+		-- s_mess is made _no to pass the valid data.
+		#T_UINT32 AppU32NSC(T_A825_MESSAGE  _no *s_mess, T_EA825BUS  _in a825_bus)
+		#{
+		# *s_mess = PTU_s_mess;
+		#}
+		
+		-- s_mess is made _no to pass the valid data.
+		#T_UINT32 AppU32NOC(T_A825_MESSAGE  _no *s_mess, T_EA825BUS  _in a825_bus) 
+		#{
+		# *s_mess = PTU_s_mess;
+		#}
+
+		-- ps_destination is made _no to pass a valid address to structure.
+		#T_A825_RECRESULT A8251GetMessage(T_LCC_TYPE  _in e_channel, T_A825_MESSAGE  _no *ps_destination) 
+		#{
+		#  *ps_destination = PTU_s_mess;
+		#}
+		
+		-- p_event and error are made _no to pass a valid address
+		#void OsSemPend(T_OS_EVENT  _in *p_event, T_UWORD  _in time_out, T_UBYTE  _no *error) 
+		#{
+		#  PTU_err = *error;
+		#}
+		
+	END DEFINE
+	
+ELSE_SIMUL
+
+	-- No action defined as of now if the module is not simulated
+	
+END SIMUL	
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfa825comm1.c
+ENVIRONMENT ENV_hdudispfa825comm1_c
+
+	ARRAY A825_comm1_task_stk,		init = { others => 0 },		ev = init
+	
+END ENVIRONMENT -- ENV_hdudispfa825comm1_c
+
+USE ENV_hdudispfa825comm1_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service A825CommInit1
+--------------------------------------------------------------------------------
+SERVICE A825CommInit1
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT	[hdudispfa825comm1-A825CommInit1-DB-LLR-002]
+	COMMENT The function creates the application task by calling 'OsTaskCreate'  with parameters pointer to A825CommTask1 
+	COMMENT	function, NULL, top of stack array and  A825_1_COMM_TASK_PRIO.
+	COMMENT Equivalence Class 1,18
+	COMMENT
+	COMMENT [hdudispfa825comm1-A825CommTask1-DB-LLR-008] 
+	COMMENT	The function sets p_data to sum of p_data and 0.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfa825comm1-A825CommTask1-DB-LLR-001]
+	COMMENT The function loops infinitely to process the received message.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispfa825comm1-A825CommTask1-DB-LLR-002]
+	COMMENT The function waits for a message to arrive by calling OsSemPend function with parameters 
+	COMMENT Sem_a8251_commtask, 0 and reference to error code and sets Can1_msg_cntr to ZERO.
+	COMMENT Equivalence Class 2
+	COMMENT
+	COMMENT [hdudispfa825comm1-A825CommTask1-DB-LLR-004]
+	COMMENT The function does nothing when the return value of 'A8251GetMessage' with parameters NOC and reference to A825 message 
+	COMMENT structure is equal to A825_RX_QUEUE_EMPTY.
+	COMMENT	Equivalence Class 3,17
+	COMMENT 
+	COMMENT [hdudispfa825comm1-A825CommTask1-DB-LLR-006]
+	COMMENT The function does nothing when the return value of 'A8251GetMessage' with parameters NSC and reference to A825 message 
+	COMMENT structure is equal to A825_RX_QUEUE_EMPTY.
+	COMMENT Equivalence Class 3,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+       		
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x0,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+    		-- Holds the raw data  of PTU_s_mess
+    		STRUCTURE 	PTU_s_mess, 			init = {lcc => EEC, sID => {BID => {others => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err'
+        	VAR PTU_err,						init = 10,					ev = 0
+        
+        	-- gloabl variable verification
+        	VAR Can1_msg_cntr,					init = 500,					ev = ZERO		
+        
+        -- Stub Calls
+    	SIMUL
+    	
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR
+    		
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+    		STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+    		
+    		STUB A8251GetMessage (NSC) A825_RX_QUEUE_EMPTY
+    		
+    		STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+    		
+    		STUB A8251GetMessage (NSC) A825_RX_QUEUE_EMPTY
+    		
+    		STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+    		
+    		STUB A8251GetMessage (NSC) A825_RX_QUEUE_EMPTY
+    		
+    		STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+    		
+    		STUB A8251GetMessage (NSC) A825_RX_QUEUE_EMPTY  		
+    		
+    	END SIMUL   	
+    	
+    -- Calling the Unit Under Test :
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-004]
+	COMMENT The function increments the transmission error by  return value of function AppU32NOC with reference to 
+	COMMENT A825 message structure and A825_1 when the return value of 'A8251GetMessage' with parameter NOC and reference
+	COMMENT to A825 message structure is not equal to  A825_RX_QUEUE_EMPTY and sfid of BID of sID of A825 message structure
+	COMMENT is equal to HOWELL_DAU_FID.
+	COMMENT return value of AppU32NOC is exercised for nominal value
+	COMMENT	Equivalence Class 4,5,7,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    		
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x10,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+			-- Holds the raw data  of PTU_s_mess
+			STRUCTURE 	PTU_s_mess, 			init = {lcc=>EEC, sID => {BID => {sfid => 42, rsd => 0, lcl => 0, pvt => 0, 
+				&        doc => 0, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err' 
+			VAR PTU_err,							init = 10,					ev = 0
+        
+        -- Stub Calls
+    	SIMUL
+    		
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR
+    		
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+    		 		   		
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+			 		
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+    		 		
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+    		 		
+    		-- Stub to process the NOC ARInc message
+    		STUB AppU32NOC 1..4 => (A825_1) (T_UINT32 )0x7FFFFFFF    		
+    		    		    
+    		
+    	END SIMUL   	
+    
+    -- Calling the Unit Under Test :
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-005]
+	COMMENT The function increments the transmission error by one when the return value of 'A8251GetMessage'  with parameters
+	COMMENT NOC and reference to A825 message structure is not equal to  A825_RX_QUEUE_EMPTY and  sfid of BID of sID of A825
+	COMMENT message structure is not equal to HOWELL_DAU_FID.
+	COMMENT	Equivalence Class 4,8,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    	
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x01,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+    		-- Holds the raw data  of PTU_s_mess
+    		STRUCTURE 	PTU_s_mess, 			init = {lcc => EEC,sID => {BID => {sfid => 24, rsd => 0, lcl => 0, pvt => 0, 
+				&        doc => 0, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err'
+        	VAR PTU_err,							init = 10,					ev = 0
+
+		-- Stub Calls
+    	SIMUL
+    		
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR
+
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+			STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+			 		   		
+			STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+			 		
+			STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+			    		 		
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+    		   		
+    	END SIMUL   	
+    	
+    -- Calling the Unit Under Test :	
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-006]
+	COMMENT The function increments the transmission error by return value of function AppU32NSC with reference to A825 message structure
+	COMMENT	 and A825_1 when 
+	COMMENT 1.  Return value of A8251GetMessage function with parameters NOC and reference to A825 message structure 
+	COMMENT is equal to A825_RX_QUEUE_EMPTY
+	COMMENT 2. Return value of A8251GetMessage function with parameters NSC and reference to A825 message structure 
+	COMMENT is not equal to A825_RX_QUEUE_EMPTY
+	COMMENT 3. sid of PID of sID of A825 message structure is equal to EISDSPLYGATEWAY_SID.
+	COMMENT 4. smt of PID of sID of A825 message structure is set
+	COMMENT return value of 'AppU32NSC' is excercised for nominal value.
+	COMMENT	MCDC covered TFFT
+    COMMENT Equivalence Class 4,6,9,15,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    		
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x101,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+    		-- Holds the raw data  of PTU_s_mess
+    		STRUCTURE 	PTU_s_mess, 			init = {lcc => EEC,sID => {PID => {cfid => 0, smt => 0, lcl => 0, pvt => 0, sfid => 0,
+				&		 sid => 8, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err'
+        	VAR PTU_err,						init = 10,					 ev = 0
+
+		-- Stub Calls
+    	SIMUL
+    		
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR
+
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+    		STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+    		
+    		STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+    		
+    		STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+    		STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+    		
+    		STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+    		STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+    		
+    		STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+    		STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+    		
+    		-- Stub to process the NSC ARInc message
+    		STUB AppU32NSC 1..4 => (A825_1) (T_UINT32 ) 0x7FFFFFFF
+    		
+    	END SIMUL   	
+    
+    -- Calling the Unit Under Test :
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 4
+
+
+TEST 5
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-007]
+	COMMENT The function increments the transmission error by one when 
+	COMMENT 1.  Return value of A8251GetMessage function with parameters NOC and reference to A825 message structure 
+	COMMENT is equal to A825_RX_QUEUE_EMPTY
+	COMMENT 2. Return value of A8251GetMessage function with parameters NSC and reference to A825 message structure 
+	COMMENT is not equal to A825_RX_QUEUE_EMPTY
+	COMMENT 3. sid of PID of sID of A825 message structure is not equal to EISDSPLYGATEWAY_SID or MULTICAST_SID or MY_SID.
+	COMMENT 4. smt of PID of sID of A825 message structure is reset
+	COMMENT MCDC covered FFFF
+	COMMENT Equivalence Class 4,10,12,14,16,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    		
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x20,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+    		-- Holds the raw data  of PTU_s_mess
+    		STRUCTURE 	PTU_s_mess, 			init = {lcc => EEC, sID => {PID => {cfid => 0, smt => 1, lcl => 0, pvt => 0, sfid => 0,
+				&		 sid => 5, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err'
+        	VAR PTU_err,						init = 10,					 ev = 0
+        
+        -- Stub Calls
+    	SIMUL
+    	
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR    	
+    		
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+						    		
+    		STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+    		
+    	END SIMUL   	
+    	
+    -- Calling the Unit Under Test :	
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-006]
+	COMMENT The function increments the transmission error by return value of function AppU32NSC with reference to A825 message structure
+	COMMENT	 and A825_1 when 
+	COMMENT 1.  Return value of A8251GetMessage function with parameters NOC and reference to A825 message structure 
+	COMMENT is equal to A825_RX_QUEUE_EMPTY
+	COMMENT 2. Return value of A8251GetMessage function with parameters NSC and reference to A825 message structure 
+	COMMENT is not equal to A825_RX_QUEUE_EMPTY
+	COMMENT 3. sid of PID of sID of A825 message structure is equal to MULTICAST_SID.
+	COMMENT 4. smt of PID of sID of A825 message structure is set
+	COMMENT MCDC covered FTFT
+	COMMENT return value of 'AppU32NSC' is excercised for max value.
+	COMMENT Equivalence Class 4,6,10,11,14,15,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x5,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+    		-- Holds the raw data  of PTU_s_mess
+    		STRUCTURE 	PTU_s_mess, 			init = {lcc => EEC, sID => {PID => {cfid => 0, smt => 0, lcl => 0, pvt => 0, sfid => 0,
+				&		 sid => 0, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err'
+        	VAR PTU_err,						init = 10,					    ev = 0
+        
+        -- Stub Calls
+    	SIMUL
+    	
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR    	
+    		
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+						    		
+    		STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+    		
+    		-- Stub to process the NSC ARInc message
+    		STUB AppU32NSC 1..4 => (A825_1) (T_UINT32 ) 0xFFFFFFFF
+    		
+    	END SIMUL   	
+	
+	-- Calling the Unit Under Test :	
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-006]
+	COMMENT The function increments the transmission error by return value of function AppU32NSC with reference to A825 message structure
+	COMMENT	 and A825_1 when 
+	COMMENT 1.  Return value of A8251GetMessage function with parameters NOC and reference to A825 message structure 
+	COMMENT is equal to A825_RX_QUEUE_EMPTY
+	COMMENT 2. Return value of A8251GetMessage function with parameters NSC and reference to A825 message structure 
+	COMMENT is not equal to A825_RX_QUEUE_EMPTY
+	COMMENT 3. sid of PID of sID of A825 message structure is equal to MY_SID
+	COMMENT 4. smt of PID of sID of A825 message structure is set
+	COMMENT excercised for minmum values. 
+	COMMENT	MCDC covered FFTT
+	COMMENT Equivalence Class 4,6,10,12,13,15,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x140,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+    		-- Holds the raw data  of PTU_s_mess
+    		STRUCTURE 	PTU_s_mess, 			init = {lcc => EEC, sID => {PID => {cfid => 0, smt => 0, lcl => 0, pvt => 0, sfid => 0,
+				&		 sid => 7, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err'
+        	VAR PTU_err,						init = 10,						ev = 0
+        
+        -- Stub Calls
+    	SIMUL
+    	
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR    	
+    		
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+						    		
+    		STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+    		
+    		-- Stub to process the NSC ARInc message
+    		STUB AppU32NSC 1..4 => (A825_1) 0
+    		
+    	END SIMUL   	
+    
+	-- Calling the Unit Under Test :
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-007]
+	COMMENT The function increments the transmission error by one when 
+	COMMENT 1.  Return value of A8251GetMessage function with parameters NOC and reference to A825 message structure 
+	COMMENT is equal to A825_RX_QUEUE_EMPTY
+	COMMENT 2. Return value of A8251GetMessage function with parameters NSC and reference to A825 message structure 
+	COMMENT is not equal to A825_RX_QUEUE_EMPTY
+	COMMENT 3. sid of PID of sID of A825 message structure is equal to EISDSPLYGATEWAY_SID.
+	COMMENT 4. smt of PID of sID of A825 message structure is reset
+	COMMENT	MCDC covered TFFF
+	COMMENT Equivalence Class 4,9,12,14,16,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    		
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x150,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+    		-- Holds the raw data  of PTU_s_mess
+    		STRUCTURE 	PTU_s_mess, 			init = {lcc => EEC, sID => {PID => {cfid => 0, smt => 1, lcl => 0, pvt => 0, sfid => 0,
+				&		 sid => 8, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err'
+        	VAR PTU_err,						init = 10,						ev = 0
+        
+        -- Stub Calls
+    	SIMUL
+    	
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR    	
+    		
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+						    		
+    		STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+    		
+    	END SIMUL   	
+    
+	-- Calling the Unit Under Test :
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-007]
+	COMMENT The function increments the transmission error by one when 
+	COMMENT 1.  Return value of A8251GetMessage function with parameters NOC and reference to A825 message structure 
+	COMMENT is equal to A825_RX_QUEUE_EMPTY
+	COMMENT 2. Return value of A8251GetMessage function with parameters NSC and reference to A825 message structure 
+	COMMENT is not equal to A825_RX_QUEUE_EMPTY
+	COMMENT 3. sid of PID of sID of A825 message structure is equal to MULTICAST_SID.
+	COMMENT 4. smt of PID of sID of A825 message structure is reset
+	COMMENT	MCDC covered FTFF
+	COMMENT Equivalence Class 4,10,11,14,16,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x42,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+    		-- Holds the raw data  of PTU_s_mess
+    		STRUCTURE 	PTU_s_mess, 			init = {lcc => EEC, sID => {PID => {cfid => 0, smt => 1, lcl => 0, pvt => 0, sfid => 0,
+				&		 sid => 0, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err'
+        	VAR PTU_err,						init = 10,						ev = 0
+        
+        -- Stub Calls
+    	SIMUL
+    	
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR    	
+    		
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+						    		
+    		STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+    		
+    	END SIMUL   	
+    
+	-- Calling the Unit Under Test :
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 9
+
+
+TEST 10
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-007]
+	COMMENT The function increments the transmission error by one when 
+	COMMENT 1.  Return value of A8251GetMessage function with parameters NOC and reference to A825 message structure 
+	COMMENT is equal to A825_RX_QUEUE_EMPTY
+	COMMENT 2. Return value of A8251GetMessage function with parameters NSC and reference to A825 message structure 
+	COMMENT is not equal to A825_RX_QUEUE_EMPTY
+	COMMENT 3. sid of PID of sID of A825 message structure is equal to MY_SID
+	COMMENT 4. smt of PID of sID of A825 message structure is reset
+	COMMENT	MCDC covered FFTF
+	COMMENT Equivalence Class 4,10,12,13,16,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    	
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x14,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+    		-- Holds the raw data  of PTU_s_mess
+    		STRUCTURE 	PTU_s_mess, 			init = {lcc => EEC, sID => {PID => {cfid => 0, smt => 1, lcl => 0, pvt => 0, sfid => 0,
+				&		 sid => 7, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err'
+        	VAR PTU_err,						init = 10,					ev = 0
+        
+        -- Stub Calls
+    	SIMUL
+    	
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR    	
+    		
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+			    		
+			STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+			
+			STUB A8251GetMessage (NOC) A825_RX_QUEUE_EMPTY
+						    		
+    		STUB A8251GetMessage (NSC) A825_RX_OVERFLOW
+    		
+    	END SIMUL   	
+ 
+    -- Calling the Unit Under Test :
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 10
+
+TEST 11
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-004]
+	COMMENT The function increments the transmission error by  return value of function AppU32NOC with reference to 
+	COMMENT A825 message structure and A825_1 when the return value of 'A8251GetMessage' with parameter NOC and reference
+	COMMENT to A825 message structure is not equal to  A825_RX_QUEUE_EMPTY and sfid of BID of sID of A825 message structure
+	COMMENT is equal to HOWELL_DAU_FID.
+	COMMENT return value of AppU32NOC is exercised for minimum value
+	COMMENT	Equivalence Class 4,5,7,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    		
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x40,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+			-- Holds the raw data  of PTU_s_mess
+			STRUCTURE 	PTU_s_mess, 			init = {lcc=>EEC, sID => {BID => {sfid => 42, rsd => 0, lcl => 0, pvt => 0, 
+				&        doc => 0, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err' 
+			VAR PTU_err,							init = 10,					ev = 0
+        
+        -- Stub Calls
+    	SIMUL
+    		
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR
+    		
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+    		 		   		
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+			 		
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+    		 		
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+    		 		
+    		-- Stub to process the NOC ARInc message
+    		STUB AppU32NOC 1..4 => (A825_1) 0    		
+    		    		    
+    		
+    	END SIMUL   	
+    
+    -- Calling the Unit Under Test :
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 11
+
+
+TEST 12
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	[hdudispfa825comm1-A825CommTask1-DB-LLR-004]
+	COMMENT The function increments the transmission error by  return value of function AppU32NOC with reference to 
+	COMMENT A825 message structure and A825_1 when the return value of 'A8251GetMessage' with parameter NOC and reference
+	COMMENT to A825 message structure is not equal to  A825_RX_QUEUE_EMPTY and sfid of BID of sID of A825 message structure
+	COMMENT is equal to HOWELL_DAU_FID.
+	COMMENT return value of AppU32NOC is exercised for maximum value value
+	COMMENT	Equivalence Class 4,5,7,17
+	COMMENT </TD>
+
+    ELEMENT
+    
+    	COMMENT INPUT SECTION:
+    		
+    		-- global variable used in stub
+    		VAR Sem_a8251_commtask,				init = 0x78,				ev = init
+    	
+    	COMMENT INPUT/OUTPUT SECTION:
+    	
+    		-- None
+    	
+    	COMMENT OUTPUT SECTION:
+			-- Holds the raw data  of PTU_s_mess
+			STRUCTURE 	PTU_s_mess, 			init = {lcc=>EEC, sID => {BID => {sfid => 42, rsd => 0, lcl => 0, pvt => 0, 
+				&        doc => 0, rci => 0}}, u8PaySize => 0, u8PayLoad => { others => 0 }}, 		ev = init
+
+			--Parameter 'error' of function 'OsSemPend' is verified using 'PTU_err' 
+			VAR PTU_err,							init = 10,					ev = 0
+        
+        -- Stub Calls
+    	SIMUL
+    		
+    		--Creates the application Task
+			STUB OsTaskCreate (0, &A825_comm1_task_stk[A825COMM_TASK_STK_SIZE],A825_1_COMM_TASK_PRIO) OS_NO_ERR
+    		
+    		--pends an semaphore
+    		STUB OsSemPend 1..4 =>(Sem_a8251_commtask,0)
+    		
+    		-- Stub called in A825CommTask1 function.
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+    		 		   		
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+			 		
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+    		 		
+    		STUB A8251GetMessage (NOC) A825_RX_OVERFLOW
+    		 		
+    		-- Stub to process the NOC ARInc message
+    		STUB AppU32NOC 1..4 => (A825_1) (T_UINT32 )0xFFFFFFFF    		
+    		    		    
+    		
+    	END SIMUL   	
+    
+    -- Calling the Unit Under Test :
+    #A825CommInit1();
+    END ELEMENT
+
+END TEST -- TEST 12
+
+
+END SERVICE -- A825CommInit1
+
+
+
+
+

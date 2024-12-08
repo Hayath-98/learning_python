@@ -1,0 +1,879 @@
+HEADER hducommfintr,Source Code Ver : 1.5 ,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Anusha V
+--
+-- File Name           : hducommfintr_2.ptu
+--
+-- Test Creation Date  : 30.10.2017 
+--
+-- Tested Functions    : HardFault
+--						 MemManage
+--						 BusFault
+--						 UsageFault
+--						 IsrReset
+--						 SpuriousInterrupt
+--						 NonMaskable
+--						 IntrInstall
+--						 IntrInit
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE           TESTER NAME        MODIFICATIONS
+-- ------------        ---------           -----------        -------------
+--    1.1              30.10.2017          Anusha V           Created the ptu file by enabling internal service
+--    1.2 			   10.11.2017		   Anusha V		      Updated as per #PR100171
+--	  1.3 			   14.11.2017		   Anusha V		      Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommfintr.c"
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+	
+	--copy the pointer to highest priority TCB ready 
+	#T_OS_TCB *Os_tcb_high_rdy; 
+	
+    #T_UINT32 U32_critical_sr; 
+
+-- Declarations of temporary variables of the tested file
+	
+	--temporary variable created to pass local address to Os_tcb_high_rdy 
+	#T_OS_TCB PTU_Os_tcb_high_rdy;
+	
+	--temporary variable created to pass address to os_tcb_stkptr.
+	#T_OS_TCB PTU_stack_top;
+	
+	--Temporary variable created to be used in the static functions 
+	#T_UINT32 PTU_temp;
+	
+	--Temporary variable created to be give input 
+	#T_UINT32 PTU_dummy=10;
+--------------------------------------------------------------------------------
+	
+BEGIN
+	COMMENT  Author Name         : Anusha V
+	COMMENT 
+	COMMENT  File Name           : hducommfintr_1.ptu
+	COMMENT 
+	COMMENT  Tested Functions    : HardFault
+	COMMENT						   MemManage
+	COMMENT						   BusFault
+	COMMENT						   UsageFault
+	COMMENT						   IsrReset
+	COMMENT						   SpuriousInterrupt
+	COMMENT						   NonMaskable
+	COMMENT						   IntrInstall
+	COMMENT						   IntrInit
+	COMMENT                                             
+    COMMENT  Assumptions and Constraints
+	COMMENT  <AC>
+	COMMENT
+	COMMENT  Assumption(s):
+	COMMENT  None
+	COMMENT 
+	COMMENT  Constraint(s):
+	COMMENT 1.PTU has been split into 3 due to static dependency.
+	COMMENT
+	COMMENT 2.In function  'IntrInit', "for" loop cannot be covered for 0 and 1 time since 
+	COMMENT it is controlled by ENUM INTR_MAX, in hducommfintr_2.ptu
+	COMMENT
+	COMMENT 3.In function 'SaveDataToSection', "for" loop cannot be covered for 0 and 1 time since 
+	COMMENT it is controlled by MACROS DEC_FOURTY,GEN_REG,END_FPBR.
+	COMMENT
+    COMMENT 4.Internal Services is enabled in PTU 'hducommfintr_2.ptu' in order to test the following LLRs 
+	COMMENT  "hducommfintr-IsrReset-CB-LLR-001"
+	COMMENT  "hducommfintr-NonMaskable-CB-LLR-001"
+	COMMENT  "hducommfintr-HardFault-CB-LLR-001"
+	COMMENT  "hducommfintr-HardFault-CB-LLR-002"
+	COMMENT  "hducommfintr-HardFault-CB-LLR-003"
+	COMMENT  "hducommfintr-HardFault-CB-LLR-004"
+	COMMENT  "hducommfintr-MemManage-CB-LLR-001 "
+	COMMENT  "hducommfintr-BusFault-CB-LLR-001"
+	COMMENT  "hducommfintr-UsageFault-CB-LLR-001"
+	COMMENT  "hducommfintr-SpuriousInterrupt-CB-LLR-001"
+	COMMENT 
+	COMMENT which are implemented in static functions 'IsrReset' 'HardFault','MemManage','BusFault','ResetFunc','UsageFault',
+	COMMENT 'NonMaskable','SpuriousInterrupt'' IntrInstall' and ' IntrInit'.
+	COMMENT 
+	COMMENT 5.Header file "hducommfmemmap.h" is modified for testing purpose.
+	COMMENT   The macro 'MEMMAP_FIRST_ERR_REP_ADDR_RGTRS' is modified for stubbing hardware address.
+	COMMENT   /*Commented for testing purpose*/
+	COMMENT   /*#define MEMMAP_FIRST_ERR_REP_ADDR_RGTRS         (MEMMAP_FIRST_ERR_REPORT_ADDR +0x0400) */   
+	COMMENT
+	COMMENT   /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT   T_UINT32 PTU_MEMMAP_FIRST_ERR_REP_ADDR_RGTRS[200];
+	COMMENT   #define MEMMAP_FIRST_ERR_REP_ADDR_RGTRS         &PTU_MEMMAP_FIRST_ERR_REP_ADDR_RGTRS[0]  
+	COMMENT
+	COMMENT 6.In function 'SaveDataToSection', "for" loop cannot be covered for 0 time since 
+	COMMENT it is controlled by MACROS DEC_FIVE,DEC_FOURTY.
+	COMMENT	
+	COMMENT 7.Source file "hducommfintr.c" is modified for testing purpose.in functions NonMaskable,
+	COMMENT MemManage,BusFault,UsageFault,SpuriousInterrupt in hducommfintr_2
+	COMMENT  
+	COMMENT  Snippet of code is added in the above listed functions:
+	COMMENT 
+	COMMENT  /*local variable declared for testing purpose*/
+	COMMENT    T_UINT16 PTU_count =0;
+	COMMENT
+	COMMENT   while(TRUE)
+	COMMENT   {
+	COMMENT	   /*Modified for testing purpose to terminate infinite loop*/
+	COMMENT	      PTU_count++;
+	COMMENT	      if(PTU_count == 4)
+	COMMENT	      {
+	COMMENT	         break;
+	COMMENT	      }
+	COMMENT	      else
+	COMMENT	      {
+	COMMENT	        /*nothing*/
+	COMMENT       }
+	COMMENT   }
+	COMMENT
+	COMMENT	Hence while loop cannot be covered for 0 and 1 time for the above functions .
+	COMMENT
+	COMMENT 9.Header file "hdulibcorecm4.h" is modified for testing purpose.
+	COMMENT   The macro 'SCB' is modified for stubbing hardware address.
+	COMMENT
+	COMMENT  /*Commented for testing purpose*/
+	COMMENT  /*#define SCB                 ((T_SCB_TYPE *)  SCB_BASE)*/
+	COMMENT
+	COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT T_SCB_TYPE PTU_SCB;
+	COMMENT #define SCB                 ((T_SCB_TYPE  *)  &PTU_SCB )
+	COMMENT 
+	COMMENT 10.Header file "hdulibstm32f4xx.h" is modified for testing purpose.
+	COMMENT   The macro 'IWDG' is modified for stubbing hardware address.
+	COMMENT
+	COMMENT  /*Commented for testing purpose*/
+	COMMENT  /*#define IWDG                  ((T_IWDG_TYPE *) IWDG_BASE)*/
+	COMMENT
+	COMMENT  /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT  T_IWDG_TYPE PTU_IWDG;
+	COMMENT  #define IWDG                  ((T_IWDG_TYPE *) &PTU_IWDG)
+	COMMENT 
+	COMMENT 11.Header file "hdulibstm32f4xx.h" is modified for testing purpose.
+	COMMENT   The macro 'FLASH' is modified for stubbing hardware address.
+	COMMENT
+	COMMENT /*Commented for testing purpose*/
+	COMMENT /*#define FLASH                 ((T_FLASH_TYPE *) FLASH_R_BASE)*/
+	COMMENT
+	COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT T_FLASH_TYPE PTU_FLASH;
+	COMMENT #define FLASH                 ((T_FLASH_TYPE *) &PTU_FLASH)
+	COMMENT 
+	COMMENT 12.Source file "hducommfintr.c" is modified for testing purpose in function 'HardFault' to avoid 
+	COMMENT    infinite loop.
+	COMMENT   
+	COMMENT  Snippet of code:
+	COMMENT 
+	COMMENT  /*__asm volatile
+	COMMENT  (
+	COMMENT   /* hducommfintr-HardFault-CB-LLR-001 */
+	COMMENT   /* Disable interrupts */
+	COMMENT   /*"   cpsid   i      \n"*/
+	COMMENT   /* test link register */
+	COMMENT   /*" tst lr, #4       \n"*/
+	COMMENT   /*  if the next 2 instruction executes, if Z is set (EQ) */
+	COMMENT   /*" beq hf1          \n"*/
+	COMMENT   /* move r0 to process stack if not equal */
+	COMMENT   /*" mrs r0, psp      \n"*/
+	COMMENT   /*);*/
+	COMMENT
+	COMMENT  /* __asm volatile
+	COMMENT  (
+	COMMENT   /* hducommfintr-HardFault-CB-LLR-002 */
+	COMMENT   /* goto location continue */
+	COMMENT   /*"b continue   \n"*/
+	COMMENT   /*location hf1 is if equal*/
+	COMMENT   /*"hf1:      \n"*/
+	COMMENT   /* move r0 to main stack if equal */
+	COMMENT   /*" mrs r0, msp  \n"*/
+	COMMENT   /*);*/
+	COMMENT
+	COMMENT  /*
+	COMMENT   * Due to the fact we can only induce a HardFault by divide by zero
+	COMMENT   * this BBand will never get hit during normal operation.
+	COMMENT   */
+	COMMENT
+	COMMENT  /*__asm volatile
+	COMMENT  (
+	COMMENT   /* hducommfintr-HardFault-CB-LLR-003 */
+	COMMENT   /*location continue */
+	COMMENT   /*"continue: \n" */
+	COMMENT   /* load r1 with word of data from r0 */
+	COMMENT   /*" ldr r1, [r0, #24]     \n"*/
+	COMMENT   /* load ARM register to handler2_address_const */
+	COMMENT   /*" ldr r2, handler2_address_const        \n"*/
+	COMMENT   /* Return */
+	COMMENT   /*"blx r2  \n"*/
+	COMMENT   /*" handler2_address_const: .word PrvGetRegistersFromStack    \n"*/
+	COMMENT   /*);*/
+	COMMENT
+	COMMENT 13.In function 'SaveDataToSection',the parameters of the function FlashProgramWord 
+	COMMENT    cannot be expected since address of static variables and registers are being passed as parameters and 
+	COMMENT    its values in non-instrumented and instrumented run during testing differs.
+	COMMENT
+	COMMENT </AC>
+	
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT 
+	COMMENT Valid Class(es)
+	COMMENT Class 1
+	COMMENT The function 'IntrInstall', calls the function SaveStatusReg.
+	COMMENT
+	COMMENT Class 2
+	COMMENT The function 'IntrInstall', calls the function RestoreStatusReg.
+	COMMENT
+	COMMENT Class 3
+	COMMENT In the function 'IntrInstall', u8_index is less than INTR_MAX.
+	COMMENT
+	COMMENT Class 4
+	COMMENT In the function 'IntrInstall', u8_index is equal to INTR_MAX.
+	COMMENT
+	COMMENT Class 5
+	COMMENT In the function 'IntrInstall', u8_index is greater than INTR_MAX.
+	COMMENT
+	COMMENT Class 6
+	COMMENT In the function 'IntrInit', Interrupt Vector Table in ROM for corresponding index is not empty.
+	COMMENT 
+	COMMENT Class 7
+	COMMENT In the function 'IntrInit', Interrupt Vector Table in ROM for corresponding index is empty.
+	COMMENT 
+	COMMENT Class 8
+	COMMENT In the function 'PrvGetRegistersFromStack','SaveDataToSection'is called.
+	COMMENT 
+	COMMENT Class 9
+	COMMENT In the function 'SaveDataToSection',check location with index DEC_FIVE is equal to p_value with index DEC_FIVE .
+	COMMENT 
+	COMMENT Class 10
+	COMMENT In the function 'SaveDataToSection',check location with index DEC_FIVE is not equal to p_value with index DEC_FIVE .
+	COMMENT
+	COMMENT Class 11
+	COMMENT In the function 'SaveDataToSection','FlashUnlock' is called.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In the function 'SaveDataToSection','FlashClearFlag' is called.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In the function 'SaveDataToSection',the return value of FlashProgramWord is FLASH_COMPLETE.
+	COMMENT
+	COMMENT Class 14
+	COMMENT In the function 'SaveDataToSection',the return value of FlashProgramWord is other than FLASH_COMPLETE.
+	COMMENT
+	COMMENT Class 15
+	COMMENT In the function 'SaveDataToSection','FlashLock' is called.
+	COMMENT
+	COMMENT Class 16
+	COMMENT In the function 'SaveDataToSection',STK_VAL is equal to DEADDEAD.
+	COMMENT
+	COMMENT Class 17
+	COMMENT In the function 'SaveDataToSection',STK_VAL is not equal to DEADDEAD.
+	COMMENT
+	COMMENT Class 18
+	COMMENT In the function 'SaveDataToSection',index is less than DEC_FOUR.
+	COMMENT
+	COMMENT Class 19
+	COMMENT In the function 'SaveDataToSection',index is greater than DEC_FOUR.
+	COMMENT
+	COMMENT Class 20
+	COMMENT In the function 'SaveDataToSection',index is equal to DEC_FIVE.
+	COMMENT
+	COMMENT Class 21
+	COMMENT In the function 'SaveDataToSection',index is not equal to DEC_FIVE.
+	COMMENT 
+	COMMENT Class 22
+	COMMENT In the function 'SaveDataToSection',check location with index DEC_SIX is  equal to p_value with index DEC_SIX.
+	COMMENT
+	COMMENT Class 23
+	COMMENT In the function 'SaveDataToSection',check location with index DEC_SIX is not equal to p_value with index DEC_SIX.
+	COMMENT
+	COMMENT Invalid Class(es)
+	COMMENT
+	COMMENT	Class 24
+	COMMENT In function 'PrvGetRegistersFromStack',pulFaultStackAddress is passed with invalid reference.
+	COMMENT </ECD>
+	
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL    
+
+DEFINE STUB hducommfintr_c
+
+    #void FlashLock(void); 
+    
+    -- Parameter address is made as _no since the address of function is passed
+    #T_FLASH_STATUS FlashProgramWord(T_UINT32  _no address, T_UINT32  _no data);
+    
+    #void FlashClearFlag(T_UINT32  _in flash_flag);
+    
+    #void FlashUnlock(void);
+    
+    #void Crt0TransferData(void);
+    
+    #void RestoreStatusReg(T_UINT32  _in U32_critical_sr); 
+    
+    #T_UINT32 SaveStatusReg(void);
+    
+    --Dummy function created to verify parameter 'intr_function' in function 'IntrInstall'.		
+	#void Dummy_Function(void);  
+
+	END DEFINE
+
+ELSE_SIMUL
+
+	-- No action defined as of now if the module is not simulated.
+
+END SIMUL
+
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- INCLUDED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hducommfintr.c
+
+--ENVIRONMENT ENV_hducommfintr_c
+
+	-- None
+	
+--END ENVIRONMENT -- ENV_hducommfintr_c
+
+--USE ENV_hducommfintr_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HardFault
+--------------------------------------------------------------------------------
+SERVICE HardFault
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommfintr-HardFault-CB-LLR-001]
+	COMMENT The function does the following,
+	COMMENT a)disables the interrupts
+	COMMENT b)tests the link register
+	COMMENT c)branches to the location hf1 when zero flag is set, otherwise move processor stack to R0 register.
+	COMMENT 
+	COMMENT Equivalence Class None  
+	COMMENT
+	COMMENT [hducommfintr-HardFault-CB-LLR-002]
+	COMMENT The function does the following,
+	COMMENT a)branches to the location continue.
+	COMMENT b)When hf1 is invoked it moves main stack to R0 register
+	COMMENT 
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hducommfintr-HardFault-CB-LLR-003]
+	COMMENT The function does the following when continue is invoked,
+	COMMENT a)loads arm register with the content of (R0 and offset 24)
+	COMMENT b)loads arm register with address of the location handler2_address_const
+	COMMENT c)calls the function PrvGetRegistersFromStack by branching to handler2_address_const
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hducommfintr-HardFault-CB-LLR-004]
+    COMMENT The function returns.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+    	
+		COMMENT INPUT SECTION:    	
+    	    	
+			--Temporary variable used for testing purpose
+			VAR PTU_temp,    					init =0,      			  ev=init   
+    	    
+    	COMMENT OUTPUT SECTION:
+    	    
+    	    -- No Variables
+    	    
+    	COMMENT	INPUT/OUTPUT SECTION:
+    	    
+    		-- No Variables
+    	    
+    	-- Stub Calls:
+    	    	
+    	SIMUL
+    	    
+    	    --NONE
+    	    
+    	END SIMUL
+    	    
+    	-- Calling the Unit Under Test 
+ 		 #HardFault();
+ 		 
+     END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- HardFault
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service MemManage
+--------------------------------------------------------------------------------
+SERVICE MemManage
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal 
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hducommfintr-MemManage-CB-LLR-001]
+	COMMENT The function'MemManage'loops infinitely and does nothing.
+	COMMENT Equivalence Class none
+	COMMENT </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+	        	
+			--Temporary variable used for testing purpose
+			VAR PTU_temp,   				 	init =0,       		 ev=init   
+	        
+		COMMENT OUTPUT SECTION:
+	        
+			-- No Variables
+	        
+		COMMENT	INPUT/OUTPUT SECTION:
+	        
+			-- No Variables
+	        
+		-- Stub Calls:
+	        	
+		SIMUL
+	        
+			--NONE
+	        
+		END SIMUL
+	        
+        -- Calling the Unit Under Test 
+        #MemManage();
+        
+	END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- MemManage
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BusFault
+--------------------------------------------------------------------------------
+SERVICE BusFault
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hducommfintr-BusFault-CB-LLR-001]
+	COMMENT The function'BusFault'loops infinitely and does nothing
+    COMMENT Equivalence Class none    
+    COMMENT </TD>
+    
+    ELEMENT
+		
+		COMMENT INPUT SECTION:
+			
+			--Temporary variable used for testing purpose
+			VAR PTU_temp,   					 init =0,        		ev=init   
+			        
+		COMMENT OUTPUT SECTION:
+			        
+			-- No Variables
+			        
+		COMMENT	INPUT/OUTPUT SECTION:
+			        
+			-- No Variables
+			        
+		 -- Stub Calls:
+			        	
+		SIMUL
+			        
+			--NONE
+			        
+		END SIMUL
+			        
+	-- Calling the Unit Under Test
+	#BusFault();
+	
+	END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- BusFault
+
+--------------------------------------------------------------------------------
+-- Declaration of the service SpuriousInterrupt
+--------------------------------------------------------------------------------
+SERVICE SpuriousInterrupt
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hducommfintr-SpuriousInterrupt-CB-LLR-001]
+	COMMENT THe function 'SpuriousInterrupt' loops infinitely and does nothing
+	COMMENT Equivalence Class none
+	COMMENT </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+			
+			--Temporary variable used for testing purpose
+			VAR PTU_temp,    					init =0,        			ev=init   
+
+		COMMENT OUTPUT SECTION:
+
+			-- No Variables
+
+		COMMENT	INPUT/OUTPUT SECTION:
+
+			-- No Variables
+
+		-- Stub Calls:
+
+		SIMUL
+
+			--NONE
+
+		END SIMUL
+		        
+        -- Calling the Unit Under Test
+        #SpuriousInterrupt();
+	END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- SpuriousInterrupt
+
+--------------------------------------------------------------------------------
+-- Declaration of the service IsrReset
+--------------------------------------------------------------------------------
+SERVICE IsrReset
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hducommfintr-IsrReset-CB-LLR-001]
+	COMMENT The function calls 'Crt0TransferData' to run the reset routine.
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		    
+		    --Temporary variable used for testing purpose
+			VAR PTU_temp,    					init =0,        		ev=init   
+		        
+		COMMENT OUTPUT SECTION:
+		        
+			-- No Variables
+		        
+		COMMENT	INPUT/OUTPUT SECTION:
+		        
+			-- No Variables
+		        
+		-- Stub Calls:
+		        	
+		SIMUL
+		
+			--To run the reset routine
+			STUB Crt0TransferData()	
+		        
+		END SIMUL
+		        
+        -- Calling the Unit Under Test	
+        #IsrReset();
+	END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- IsrReset
+
+-------------------------------------------------------------------------------
+-- Declaration of the service UsageFault
+--------------------------------------------------------------------------------
+SERVICE UsageFault
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hducommfintr-UsageFault-CB-LLR-001]
+	COMMENT The function 'UsageFault'loops infinitely and does nothing
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+	COMMENT 
+    
+	ELEMENT
+			
+		COMMENT INPUT SECTION:
+			
+			--Temporary variable used for testing purpose
+			VAR PTU_temp,    						init =0,       			 ev=init   
+			        
+		COMMENT OUTPUT SECTION:
+			        
+			-- No Variables
+			        
+		COMMENT	INPUT/OUTPUT SECTION:
+			        
+			-- No Variables
+			        
+		-- Stub Calls:
+			        	
+		SIMUL
+			
+			--none
+			        
+		END SIMUL
+			        
+        -- Calling the Unit Under Test	
+        #UsageFault();
+     END ELEMENT
+
+    END TEST -- TEST 1
+
+END SERVICE -- UsageFault
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service NonMaskable
+--------------------------------------------------------------------------------
+SERVICE NonMaskable
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hducommfintr-NonMaskable-CB-LLR-001]
+	COMMENT The function 'NonMaskable' loops infinitely and does nothing
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+	COMMENT 
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+			
+			--Temporary variable used for testing purpose
+			VAR PTU_temp,   				 init =0,       			 ev=init   
+				        
+		COMMENT OUTPUT SECTION:
+				        
+			-- No Variables
+				        
+		COMMENT	INPUT/OUTPUT SECTION:
+				        
+			-- No Variables
+				        
+		-- Stub Calls:
+				        	
+		SIMUL
+				
+			--none
+				        
+		END SIMUL
+				        
+        -- Calling the Unit Under Test	
+        #NonMaskable();
+	END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- NonMaskable
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service IntrInstall
+--------------------------------------------------------------------------------
+SERVICE IntrInstall
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT8 u8_index;
+#T_INTR_FN intr_function;
+
+  
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hducommfintr-IntrInstall-CB-LLR-001]
+	COMMENT The function 'IntrInstall'calls 
+	COMMENT a)'SaveStatusReg' to disable interrupts before loading the ISR into the interrupt vector table.
+	COMMENT b)'RestoreStatusReg' with parameter (U32_critical_sr) to restore the priority mask register after
+	COMMENT .  the loading is complete.
+	COMMENT Equivalence Class 1,2
+	COMMENT 
+	COMMENT[hducommfintr-IntrInstall-CB-LLR-002]
+	COMMENT The function 'IntrInstall' stores the intr_function into index u8_index of the interrupt 
+	COMMENT Vector Table in RAM when u8_index is less than INTR_MAX.
+	COMMENT The index is exercised for nominal value.
+	COMMENT Equivalence Class 3
+	COMMENT </TD>  
+	
+	ELEMENT
+	
+	
+		COMMENT INPUT SECTION
+	
+			--Global parameter act as index for interrupt vector table  
+			VAR u8_index,				init = INTR_USART_2,					ev = init 
+	
+			--Global parameter holds ISR function. 
+			VAR intr_function,			init =&Dummy_Function,					ev = init
+			
+			--to pass value to RestoreStatusReg
+			VAR  U32_critical_sr,       init = 1,								ev = 2
+	
+		COMMENT INPUT/OUTPUT SECTION
+	
+			--None
+	
+		COMMENT OUTPUT SECTION
+	
+			--Interrupt Vector Table in RAM
+			VAR  L_fn_table_ram[INTR_USART_2],		init = 10,					ev =intr_function
+			
+	
+		--Stub Calls:
+		SIMUL
+				
+			--to disable interrupts before loading the ISR into the Interrupt Vector Table
+			STUB SaveStatusReg() 2
+				
+			--to restore the priority mask register 
+			STUB RestoreStatusReg(2)
+				
+		END SIMUL
+		
+		-- Calling the Unit Under Test: 
+		#IntrInstall(u8_index, intr_function);
+			
+	END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- IntrInstall
+
+--------------------------------------------------------------------------------
+-- Declaration of the service IntrInit
+--------------------------------------------------------------------------------
+SERVICE IntrInit
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hducommfintr-IntrInit-CB-LLR-001]
+	COMMENT The function 'IntrInit' stores the interrupt functions of particular index from the interrupt Vector 
+	COMMENT table in ROM into the corresponding index of the interrupt vector table in RAM,when index is less than 
+	COMMENT INTR_MAX and the interrupt vector table in ROM for corresponding index is not empty.
+	COMMENT Equivalence Class 6
+	COMMENT
+	COMMENT [hducommfintr-IntrInit-CB-LLR-002]
+	COMMENT The function 'IntrInit' stores the reference of the function SpuriousInterrupt into the corresponding 
+	COMMENT	index of the interrupt vector table in RAM, when index is less than INTR_MAX and the interrupt Vector 
+	COMMENT	Table in ROM for corresponding index is empty.
+	COMMENT Equivalence Class 7
+	COMMENT </TD>	
+	
+	ELEMENT
+
+		COMMENT INPUT SECTION
+		
+			--None
+			
+		COMMENT INPUT/OUTPUT SECTION
+
+			--None
+
+		COMMENT OUTPUT SECTION
+
+
+			--Interrupt Vector Table in RAM			
+			VAR L_fn_table_ram[0],				init==,							ev=0
+			
+			VAR L_fn_table_ram[1],				init=&PTU_dummy,					ev=IsrReset
+			
+			VAR L_fn_table_ram[2],				init=&PTU_dummy,					ev=NonMaskable
+						
+			VAR L_fn_table_ram[3],				init=&PTU_dummy,					ev=HardFault
+						
+			VAR L_fn_table_ram[4],				init=&PTU_dummy,					ev=MemManage
+						
+			VAR L_fn_table_ram[5],				init=&PTU_dummy,					ev=BusFault
+						
+			VAR L_fn_table_ram[6],				init=&PTU_dummy,					ev=UsageFault
+			
+			ARRAY L_fn_table_ram[7..97],		init=&PTU_dummy,					ev=SpuriousInterrupt
+
+		--Stub Calls:
+		SIMUL
+
+			--None
+		
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+        #IntrInit();
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+END SERVICE -- IntrInit
+

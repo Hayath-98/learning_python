@@ -1,0 +1,1468 @@
+HEADER hdudispflmsscu,Source Code Ver : 1.7 ,TestScript Ver :1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Vignesh Sunil
+--
+-- File Name           : hdudispflmsscu_2.ptu
+--                       
+-- Test Creation Date  : 29.04.2021
+--
+-- Tested Functions    : ProcessLmsScuSysStatusErr
+--
+-- Version History     :
+--
+-- TEST-VERSION     TEST-DATE       TESTER NAME        MODIFICATIONS
+-- ------------     ---------       -----------        -------------
+--     1.1          29.04.2021      Vignesh Sunil       Updated as per #PR100338
+--     1.2          14.05.2020      Vignesh Sunil       Updated as per #PR100354
+--     1.3          20.04.2022      P AFREEN            Updated as per #PR1000371
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/  
+
+##include "hdudispflmsscu.h"  
+##include "hdudispfa429.h"  
+##include "hdulibbasictypes.h"      
+##include "hdudispfgrapp.h"         
+##include "hdudispfdauprofile.h"    
+##include "hdudispfarinc825.h" 
+##include "hdudispftimer.h"         
+##include "hdudispfglobalsettings.h"
+##include "hdudispfapp.h"           
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+--------------------------------------------------------------------------------
+
+    #T_UINT8 Du_position; 
+    #T_UINT16 Port1_label_count; 
+    #T_UINT8 Scu_label_flag; 
+    #T_BOOL Demo_mode;
+    #T_UINT32 Time_in_sec; 
+    #T_UINT16 Flight_count; 
+    #T_BOOL Ft_log_overflow;
+    #T_UINT16 U16_message_words[3]; 
+    #T_A429_DATA_STRUCT A429_data[2][256]; 
+    #T_UINT16 Scu_timer[3]; 
+    #T_UINT8 Scu_fty_offset_flag; 
+    #T_UINT32 U32_critical_sr; 
+    # volatile T_INT32 Itm_rx_buffer; 
+    
+    
+    
+#T_A825_MESSAGE PTU_IN_ps_xm[30];   
+#T_UINT32 Index=0;
+
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT  Author Name         : Vignesh Sunil
+    COMMENT 
+    COMMENT  File Name           : hdudispflmsscu_2.ptu
+    COMMENT 
+    COMMENT  Tested Functions    : ProcessLmsScuSysStatusErr
+    COMMENT
+    COMMENT  Assumptions and Constraints
+    COMMENT  <AC>
+    COMMENT
+    COMMENT  Assumption(s):
+    COMMENT  None
+    COMMENT 
+    COMMENT  Constraint(s):
+    COMMENT 1) The testscript is split into 3 due to static dependency.
+    COMMENT
+    COMMENT  </AC>
+    COMMENT
+    COMMENT Equivalence Class Description
+    COMMENT  <ECD>
+    COMMENT 
+    COMMENT  Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+    COMMENT In function 'ScuRTDSetParam', parameter a429_tag is not equal to ZERO
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function 'ScuRTDSetParam', parameter a429_tag is equal to ZERO   
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'ScuRTDSetParam', type of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is equal to BNR  
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'ScuRTDSetParam', type of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is not equal to BNR  
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'ScuRTDSetParam', min_val of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is greater than parameter s32_data   
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'ScuRTDSetParam', min_val of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is less than parameter s32_data  
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'ScuRTDSetParam', max_val of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is less than parameter s32_data
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'ScuRTDSetParam', max_val of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is greater than parameter s32_data   
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'ScuRTDSetParam', max_val and min_val of A429_data with index channel and parameter a429_tag 
+    COMMENT decremented by one is equal to parameter s32_data       
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'ScuRTDSetParam', rtd_tag is equal to ZERO 
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'ScuRTDSetParam', rtd_tag is not equal to ZERO  
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'ScuRTDSetParam', ertd_stat is not equal to THREE       
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'ScuRTDSetParam', ertd_stat is equal to THREE       
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'ScuRTDWatchdog', usRTimer of Storage for Real Time Data with 
+    COMMENT index as loop index count is less than RTD_MAX_INTERVAL_SCU 
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'ScuRTDWatchdog', usRTimer of Storage for Real Time Data with 
+    COMMENT index as loop index count is greater than RTD_MAX_INTERVAL_SCU
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'ScuRTDWatchdog', Scu_timer with 
+    COMMENT index as loop index count is greater than RTD_MAX_INTERVAL_SCU  
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'ScuRTDWatchdog', Scu_timer with 
+    COMMENT index as loop index count is less than RTD_MAX_INTERVAL_SCU     
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'ScuRTDWatchdog', Scu_timer with 
+    COMMENT index as loop index count is equal to RTD_MAX_INTERVAL_SCU  
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'ProcessingArinc01Fault', Demo_mode is not equal to TRUE
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'ProcessingArinc01Fault', Demo_mode is equal to TRUE    
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'ProcessingArinc01Fault', Arinc Fault set is equal to ZERO 
+    COMMENT   
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'ProcessingArinc01Fault', scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is less than RTD_MAX_INTERVAL_SCU 
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'ProcessingArinc01Fault', scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is equal to RTD_MAX_INTERVAL_SCU  
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'ProcessingArinc01Fault', scu timer of index ZERO or scu timer of index ONE or scu timer of 
+    COMMENT index TWO is greater than RTD_MAX_INTERVAL_SCU  
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'ProcessingArinc01Fault', error state is FALSE  
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'ProcessingArinc01Fault', error state is TRUE       
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'ProcessingArinc01Fault', fault_active_flag of Fault log structure with index as ft index is TRUE
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'ProcessingArinc01Fault', fault_active_flag of Fault log structure with index as ft index is FALSE
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'ProcessingArinc01Fault', index flag is equal to FALSE  
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'ProcessingArinc01Fault', index flag is equal to TRUE
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'ProcessingArinc01Fault', scu label flag is 
+    COMMENT equal to SEVEN
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'ProcessingArinc01Fault', scu label flag is 
+    COMMENT not equal to SEVEN  
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'ProcessingArinc01Fault', data_present of Fault log structure with index as fault index count is 
+    COMMENT equal to FALSE
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'ProcessingArinc01Fault', data_present of Fault log structure with index as fault index count is 
+    COMMENT not equal to FALSE  
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'ProcessingArinc01Fault',ft index flag is equal to FALSE
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'ProcessingArinc01Fault',ft index flag is equal to TRUE 
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'ProcessingArinc01Fault',initial_fault_index of Fault log structure 
+    COMMENT with index as ft index is equal to FALSE.   
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'ProcessingArinc01Fault',initial_fault_index of Fault log structure 
+    COMMENT with index as ft index is equal to TRUE.    
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'ProcessingArinc01Fault',fault index is less than TEN and Stop log variable is equal to FALSE.  
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'ProcessingArinc01Fault',fault index is less than TEN and Stop log variable is equal to TRUE.
+    COMMENT
+    COMMENT Class 42
+    COMMENT In function 'ProcessingArinc01Fault',fault index is greater than TEN and Stop log variable is equal to FALSE.   
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function 'StartProcessingFaultLog',fault id count is greater than 65534  
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'StartProcessingFaultLog',fault id count is less than 65534 
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function 'StartProcessingFaultLog',fault id count is equal to 65534      
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'StartProcessingFaultLog',Ft log 
+    COMMENT Size is less than fault id count    
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'StartProcessingFaultLog',Ft log 
+    COMMENT Size is greater than fault id count 
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function 'GetFaultParamData',label of A429_data with index zero and first loop index count is equal 
+    COMMENT to fault_label of fault data with index zero    
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function 'GetFaultParamData',label of A429_data with index zero and first loop index count is not equal 
+    COMMENT to fault_label of fault data with index zero    
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function 'GetFaultParamData',stat of label_data of fault data with index as second 
+    COMMENT loop index count is equal to PARAM_OK
+    COMMENT
+    COMMENT Class 51
+    COMMENT In function 'GetFaultParamData',stat of label_data of fault data with index as second 
+    COMMENT loop index count is not equal to PARAM_OK   
+    COMMENT
+    COMMENT Class 52
+    COMMENT In function 'GetFaultParamData',data set flag equal to TRUE
+    COMMENT
+    COMMENT Class 53
+    COMMENT In function 'GetFaultParamData',data set flag equal to FALSE    
+    COMMENT
+    COMMENT Class 54
+    COMMENT In function 'GetFaultParamData',param_data_present with index as second loop index count of Fault 
+    COMMENT log structure with index as parameter arr_index is equal to FALSE
+    COMMENT
+    COMMENT Class 55
+    COMMENT In function 'GetFaultParamData',param_data_present with index as second loop index count of Fault 
+    COMMENT log structure with index as parameter arr_index is equal to TRUE    
+    COMMENT
+    COMMENT Class 56
+    COMMENT In function 'GetFaultParamData',parameter timer reset state with index as second loop index count 
+    COMMENT is equal to FALSE   
+    COMMENT
+    COMMENT Class 57
+    COMMENT In function 'GetFaultParamData',parameter timer reset state with index as second loop index count 
+    COMMENT is equal to TRUE 
+    COMMENT
+    COMMENT Class 58
+    COMMENT In function 'GetFaultParamData',param_data_present with index as second loop index count of 
+    COMMENT Fault log structure with index as parameter arr_index is equal to FALSE
+    COMMENT
+    COMMENT Class 59
+    COMMENT In function 'GetFaultParamData',param_data_present with index as second loop index count of 
+    COMMENT Fault log structure with index as parameter arr_index is equal to TRUE  
+    COMMENT
+    COMMENT Class 60
+    COMMENT In function 'GetFaultParamData',Return value of FaultTimer with index as second loop index count 
+    COMMENT is not equal to TRUE
+    COMMENT
+    COMMENT Class 61
+    COMMENT In function 'GetFaultParamData',Return value of FaultTimer with index as second loop index count 
+    COMMENT is equal to TRUE
+    COMMENT
+    COMMENT Class 62
+    COMMENT In function 'GetFaultParamData',parameter ssm validity with index as second loop index count is 
+    COMMENT equal to TRUE 
+    COMMENT
+    COMMENT Class 63
+    COMMENT In function 'GetFaultParamData',parameter ssm validity with index as second loop index count is 
+    COMMENT not equal to TRUE   
+    COMMENT
+    COMMENT Class 64
+    COMMENT In function 'FaultTimer',initial variable is TRUE
+    COMMENT
+    COMMENT Class 65
+    COMMENT In function 'FaultTimer',initial variable is FALSE  
+    COMMENT
+    COMMENT Class 66
+    COMMENT In function 'FaultTimer',Fault timer with index as parameter
+    COMMENT index is greater than TIME_FRAME
+    COMMENT
+    COMMENT Class 67
+    COMMENT In function 'FaultTimer',Fault timer with index as parameter
+    COMMENT index is less than TIME_FRAME   
+    COMMENT
+    COMMENT Class 68
+    COMMENT In function 'GetFaultParamData',stat of 
+    COMMENT label_data of Fault_data with index zero and one and two and three and 
+    COMMENT four and five are equal to PARAM_OK 
+    COMMENT
+    COMMENT Class 69
+    COMMENT In function 'GetFaultParamData',stat of 
+    COMMENT label_data of Fault_data with index zero and one and two and three and 
+    COMMENT four and five are not equal to PARAM_OK     
+    COMMENT
+    COMMENT Class 70
+    COMMENT In function 'PushFaultLog',Fault_index of Fault log structure 
+    COMMENT with index as fault index is greater than ZERO
+    COMMENT
+    COMMENT Class 71
+    COMMENT In function 'PushFaultLog',Fault_index of Fault log structure 
+    COMMENT with index as fault index is equal to ZERO
+    COMMENT
+    COMMENT Class 72
+    COMMENT In function 'PushFaultLog',end_ft_transmission 
+    COMMENT of Fault log structure with index as fault index count is equal to FALSE
+    COMMENT
+    COMMENT Class 73
+    COMMENT In function 'PushFaultLog',end_ft_transmission 
+    COMMENT of Fault log structure with index as fault index count is equal to TRUE 
+    COMMENT
+    COMMENT Class 74
+    COMMENT In function 'PushFaultLog',Stop ft log is equal to FALSE    
+    COMMENT
+    COMMENT Class 75
+    COMMENT In function 'PushFaultLog',Stop ft log is equal to TRUE     
+    COMMENT
+    COMMENT Class 76
+    COMMENT In function 'PushFaultLog',fault_data_write of Fault log structure with index as fault index count 
+    COMMENT is equal to FALSE   
+    COMMENT
+    COMMENT Class 77
+    COMMENT In function 'PushFaultLog',fault_data_write of Fault log structure with index as fault index count 
+    COMMENT is equal to TRUE    
+    COMMENT
+    COMMENT Class 78
+    COMMENT In function 'PushFaultLog',test result is not equal to A825_XM_OK
+    COMMENT
+    COMMENT Class 79
+    COMMENT In function 'PushFaultLog',test result is equal to A825_XM_OK   
+    COMMENT
+    COMMENT Class 80
+    COMMENT In function 'PushFaultLog',fault_active_flag of Fault log structure with index as fault index is equal to TRUE
+    COMMENT
+    COMMENT Class 81
+    COMMENT In function 'PushFaultLog',fault_active_flag of Fault log structure with index as fault index is equal to FALSE 
+    COMMENT
+    COMMENT Class 82
+    COMMENT In function 'PushFaultLog',param_data_present with index as data index count of Fault log structure 
+    COMMENT with index as parameter arr_index is equal to TRUE and param_data_write with 
+    COMMENT index as data index count of Fault log structure with index as parameter 
+    COMMENT arr_index is equal to FALSE 
+    COMMENT
+    COMMENT Class 83
+    COMMENT In function 'PushFaultLog',param_data_present with index as data index count of Fault log structure 
+    COMMENT with index as parameter arr_index is equal to TRUE and param_data_write with 
+    COMMENT index as data index count of Fault log structure with index as parameter 
+    COMMENT arr_index is equal to TRUE 
+    COMMENT
+    COMMENT Class 84
+    COMMENT In function 'PushFaultLog',param_data_present with index as data index count of Fault log structure 
+    COMMENT with index as parameter arr_index is equal to FALSE and param_data_write with 
+    COMMENT index as data index count of Fault log structure with index as parameter 
+    COMMENT arr_index is equal to FALSE 
+    COMMENT
+    COMMENT Class 85
+    COMMENT In function 'PushFaultLog'Last_ft_record of Fault log structure with index as fault index 
+    COMMENT count is equal to TRUE      
+    COMMENT
+    COMMENT Class 86
+    COMMENT In function 'PushFaultLog'Last_ft_record of Fault log structure with index as fault index 
+    COMMENT count is equal to FALSE 
+    COMMENT
+    COMMENT Class 87
+    COMMENT In function 'ProcessLmsScuSysStatusErr'data_present of Fault log structure with index as 
+    COMMENT loop index count is equal to FALSE
+    COMMENT
+    COMMENT Class 88
+    COMMENT In function 'ProcessLmsScuSysStatusErr'data_present of Fault log structure with index as 
+    COMMENT loop index count is equal to TRUE
+    COMMENT
+    COMMENT Class 89
+    COMMENT In function 'ProcessLmsScuSysStatusErr'status is equal to THREE 
+    COMMENT
+    COMMENT Class 90
+    COMMENT In function 'ProcessLmsScuSysStatusErr'status is not equal to THREE or ONE  
+    COMMENT
+    COMMENT Class 91
+    COMMENT In function 'ProcessLmsScuSysStatusErr'fault_active_flag of Fault log structure with index as index with index 
+    COMMENT zero to four is FALSE   
+    COMMENT
+    COMMENT Class 92
+    COMMENT In function 'ProcessLmsScuSysStatusErr'fault_active_flag of Fault log structure with index as index with index 
+    COMMENT zero to four is TRUE
+    COMMENT
+    COMMENT Class 93
+    COMMENT In function 'ProcessLmsScuSysStatusErr'parameter data right shifting to 
+    COMMENT NINE,TWELVE,THIRTEEN,FORTEEN,FIFTEEN and with HEX_ONE is not equal to ONE
+    COMMENT
+    COMMENT Class 94
+    COMMENT In function 'ProcessLmsScuSysStatusErr'parameter data right shifting to 
+    COMMENT NINE,TWELVE,THIRTEEN,FORTEEN,FIFTEEN and with HEX_ONE is equal to ONE
+    COMMENT
+    COMMENT Class 95
+    COMMENT In function 'ProcessLmsScuSysStatusErr'err_stat is TRUE 
+    COMMENT
+    COMMENT Class 96
+    COMMENT In function 'ProcessLmsScuSysStatusErr'err_stat is FALSE
+    COMMENT
+    COMMENT Class 97
+    COMMENT In function 'ProcessLmsScuSysStatusErr'index flag with index zero,one,two,three,four is equal to FALSE
+    COMMENT
+    COMMENT Class 98
+    COMMENT In function 'ProcessLmsScuSysStatusErr'index flag with index zero,one,two,three,four is equal to TRUE   
+    COMMENT
+    COMMENT Class 99
+    COMMENT In function 'ProcessLmsScuSysStatusErr'initial_fault_index of Fault log structure with index as 
+    COMMENT index with index zero is equal to FALSE.    
+    COMMENT
+    COMMENT Class 100
+    COMMENT In function 'ProcessLmsScuSysStatusErr'initial_fault_index of Fault log structure with index as 
+    COMMENT index with index zero is equal to TRUE. 
+    COMMENT
+    COMMENT Class 101
+    COMMENT In function 'ProcessLmsScuSysStatusErr'fault index is less than TEN and Stop log variable is equal to FALSE 
+    COMMENT
+    COMMENT Class 102
+    COMMENT In function 'ProcessLmsScuSysStatusErr'fault index is less than TEN and Stop log variable is equal to TRUE  
+    COMMENT
+    COMMENT Class 103
+    COMMENT In function 'ProcessLmsScuSysStatusErr'fault index is greater than TEN and Stop log variable is equal to TRUE   
+    COMMENT
+    COMMENT Class 104
+    COMMENT In function 'ProcessLmsScuProbeErr'parameter data right shifting to ZERO,ONE,TWO,THREE
+    COMMENT and with HEX_ONE is not equal to ONE
+    COMMENT
+    COMMENT Class 105
+    COMMENT In function 'ProcessLmsScuProbeErr'parameter data right shifting to ZERO,ONE,TWO,THREE
+    COMMENT and with HEX_ONE is equal to ONE
+    COMMENT
+    COMMENT Class 106
+    COMMENT In function 'ProcessLmsScuProbeErr'fault_active_flag of Fault log structure with index as 
+    COMMENT index with index ZERO,ONE,TWO,THREE is FALSE    
+    COMMENT
+    COMMENT Class 107
+    COMMENT In function 'ProcessLmsScuProbeErr'fault_active_flag of Fault log structure with index as 
+    COMMENT index with index ZERO,ONE,TWO,THREE is TRUE 
+    COMMENT
+    COMMENT Class 108
+    COMMENT In function 'ProcessLmsScuProbeErr'index flag with index ZERO,ONE,TWO,THREE is equal to TRUE
+    COMMENT
+    COMMENT Class 109
+    COMMENT In function 'ProcessLmsScuProbeErr'index flag with index ZERO,ONE,TWO,THREE is equal to FALSE   
+    COMMENT
+    COMMENT Class 110
+    COMMENT In function 'ProcessLmsScuProbeErr'status is equal to THREE 
+    COMMENT
+    COMMENT Class 111
+    COMMENT In function 'ProcessLmsScuProbeErr'status is not equal to THREE or ZERO  
+    COMMENT
+    COMMENT Class 112
+    COMMENT In function 'ProcessLmsScuProbeErr'initial_fault_index of Fault log structure with index as index with index
+    COMMENT  zero,one,two,three is equal to FALSE
+    COMMENT
+    COMMENT Class 113
+    COMMENT In function 'ProcessLmsScuProbeErr'initial_fault_index of Fault log structure with index as index with index
+    COMMENT  zero,one,two,three is equal to TRUE    
+    COMMENT
+    COMMENT Class 114
+    COMMENT In function 'ProcessLmsScuProbeErr'fault index is less than TEN and Stop log variable is equal to FALSE 
+    COMMENT
+    COMMENT Class 115
+    COMMENT In function 'ProcessLmsScuProbeErr'fault index is greater than TEN and Stop log variable is equal to FALSE  
+    COMMENT
+    COMMENT Class 116
+    COMMENT In function 'ProcessLmsScuProbeErr'fault index is less than TEN and Stop log variable is equal to TRUE  
+    COMMENT
+    COMMENT Class 117
+    COMMENT In function 'ScuRTDGetParam'rtd_tag is greater 
+    COMMENT than SCU_RTDMAX_PARAM       
+    COMMENT
+    COMMENT Class 118
+    COMMENT In function 'ScuRTDGetParam'rtd_tag is less 
+    COMMENT than SCU_RTDMAX_PARAM       
+    COMMENT
+    COMMENT Class 119
+    COMMENT In function 'ScuRTDGetParam'rtd_tag is equal to 
+    COMMENT SCU_RTDMAX_PARAM    
+    COMMENT
+    COMMENT Class 120
+    COMMENT In function 'ScuRTDGetParam'a429_type is BNR
+    COMMENT
+    COMMENT Class 121
+    COMMENT In function 'ScuRTDGetParam'a429_type is DDW    
+    COMMENT
+    COMMENT Class 122
+    COMMENT In function 'ScuRTDGetParam'a429_type is otherthan BNR or DDW   
+    COMMENT
+    COMMENT Class 123
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is RTD_STAT_FAIL        
+    COMMENT
+    COMMENT Class 124
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is not RTD_STAT_FAIL, RTD_NCD,
+    COMMENT RTD_MISSING ,RTD_NORMAL and RTD_RANGE_ERR.
+    COMMENT
+    COMMENT Class 125
+    COMMENT In function 'ScuRTDGetParam'Fault_set is not equal to ZERO  
+    COMMENT
+    COMMENT Class 126
+    COMMENT In function 'ScuRTDGetParam'Fault_set is equal to ZERO  
+    COMMENT
+    COMMENT Class 127
+    COMMENT In function 'ScuRTDGetParam'Ssm_ncd is equal to zero    
+    COMMENT
+    COMMENT Class 128
+    COMMENT In function 'ScuRTDGetParam'Ssm_ncd is not equal to zero    
+    COMMENT
+    COMMENT Class 129
+    COMMENT In function 'ScuRTDGetParam'second 
+    COMMENT or third bit of Scu_fty_offset_flag is equal to one
+    COMMENT
+    COMMENT Class 130
+    COMMENT In function 'ScuRTDGetParam'second 
+    COMMENT or third bit of Scu_fty_offset_flag is not equal to one 
+    COMMENT
+    COMMENT Class 137
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is RTD_NCD      
+    COMMENT
+    COMMENT Class 138
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is RTD_MISSING
+    COMMENT
+    COMMENT Class 139
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is RTD_NORMAL       
+    COMMENT
+    COMMENT Class 140
+    COMMENT In function 'ScuRTDGetParam'eRTDStat of RTD reading is RTD_RANGE_ERR        
+    COMMENT
+    COMMENT Class 141
+    COMMENT In function 'ScuRTDGetParam'second 
+    COMMENT bit of Fault_set is not ONE         
+    COMMENT
+    COMMENT Class 142
+    COMMENT In function 'ScuRTDGetParam'second 
+    COMMENT bit of Fault_set is ONE     
+    COMMENT
+    COMMENT Class 143
+    COMMENT In function 'ScuRTDGetParam'stat of ps_dest is not equal to RANGE_ERROR     
+    COMMENT
+    COMMENT Class 144
+    COMMENT In function 'ScuRTDGetParam'stat of ps_dest is equal to RANGE_ERROR         
+    COMMENT 
+    COMMENT
+    COMMENT Class 146
+    COMMENT In function 'ProcessingArinc01Fault', initial variable is TRUE
+    COMMENT
+    COMMENT Class 147
+    COMMENT In function 'ProcessingArinc01Fault', initial variable is FALSE 
+    COMMENT
+    COMMENT Class 150
+    COMMENT In function 'ProcessLmsScuProbeErr'error 
+    COMMENT state is equal to TRUE 
+    COMMENT 
+    COMMENT Class 151
+    COMMENT In function 'ProcessLmsScuProbeErr'error 
+    COMMENT state is equal to FALSE 
+    COMMENT 
+    COMMENT Class 152
+    COMMENT In function 'ProcessLmsScuProbeErr' status is equal to ZERO.    
+    COMMENT 
+    COMMENT Class 153
+    COMMENT In function 'ProcessLmsScuSysStatusErr' status is equal to ZERO.    
+    COMMENT
+    COMMENT Class 154
+    COMMENT In function 'ProcessLmsScuSysStatusErr' M_ENGSTART  is equal to N1_value
+    COMMENT
+    COMMENT Class 155
+    COMMENT In function 'ProcessLmsScuSysStatusErr' M_ENGSTART  is Greater than N1_value
+    COMMENT
+    COMMENT Class 156
+    COMMENT In function 'ProcessLmsScuSysStatusErr' M_ENGSTART is  less than n1 value   
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------    
+
+DEFINE STUB hdudispflmsscu_c
+
+    #T_A825_XMITRESULT A8251Xmit(T_A825_MESSAGE _no *ps_xm)
+    #{
+    #
+    #       PTU_IN_ps_xm[Index] = *ps_xm;
+    #
+    #Index++;
+    #}
+        
+    #void RTDGetParam(T_UINT16  _in a429_tag, T_PARAM_READING  _inout ps_dest);
+    #void RTDGetParamDdw(T_UINT16  _in a429_tag, T_PARAM_READING  _inout ps_dest); 
+    #void TimerPreset( volatile T_TIMER  _no timer, T_INT32  _in s32_set_val);
+   #void TimerInstall( volatile T_TIMER  _no timer);
+    #void RestoreStatusReg(T_UINT32  _in U32_critical_sr);
+    #T_UINT32 SaveStatusReg(void); 
+
+END DEFINE
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file E:\HDU_VIGNESH\HDUDISPFLMSSCU\SRC\hdudispflmsscu.c
+ENVIRONMENT ENV_hdudispflmsscu_c
+  VAR Flt_id_count,     init = 0,       ev = init
+--  ARRAY Fault_data,       init = { others => { fault_label => 0, label_data => { r => 0, stat => PARAM_OK, fread => 0.0 } } },        ev = init
+  ARRAY Fault_timer,        init = { others => 0 },     ev = init
+--  ARRAY Fault_log_structure,      init = { others => { Fault_index => 0, flight_number => 0, fault_type => PROBE_ERROR, error_code => 0, timestamp => 0, param_data => { others => 0 }, initial_fault_index => FALSE, start_duration => 0, stop_duration => 0, param_data_present
+--&=> { others => FALSE }, data_present => FALSE, fault_active_flag => FALSE, fault_data_write => FALSE, Last_ft_record => FALSE, end_ft_transmission => FALSE, param_data_write => { others => FALSE } } },        ev = init
+END ENVIRONMENT -- ENV_hdudispflmsscu_c
+USE ENV_hdudispflmsscu_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service ProcessLmsScuSysStatusErr
+--------------------------------------------------------------------------------
+SERVICE ProcessLmsScuSysStatusErr
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT32 data;
+    #T_UINT8 status;    
+    TEST 17
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-034]
+    COMMENT The function increment the fault index when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to THREE
+    COMMENT 2. parameter data right shifting to FIFTEEN and with HEX_ONE is equal to ONE
+    COMMENT 3. initial_fault_index of Fault log structure with index as index with index four is equal to FALSE.
+    COMMENT 4. fault index is less than TEN and Stop log variable is equal to FALSE
+    COMMENT Equivalence Class 89,94,101
+    COMMENT 
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            VAR data,           init= 0x8000,           ev = init
+            
+            VAR status,         init= THREE,            ev = init
+            
+            VAR Fault_log_structure[0].data_present,            init= TRUE,            ev = init
+            
+            VAR Fault_log_structure[0].initial_fault_index,         init= TRUE,            ev = init
+            
+            VAR Port1_label_count,          init= 0,            ev = init
+            
+            VAR Flt_id_count,           init= 0,            ev = 1
+            
+            VAR Flight_count,           init= 0,            ev = init
+            
+            VAR Fault_data[0].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[1].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[2].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[3].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[4].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[5].label_data.stat,          init= PARAM_OK,         ev = init
+            
+            VAR U16_message_words[1],           init= 0,            ev = 0
+            
+            VAR U16_message_words[2],           init= 0,            ev = 8          
+        
+        COMMENT OUTPUT SECTION:
+        
+            VAR Fault_log_structure[0].Last_ft_record,      init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].fault_data_write,        init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].end_ft_transmission, init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[0], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[1], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[2], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[3], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[4], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[5], init = 0,       ev   = FALSE        
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        
+        -- Stub Calls:
+        SIMUL
+                    
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #ProcessLmsScuSysStatusErr(data, status);
+        END ELEMENT
+    
+        
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            VAR data,           init= 0x0000,           ev = init
+            
+            VAR status,         init= THREE,            ev = init
+            
+            VAR Fault_log_structure[0].data_present,            init= FALSE,            ev = init
+            
+            VAR U16_message_words[1],           init= 0,            ev = init
+            
+            VAR U16_message_words[2],           init= 0,            ev = init
+            
+            VAR Fault_log_structure[0].fault_active_flag,           init= TRUE,         ev = init
+        
+        COMMENT OUTPUT SECTION:
+        
+                VAR Fault_log_structure[0].Fault_index,                     init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].flight_number,                   init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].start_duration,                  init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].stop_duration,                   init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].fault_type,                      init = 0,       ev  = init
+                VAR Fault_log_structure[0].error_code,                      init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].end_ft_transmission,             init = 0,       ev  = init
+                VAR Fault_log_structure[0].Last_ft_record,                  init = 0,       ev  = init
+                VAR Fault_log_structure[0].initial_fault_index,             init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[0],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[1],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[2],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[3],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[4],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[5],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].fault_data_write,                init = 0,       ev  = init      
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        
+        -- Stub Calls:
+        SIMUL
+                    
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #ProcessLmsScuSysStatusErr(data, status);
+        END ELEMENT         
+        
+    END TEST -- TEST 17 
+
+    
+    TEST 18
+    FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-036]
+    COMMENT The function call the function StopProcessingFaultLog with index 
+    COMMENT as index with index four and set the index flag with index four to 
+    COMMENT FALSE when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to THREE
+    COMMENT 2. parameter data right shifting to FIFTEEN and with HEX_ONE is not 
+    COMMENT equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure is TRUE and index flag 
+    COMMENT with index four is equal to TRUE
+    COMMENT Equivalence Class 89,91,97 
+    COMMENT 
+    COMMENT 
+    COMMENT </TD>   
+
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            VAR data,           init= 0x8000,           ev = init
+            
+            VAR status,         init= THREE,            ev = init
+            
+            VAR Fault_log_structure[0].data_present,            init= FALSE,            ev = TRUE
+            
+            VAR Fault_log_structure[0].initial_fault_index,         init= FALSE,            ev = TRUE
+            
+            VAR Port1_label_count,          init= 0,            ev = init
+            
+            VAR Flt_id_count,           init= 0,            ev = 1
+            
+            VAR Flight_count,           init= 0,            ev = init
+            
+            VAR Fault_data[0].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[1].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[2].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[3].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[4].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[5].label_data.stat,          init= PARAM_OK,         ev = init
+            
+            VAR U16_message_words[1],           init= 0,            ev = 0
+            
+            VAR U16_message_words[2],           init= 0,            ev = 8          
+        
+        COMMENT OUTPUT SECTION:
+        
+            VAR Fault_log_structure[0].Last_ft_record,      init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].fault_data_write,        init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].end_ft_transmission, init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[0], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[1], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[2], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[3], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[4], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[5], init = 0,       ev   = FALSE        
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        
+        -- Stub Calls:
+        SIMUL
+                    
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #ProcessLmsScuSysStatusErr(data, status);
+        END ELEMENT
+    
+        
+        ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            VAR data,           init= 0x0000,           ev = init
+            
+            VAR status,         init= THREE,            ev = init
+            
+            VAR Fault_log_structure[0].data_present,            init= FALSE,            ev = init
+            
+            VAR U16_message_words[1],           init= 0,            ev = init
+            
+            VAR U16_message_words[2],           init= 0,            ev = init
+            
+            VAR Fault_log_structure[0].fault_active_flag,           init= TRUE,         ev = FALSE
+        
+        COMMENT OUTPUT SECTION:
+        
+                VAR Fault_log_structure[0].Fault_index,                     init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].flight_number,                   init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].start_duration,                  init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].stop_duration,                   init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].fault_type,                      init = 0,       ev  = NO_ERROR
+                VAR Fault_log_structure[0].error_code,                      init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].end_ft_transmission,             init = 0,       ev  = TRUE
+                VAR Fault_log_structure[0].Last_ft_record,                  init = 0,       ev  = TRUE
+                VAR Fault_log_structure[0].initial_fault_index,             init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[0],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[1],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[2],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[3],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[4],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[5],           init = 0,       ev  = FALSE
+                VAR Fault_log_structure[0].fault_data_write,                init = 0,       ev  = TRUE      
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        
+        -- Stub Calls:
+        SIMUL
+                    
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #ProcessLmsScuSysStatusErr(data, status);
+        END ELEMENT         
+        
+    END TEST -- TEST 18 
+
+TEST 23
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-001]
+    COMMENT The function loop from index ZERO till index is less than 
+    COMMENT MAX_FAULT_LOG and perform the following :
+    COMMENT Do nothing when data_present of Fault log structure with index as 
+    COMMENT loop index count is equal to FALSE or TRUE.
+    COMMENT Equivalence Class 87
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-002]
+    COMMENT The function set the Arinc fault set with Arinc fault set and 
+    COMMENT with 0xFD and SSM ncd with SSM ncd and with 0xFD when parameter 
+    COMMENT status is equal to THREE
+    COMMENT Equivalence Class 89
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-040]
+    COMMENT The function do nothing when
+    COMMENT 1. parameter status is equal to THREE
+    COMMENT 2. parameter data right shifting to NINE and with HEX_ONE is not equal to ONE
+    COMMENT 3. M_ENGSTART is  greater than n1 value
+    COMMENT 4. fault_active_flag of Fault log structure with index as index with index 
+    COMMENT zero is FALSE and index flag with index zero is equal to TRUE
+    COMMENT Set the U16_message_words with index as one to U16_message_words with index one AND with 32767
+    COMMENT Equivalence Class 89,91,155
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-015]
+    COMMENT The function set the U16_message_words with index two to U16_message_words 
+    COMMENT with index two AND with 65534 when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to THREE
+    COMMENT 2. parameter data right shifting to TWELVE and with HEX_ONE is not equal to ONE.
+    COMMENT Equivalence Class 89,93
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-016]
+    COMMENT The function do nothing when
+    COMMENT 1. parameter status is equal to THREE
+    COMMENT 2. parameter data right shifting to TWELVE and with HEX_ONE is 
+    COMMENT not equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure with index as index with 
+    COMMENT index one is FALSE and index flag with index one is equal to TRUE 
+    COMMENT Equivalence Class 89,91
+    COMMENT 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-021]
+    COMMENT The function set the U16_message_words with index two to 
+    COMMENT U16_message_words with index two AND with 65533 when below 
+    COMMENT conditions are satisfied :
+    COMMENT 1. parameter status is equal to THREE
+    COMMENT 2. parameter data right shifting to THIRTEEN and with 
+    COMMENT HEX_ONE is not equal to ONE.
+    COMMENT Equivalence Class 89,93
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-022]
+    COMMENT The function do nothing when
+    COMMENT 1. parameter status is equal to THREE
+    COMMENT 2. parameter data right shifting to THIRTEEN and with HEX_ONE is not 
+    COMMENT equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure with index as index with 
+    COMMENT index two is FALSE and index flag with index two is equal to TRUE
+    COMMENT Equivalence Class 89,91 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-028]
+    COMMENT The function set the U16_message_words with index two to U16_message_words 
+    COMMENT with index two AND with 65531 when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to THREE
+    COMMENT 2. parameter data right shifting to FORTEEN and with HEX_ONE is not equal to ONE
+    COMMENT Equivalence Class 89,93
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-035]
+    COMMENT The function set the U16_message_words with index two to 
+    COMMENT U16_message_words with index two AND with 65527 when below 
+    COMMENT conditions are satisfied :
+    COMMENT 1. parameter status is equal to THREE
+    COMMENT 2. parameter data right shifting to FIFTEEN and with 
+    COMMENT HEX_ONE is not equal to ONE.
+    COMMENT Equivalence Class 89,93
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-036]
+    COMMENT The function do nothing when 
+    COMMENT FALSE when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to THREE
+    COMMENT 2. parameter data right shifting to FIFTEEN and with HEX_ONE is not 
+    COMMENT equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure is TRUE and index flag 
+    COMMENT with index four is equal to FALSE 
+    COMMENT Equivalence Class 89,91  
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-038]
+    COMMENT The function set Fault set to Fault set or with ONE when 
+    COMMENT err_stat is TRUE else set Fault set to Fault set and with 0xFE. 
+    COMMENT Equivalence Class 96
+    COMMENT 
+    COMMENT 
+    COMMENT </TD> 
+
+ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            VAR data,           init= 0x3FF,            ev = init
+            
+            VAR status,         init= THREE,             ev = init
+            
+            VAR N1_value,      init=MAX_FAULT_LOG,         ev = init
+            
+            VAR Fault_log_structure[0].data_present,             init= FALSE,           ev = init
+            
+            VAR U16_message_words[1],           init= 0,     ev = init
+            
+            VAR U16_message_words[2],           init= 0,     ev = init
+            
+            VAR Fault_log_structure[0].fault_active_flag,            init= FALSE,           ev = init
+        
+        COMMENT OUTPUT SECTION:
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        
+        -- Stub Calls:
+        SIMUL
+                    
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #ProcessLmsScuSysStatusErr(data, status);
+        END ELEMENT     
+        
+        END TEST -- TEST 23
+        
+        
+
+TEST 19
+FAMILY nominal  
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-040]
+    COMMENT The function  call the function StopProcessingFaultLog with index 
+    COMMENT as index with index zero and set the index flag with index zero to 
+    COMMENT FALSE when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to NINE and with HEX_ONE is not  equal to ONE
+    COMMENT 3. M_ENGSTART is  greater than n1 value
+    COMMENT 4. fault_active_flag of Fault log structure with index as index with index 
+    COMMENT zero is TRUE and index flag with index zero is equal to FALSE
+    COMMENT Set the U16_message_words with index as one to U16_message_words with index one AND with 32767
+    COMMENT Equivalence Class 153,92,155
+    COMMENT 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-016]
+    COMMENT The function  call the function StopProcessingFaultLog with index 
+    COMMENT as index with index one and set the index flag with index one to 
+    COMMENT FALSE when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to TWELVE and with HEX_ONE is 
+    COMMENT not equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure with index as index with 
+    COMMENT index one is TRUE and index flag with index one is equal to FALSE 
+    COMMENT Equivalence Class 153,92
+    COMMENT 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-022]
+    COMMENT The function  call the function StopProcessingFaultLog with index 
+    COMMENT as index with index two and set the index flag with index two to 
+    COMMENT FALSE when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to THIRTEEN and with HEX_ONE is not 
+    COMMENT equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure with index as index with 
+    COMMENT index two is TRUE and index flag with index two is equal to FALSE
+    COMMENT Equivalence Class 153,92
+    COMMENT 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-036]
+    COMMENT The function  call the function StopProcessingFaultLog with index 
+    COMMENT as index with index four and set the index flag with index four to 
+    COMMENT FALSE when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to FIFTEEN and with HEX_ONE is not 
+    COMMENT equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure is TRUE and index flag 
+    COMMENT with index four is equal to FALSE 
+    COMMENT Equivalence Class 153,92 
+    COMMENT 
+    COMMENT </TD>   
+    
+ ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            VAR data,           init= 0x2FF,            ev = init
+            
+            VAR status,         init= ZERO,          ev = init
+            
+            VAR N1_value,      init=MAX_FAULT_LOG,         ev = init            
+            
+            VAR Fault_log_structure[0].data_present,             init= FALSE,           ev = init
+            
+            VAR U16_message_words[1],           init= 0,     ev = init
+            
+            VAR U16_message_words[2],           init= 0,     ev = init
+            
+            VAR Fault_log_structure[0].fault_active_flag,            init= TRUE,            ev = init
+        
+        COMMENT OUTPUT SECTION:
+        --NONE
+        
+        COMMENT INPUT/OUTPUT SECTION:
+           --NONE
+        
+        -- Stub Calls:
+        SIMUL
+                    
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #ProcessLmsScuSysStatusErr(data, status);
+        END ELEMENT     
+        
+    END TEST -- TEST 19
+    
+    
+    
+
+TEST 20
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT 
+    COMMENT ELEMENT
+    COMMENT
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-003]
+    COMMENT The function sets the error state to TRUE and 
+    COMMENT set the U16_message_words with index one to bitwise or with 32768 when below condition are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to NINE and with HEX_ONE is equal to ONE.
+    COMMENT 3. M_ENGSTART is less than n1 value
+    COMMENT Equivalence Class 153,156
+    COMMENT  
+    COMMENT 
+    COMMENT ELEMENT 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-040]
+    COMMENT The function call the function StopProcessingFaultLog with index as 
+    COMMENT index with index zero and set the index flag with index zero to FALSE 
+    COMMENT when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to NINE and with HEX_ONE is not equal to ONE
+    COMMENT 3. M_ENGSTART is greater than n1 value
+    COMMENT Set the U16_message_words with index as one to U16_message_words with index one AND with
+    COMMENT 4. fault_active_flag of Fault log structure with index as index with index 
+    COMMENT zero is TRUE and index flag with index zero is equal to TRUE
+    COMMENT Equivalence Class 153,91,97,155
+    COMMENT 
+     COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-016]
+    COMMENT The function call the function StopProcessingFaultLog with index as 
+    COMMENT index with index one and set the index flag with index one to FALSE when 
+    COMMENT below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to TWELVE and with HEX_ONE is 
+    COMMENT not equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure with index as index with 
+    COMMENT index one is TRUE and index flag with index one is equal to TRUE 
+    COMMENT Equivalence Class 153,91,97
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-022]
+    COMMENT The function call the function StopProcessingFaultLog with index as 
+    COMMENT index with index two and set the index flag with index two to FALSE 
+    COMMENT when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to THIRTEEN and with HEX_ONE is not 
+    COMMENT equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure with index as index with 
+    COMMENT index two is TRUE and index flag with index two is equal to TRUE
+    COMMENT Equivalence Class 153,91,97
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-029]
+    COMMENT The function call the function StopProcessingFaultLog with index as index 
+    COMMENT with index three and set the index flag with index three to FALSE when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to FORTEEN and with HEX_ONE is not equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure with index as index with index three 
+    COMMENT is TRUE and index flag with index three is equal to TRUE.
+    COMMENT Equivalence Class 153,91,97 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-036]
+    COMMENT The function shall call the function StopProcessingFaultLog with index 
+    COMMENT as index with index four and set the index flag with index four to 
+    COMMENT FALSE when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to FIFTEEN and with HEX_ONE is not 
+    COMMENT equal to ONE
+    COMMENT 3. fault_active_flag of Fault log structure is TRUE and index flag 
+    COMMENT with index four is equal to TRUE.
+    COMMENT Equivalence Class 153,91,97 
+    COMMENT 
+    COMMENT </TD>       
+
+ ELEMENT
+        
+        COMMENT INPUT SECTION:
+
+            VAR data,           init= 0xFF00,           ev = init
+            
+            VAR status,         init= ZERO,            ev = init
+            
+            VAR N1_value,      init=FT_LOG_SIZE,      ev = init
+
+            
+            VAR Fault_log_structure[0].data_present,            init= FALSE,            ev = init
+            
+            VAR Fault_log_structure[0].initial_fault_index,         init= TRUE,         ev = init
+            
+            VAR Port1_label_count,          init= 0,            ev = init
+            
+            VAR Fault_data[0].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[1].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[2].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[3].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[4].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[5].label_data.stat,          init= PARAM_OK,         ev = init
+        
+        COMMENT OUTPUT SECTION:
+        
+            VAR Fault_log_structure[0].Last_ft_record,      init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].fault_data_write,        init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].end_ft_transmission, init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[0], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[1], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[2], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[3], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[4], init = 0,       ev   = FALSE
+            VAR Fault_log_structure[0].param_data_write[5], init = 0,       ev   = FALSE            
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        
+        -- Stub Calls:
+        SIMUL
+                    
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #ProcessLmsScuSysStatusErr(data, status);
+        END ELEMENT     
+
+ ELEMENT 
+ 
+        
+        COMMENT INPUT SECTION:
+
+            VAR data,           init=  0x3FF,            ev = init
+            
+            VAR status,         init= THREE,             ev = init
+            
+            VAR N1_value,      init=10,      ev = init
+
+            VAR Fault_log_structure[0].data_present,             init= FALSE,           ev = init
+            
+          VAR Flt_id_count,     init=0,     ev=4
+
+           VAR Fault_data[0].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[1].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[2].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[3].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[4].label_data.stat,          init= PARAM_OK,         ev = init
+            VAR Fault_data[5].label_data.stat,          init= PARAM_OK,         ev = init
+        
+            
+            VAR U16_message_words[1],           init= 0,     ev =28672
+            
+            VAR U16_message_words[2],           init= 0,        ev = 32
+            
+            VAR Fault_log_structure[0].fault_active_flag,            init= TRUE,            ev = FALSE
+
+        
+        COMMENT OUTPUT SECTION:
+        
+                VAR Fault_log_structure[0].Fault_index,             init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].flight_number,           init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].start_duration,       init = 0,      ev  = ZERO
+                VAR Fault_log_structure[0].stop_duration,           init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].fault_type,           init = 0,      ev  = NO_ERROR
+                VAR Fault_log_structure[0].error_code,              init = 0,       ev  = ZERO
+                VAR Fault_log_structure[0].end_ft_transmission,      init = 0,      ev  = TRUE
+                VAR Fault_log_structure[0].Last_ft_record,          init = 0,       ev  = TRUE
+                VAR Fault_log_structure[0].initial_fault_index,      init = 0,      ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[0],    init = 0,      ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[1],    init = 0,      ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[2],    init = 0,      ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[3],    init = 0,      ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[4],    init = 0,      ev  = FALSE
+                VAR Fault_log_structure[0].param_data_present[5],    init = 0,      ev  = FALSE
+                VAR Fault_log_structure[0].fault_data_write,         init = 0,      ev  = TRUE      
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        
+        -- Stub Calls:
+        SIMUL
+                    
+    
+        END SIMUL
+
+        #ProcessLmsScuProbeErr(data,status);
+        -- Calling the Unit Under Test :        
+        #ProcessLmsScuSysStatusErr(data, status);
+        END ELEMENT         
+        
+    END TEST -- TEST 20 
+    
+    
+TEST 21
+FAMILY nominal  
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-040]
+    COMMENT The function call the function StopProcessingFaultLog with index as 
+    COMMENT index with index zero and set the index flag with index zero to FALSE 
+    COMMENT when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to NINE and with HEX_ONE is not equal to ONE
+    COMMENT 3. M_ENGSTART is greater than n1 value
+    COMMENT Set the U16_message_words with index as one to U16_message_words with index one AND with
+    COMMENT 4. fault_active_flag of Fault log structure with index as index with index 
+    COMMENT zero is TRUE and index flag with index zero is equal to TRUE
+    COMMENT Equivalence Class 153,92,97,155
+    COMMENT 
+    COMMENT 
+    COMMENT </TD> 
+
+ ELEMENT 
+        
+        COMMENT INPUT SECTION:
+
+            VAR data,           init=  0xFF0,            ev = init
+            
+            VAR status,         init= ZERO,          ev = init
+                
+            VAR N1_value,      init=50,      ev = init
+
+            VAR Fault_log_structure[0].data_present,             init= FALSE,            ev = init
+            
+            VAR U16_message_words[1],           init= 0,     ev = init
+            
+            VAR U16_message_words[2],           init= 0,        ev = init
+            
+            VAR Fault_log_structure[0].fault_active_flag,            init= FALSE,            ev = init
+        
+        COMMENT OUTPUT SECTION:
+        
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+        
+        -- Stub Calls:
+        SIMUL
+                    
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :        
+        #ProcessLmsScuSysStatusErr(data, status);
+        END ELEMENT         
+        
+    END TEST -- TEST 21
+    
+TEST 22
+FAMILY nominal  
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT 
+    COMMENT [hdudispflmsscu-ProcessLmsScuSysStatusErr-DB-LLR-040]
+    COMMENT The function call the function StopProcessingFaultLog with index as 
+    COMMENT index with index zero and set the index flag with index zero to FALSE 
+    COMMENT when below conditions are satisfied :
+    COMMENT 1. parameter status is equal to ZERO
+    COMMENT 2. parameter data right shifting to NINE and with HEX_ONE is not equal to ONE
+    COMMENT 3. M_ENGSTART is greater than n1 value
+    COMMENT Set the U16_message_words with index as one to U16_message_words with index one AND with
+    COMMENT 4. fault_active_flag of Fault log structure with index as index with index 
+    COMMENT zero is FALSE and index flag with index zero is equal to TRUE
+    COMMENT Equivalence Class 153,91,97,155
+    COMMENT 
+    COMMENT 
+    COMMENT </TD> 
+
+ 
+ ELEMENT 
+ 
+        
+        COMMENT INPUT SECTION:
+
+            VAR data,           init=  0xFF0,            ev = init
+            
+            VAR status,         init= ZERO,          ev = init
+               
+            VAR N1_value,      init=40,      ev = init
+
+            VAR Fault_log_structure[0].data_present,             init= TRUE,            ev = init
+            
+            VAR U16_message_words[1],           init= 0,     ev = init
+            
+            VAR U16_message_words[2],           init= 0,        ev = init
+            
+            VAR Fault_log_structure[0].fault_active_flag,            init= FALSE,           ev = init
+        
+        COMMENT OUTPUT SECTION:
+        
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+        
+        -- Stub Calls:
+        SIMUL
+                    
+    
+        END SIMUL
+
+        
+        -- Calling the Unit Under Test :        
+        #ProcessLmsScuSysStatusErr(data, status);
+        END ELEMENT         
+        
+    END TEST -- TEST 22
+
+END SERVICE -- ProcessLmsScuSysStatusErr
+
+
+
+
+
+
+

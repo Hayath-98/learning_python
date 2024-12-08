@@ -1,0 +1,2164 @@
+HEADER hdudispffonts, Source Code Ver : 1.7, TestScript Ver : 1.6
+--------------------------------------------------------------------------------
+-- Author Name      	:  Akshay R K
+--
+-- File Name        	:  hdudispffonts.ptu
+--
+-- Test Creation Date  	:  12.10.2017
+--
+-- Tested Functions 	:  FontsGetStringWidth
+--						   Pu8GetCharBitMap
+--						   PsGetCharInfo
+--						   FontsGetFont
+--						   FontsGetCharWidth
+--						   FontsGetFontHeight
+--  					   Pu8FindCharBitMap	
+--						  
+-- Version History      :
+--
+--  TEST-VERSION		TEST-DATE		TESTER NAME			MODIFICATIONS
+--  ------------		---------		-----------			-------------
+--      1.1				12.10.2017		Akshay R K			Created the PTU file.
+--		1.2				10.11.2017		Akshay R K			Updated as per #PR100171
+--		1.3				14.11.2017		Akshay R K			Updated as per #PR100171
+--		1.4				27.07.2020		Swaroopa N			Updated as per #PR100267
+--		1.5				02.10.2020		Vignesh Sunil		Updated as per #PR100281
+--		1.6				27.04.2021		Vignesh Sunil		Updated as per #PR100338
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+##include "hdudispfpanel.h"
+##include "hdudispfbfcfont.h"   
+##include "hdudispffonts.h"     
+##include "hdudispfrterror.h"   
+##include "hdulibbasictypes.h"  
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	--Constant structures defined in hdudispfmono18haa4 file.
+	
+	#const T_BFC_CHARINFO Font_hd_mono18haa4_char_info[224] = {
+    #{  11,  99, (T_UINT8 *)0  }, 
+    #{  11,  99, (T_UINT8 *)0  }, 
+    #{  11,  99, (T_UINT8 *)0  }, 
+    #{  11,  99, (T_UINT8 *)0  }, 
+    #{  11,  99, (T_UINT8 *)0  }, 
+    #{  11,  99, (T_UINT8 *)0 }, 
+    #{  11,  99, (T_UINT8 *)0 }, 
+    #{   3,  27, (T_UINT8 *)0  }, 
+    #{   3,  27, (T_UINT8 *)0 }, 
+    #{  10,  90, (T_UINT8 *)0  }, 
+	#};
+
+	#const T_BFC_FONT_PROP Font_hd_mono18haa4_prop2 = {
+	#0x0090, /* first character */
+	#0x00FF, /* last character  */
+	#&Font_hd_mono18haa4_char_info[ 112],  /* address of first character */
+	#(const T_BFC_FONT_PROP *)0          /* pointer to next T_BFC_FONT_PROP */
+	#};
+	
+	#const T_BFC_FONT_PROP Font_hd_mono18haa4_prop1 = {
+	#0x0010, /* first character */
+	#0x007F, /* last character  */
+	#&Font_hd_mono18haa4_char_info[   0],  /* address of first character */
+	#&Font_hd_mono18haa4_prop2        /* pointer to next T_BFC_FONT_PROP */
+	#};
+	
+	
+	#T_BFC_FONT Font_tiny = {
+	#0x01010740,
+	#18,  /* font height in pixels   */
+	#15,  /* font ascent (baseline) in pixels  */
+	#0 ,  /* reversed, =0 */
+	#{&Font_hd_mono18haa4_prop1}
+	#};
+
+    #T_BFC_FONT Font_bezel; 
+    #T_BFC_FONT Font_large; 
+    #T_BFC_FONT Font_normal;
+    #T_BFC_FONT Font_small; 
+
+    # T_BFC_FONT Font_tiny_10inch;
+    # T_BFC_FONT Font_small_10inch;
+    # T_BFC_FONT Font_normal_10inch;
+    # T_BFC_FONT Font_large_10inch;;
+
+    # T_ELANDSCAPEORPORTRIAT E_orientation;
+
+-- Declarations of the temporary variable
+
+--temporary variable to verify return value of PsGetCharInfo
+#T_BFC_CHARINFO		PTU_ps_ret_val ;
+
+--temporary variables to verify while loop
+#T_BFC_FONT_PROP	PTU_ps_group , PTU_ps_group_1;
+
+--temporary variables to verify the functions which return value of type T_BFC_CHARINFO
+#T_BFC_CHARINFO		PTU_pFirstCharInfo[100];
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      : Akshay R K
+    COMMENT
+    COMMENT File Name        : hdudispffonts.ptu
+    COMMENT
+    COMMENT Tested Functions : FontsGetStringWidth
+	COMMENT					   Pu8GetCharBitMap
+	COMMENT					   PsGetCharInfo
+	COMMENT					   FontsGetFont
+	COMMENT					   FontsGetCharWidth
+	COMMENT					   FontsGetFontHeight
+	COMMENT					   Pu8FindCharBitMap				   
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT None
+    COMMENT
+    COMMENT </AC>
+    COMMENT
+	COMMENT Equivalence Class Description 	
+	COMMENT <ECD>
+	COMMENT Valid Class(es)
+	COMMENT
+	COMMENT Class 1 
+	COMMENT In function 'Pu8GetCharBitMap',return value of function Pu8FindCharBitMap is ZERO
+	COMMENT
+	COMMENT Class 2
+	COMMENT In function 'Pu8GetCharBitMap',return value of function Pu8FindCharBitMap is not ZERO
+	COMMENT
+	COMMENT Class 3
+	COMMENT In function 'Pu8FindCharBitMap',u8_char is greater than FirstChar of ps_group and u8_char is less than LastChar of ps_group.
+	COMMENT
+	COMMENT Class 4
+	COMMENT	In function 'Pu8FindCharBitMap',u8_char is equal to FirstChar of ps_group and u8_char is less than LastChar of ps_group.
+	COMMENT
+	COMMENT Class 5
+	COMMENT	In function 'Pu8FindCharBitMap',u8_char is greater than FirstChar of ps_group and u8_char is equal to LastChar of ps_group.
+	COMMENT
+	COMMENT	Class 6
+	COMMENT	In function 'Pu8FindCharBitMap',u8_char is less than FirstChar of ps_group .
+	COMMENT
+	COMMENT Class 7
+	COMMENT	In function 'Pu8FindCharBitMap',u8_char is greater than FirstChar of ps_group and u8_char is greater than  LastChar of ps_group.
+	COMMENT
+	COMMENT	Class 8
+	COMMENT	In function 'Pu8FindCharBitMap',ps group is NULL.
+	COMMENT
+	COMMENT	Class 9
+	COMMENT	In function 'Pu8FindCharBitMap',ps group is not NULL.
+	COMMENT
+	COMMENT Class 10
+	COMMENT	In function 'PsGetCharInfo', u8_char is greater than FirstChar of ps_group and u8_char is less than LastChar of ps_group.
+	COMMENT
+	COMMENT Class 11
+	COMMENT	In function 'PsGetCharInfo', u8_char is equal to FirstChar of ps_group and u8_char is less than LastChar of ps_group.
+	COMMENT
+	COMMENT Class 12
+	COMMENT	In function 'PsGetCharInfo', u8_char is greater than FirstChar of ps_group and u8_char is equal to LastChar of ps_group.
+	COMMENT
+	COMMENT Class 13
+	COMMENT	In function 'PsGetCharInfo', u8_char is less than FirstChar of ps_group and u8_char less than  LastChar of ps_group.
+	COMMENT
+	COMMENT Class 14
+	COMMENT	In function 'PsGetCharInfo', u8_char is greater than FirstChar of ps_group and u8_char is greater than LastChar of ps_group.
+	COMMENT
+	COMMENT	Class 15
+	COMMENT	In function 'PsGetCharInfo',ps group is NULL.
+	COMMENT
+	COMMENT	Class 16
+	COMMENT	In function 'PsGetCharInfo',ps group is not NULL.
+	COMMENT
+	COMMENT	Class 17
+	COMMENT	In function 'FontsGetFont' ,e_tx_font is E_TINY_FONT.
+	COMMENT
+	COMMENT	Class 18
+	COMMENT	In function 'FontsGetFont' ,e_tx_font is E_SMALL_FONT.
+	COMMENT
+	COMMENT	Class 19
+	COMMENT	In function 'FontsGetFont' ,e_tx_font is E_NORMAL_FONT.
+	COMMENT
+	COMMENT	Class 20
+	COMMENT	In function 'FontsGetFont' ,e_tx_font is E_LARGE_FONT.
+	COMMENT
+	COMMENT	Class 23
+	COMMENT	In function 'FontsGetFont' ,e_tx_font is E_BEZEL_FONT.
+	COMMENT
+	COMMENT	Class 24
+	COMMENT	In function 'FontsGetFont' ,e_tx_font is other than the following 
+	COMMENT E_TINY_FONT, E_SMALL_FONT,  E_NORMAL_FONT, E_LARGE_FONT and E_BEZEL_FONT.
+	COMMENT
+	COMMENT	Class 25
+	COMMENT	In function 'FontsGetCharWidth',font pointer is not equal to ZERO.
+	COMMENT
+	COMMENT Class 26
+	COMMENT	In function 'FontsGetCharWidth',font pointer is equal to ZERO.
+	COMMENT
+	COMMENT Class 27
+	COMMENT	In function 'FontsGetCharWidth', character info is not equal to ZERO.
+	COMMENT
+	COMMENT Class 28
+	COMMENT	In function 'FontsGetCharWidth',character info is equal to ZERO.
+	COMMENT
+	COMMENT	Class 29
+	COMMENT	The function 'FontsGetCharWidth',calls FontsGetFont.
+	COMMENT
+	COMMENT	Class 30
+	COMMENT	The function 'FontsGetCharWidth',calls PsGetCharInfo.
+	COMMENT
+	COMMENT Class 31
+	COMMENT	In function 'FontsGetFontHeight',font pointer is not equal to ZERO.
+	COMMENT
+	COMMENT	Class 32
+	COMMENT	In function 'FontsGetFontHeight',font pointer is equal to ZERO.
+	COMMENT
+	COMMENT	Class 33
+	COMMENT	The function 'FontsGetFontHeight',calls FontsGetFont.
+	COMMENT
+	COMMENT Class 34
+	COMMENT The function 'FontsGetStringWidth', calls FontsGetFont.
+	COMMENT
+	COMMENT Class 35
+	COMMENT In the function 'FontsGetStringWidth', font pointer is not equal to zero
+	COMMENT
+	COMMENT Class 36
+	COMMENT In the function 'FontsGetStringWidth', font pointer is equal to zero
+	COMMENT
+	COMMENT Class 37
+	COMMENT In the function 'FontsGetStringWidth', pu8_string is not equal to zero 
+	COMMENT
+	COMMENT Class 38
+	COMMENT In the function 'FontsGetStringWidth', pu8_string is equal to zero 
+    COMMENT
+    COMMENT Invalid class(es)
+	COMMENT
+	COMMENT Class 39
+	COMMENT The function 'FontsGetFont', returns NULL
+	COMMENT
+	COMMENT Class 40
+	COMMENT The function 'PsGetCharInfo', returns NULL
+	COMMENT
+	COMMENT Class 41
+	COMMENT The function 'Pu8GetCharBitMap', returns NULL
+	COMMENT
+	COMMENT Class 42
+	COMMENT The function 'Pu8FindCharBitMap', returns NULL
+	COMMENT
+	COMMENT	Class 43
+	COMMENT	In function 'FontsGetFont' ,E_orientation is equal to E_PORTRAIT.
+	COMMENT
+	COMMENT	Class 44
+	COMMENT	In function 'FontsGetFont' ,E_orientation is not equal to E_PORTRAIT.
+	COMMENT
+	COMMENT Invalid Class(es)
+	COMMENT
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+     DEFINE STUB filename_c
+
+           -- No stubs
+
+     END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+-- Environment of the file hdudispffonts.c
+--ENVIRONMENT ENV_hdudispffonts_c
+
+  --None
+  
+--END ENVIRONMENT -- ENV_hdudispffonts_c
+--USE ENV_hdudispffonts_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service Pu8GetCharBitMap
+--------------------------------------------------------------------------------
+SERVICE Pu8GetCharBitMap
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_BFC_FONT ps_font;
+    #T_UINT8 	u8_char;
+	
+    -- By function returned type declaration
+    #   T_UINT8* 	ret_Pu8GetCharBitMap;
+	#	T_UINT8 	PTU_pData8;
+	
+    ENVIRONMENT ENV_Pu8GetCharBitMap
+	
+    STRUCTURE ps_font,					init = { FontType => 0, FontHeight => 0, Baseline => 0, 
+	&									Reversed => 0, p_var_type => { pData => NIL } },		ev = init
+	
+    VAR u8_char,						init = 0,		ev = init
+	
+    VAR ret_Pu8GetCharBitMap,			init = NIL,		ev = init
+	
+    END ENVIRONMENT -- ENV_Pu8GetCharBitMap
+    USE ENV_Pu8GetCharBitMap
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispffonts-Pu8GetCharBitMap-DB-LLR-001]
+	COMMENT The function 'Pu8GetCharBitMap' sets the return value to 
+	COMMENT return value of function Pu8FindCharBitMap with parameter ps_font and u8_char.
+	COMMENT Equivalence Class 2
+	COMMENT   
+	COMMENT [hdudispffonts-Pu8GetCharBitMap-DB-LLR-003]
+	COMMENT The function 'Pu8GetCharBitMap' returns the return value.
+	COMMENT Equivalence Class None
+	COMMENT 
+	COMMENT [hdudispffonts-Pu8FindCharBitMap-DB-LLR-001]
+	COMMENT The function 'Pu8GetCharBitMap' set ps group to pProp of p_var_type of ps_font.
+	COMMENT	Equivalence Class None
+	COMMENT
+	COMMENT [hdudispffonts-Pu8FindCharBitMap-DB-LLR-002]
+	COMMENT The function 'Pu8FindCharBitMap' loops till ps group is not equal to null 
+	COMMENT and sets return value to pFirstCharInfo of ps group  
+	COMMENT	plus pData8 of p_var_type of u8_char minus FirstChar of ps group 
+	COMMENT when u8_char is greater than FirstChar of ps group 
+	COMMENT AND u8_char is less than LastChar of ps group is equal to TRUE
+	COMMENT	(tested for 1 loop of while)
+	COMMENT Equivalence Class 3,9
+	COMMENT
+	COMMENT [hdudispffonts-Pu8FindCharBitMap-DB-LLR-004]
+	COMMENT The function 'Pu8FindCharBitMap' returns the return value.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Character to be searched 
+			VAR u8_char,										init = 0x61,						ev = init
+		
+			--font structure of character to be searched
+			STRUCTURE ps_font,									init = { FontType => 0, FontHeight => 0, Baseline => 0, 
+			&													Reversed => 0, p_var_type => { pData => &PTU_ps_group } },		ev = init
+		
+			--index of first character
+			VAR PTU_ps_group.FirstChar,							init = 0x0020, 						ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,							init = 0x007F,						ev = init
+			
+			--address of first character
+			VAR PTU_ps_group.pFirstCharInfo,					init = &PTU_pFirstCharInfo[0],		ev = init
+			
+			--pointer which points to pixel data in bytes
+			VAR PTU_pFirstCharInfo[65].p_var_type.pData,		init = &PTU_pData8,					ev = init
+			
+		COMMENT OUTPUT SECTION:
+		
+			--Pointer to a character's bit map
+			VAR ret_Pu8GetCharBitMap,							init = NIL,		 					ev = &PTU_pData8
+			
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		-- Calling the Unit Under Test :
+        #ret_Pu8GetCharBitMap = (T_UINT8*)Pu8GetCharBitMap(&ps_font, u8_char);
+		
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispffonts-Pu8FindCharBitMap-DB-LLR-002]
+	COMMENT The function 'Pu8FindCharBitMap' loops till ps group is not equal to null 
+	COMMENT and sets return value to pFirstCharInfo of ps group  
+	COMMENT	plus pData8 of p_var_type of u8_char minus FirstChar of ps group 
+	COMMENT when u8_char is greater than FirstChar of ps group 
+	COMMENT AND u8_char is equal to LastChar of ps group is equal to TRUE
+	COMMENT	(tested for 1 loop of while)
+	COMMENT Equivalence Class 5,9
+	COMMENT </TD>
+          
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+		
+			--font structure of character to be searched
+    		STRUCTURE ps_font,				init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, 
+			&								Reversed => 0, p_var_type => { pData => &PTU_ps_group } },			ev = init
+		
+    		--Character to be searched 
+			VAR u8_char,											init = 0x7F,								ev = init
+    		
+    		--index of first character
+    		VAR PTU_ps_group.FirstChar,   							init = 0x0020,								ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,								init = 0x007f,								ev = init
+    		
+    		--address of first character
+    		VAR PTU_ps_group.pFirstCharInfo,	  					init = &PTU_pFirstCharInfo[0],				ev = init
+    		
+    		--temporary variable to assign address to pData8
+    		VAR PTU_pData8,											init = 0x1,									ev = init
+			
+			--pointer which points to pixel data in bytes
+			VAR PTU_pFirstCharInfo[95].p_var_type.pData,			init = &PTU_pData8,							ev = init
+    		
+		COMMENT OUTPUT SECTION:
+    		
+    		--Pointer to a character's bit map
+			VAR ret_Pu8GetCharBitMap,								init = NIL,									ev = &PTU_pData8
+    			
+		COMMENT INPUT/OUTPUT SECTION:
+    			
+			--None
+    		
+		-- Stub Calls:	
+		SIMUL
+			
+			--None
+    	
+		END SIMUL
+    
+		-- Calling the Unit Under Test :
+		#ret_Pu8GetCharBitMap = (T_UINT8*)Pu8GetCharBitMap(&ps_font, u8_char);
+            
+	END ELEMENT
+    
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispffonts-Pu8FindCharBitMap-DB-LLR-002]
+	COMMENT The function 'Pu8FindCharBitMap' loops till ps group is not equal to null 
+	COMMENT and sets return value to pFirstCharInfo of ps group  
+	COMMENT	plus pData8 of p_var_type of u8_char minus FirstChar of ps group 
+	COMMENT when u8_char is equal to FirstChar of ps group 
+	COMMENT AND u8_char is less than LastChar of ps group is equal to TRUE
+	COMMENT	(tested for 1 loop of while and MCDC condition TT)
+	COMMENT Equivalence Class 4,9
+	COMMENT </TD>
+          
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--font structure of character to be searched
+    		STRUCTURE ps_font,				init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, 
+			&								Reversed => 0, p_var_type => { pData => &PTU_ps_group } },			ev = init
+			
+    		--Character to be searched 
+			VAR u8_char,											init = 0x20,								ev = init
+    		
+    		--index of first character
+    		VAR PTU_ps_group.FirstChar,   							init = 0x0020,								ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,								init = 0x007f,								ev = init
+    		
+    		--address of first character
+    		VAR PTU_ps_group.pFirstCharInfo,	  					init = &PTU_pFirstCharInfo[0],				ev = init
+    		
+    		--temporary variable to assign address to pData8
+    		VAR PTU_pData8,											init = 0x1,									ev = init
+			
+			--pointer which points to pixel data in bytes
+			VAR PTU_pFirstCharInfo[0].p_var_type.pData,	  			init = &PTU_pData8,							ev = init
+    		
+		COMMENT OUTPUT SECTION:
+    		
+    		--Pointer to a character's bit map
+			VAR ret_Pu8GetCharBitMap,								init = NIL,									ev = &PTU_pData8
+    			
+		COMMENT INPUT/OUTPUT SECTION:
+    			
+			--None
+    		
+		-- Stub Calls:	
+		SIMUL
+			
+			--None
+    	
+		END SIMUL
+    
+		-- Calling the Unit Under Test :
+		#ret_Pu8GetCharBitMap = (T_UINT8*)Pu8GetCharBitMap(&ps_font, u8_char);
+            
+	END ELEMENT
+    
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispffonts-Pu8FindCharBitMap-DB-LLR-003]
+	COMMENT The function 'Pu8FindCharBitMap' loop till ps group is not equal to null 
+	COMMENT	and set ps group to pNextProp of ps group
+	COMMENT when u8_char is greater than FirstChar of ps group 
+	COMMENT AND u8_char greater than than LastChar of ps group is equal to TRUE
+	COMMENT	(tested for 1 loop of while and MCDC condition TF)
+	COMMENT Equivalence Class 7,9
+	COMMENT </TD>
+          
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+    		--font structure of character to be searched
+    		STRUCTURE ps_font,				init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, 
+			&										Reversed => 0, p_var_type => { pData => &PTU_ps_group } },		ev = init
+		
+    		--Character to be searched 
+			VAR u8_char,											init = 0x80,								ev = init
+    		
+    		--index of first character
+    		VAR PTU_ps_group.FirstChar,   							init = 0x0020,								ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,								init = 0x007f,								ev = init
+    		
+    		--address of first character
+    		VAR PTU_ps_group.pFirstCharInfo,	  					init = &PTU_pFirstCharInfo[0],				ev = init
+    		
+			--pointer to next BFC_FONT_PROP
+			VAR PTU_ps_group.pNextProp,								init = NULL,								ev = init	
+			
+    		--temporary variable to assign address to pData8
+    		VAR PTU_pData8,											init = 0x1,									ev = init
+			
+			--pointer which points to pixel data in bytes
+			VAR PTU_pFirstCharInfo[0].p_var_type.pData,	  			init = &PTU_pData8,							ev = init
+    		
+		COMMENT OUTPUT SECTION:
+    		
+    		--Pointer to a character's bit map
+			VAR ret_Pu8GetCharBitMap,								init = 1,									ev = NULL
+    			
+		COMMENT INPUT/OUTPUT SECTION:
+    			
+			--None
+    		
+		-- Stub Calls:	
+		SIMUL
+			
+			--None
+    	
+		END SIMUL
+    
+		-- Calling the Unit Under Test :
+		#ret_Pu8GetCharBitMap = (T_UINT8*)Pu8GetCharBitMap(&ps_font, u8_char);
+            
+	END ELEMENT
+    
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispffonts-Pu8FindCharBitMap-DB-LLR-002]
+	COMMENT The function 'Pu8FindCharBitMap' loop till ps group is not equal to null 
+	COMMENT	and set ps group to pNextProp of ps group
+	COMMENT when u8_char is less than FirstChar of ps group 
+	COMMENT	(tested for 1 loop of while and MCDC condition FX)
+	COMMENT Equivalence Class 6,9
+	COMMENT </TD>
+          
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--font structure of character to be searched
+    		STRUCTURE ps_font,				init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, 
+			&										Reversed => 0, p_var_type => { pData => &PTU_ps_group } },		ev = init
+		
+    		--Character to be searched 
+			VAR u8_char,											init = 0x1F,								ev = init
+    		
+    		--index of first character
+    		VAR PTU_ps_group.FirstChar,   							init = 0x0020,								ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,								init = 0x007f,								ev = init
+    		
+    		--address of first character
+    		VAR PTU_ps_group.pFirstCharInfo,	  					init = &PTU_pFirstCharInfo[0],				ev = init
+    		
+			--pointer to next BFC_FONT_PROP
+    		VAR PTU_ps_group.pNextProp,								init = NULL,								ev = init
+			
+    		--temporary variable to assign address to pData8
+    		VAR PTU_pData8,											init = 0x1,									ev = init
+			
+			--pointer which points to pixel data in bytes
+			VAR PTU_pFirstCharInfo[0].p_var_type.pData,	  			init = &PTU_pData8,							ev = init
+    		
+		COMMENT OUTPUT SECTION:
+    		
+    		--Pointer to a character's bit map
+			VAR ret_Pu8GetCharBitMap,								init = 1,									ev = NULL
+    			
+		COMMENT INPUT/OUTPUT SECTION:
+    			
+			--None
+    		
+		-- Stub Calls:	
+		SIMUL
+			
+			--None
+    	
+		END SIMUL
+    
+		-- Calling the Unit Under Test :
+		#ret_Pu8GetCharBitMap = (T_UINT8*)Pu8GetCharBitMap(&ps_font, u8_char);
+            
+	END ELEMENT
+    
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispffonts-Pu8FindCharBitMap-DB-LLR-002]
+	COMMENT The function 'Pu8FindCharBitMap' does nothing when ps group is equal to null 
+	COMMENT	(tested for 0th loop of while)
+	COMMENT Equivalence Class 8,41
+	COMMENT </TD>
+          
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--font structure of character to be searched
+    		STRUCTURE ps_font,							init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, 
+			&											Reversed => 0, p_var_type => { pData => NULL } },		ev = init
+		
+    		--Character to be searched 
+			VAR u8_char,											init = 0x1F,								ev = init
+    				
+			--pointer which points to pixel data in bytes
+			VAR PTU_pFirstCharInfo[0].p_var_type.pData,	  			init = &PTU_pData8,							ev = init
+    		
+		COMMENT OUTPUT SECTION:
+    		
+    		--Pointer to a character's bit map
+			VAR ret_Pu8GetCharBitMap,								init = 1,									ev = NULL
+    			
+		COMMENT INPUT/OUTPUT SECTION:
+    			
+			--None
+    		
+		-- Stub Calls:	
+		SIMUL
+			
+			--None
+    	
+		END SIMUL
+    
+		-- Calling the Unit Under Test :
+		#ret_Pu8GetCharBitMap = (T_UINT8*)Pu8GetCharBitMap(&ps_font, u8_char);
+            
+	END ELEMENT
+    
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT	[hdudispffonts-Pu8GetCharBitMap-DB-LLR-002]
+	COMMENT The function 'Pu8GetCharBitMap' sets return value to return value of function Pu8FindCharBitMap 
+	COMMENT with parameter ps_font and ‘?’ if inverse of return value is TRUE.
+	COMMENT Equivalence Class 1
+	COMMENT
+	COMMENT [hdudispffonts-Pu8FindCharBitMap-DB-LLR-002]
+	COMMENT The function 'Pu8FindCharBitMap' loops till ps group is not equal to null 
+	COMMENT and sets return value to pFirstCharInfo of ps group  
+	COMMENT	plus pData8 of p_var_type of u8_char minus FirstChar of ps group 
+	COMMENT when u8_char is less than FirstChar of ps group 
+	COMMENT AND u8_char less than than LastChar of ps group is equal to TRUE
+	COMMENT	(tested for 2 or more loop of while)
+	COMMENT Equivalence Class 9,42
+	COMMENT </TD>
+          
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+		
+			--font structure of character to be searched
+    		STRUCTURE ps_font,				init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, 
+			&										Reversed => 0, p_var_type => { pData => &PTU_ps_group } },		ev = init
+		
+    		--Character to be searched 
+			VAR u8_char,											init = 0x1F,								ev = init
+    		
+    		--index of first character
+    		VAR PTU_ps_group.FirstChar,   							init = 0x0020,								ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,								init = 0x007f,								ev = init
+    		
+    		--address of first character
+    		VAR PTU_ps_group.pFirstCharInfo,	  					init = &PTU_pFirstCharInfo[0],				ev = init
+    		
+			--pointer to next BFC_FONT_PROP
+    		VAR PTU_ps_group.pNextProp,								init = &PTU_ps_group_1,						ev = init
+			
+			--pointer to next BFC_FONT_PROP
+    		VAR PTU_ps_group_1.pNextProp,							init = NULL,								ev = init
+	
+			--pointer which points to pixel data in bytes
+			VAR PTU_pFirstCharInfo[0].p_var_type.pData,	  			init = &PTU_pData8,							ev = init
+    		
+		COMMENT OUTPUT SECTION:
+    		
+    		--Pointer to a character's bit map
+			VAR ret_Pu8GetCharBitMap,								init = 1,									ev = NULL
+    			
+		COMMENT INPUT/OUTPUT SECTION:
+    			
+			--None
+    		
+		-- Stub Calls:	
+		SIMUL
+			
+			--None
+    	
+		END SIMUL
+    
+		-- Calling the Unit Under Test :
+		#ret_Pu8GetCharBitMap = (T_UINT8*)Pu8GetCharBitMap(&ps_font, u8_char);
+            
+	END ELEMENT
+    
+END TEST -- TEST 7
+
+END SERVICE -- Pu8GetCharBitMap
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PsGetCharInfo
+--------------------------------------------------------------------------------
+SERVICE PsGetCharInfo
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_BFC_FONT ps_font;
+    #T_UINT8 u8_char;
+	
+    -- By function returned type declaration
+    #   T_BFC_CHARINFO* ret_PsGetCharInfo;
+	
+
+    ENVIRONMENT ENV_PsGetCharInfo
+	
+		STRUCTURE ps_font,			init = { FontType => 0, FontHeight => 0, Baseline => 0, 
+		&									Reversed => 0, p_var_type => { pData => NIL } },		ev = init
+	
+		VAR u8_char,				init = 0,		ev = init
+	
+		VAR ret_PsGetCharInfo,		init = NIL,		ev = init
+	
+    END ENVIRONMENT -- ENV_PsGetCharInfo
+    USE ENV_PsGetCharInfo
+
+TEST 1
+    FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-PsGetCharInfo-DB-LLR-001]
+	COMMENT The function 'PsGetCharInfo' sets ps group to pProp of p_var_type of ps_font.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdudispffonts-PsGetCharInfo-DB-LLR-002]
+	COMMENT The function 'PsGetCharInfo' loops till ps group is not equal to null and set return value to pFirstCharInfo of ps group  
+	COMMENT plus (u8Char minus FirstChar of ps group) when u8_char is greater than  
+	COMMENT FirstChar of ps group AND u8_char is less than LastChar of ps group is not equal to FALSE.
+	COMMENT (tested for boundary value of u8_char)
+	COMMENT Equivalence Class 10,16
+	COMMENT
+	COMMENT [hdudispffonts-PsGetCharInfo-DB-LLR-004]
+	COMMENT The function 'PsGetCharInfo' returns the return value
+	COMMENT Equivalence Class None
+	COMMENT
+    COMMENT </TD>	
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+		
+			--Character to be searched 
+			VAR u8_char,						init = 0x21,							ev = init
+		
+			--font structure of character to be searched
+			STRUCTURE ps_font,					init = { FontType => 0, FontHeight => 0, Baseline => 0, 
+			&									Reversed => 0, p_var_type => { pData => &PTU_ps_group } },		ev = init
+		
+			--address of first character
+			VAR PTU_ps_group.FirstChar,			init = 0x0020, 							ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,			init = 0x007F,							ev = init
+			
+			--address of first character
+			VAR PTU_ps_group.pFirstCharInfo,	init = &PTU_pFirstCharInfo[0],			ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			--Pointer to a character's bit map
+			VAR ret_PsGetCharInfo,		init = NULL,		ev = &PTU_pFirstCharInfo[1]
+		 
+		--Calling the Unit Under Test :
+        #ret_PsGetCharInfo = (T_BFC_CHARINFO *)PsGetCharInfo(&ps_font, u8_char);
+		
+	END ELEMENT
+
+END TEST -- TEST 1
+	
+TEST 2
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT [hdudispffonts-PsGetCharInfo-DB-LLR-002]
+	COMMENT The function 'PsGetCharInfo' loops till ps group is not equal to null and set return value to pFirstCharInfo of ps group  
+	COMMENT plus (u8Char minus FirstChar of ps group) when u8_char is equal to  
+	COMMENT FirstChar of ps group AND u8_char is less than LastChar of ps group is not equal to FALSE.
+	COMMENT Equivalence Class 11,16
+	COMMENT
+    COMMENT </TD>	
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--Character to be searched 
+			VAR u8_char,						init = 0x20,					ev = init
+		
+			--font structure of character to be searched
+			STRUCTURE ps_font,					init = { FontType => 0, FontHeight => 0, Baseline => 0, 
+			&									Reversed => 0, p_var_type => { pData => &PTU_ps_group } },		ev = init
+			--address of first character
+			VAR PTU_ps_group.FirstChar,			init = 0x0020, 					ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,			init = 0x007F,					ev = init
+		
+			--address of first character
+			VAR PTU_ps_group.pFirstCharInfo,	init = &PTU_pFirstCharInfo[0],	ev = init
+
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_PsGetCharInfo,				init = NULL,					ev = &PTU_pFirstCharInfo[0]
+		 
+		--Calling the Unit Under Test :
+		 
+        #ret_PsGetCharInfo = (T_BFC_CHARINFO *)PsGetCharInfo(&ps_font, u8_char);
+		
+		
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+    FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-PsGetCharInfo-DB-LLR-002]
+	COMMENT The function 'PsGetCharInfo' loops till ps group is not equal to null and set return value to pFirstCharInfo of ps group  
+	COMMENT plus (u8Char minus FirstChar of ps group) when u8_char is greater than  
+	COMMENT FirstChar of ps group AND u8_char is equal to LastChar of ps group is not equal to FALSE.
+	COMMENT (tested for 1 loop of while and MCDC condition TT)
+	COMMENT Equivalence Class 12,16
+	COMMENT
+    COMMENT </TD>	
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--Character to be searched 
+			VAR u8_char,						init = 0x7F,					ev = init
+		
+			--font structure of character to be searched
+			STRUCTURE ps_font,					init = { FontType => 0, FontHeight => 0, Baseline => 0, 
+			&									Reversed => 0, p_var_type => { pData => &PTU_ps_group } },		ev = init
+		
+			--address of first character
+			VAR PTU_ps_group.FirstChar,			init = 0x0020, 					ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,			init = 0x007F,					ev = init
+			
+			--address of first character
+			VAR PTU_ps_group.pFirstCharInfo,	init = &PTU_pFirstCharInfo[0],	ev = init
+
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_PsGetCharInfo,				init = NULL,					ev = &PTU_pFirstCharInfo[95]
+		 
+		--Calling the Unit Under Test :
+		 
+        #ret_PsGetCharInfo = (T_BFC_CHARINFO *)PsGetCharInfo(&ps_font, u8_char);
+		
+	END ELEMENT
+
+END TEST -- TEST 3
+	
+TEST 4
+    FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-PsGetCharInfo-DB-LLR-003]
+	COMMENT The function 'PsGetCharInfo' loops till ps group is not equal to null 
+	COMMENT	and set ps group to pNextProp of ps group 
+	COMMENT if u8_char is greater than  FirstChar of ps group 
+	COMMENT AND u8_char is greater than LastChar of ps group is equal to FALSE.
+	COMMENT (tested for MCDC condition TF)
+	COMMENT Equivalence Class 14,16
+	COMMENT
+    COMMENT </TD>	
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--Character to be searched 
+			VAR u8_char,						init = 0x80,			ev = init
+		
+			--font structure of character to be searched
+			STRUCTURE ps_font,					init = { FontType => 0, FontHeight => 0, Baseline => 0, 
+			&									Reversed => 0, p_var_type => { pData => &PTU_ps_group } },		ev = init
+		
+			--address of first character
+			VAR PTU_ps_group.FirstChar,			init = 0x0020, 			ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,			init = 0x007f,			ev = init
+			
+			--pointer to next BFC_FONT_PROP
+			VAR PTU_ps_group.pNextProp,			init = NULL,			ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_PsGetCharInfo,				init = &PTU_ps_ret_val,		ev = NULL
+		 
+		 -- Calling the Unit Under Test :
+		 
+        #ret_PsGetCharInfo = (T_BFC_CHARINFO *)PsGetCharInfo(&ps_font, u8_char);
+		
+	END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+    FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-PsGetCharInfo-DB-LLR-003]
+	COMMENT The function 'PsGetCharInfo' loops till ps group is not equal to null 
+	COMMENT	and set ps group to pNextProp of ps group 
+	COMMENT if u8_char is less than  FirstChar of ps group 
+	COMMENT AND u8_char is less than LastChar of ps group is equal to FALSE.
+	COMMENT (tested for MCDC condition FX)
+	COMMENT Equivalence Class 13,16
+	COMMENT
+    COMMENT </TD>	
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--Character to be searched 
+			VAR u8_char,							init = 0x1F,					ev = init
+			
+			--font structure of character to be searched
+			STRUCTURE ps_font,						init = { FontType => 0, FontHeight => 0, Baseline => 0, 
+			&										Reversed => 0, p_var_type => { pData => &PTU_ps_group } },		ev = init
+		
+			--address of first character
+			VAR PTU_ps_group.FirstChar,				init = 0x0020,				 	ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,				init = 0x007F,					ev = init
+			
+			--pointer to next BFC_FONT_PROP
+			VAR PTU_ps_group.pNextProp,				init = NULL,			ev = init
+
+			--address of first character
+			VAR PTU_ps_group.pFirstCharInfo,		init = &PTU_pFirstCharInfo[0],	ev = init
+
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_PsGetCharInfo,					init = &PTU_ps_ret_val,			ev = NULL
+		 
+		--Calling the Unit Under Test :
+		 
+        #ret_PsGetCharInfo = (T_BFC_CHARINFO *)PsGetCharInfo(&ps_font, u8_char);
+		
+	END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+    FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-PsGetCharInfo-DB-LLR-002]
+	COMMENT The function 'PsGetCharInfo' does nothing when ps group is equal to null 
+	COMMENT (tested for 0th while loop and boundary value of u8_char)
+	COMMENT Equivalence Class 15,40
+	COMMENT
+    COMMENT </TD>	
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--Character to be searched 
+			VAR u8_char,						init = 0x7E,							ev = init
+		
+			--font structure of character to be searched
+			STRUCTURE ps_font,					init = { FontType => 0, FontHeight => 0, Baseline => 0, 
+			&									Reversed => 0, p_var_type => { pData => NULL } },		ev = init
+		
+			--address of first character
+			VAR PTU_ps_group.FirstChar,			init = 0x0020, 							ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,			init = 0x007F,							ev = init
+			
+			--pointer to next BFC_FONT_PROP
+			VAR PTU_ps_group.pNextProp,			init = &PTU_ps_group,					ev = init
+
+			--address of first character
+			VAR PTU_ps_group.pFirstCharInfo,	init = &PTU_pFirstCharInfo[0],			ev = init
+
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_PsGetCharInfo,		init =&PTU_pFirstCharInfo[65] ,		ev = NULL
+		 
+		--Calling the Unit Under Test :
+		 
+        #ret_PsGetCharInfo = (T_BFC_CHARINFO *)PsGetCharInfo(&ps_font, u8_char);
+		
+		
+	END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-PsGetCharInfo-DB-LLR-003]
+	COMMENT The function 'PsGetCharInfo' loops till ps group is not equal to null 
+	COMMENT	and set ps group to pNextProp of ps group 
+	COMMENT if u8_char is less than  FirstChar of ps group 
+	COMMENT AND u8_char is less than LastChar of ps group is equal to FALSE.
+	COMMENT (tested for 2 or more loop of while )
+	COMMENT Equivalence Class 13,16
+	COMMENT
+    COMMENT </TD>	
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--Character to be searched 
+			VAR u8_char,							init = 0x1F,					ev = init
+			
+			--font structure of character to be searched
+			STRUCTURE ps_font,						init = { FontType => 0, FontHeight => 0, Baseline => 0, 
+			&										Reversed => 0, p_var_type => { pData => &PTU_ps_group } },		ev = init
+		
+			--address of first character
+			VAR PTU_ps_group.FirstChar,				init = 0x0020,				 	ev = init
+			
+			--index of last character
+			VAR PTU_ps_group.LastChar,				init = 0x007F,					ev = init
+			
+			--pointer to next BFC_FONT_PROP
+			VAR PTU_ps_group.pNextProp,				init = &PTU_ps_group_1,			ev = init
+			
+			--pointer to next BFC_FONT_PROP
+			VAR PTU_ps_group_1.pNextProp,			init = NULL,			ev = init
+
+			--address of first character
+			VAR PTU_ps_group.pFirstCharInfo,		init = &PTU_pFirstCharInfo[0],	ev = init
+
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_PsGetCharInfo,					init = &PTU_ps_ret_val,			ev = NULL
+		 
+		--Calling the Unit Under Test :
+        #ret_PsGetCharInfo = (T_BFC_CHARINFO *)PsGetCharInfo(&ps_font, u8_char);
+			
+	END ELEMENT
+
+END TEST -- TEST 7
+
+END SERVICE -- PsGetCharInfo
+
+--------------------------------------------------------------------------------
+-- Declaration of the service FontsGetFont
+--------------------------------------------------------------------------------
+SERVICE FontsGetFont
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+		#T_ETXFONT e_tx_font;
+	
+    -- By function returned type declaration
+		#T_BFC_FONT* ret_FontsGetFont;
+
+    ENVIRONMENT ENV_FontsGetFont
+	
+		VAR e_tx_font,				init = E_NO_FONT,		ev = init
+		
+		VAR ret_FontsGetFont,		init = NIL,		ev = init
+		
+    END ENVIRONMENT -- ENV_FontsGetFont
+    USE ENV_FontsGetFont
+
+TEST 1
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-001]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT address of Font_tiny when e_tx_font is equal to E_TINY_FONT.
+	COMMENT Equivalence class 17,43
+	COMMENT
+    COMMENT </TD>	
+	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init = E_TINY_FONT,		ev = init
+
+			VAR E_orientation,			init = E_PORTRAIT,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			--holds the reference value
+			VAR ret_FontsGetFont,		init = NULL,		ev = &Font_tiny
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-002]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT address of Font_small when e_tx_font is equal to E_SMALL_FONT.
+	COMMENT Equivalence class 18,43
+	COMMENT
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init = E_SMALL_FONT,		ev = init
+
+			VAR E_orientation,			init = E_PORTRAIT,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			--holds the reference value
+			VAR ret_FontsGetFont,		init = NULL,		ev = &Font_small
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-003]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT address of Font_normal when e_tx_font is equal to E_NORMAL_FONT.
+	COMMENT Equivalence class 19,43
+	COMMENT
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init = E_NORMAL_FONT,		ev = init
+
+			VAR E_orientation,			init = E_PORTRAIT,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			--holds the reference value
+			VAR ret_FontsGetFont,		init = NULL,				ev = &Font_normal
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-004]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT address of Font_large when e_tx_font is equal to E_LARGE_FONT.
+	COMMENT Equivalence class 20,43
+	COMMENT 
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init = E_LARGE_FONT,		ev = init
+
+			VAR E_orientation,			init = E_PORTRAIT,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			--holds the reference value
+			VAR ret_FontsGetFont,		init = NULL,				ev = &Font_large
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-007]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT address of Font_bezel when e_tx_font is equal to E_BEZEL_FONT.
+	COMMENT Equivalence class 23,43
+	COMMENT 
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init = E_BEZEL_FONT,		ev = init
+
+			VAR E_orientation,			init = E_PORTRAIT,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_FontsGetFont,		init = NULL ,		ev =  &Font_bezel
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-008]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT NULL when e_tx_font is other than the following
+	COMMENT E_TINY_FONT, E_SMALL_FONT,  E_NORMAL_FONT, E_LARGE_FONT, 
+	COMMENT E_HUGE_FONT, E_CAP_FONT and E_BEZEL_FONT.
+	COMMENT Equivalence class 24,39,43
+	COMMENT 
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init = E_NO_FONT,		ev = init
+
+			VAR E_orientation,			init = E_PORTRAIT,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_FontsGetFont,		init = &Font_bezel,		ev = NULL
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-009]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT address of Font_tiny_10inch when e_tx_font is equal to E_TINY_FONT.
+	COMMENT Equivalence class 17,44
+	COMMENT 
+	COMMENT Equivalence class 
+	COMMENT 
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init =  E_TINY_FONT,		ev = init
+
+			VAR E_orientation,			init = E_LAND_SCAPE,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_FontsGetFont,		init = NULL ,		ev =  &Font_tiny_10inch
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-010
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT address of Font_small_10inch when e_tx_font is equal to E_SMALL_FONT.
+	COMMENT Equivalence class 18,44	 
+	COMMENT 
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init =  E_SMALL_FONT,		ev = init
+
+			VAR E_orientation,			init = E_LAND_SCAPE,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_FontsGetFont,		init = NULL ,		ev =  &Font_small_10inch
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-011]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT address of Font_normal_10inch when e_tx_font is equal to E_NORMAL_FONT.
+	COMMENT Equivalence class 19,44
+	COMMENT 
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init =  E_NORMAL_FONT,		ev = init
+
+			VAR E_orientation,			init = E_LAND_SCAPE,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_FontsGetFont,		init = NULL ,		ev =  &Font_normal_10inch
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 9
+
+TEST 10
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-012]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT address of Font_large_10inch when e_tx_font is equal to E_LARGE_FONT.
+	COMMENT Equivalence class 20,44
+	COMMENT 
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init =  E_LARGE_FONT,		ev = init
+
+			VAR E_orientation,			init = E_LAND_SCAPE,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_FontsGetFont,		init = NULL ,		ev =  &Font_large_10inch
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 10
+
+TEST 11
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-013]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT address of Font_small_10inch when e_tx_font is equal to E_BEZEL_FONT.
+	COMMENT Equivalence class 23,44
+	COMMENT 
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init =  E_BEZEL_FONT,		ev = init
+
+			VAR E_orientation,			init = E_LAND_SCAPE,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_FontsGetFont,		init = NULL ,		ev =  &Font_small_10inch
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 11
+
+TEST 12
+FAMILY nominal
+    COMMENT Test description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFont-DB-LLR-014]
+	COMMENT The function 'FontsGetFont' sets the return value to 
+	COMMENT NULL when e_tx_font is other than the following
+	COMMENT E_TINY_FONT, E_SMALL_FONT,  E_NORMAL_FONT, E_LARGE_FONT, 
+	COMMENT E_HUGE_FONT, E_CAP_FONT and E_BEZEL_FONT.
+	COMMENT Equivalence class 24,39,44
+	COMMENT 
+    COMMENT </TD>	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,				init =  E_NO_FONT,		ev = init
+
+			VAR E_orientation,			init = E_LAND_SCAPE,		ev = init
+		
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+			
+		COMMENT OUTPUT SECTION:
+		
+			VAR ret_FontsGetFont,		init = &Font_bezel ,		ev =  NULL
+		 
+		 -- Calling the Unit Under Test :
+        #ret_FontsGetFont = FontsGetFont(e_tx_font);
+	END ELEMENT
+
+END TEST -- TEST 12
+
+END SERVICE -- FontsGetFont
+
+--------------------------------------------------------------------------------
+-- Declaration of the service FontsGetCharWidth
+--------------------------------------------------------------------------------
+SERVICE FontsGetCharWidth
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ETXFONT e_tx_font;
+    #T_UINT8 u8_achar;
+	
+    -- By function returned type declaration
+    #T_INT16 ret_FontsGetCharWidth;
+
+    ENVIRONMENT ENV_FontsGetCharWidth
+	
+		VAR e_tx_font,					init = E_NO_FONT,		ev = init
+	
+		VAR u8_achar,					init = 0,		ev = init
+	
+		VAR ret_FontsGetCharWidth,		init = 0,		ev = init
+	
+    END ENVIRONMENT -- ENV_FontsGetCharWidth
+    USE ENV_FontsGetCharWidth
+
+TEST 1
+FAMILY nominal
+
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdudispffonts-FontsGetCharWidth-DB-LLR-001]
+	COMMENT The function 'FontsGetCharWidth' sets the font pointer to return value 
+	COMMENT of the function FontsGetFont with parameter e_tx_font.
+	COMMENT Equivalence Class 29
+	COMMENT
+	COMMENT	[hdudispffonts-FontsGetCharWidth-DB-LLR-002]
+	COMMENT The function 'FontsGetCharWidth' does nothing when font pointer is equal to ZERO  
+	COMMENT Equivalence Class 26
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetCharWidth-DB-LLR-003]
+	COMMENT The function 'FontsGetCharWidth' returns the return value from the function.
+	COMMENT Equivalence Class None
+	COMMENT </TD>
+          
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+    		
+    		--Specifies the font (TESTED FOR RETURN 0)
+			VAR e_tx_font,					init = E_NO_FONT,		ev = init
+            
+            --Specifies the character. 
+			VAR u8_achar,					init = 0x61,				ev = init
+    		
+		COMMENT OUTPUT SECTION:
+    
+    		--Holds width of the character
+			VAR ret_FontsGetCharWidth,		init = 1,					ev = 0
+    
+		COMMENT INPUT/OUTPUT SECTION:
+    			
+			--None
+    		
+		-- Stub Calls:
+		SIMUL
+    			
+			--None
+    	
+		END SIMUL
+		
+		-- Calling the Unit Under Test : 
+        #ret_FontsGetCharWidth = FontsGetCharWidth(e_tx_font, u8_achar);
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT	[hdudispffonts-FontsGetCharWidth-DB-LLR-002]
+	COMMENT The function 'FontsGetCharWidth' sets character info to 
+	COMMENT return value of PsGetCharInfo with parameter font pointer and u8_char .
+	COMMENT when font pointer is not equal to ZERO.
+	COMMENT Equivalence Class 25,30
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetCharWidth-DB-LLR-003]
+	COMMENT The function 'FontsGetCharWidth' sets return value to Width of character info when 
+	COMMENT font pointer is not equal to zero and character info not equal to zero.
+	COMMENT Equivalence Class 27
+	COMMENT 
+	COMMENT [hdudispffonts-FontsGetCharWidth-DB-LLR-004]
+	COMMENT The function 'FontsGetCharWidth' returns the return value
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT </TD>
+	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+    		 
+    		--Specifies the font 
+			VAR e_tx_font,					init = E_TINY_FONT,		        ev = init      
+
+			VAR E_orientation,			init = E_PORTRAIT,		ev = init
+			
+			--Specifies the character.
+			VAR u8_achar,					init = 0x11,					ev = init
+    			
+		COMMENT OUTPUT SECTION:
+    
+    		--Holds width of the character
+			VAR ret_FontsGetCharWidth,		init = 0,						ev = 11
+    
+		COMMENT INPUT/OUTPUT SECTION:
+    			
+			--None
+    		
+		-- Stub Calls:
+		SIMUL
+    			
+			--Nonea
+    	
+		END SIMUL
+    
+		-- Calling the Unit Under Test :
+		#ret_FontsGetCharWidth = FontsGetCharWidth(e_tx_font, u8_achar);
+            
+	END ELEMENT
+    
+END TEST -- TEST 2	
+	
+TEST 3
+FAMILY nominal
+    
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+	COMMENT	[hdudispffonts-FontsGetCharWidth-DB-LLR-002]
+	COMMENT The function 'FontsGetCharWidth' sets character info to 
+	COMMENT return value of PsGetCharInfo with parameter font pointer and u8_char .
+	COMMENT when font pointer is not equal to ZERO.
+	COMMENT Equivalence Class 25,30
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetCharWidth-DB-LLR-003]
+	COMMENT The function 'FontsGetCharWidth' does nothing when 
+	COMMENT font pointer is not equal to zero and character info is equal to zero.
+	COMMENT Equivalence Class 28
+	COMMENT </TD>
+	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+    		 
+    		--Specifies the font 
+			VAR e_tx_font,					init = E_TINY_FONT,		        ev = init     
+
+			 VAR E_orientation,				init = E_PORTRAIT,		ev = init
+			
+			--Specifies the character.
+			VAR u8_achar,					init = 0x09,				ev = init
+    			
+		COMMENT OUTPUT SECTION:
+    
+    		--Holds width of the character
+			VAR ret_FontsGetCharWidth,		init = 10,					ev = 0
+    
+		COMMENT INPUT/OUTPUT SECTION:
+    			
+			--None
+    		
+		-- Stub Calls:
+		SIMUL
+    			
+			--Nonea
+    	
+		END SIMUL
+    
+		-- Calling the Unit Under Test :
+		#ret_FontsGetCharWidth = FontsGetCharWidth(e_tx_font, u8_achar);
+            
+	END ELEMENT
+    
+END TEST -- TEST 3
+	
+END SERVICE -- FontsGetCharWidth
+
+--------------------------------------------------------------------------------
+-- Declaration of the service FontsGetFontHeight
+--------------------------------------------------------------------------------
+SERVICE FontsGetFontHeight
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ETXFONT e_tx_font;
+	
+    -- By function returned type declaration
+    #T_INT16 ret_FontsGetFontHeight;
+    ENVIRONMENT ENV_FontsGetFontHeight
+	
+		VAR e_tx_font,		init = E_NO_FONT,		ev = init
+	
+		VAR ret_FontsGetFontHeight,		init = 0,		ev = init
+	
+    END ENVIRONMENT -- ENV_FontsGetFontHeight
+    USE ENV_FontsGetFontHeight
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFontHeight-DB-LLR-001]
+	COMMENT The function 'FontsGetFontHeight' sets font pointer 
+	COMMENT to return value of function FontsGetFont with parameter e_tx_font.
+	COMMENT Equivalence Class 33
+	COMMENT
+	COMMENT	[hdudispffonts-FontsGetFontHeight-DB-LLR-002]
+	COMMENT The function 'FontsGetFontHeight' does nothing when font pointer is equal to ZERO.
+	COMMENT Equivalence Class 32
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetFontHeight-DB-LLR-003]
+	COMMENT The function 'FontsGetFontHeight' returns the return value from the function.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT </TD>
+	
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			--Specifies the font
+			VAR e_tx_font,					init = E_NO_FONT,		ev = init
+
+		COMMENT OUTPUT SECTION:
+		
+			--height of the font
+			VAR ret_FontsGetFontHeight,		init = 0x05,					ev = 0
+
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+			
+		-- Stub Calls:
+		SIMUL
+
+			--None
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#ret_FontsGetFontHeight = FontsGetFontHeight(e_tx_font);
+	        
+	END ELEMENT
+	
+END TEST -- TEST 1
+		
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+	COMMENT	[hdudispbfonts-FontsGetFontHeight-DB-LLR-002]
+	COMMENT The function set the return value to FontHeight of font pointer when font pointer is not equal to ZERO 
+	COMMENT Equivalence Class 31
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+			
+			--Specifies the font
+			VAR e_tx_font,						init = E_TINY_FONT,			ev = init
+
+		COMMENT OUTPUT SECTION:
+
+			--height of the font
+			VAR ret_FontsGetFontHeight,			init = 0,					ev = 18
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL
+
+			--None
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :
+		#ret_FontsGetFontHeight = FontsGetFontHeight(e_tx_font);
+
+	END ELEMENT
+	
+END TEST -- TEST 2
+
+END SERVICE -- FontsGetFontHeight
+
+--------------------------------------------------------------------------------
+-- Declaration of the service FontsGetStringWidth
+--------------------------------------------------------------------------------
+SERVICE FontsGetStringWidth
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT8 *pu8_string;
+    #T_ETXFONT e_tx_font;
+	
+    -- By function returned type declaration
+    #T_INT16 ret_FontsGetStringWidth;
+
+    ENVIRONMENT ENV_FontsGetStringWidth
+	
+		VAR pu8_string,						init = 0,		ev = init
+		
+		VAR e_tx_font,						init = E_NO_FONT,		ev = init
+		
+		VAR ret_FontsGetStringWidth,		init = 0,		ev = init
+
+    END ENVIRONMENT -- ENV_FontsGetStringWidth
+    USE ENV_FontsGetStringWidth
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetStringWidth-DB-LLR-001]
+	COMMENT The function 'FontsGetStringWidth' sets font pointer to 
+	COMMENT return value of function FontsGetFont with parameter e_tx_font.
+	COMMENT Equivalence Class 34
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetStringWidth-DB-LLR-002]
+	COMMENT The function 'FontsGetStringWidth' does nothing 
+	COMMENT when font pointer is equal to zero
+	COMMENT Equivalence Class 36
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetStringWidth-DB-LLR-003]
+	COMMENT The function 'FontsGetStringWidth' returns the return value.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT </TD>
+	
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,		init = E_NO_FONT,		ev = init
+		
+		COMMENT OUTPUT SECTION:
+		
+			--width of the string
+			VAR ret_FontsGetStringWidth,		init = 1,		ev = 0
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL
+
+			--None
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :			
+		#ret_FontsGetStringWidth = FontsGetStringWidth(pu8_string, e_tx_font);
+		
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetStringWidth-DB-LLR-002]
+	COMMENT The function 'FontsGetStringWidth' does nothing when pu8_string is equal to zero 
+	COMMENT (tested for 0th loop of while)
+	COMMENT Equivalence Class 38
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+			--Specifies the font
+			VAR e_tx_font,		init = E_TINY_FONT,		ev = init
+		
+			--Holds the string value
+			VAR pu8_string,		init = "",		ev = init
+
+		COMMENT OUTPUT SECTION:	
+
+			--width of the string
+			VAR ret_FontsGetStringWidth,		init = 1,		ev = 0
+		
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL
+
+			--None
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :		
+        #ret_FontsGetStringWidth = FontsGetStringWidth(pu8_string, e_tx_font);
+		
+	END ELEMENT
+
+END TEST -- TEST 2
+	
+TEST 3
+FAMILY nominal
+	
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetStringWidth-DB-LLR-002]
+	COMMENT The function 'FontsGetStringWidth' loops till pu8_string is not equal to zero 
+	COMMENT and sets return value to return value plus return value of function FontsGetCharWidth 
+	COMMENT with parameter e_tx_font and pu8_string if font pointer is not equal to zero. 
+	COMMENT (tested for 1 loop of while)
+	COMMENT Equivalence Class 35,37
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+			--Specifies the font
+			VAR e_tx_font,						init = E_TINY_FONT,		ev = init
+		
+			--Holds the string value
+			VAR pu8_string,						init = "a",				ev = init		
+
+		COMMENT OUTPUT SECTION:
+		
+			--width of the string
+			VAR ret_FontsGetStringWidth,		init = 1,				ev = 0
+		
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL
+
+			--None
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :		
+        #ret_FontsGetStringWidth = FontsGetStringWidth(pu8_string, e_tx_font);
+		
+	END ELEMENT
+
+END TEST -- TEST 3
+	
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+	COMMENT [hdudispffonts-FontsGetStringWidth-DB-LLR-002]
+	COMMENT The function 'FontsGetStringWidth' loops till pu8_string is not equal to zero 
+	COMMENT and sets return value to return value plus return value of function FontsGetCharWidth 
+	COMMENT with parameter e_tx_font and pu8_string if font pointer is not equal to zero. 
+	COMMENT (tested for 2 or more loop of while)
+	COMMENT Equivalence Class 35,37
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			--Specifies the font
+			VAR e_tx_font,						init = E_TINY_FONT,		ev = init
+			
+			--Holds the string value
+			VAR pu8_string,						init = "abcd",			ev = init
+
+		COMMENT OUTPUT SECTION:	
+
+			--width of the string
+			VAR ret_FontsGetStringWidth,		init = 1,				ev = 0
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls:
+		SIMUL
+
+			--None
+
+		END SIMUL
+
+		-- Calling the Unit Under Test :			
+        #ret_FontsGetStringWidth = FontsGetStringWidth(pu8_string, e_tx_font);
+		
+        END ELEMENT
+		
+END TEST -- TEST 4
+	
+END SERVICE -- FontsGetStringWidth
+
+
+

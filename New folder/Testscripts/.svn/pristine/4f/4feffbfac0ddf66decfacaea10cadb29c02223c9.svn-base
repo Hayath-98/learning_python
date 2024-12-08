@@ -1,0 +1,750 @@
+HEADER hdudispftimer,Source Code Ver : 1.2  , TestScript Ver :1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Santosh Mithari
+--
+-- File Name           : hdudispftimer_1.ptu
+--
+-- Test Creation Date  : 30.10.2017  
+--
+-- Tested Functions    : TimerPreset
+-- 						 TimerInstall
+--						 TimerDriver
+--						 TimerReset
+--
+-- Version History     :
+--
+-- TEST-VERSION         TEST-DATE         TESTER NAME           MODIFICATIONS
+-- ------------        -----------        -----------           -------------
+--    1.1              30.10.2017         Santosh Mithari       Created the PTU file.
+--    1.2              10.11.2017         Santosh Mithari       Updated as per #PR100171
+--    1.3              14.11.2017         Santosh Mithari       Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+
+##include "hdudispfrterror.h" 
+##include "hdudispftimer.h"   
+##include "hdudispfucos.h"    
+##include "hdulibbasictypes.h"
+
+##define NUMBER_OF_TIMERS 200U 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	#volatile  T_TIMER *Timers[200U + 1];
+	#T_UINT32 U32_critical_sr;
+	#extern T_CHAR glob_file_name[];
+
+-- Declarations of the temporary variable
+	
+	 --Temporary array to pass address to Timers.
+	 #T_UINT8 PTU_temp[201];
+
+	--Temporary variable used in stub 'RterrWidget'
+	#T_UINT8 PTU_temp_1;
+	#char PTU_pc_file_in_1[200],PTU_pc_message_in_1[200];
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name         : 	Santosh Mithari 
+	COMMENT
+	COMMENT File Name           : 	hdudispftimer_1.ptu
+	COMMENT 
+	COMMENT Tested Functions    :  	TimerPreset	
+	COMMENT							TimerInstall
+	COMMENT 						TimerDriver
+	COMMENT 						TimerReset
+	COMMENT
+	COMMENT 
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT 
+	COMMENT Assumption(s): 
+	COMMENT None
+	COMMENT
+	COMMENT Constraint(s):
+	COMMENT 1.PTU has been split in to 3,due to static dependency. 
+	COMMENT
+	COMMENT 2.For loop in function 'TimerInstall'  can not be covered for 0 times since
+	COMMENT   it is controlled by macro NUMBER_OF_TIMERS.
+	COMMENT 
+	COMMENT 3.Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+	COMMENT warning #191-D: type qualifier is meaningless on cast type
+	COMMENT 
+	COMMENT 4.Source file "hdudispftimer.c" is modified for testing purpose.  
+	COMMENT	  The global array 'glob_file_name' is declared to expect file path.
+	COMMENT
+	COMMENT Code Snippet-
+	COMMENT		/* Global array declared for testing purpose*/
+	COMMENT 	T_CHAR glob_file_name[] = __FILE__;
+	COMMENT
+	COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT
+	COMMENT Valid Class(es)
+	COMMENT Class 1
+	COMMENT In function 'TimerInstall','OS_ENTER_CRITICAL' is called.
+	COMMENT
+	COMMENT Class 2
+	COMMENT In function 'TimerInstall','OS_EXIT_CRITICAL' is called.
+	COMMENT 
+	COMMENT Class 3
+	COMMENT In function 'TimerInstall',First_call is not equal to ZERO
+	COMMENT
+	COMMENT Class 4
+	COMMENT In function 'TimerInstall',First_call is equal to ZERO
+	COMMENT
+	COMMENT Class 5
+	COMMENT In function 'TimerInstall',timer pointer is equal to ZERO
+	COMMENT
+	COMMENT Class 6
+	COMMENT In function 'TimerInstall',timer pointer is not equal to ZERO
+	COMMENT
+	COMMENT Class 7
+	COMMENT In function 'TimerInstall','RterrWidget' is called
+	COMMENT
+	COMMENT Class 8
+	COMMENT In function 'TimerDriver',First_call is not equal to ZERO
+	COMMENT
+	COMMENT Class 9
+	COMMENT In function 'TimerDriver',First_call is equal to ZERO
+	COMMENT
+	COMMENT Class 10
+	COMMENT In function 'TimerReset','OS_ENTER_CRITICAL' is called.
+	COMMENT
+	COMMENT Class 11
+	COMMENT In function 'TimerReset','OS_EXIT_CRITICAL' is called.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In function 'TimerPreset','OS_ENTER_CRITICAL' is called.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function 'TimerPreset','OS_EXIT_CRITICAL' is called.
+	COMMENT
+	COMMENT Invalid class(es)
+	COMMENT Class 14
+	COMMENT	In function 'TimerPreset', invalid reference is passed to timer.
+	COMMENT
+	COMMENT Class 15
+	COMMENT	In function 'TimerReset', invalid reference is passed to timer.
+	COMMENT
+	COMMENT Class 16
+	COMMENT	In function 'TimerInstall', invalid reference is passed to timer.
+	COMMENT
+	COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdudispftimer_c
+    
+    	--To verify the parameters pc_file, pc_message made as _no	
+    	#void RterrWidget(T_CHAR _no *pc_file, T_INT32 s32_line_number, T_CHAR _no *pc_message)
+    	#{ 
+    	#  PTU_temp_1 = 0;
+    	#  while(pc_file[PTU_temp_1]!= ZERO)
+    	#  {
+    	#    PTU_pc_file_in_1[PTU_temp_1]= pc_file[PTU_temp_1];   //Verify pc_file path  
+    	#    PTU_temp_1 = PTU_temp_1+1;
+    	#  }
+    	#    PTU_pc_file_in_1[PTU_temp_1]= ZERO;
+    	#
+    	#  PTU_temp_1 = 0;
+    	#  while(pc_message[PTU_temp_1]!= ZERO)
+    	#  {
+    	#    PTU_pc_message_in_1[PTU_temp_1]= pc_message[PTU_temp_1];  //Verify pc_message
+    	#    PTU_temp_1 = PTU_temp_1+1;
+    	#  }
+    	#    PTU_pc_message_in_1[PTU_temp_1]= ZERO;
+    	#
+    	# }		
+		
+		#void RestoreStatusReg(T_UINT32 _in U32_critical_sr); 
+		
+		#T_UINT32 SaveStatusReg(void); 
+		
+	END DEFINE
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+--No special things that have to be done on the host to run the test.
+
+--ELSE
+
+--No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+--Environment of the file hdudispftimer.c
+
+   ENVIRONMENT ENV_hdudispftimer_c
+   
+   ARRAY Timers,		init = { others => NIL },		ev = init
+   
+   END ENVIRONMENT -- ENV_hdudispftimer_c
+   
+USE ENV_hdudispftimer_c	
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service TimerPreset
+--------------------------------------------------------------------------------
+SERVICE TimerPreset
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    # volatile  T_TIMER timer;
+    #T_INT32 s32_set_val;
+    
+
+    ENVIRONMENT ENV_TimerPreset
+    VAR timer,		init = 0,		ev = init
+    VAR s32_set_val,		init = 0,		ev = init
+    END ENVIRONMENT -- ENV_TimerPreset
+    USE ENV_TimerPreset
+    
+   
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftimer-TimerPreset-DB-LLR-001]
+    COMMENT The function calls SaveStatusReg to disable interrupts using OS_ENTER_CRITICAL.
+    COMMENT Equivalence Class 12.
+    COMMENT 
+    COMMENT [hdudispftimer-TimerPreset-DB-LLR-002]
+    COMMENT  The function sets timer to s32_set_val.
+    COMMENT Equivalence Class None.
+    COMMENT
+    COMMENT [hdudispftimer-TimerPreset-DB-LLR-003]
+    COMMENT The function calls RestoreStatusReg function to enable the interrupt using OS_EXIT_CRITICAL.
+    COMMENT Equivalence Class 13.
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--In put Value to be set to timer
+			VAR s32_set_val,		init = 0x100,		ev = init
+			
+			--Global veriable passed to SaveStatusReg
+			VAR U32_critical_sr,	init =0x40,			ev=init
+		
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--pointer to the timer to reset
+			VAR timer,				init = 0x50,		ev = 0x100
+
+        -- Stub Calls:
+        SIMUL
+           
+         	--stub called to disable interrupts using OS_ENTER_CRITICAL
+         	STUB SaveStatusReg() U32_critical_sr
+
+         	--stub called to enable the interrupt using OS_EXIT_CRITICAL.
+		 	STUB RestoreStatusReg(U32_critical_sr)
+					
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#TimerPreset(&timer, s32_set_val);
+
+    END ELEMENT
+
+END TEST -- TEST 1   
+
+--TEST 2
+--FAMILY robustness
+--
+--	COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT [hdudispftimer-TimerPreset-DB-LLR-002]
+--   `COMMENT The function does nothing when invalid reference to timer is passed
+--    COMMENT Equivalence Class 14. 
+--    COMMENT </TD> 
+--
+--    ELEMENT
+--
+--		COMMENT INPUT SECTION:
+--			
+--			--Input Value to be set to timer
+--			VAR s32_set_val,		init = 0x100,			ev = init
+--		
+--        COMMENT OUTPUT SECTION:
+--
+--			--None
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--            
+--			--None
+--        
+--        -- Stub Calls:
+--        SIMUL
+--          
+--			--None					
+--
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test :
+--     	#TimerPreset(NULL, s32_set_val);
+--
+--    END ELEMENT
+--
+--END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftimer-TimerPreset-DB-LLR-002]
+    COMMENT The function set timer to s32_set_val.
+    COMMENT (max range value is passed to s32_set_val)
+    COMMENT Equivalence Class None. 
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+					
+			--In put Value to be set to timer
+			VAR s32_set_val,		init = 0x7FFFFFFF,			ev = init
+			
+			--Global veriable passed to SaveStatusReg
+			VAR U32_critical_sr,	init =0x40,					ev=init
+		
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --pointer to the timer to reset
+			VAR timer,				init = 0x60,				ev = 0x7FFFFFFF
+			
+        
+        -- Stub Calls:
+        SIMUL
+            
+         	--stub called to disable interrupts using OS_ENTER_CRITICAL
+         	STUB SaveStatusReg() U32_critical_sr
+
+         	--stub called to enable the interrupt using OS_EXIT_CRITICAL.
+		 	STUB RestoreStatusReg(U32_critical_sr)
+					
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#TimerPreset(&timer, s32_set_val);
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftimer-TimerPreset-DB-LLR-002]
+	COMMENT The function set timer to s32_set_val.
+    COMMENT (min range value is passed to s32_set_val)
+    COMMENT Equivalence Class None.
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--In put Value to be set to timer
+			VAR s32_set_val,		init = 0x0,					ev = init
+			
+			--Global veriable passed to SaveStatusReg
+			VAR U32_critical_sr,	init = 0x40,				ev=init
+		
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--pointer to the timer to reset
+			VAR timer,				init = 0x60,				ev = 0x0
+        
+        -- Stub Calls:
+        SIMUL
+         
+         	--stub called to disable interrupts using OS_ENTER_CRITICAL
+         	STUB SaveStatusReg() U32_critical_sr
+         
+        	--stub called to enable the interrupt using OS_EXIT_CRITICAL.
+			STUB RestoreStatusReg(U32_critical_sr)
+					
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#TimerPreset(&timer, s32_set_val);
+
+    END ELEMENT
+
+END TEST -- TEST 4
+
+END SERVICE -- TimerPreset
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TimerInstall
+--------------------------------------------------------------------------------
+SERVICE TimerInstall
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    # volatile  T_TIMER timer;
+
+    ENVIRONMENT ENV_TimerInstall
+    VAR timer,		init = 0,		ev = init
+    
+    END ENVIRONMENT -- ENV_TimerInstall
+    USE ENV_TimerInstall
+    
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftimer-TimerInstall-DB-LLR-001]
+    COMMENT The function calls SaveStatusReg to disable interrupts using OS_ENTER_CRITICAL.
+    COMMENT Equivalence Class 1
+    COMMENT
+    COMMENT [hdudispftimer-TimerInstall-DB-LLR-002]
+    COMMENT The function sets Timers with zero index to zero and first call to FALSE when First
+    COMMENT call is not equal to zero
+    COMMENT Equivalence Class 3
+    COMMENT
+    COMMENT [hdudispftimer-TimerInstall-DB-LLR-003]
+    COMMENT The function calls RestoreStatusReg function to enable the interrupt using OS_EXIT_CRITICAL.
+    COMMENT Equivalence Class 2
+    COMMENT
+    COMMENT [hdudispftimer-TimerInstall-DB-LLR-004]
+    COMMENT The function initialize the timer pointer to address of Timers and loop from zero to 
+    COMMENT NUMBER_OF_TIMERS-1 and Call SaveStatusReg to disable interrupts using OS_ENTER_CRITICAL
+    COMMENT till index is ZERO to NUMBER_OF_TIMERS.
+    COMMENT Equivalence Class 1
+    COMMENT 
+    COMMENT [hdudispftimer-TimerInstall-DB-LLR-005]
+    COMMENT The function initialize the timer pointer to address of Timers and loop from zero to 
+    COMMENT NUMBER_OF_TIMERS-1 and does the following when content timer pointer is equal to zero. 
+	COMMENT 1.	Content of timer to ZERO.
+	COMMENT 2.	Content of timer pointer plus one to ZERO.
+	COMMENT 3.	Content of timer pointer to timer.
+	COMMENT 4.	Call RestoreStatusReg function to enable the interrupt using OS_EXIT_CRITICAL.
+	COMMENT 5.	increment timer pointer.
+	COMMENT 6.	returns from function.
+    COMMENT Equivalence Class 2,5
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+   			
+   			--Global veriable passed to SaveStatusReg
+   			VAR U32_critical_sr,	init = 0x40,						ev = init
+   			
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+        	
+        	--pointer to the timer to install
+			VAR timer,				init = 0x50,						ev = ZERO
+					
+			--Global array with size NUMBER_OF_TIMERS + 1
+   			VAR Timers[0],			init = 0x10,						ev = &timer
+        
+        -- Stub Calls:
+        SIMUL   
+			
+			--stub called to disable interrupts using OS_ENTER_CRITICAL
+			STUB SaveStatusReg 1..2 =>() U32_critical_sr
+			
+			--stub called to enable the interrupt using OS_EXIT_CRITICAL.
+			STUB RestoreStatusReg 1..2 => (U32_critical_sr)
+			
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#TimerInstall(&timer);
+
+    END ELEMENT
+
+END TEST -- TEST 1 
+
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftimer-TimerInstall-DB-LLR-002]
+    COMMENT The function does nothing when Firstcall is equal to zero
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hdudispftimer-TimerInstall-DB-LLR-005]
+    COMMENT The function initialize the timer pointer to address of Timers and loop from zero 
+    COMMENT to NUMBER_OF_TIMERS-1 and does nothing when content timer pointer is not equal to zero. 
+    COMMENT Equivalence Class 6
+    COMMENT 
+    COMMENT [hdudispftimer-TimerInstall-DB-LLR-006]
+    COMMENT The function initialize the timer pointer to address of Timers and loop from zero to
+    COMMENT NUMBER_OF_TIMERS-1 and calls RestoreStatusReg function to enable the interrupt using 
+    COMMENT OS_EXIT_CRITICAL.
+    COMMENT Equivalence Class 2.
+    COMMENT
+    COMMENT [hdudispftimer-TimerInstall-DB-LLR-007]
+    COMMENT The function calls function RterrWidget with parameters __FILE__ , __LINE__ and
+    COMMENT string "Too many Timers."
+    COMMENT Equivalence Class 7
+    
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--pointer to the timer to install
+			VAR timer,						init = 0x100,		ev = init
+	
+        COMMENT OUTPUT SECTION:
+			
+			VAR PTU_pc_message_in_1,		init ="MESSAGE",	ev ="Too many Timers."
+
+			VAR PTU_pc_file_in_1,			init ="FILE",		ev = glob_file_name
+			
+        COMMENT INPUT/OUTPUT SECTION:
+        
+        	--Temporary array to pass address to Timers.
+        	ARRAY PTU_temp,			init={ others=> 0x10},		ev=init
+        	
+        	--Global array with size NUMBER_OF_TIMERS + 1
+			ARRAY Timers,			init ={ others=> &PTU_temp[0]},			
+			&													ev =init
+			
+			--Global veriable passed to SaveStatusReg
+			VAR U32_critical_sr,	init =0x40,					ev=init
+        
+        -- Stub Calls:
+        SIMUL
+            
+            STUB RterrWidget ((T_INT32)115)
+            
+            --stub called to disable interrupts using OS_ENTER_CRITICAL
+			STUB SaveStatusReg 1..201 => () U32_critical_sr
+
+			--stub called to enable the interrupt using OS_EXIT_CRITICAL.
+			STUB RestoreStatusReg  1..201 => (U32_critical_sr)	
+    
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#TimerInstall(&timer);
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+--TEST 3
+--FAMILY robustness
+--
+--	COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT [hdudispftimer-TimerInstall-DB-LLR-001]
+--    COMMENT Invalid reference to timer pointer is passed.
+--    COMMENT Equivalence Class 16.
+--    COMMENT </TD> 
+--
+--    ELEMENT
+--
+--		COMMENT INPUT SECTION:
+--			
+--			--None
+--			
+--		
+--        COMMENT OUTPUT SECTION:
+--
+--			--None
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--            
+--			--None
+--        
+--        -- Stub Calls:
+--        SIMUL
+--            
+--				--No Stubs
+--    
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test :
+--     	#TimerInstall(NULL);
+--
+--    END ELEMENT
+--
+--END TEST -- TEST 3
+
+END SERVICE -- TimerInstall
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TimerReset
+--------------------------------------------------------------------------------
+SERVICE TimerReset
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    # volatile  T_TIMER timer;
+
+    ENVIRONMENT ENV_TimerReset
+    VAR timer,		init = 0,		ev = init
+    END ENVIRONMENT -- ENV_TimerReset
+    USE ENV_TimerReset
+
+    
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftimer-TimerReset-DB-LLR-001]
+    COMMENT The function calls SaveStatusReg to disable interrupts using OS_ENTER_CRITICAL.
+    COMMENT Equivalence Class 10.
+    COMMENT
+    COMMENT [hdudispftimer-TimerReset-DB-LLR-002]
+    COMMENT The function sets timer to ZERO.
+    COMMENT Equivalence Class None.    
+    COMMENT
+    COMMENT [hdudispftimer-TimerReset-DB-LLR-003]
+    COMMENT The function calls RestoreStatusReg function to enable the interrupt using OS_EXIT_CRITICAL.
+    COMMENT Equivalence Class 11.
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--None	
+			
+        COMMENT OUTPUT SECTION:
+
+			--None
+
+        COMMENT INPUT/OUTPUT SECTION:
+            
+			--pointer to the timer to reset
+			VAR timer,				init = 0x100,				ev = ZERO				
+        
+        -- Stub Calls:
+        SIMUL
+			
+			--stub called to disable interrupts using OS_ENTER_CRITICAL
+			STUB SaveStatusReg() 50
+			
+			--stub called to enable the interrupt using OS_EXIT_CRITICAL.
+			STUB RestoreStatusReg(50)
+				
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#TimerReset(&timer);
+     	
+    END ELEMENT
+
+END TEST -- TEST 1   
+
+--TEST 2
+--FAMILY robustness
+--
+--	COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT [hdudispftimer-TimerReset-DB-LLR-002]
+--    COMMENT The function does nothing. since invalid reference is passed timer.
+--    COMMENT Equivalence Class 15.    
+--    COMMENT </TD> 
+--
+--    ELEMENT
+--
+--		COMMENT INPUT SECTION:
+--			
+--			--None
+--			
+--		
+--        COMMENT OUTPUT SECTION:
+--
+--			--None
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--            
+--			--None
+--        
+--        -- Stub Calls:
+--        SIMUL
+--            
+--				--None
+--
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test :
+--     	#TimerReset(NULL);
+--
+--    END ELEMENT
+--
+--END TEST -- TEST 2
+
+END SERVICE -- TimerReset
+

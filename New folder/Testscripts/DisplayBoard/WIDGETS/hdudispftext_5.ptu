@@ -1,0 +1,1092 @@
+HEADER hdudispftext,Source Code Ver :1.10,TestScript Ver : 1.6
+--------------------------------------------------------------------------------
+-- Author Name         : Vinothini M
+--
+-- File Name           : hdudispftext_5.ptu
+--
+-- Test Creation Date  : 17.10.2017
+--
+-- Tested Functions    : TextDrawChar
+--
+--
+-- Version History             :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME           MODIFICATIONS
+--  ------------        ---------       -----------           -------------
+--      1.1             17.10.2017      Vinothini M         Created the ptu file.
+--      1.2             10.11.2017      Vinothini M         Updated as per #PR100171.
+--      1.3             14.11.2017      Vinothini M         Updated as per #PR100171.
+--      1.4             28.07.2020      Swaroopa N       	Updated as per #PR100267. 
+--      1.5             20.08.2020      Swaroopa N       	Updated as per #PR100267.
+--      1.6             03.10.2020      Vignesh Sunil       Updated as per #PR100281. 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+##include "hdudispfdma2d.h"    
+##include "hdudispffonts.h"    
+##include "hdudispfrterror.h"  
+##include "hdudispftext.h"     
+##include "hdudispfwidgets.h"  
+##include "hdudispfconfig.h"   
+##include "hdudispfforeground.h" 
+##include "hdulibbasictypes.h"   
+##include "hdudispfpanel.h"
+##include "hdudispfgrapp.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+--------------------------------------------------------------------------------
+    #T_INT16 S16_panel_width; 
+    #T_INT16 S16_panel_height; 
+    #void *Vp_fgfb2; 
+    #T_ELANDSCAPEORPORTRIAT E_orientation; 
+    # volatile  T_INT32 Itm_rx_buffer; 
+    #extern T_CHAR glob_file_name[];
+	# T_PAGE Page_settings;
+	# T_PARAM_TABLE Parameters_reading[256];
+	# T_TEXT Page_txt[30];
+	#T_UINT8 Text_cnt;
+    #T_APPDATA_PANELSTRUCT *Appdata_appdata; 
+    #T_DISPLAYSIZE Display_size; 	
+
+-- Declaration of temporary variables  
+
+    -- temporary variable used in execution of test
+    # T_UINT8 PTU_tmp;
+    
+    -- temporary structure declared for receiving the address
+    # T_BFC_FONT PTU_FontsGetFont;
+
+    -- temporary structure declared for passing the address
+    # T_UINT8 PTU_pData8;
+
+    -- Created to verify the 1st parameter of RterrWidget
+    # char PTU_pc_file_in_1[200],PTU_pc_file_out_1[200];
+    # T_UINT8 PTU_temp;
+
+    -- Created to verify the 3rd parameter of RterrWidget
+   # char PTU_pc_message_in_1[200],PTU_pc_message_out_1[200];
+
+     
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Vinothini M
+    COMMENT
+    COMMENT File name        : hdudispftext_5.ptu
+    COMMENT
+    COMMENT Tested functions : TextDrawChar
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT 1. Source file "hdudispftext.c" is modified for testing purpose to verify the file name
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT
+    COMMENT 2.Warning "enumerated type mixed with another type" is obtained when parameter 
+    COMMENT    '(enum T_EPENCOLOR)type' of e_pen_color
+    COMMENT    '(enum T_ETXFONT)type' of e_tx_font 
+    COMMENT    is exercised with value "CAS_WHITE+1" and "E_BEZEL_FONT+1" to test LLR 
+    COMMENT    "hdudispftext-TextDrawChar-DB-LLR-010" and "hdudispftext-TextDispString-DB-LLR-001"
+    COMMENT    in PTU "hdudispftext_1.ptu", "hdudispftext_5.ptu" and "hdudispftext_6.ptu".
+    COMMENT
+    COMMENT 3. Testscript is split into 19 due to static dependency
+    COMMENT</AC>
+
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'TextAllocat', the function 'RterrWidget' is called. 
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In function 'TextAllocat', Text_objects_installed is equal to MAX_TEXT_OBJECTS.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function 'TextAllocat', Text_objects_installed is not equal to MAX_TEXT_OBJECTS.
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In function 'TextDraw', the function 'TextDispString' is called.
+    COMMENT 
+    COMMENT Class 5
+    COMMENT In function 'TextDispString', the function 'FontsGetFont' is called.
+    COMMENT 
+    COMMENT Class 6
+    COMMENT In function 'TextDispString', the function 'DispStringAt' is called.
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In function 'TextDispString', the function 'FontsGetStringWidth' is called.
+    COMMENT 
+    COMMENT Class 8
+    COMMENT In function 'TextDispString', the function 'FontsGetFontHeight' is called.
+    COMMENT     
+    COMMENT Class 9
+    COMMENT In function 'TextDispString', e_tx_align is equal to ALIGN_CENTER.
+    COMMENT     
+    COMMENT Class 10
+    COMMENT In function 'TextDispString', e_tx_align is not equal to ALIGN_CENTER.
+    COMMENT 
+    COMMENT Class 11
+    COMMENT In function 'TextDispString', e_tx_align is equal to ALIGN_CENTER_LEFT.
+    COMMENT 
+    COMMENT Class 12
+    COMMENT In function 'TextDispString', e_tx_align is not equal to ALIGN_CENTER_LEFT.
+    COMMENT 
+    COMMENT Class 14
+    COMMENT In function 'DispStringAt', e_tx_flash is equal to TX_FLASH.
+    COMMENT 
+    COMMENT Class 15
+    COMMENT In function 'DispStringAt', e_tx_flash is not equal to TX_FLASH.
+    COMMENT 
+    COMMENT Class 16
+    COMMENT In function 'DispStringAt', the function 'TextDrawChar' is called.
+    COMMENT 
+    COMMENT Class 17
+    COMMENT In function 'TextDrawChar', the function 'Pu8GetCharBitMap' is called.
+    COMMENT 
+    COMMENT Class 18
+    COMMENT In function 'TextDrawChar', the function 'PsGetCharInfo' is called.
+    COMMENT 
+    COMMENT Class 19
+    COMMENT In function 'TextDrawChar', the function 'Dma2dDrawChar' is called.
+    COMMENT 
+    COMMENT Class 20
+    COMMENT In function 'TextDrawChar', E_orientation is equal to E_LAND_SCAPE.
+    COMMENT 
+    COMMENT Class 21
+    COMMENT In function 'TextDrawChar', E_orientation is not equal to E_LAND_SCAPE.
+    COMMENT 
+    COMMENT Class 22
+    COMMENT In function 'TextDrawChar', e_color is equal to CAS_RED.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'TextDrawChar', e_color is not equal to CAS_RED .
+    COMMENT 
+    COMMENT Class 26
+    COMMENT In function 'TextDrawChar', E_orientation is equal to E_PORTRAIT.
+    COMMENT 
+    COMMENT Class 27
+    COMMENT In function 'TextDrawChar', E_orientation is not equal to E_PORTRAIT.
+    COMMENT 
+    COMMENT Class 28
+    COMMENT In function 'DispStringAt', e_txv is not equal to V_REVERSE.
+    COMMENT 
+    COMMENT Class 29
+    COMMENT In function 'DispStringAt', e_txv is equal to V_REVERSE.
+    COMMENT 
+    COMMENT Class 30
+    COMMENT In function 'DispStringAt', return value of EGetFlashState is equal to FLASH_OFF.
+    COMMENT 
+    COMMENT Class 31
+    COMMENT In function 'DispStringAt', return value of EGetFlashState is not equal to FLASH_OFF.
+    COMMENT 
+    COMMENT Class 32
+    COMMENT In function 'TextDraw', u16_text_ctr is lesser than Text objects installed.
+    COMMENT     
+    COMMENT Class 33
+    COMMENT In function 'TextDraw', u16_text_ctr is greater than Text objects installed.
+    COMMENT 
+    COMMENT Class 47
+    COMMENT In function 'TextDraw', u16_text_ctr is equal to Text objects installed.
+    COMMENT 
+    COMMENT Class 37
+    COMMENT In function 'DispStringAt', the function 'VHadFlash' is called.
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'TextDrawChar',result of bitwise AND of u8_char and EXTRACT_8_BIT is equal to TRUE.
+    COMMENT 
+    COMMENT Class 39
+    COMMENT In function 'TextDrawChar',result of bitwise AND of u8_char and EXTRACT_8_BIT is equal to FALSE.
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'DispStringAt', u8_achar is equal to ZERO.
+    COMMENT 
+    COMMENT Class 41
+    COMMENT In function 'DispStringAt', u8_achar is not equal to ZERO.
+    COMMENT 
+    COMMENT Class 42
+    COMMENT In function 'DispStringAt', character is equal to newline character.
+    COMMENT 
+    COMMENT Class 43
+    COMMENT In function 'DispStringAt', character is equal to Carriage Return character.
+    COMMENT 
+    COMMENT Class 44
+    COMMENT In function 'DispStringAt', character is not equal to newline character.
+    COMMENT 
+    COMMENT Class 45
+    COMMENT In function 'DispStringAt', character is not equal to Carriage Return character.
+    COMMENT 
+    COMMENT Class 46
+    COMMENT In function 'DispStringAt', PsGetCharInfo function is called.
+    COMMENT 
+	COMMENT Class 49
+    COMMENT In function 'TextAllocatPdi', Text_installed is greater than MAX_TEXT_PDI_OBJECTS.
+    COMMENT 
+	COMMENT Class 50
+    COMMENT In function 'TextAllocatPdi', Text_installed is less than MAX_TEXT_PDI_OBJECTS.
+    COMMENT
+	COMMENT Class 51
+    COMMENT In function 'TextAllocatPdi', Text_installed is equal to MAX_TEXT_PDI_OBJECTS.
+	COMMENT
+	COMMENT Class 52
+    COMMENT In function 'TextAllocatPdi', the function 'RterrWidget' is called.
+	COMMENT
+	COMMENT Calss 54
+	COMMENT In function 'TextDrawPDI', label of Text_settings of Page_settings is equal to label of Parameters_reading.
+	COMMENT
+	COMMENT Calss 55
+	COMMENT In function 'TextDrawPDI', label of Text_settings of Page_settings is not equal to label of Parameters_reading.
+	COMMENT
+	COMMENT Calss 56
+	COMMENT In function 'TextDrawPDI', stat of reading of Parameters_reading is equal to PARAM_OK.
+	COMMENT
+	COMMENT Calss 57
+	COMMENT In function 'TextDrawPDI', stat of reading of Parameters_reading is not equal to PARAM_OK.
+	COMMENT
+	COMMENT Calss 58
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is equal to DDW.
+	COMMENT
+	COMMENT Calss 59
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is not equal to DDW.
+	COMMENT
+	COMMENT Calss 60
+	COMMENT In function 'TextDrawPDI', member r of reading of Parameters_reading is rightshift by ONE is equal to ZERO. 
+	COMMENT
+	COMMENT Calss 61
+	COMMENT In function 'TextDrawPDI', member r of reading of Parameters_reading is rightshift by ONE is not equal to ZERO. 
+	COMMENT
+	COMMENT Calss 62
+	COMMENT In function 'TextDrawPDI', calls the function TextDispString. 
+	COMMENT
+	COMMENT Calss 63
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is equal to BNR.
+	COMMENT
+	COMMENT Calss 64
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is not equal to BNR.
+	COMMENT
+	COMMENT class 65
+	COMMENT IN function 'TextDrawPDI', fread of reading of Parameters_reading is greater than txt_cross_val of Text_settings of Page_settings.
+	COMMENT
+	COMMENT class 66
+	COMMENT IN function 'TextDrawPDI', fread of reading of Parameters_reading is less than txt_cross_val of Text_settings of Page_settings.
+	COMMENT
+	COMMENT class 67
+	COMMENT IN function 'TextDrawPDI', fread of reading of Parameters_reading is equal to txt_cross_val of Text_settings of Page_settings.
+	COMMENT 
+	COMMENT class 68
+	COMMENT IN function 'TextDrawPDI',psDisRegion of ps_txt is equal to NULL.
+	COMMENT
+	COMMENT class 69
+	COMMENT IN function 'TextDrawPDI',psDisRegion of ps_txt is not equal to NULL.
+	COMMENT
+	COMMENT Calss 70
+	COMMENT In function 'TextDrawPDI', calls the function WidgetsRedX. 
+	COMMENT
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT     
+    COMMENT Class 34
+    COMMENT In function 'TextDrawChar', p_font is equal to NULL.
+    COMMENT 
+    COMMENT Class 35
+    COMMENT In function 'TextDispString', pc_string is equal to NULL.
+    COMMENT 
+    COMMENT Class 36
+    COMMENT In function 'TextAllocat', pps_handle_add and pu8_string are equal to NULL.
+    COMMENT 
+    COMMENT Class 48
+    COMMENT In function 'DispStringAt', p_font is equal to NULL.
+    COMMENT 
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+
+    DEFINE STUB hdudispftext_c
+
+        -- Created to verify the parameter 'pu8_string' of function 'FontsGetStringWidth'
+        #T_UINT8 PTU_IN_pu8_string,PTU_OUT_pu8_string[50];
+        -- Created to verify the return value of function 'Pu8GetCharBitMap'
+        #T_UINT8 PTU_Pu8GetCharBitMap;
+        -- Created to verify the parameters 'character_data and write_loc' of function 'Dma2dDrawChar'
+        #void *PTU_Dma2dDrawChar;
+        #void *PTU_write_loc;
+        -- Created to verify the parameters 'ps_font' of function 'Pu8GetCharBitMap'
+        #T_BFC_FONT *PTU_IN_Pu8GetCharBitMap;
+        -- Created to verify the parameters 'ps_font' of function 'PsGetCharInfo'
+        #T_BFC_FONT *PTU_IN_PsGetCharInfo;
+        -- Created to provide address for variable Vp_fgfb2 
+        #T_UINT8 PTU_Vp_fgfb2; 
+        -- Created to verify the return value of function 'PsGetCharInfo'
+        #T_BFC_CHARINFO PTU_PsGetCharInfo;
+
+     -- Created to verify the 'ps_dis_region and pps_poly_red_x;' of function 'TextDraw'	 
+	 # T_SDISREGION PTU_ps_dis_region;
+	 # T_SPOLY PTU_pps_poly_red_x;
+        
+    --Parameter pc_file, pc_message is made as _no and is verified explicitly
+    #void RterrWidget(char _no pc_file[200], T_INT32 _in s32_line_number, char _no pc_message[200])
+        #{
+        # 
+        #  PTU_temp = 0;
+        #  while(pc_file[PTU_temp]!= ZERO)
+        #  {
+        #    PTU_pc_file_in_1[PTU_temp]= pc_file[PTU_temp];
+        #    PTU_temp = PTU_temp+1;
+        #  }
+        #    PTU_pc_file_in_1[PTU_temp]= ZERO;
+        #
+        #  PTU_temp = 0;
+        #  while(pc_message[PTU_temp]!= ZERO)
+        #  {
+        #    PTU_pc_message_in_1[PTU_temp]= pc_message[PTU_temp];
+        #    PTU_temp = PTU_temp+1;
+        #  }
+        #    PTU_pc_message_in_1[PTU_temp]= ZERO;
+        #
+        #  PTU_temp = 0;
+        #  while(PTU_pc_file_out_1[PTU_temp]!= ZERO)
+        #  {
+        #   pc_file[PTU_temp]       = PTU_pc_file_out_1[PTU_temp];
+        #   PTU_temp = PTU_temp+1;
+        #  }
+        #   pc_file[PTU_temp]= ZERO;
+        #
+        #  PTU_temp = 0;
+        #  while(PTU_pc_message_out_1[PTU_temp]!= ZERO)
+        #  {
+        #    pc_message[PTU_temp] = PTU_pc_message_out_1[PTU_temp];
+        #    PTU_temp = PTU_temp+1;
+        #  }
+        #   pc_message[PTU_temp]= ZERO;
+        #}
+        #T_INT16 FontsGetFontHeight(T_ETXFONT _in e_tx_font); 
+        
+        --Parameters_reading pu8_string is made as _no and is verified explicitly
+        #T_INT16 FontsGetStringWidth(T_UINT8 _no pu8_string, T_ETXFONT _in e_tx_font)
+        #{
+        #   PTU_IN_pu8_string =(T_UINT8)*pu8_string;
+        #   pu8_string = (T_UINT8 *)PTU_OUT_pu8_string;
+        #}
+        #T_BFC_FONT* FontsGetFont(T_ETXFONT _in e_tx_font);
+        #T_EFLASHSTATE EGetFlashState(void); 
+        #void VHadFlash(void); 
+
+        --Parameters_reading character_data and write_loc are made as _no and is verified explicitly
+        #void Dma2dDrawChar(void _no *character_data, void _no *write_loc, T_UINT32 _in u32_width, T_UINT32 _in u32_height, T_UINT16 _in e_color)
+        #{
+        #  PTU_Dma2dDrawChar = (void *)character_data;
+        #  PTU_write_loc = (T_UINT16 *)write_loc;
+        #}
+        
+        --Parameter ps_font is made as _no and is verified explicitly
+        # const  T_BFC_CHARINFO* PsGetCharInfo(T_BFC_FONT _no ps_font, T_UINT8 _in u8_char)
+        #{
+        #   PTU_IN_PsGetCharInfo = ps_font;
+        #   ps_font = &PTU_FontsGetFont;
+        #}
+        
+        --Parameter ps_font is made as _no and is verified explicitly
+        # const  T_UINT8* Pu8GetCharBitMap(T_BFC_FONT _no *ps_font, T_UINT8 _in u8_char) 
+        #{
+        #   PTU_IN_Pu8GetCharBitMap = ps_font;
+        #   ps_font = &PTU_FontsGetFont;
+        #}
+
+	 --Parameter ps_dis_region and  pps_poly_red_x is made as _no and  verified explicitly
+	 #void WidgetsRedX(T_SDISREGION  _no ps_dis_region, T_SPOLY  _no **pps_poly_red_x)
+	 #{
+	 # PTU_ps_dis_region = *ps_dis_region;
+	 # PTU_pps_poly_red_x = *((T_SPOLY *)pps_poly_red_x);
+	 #}
+
+	 #T_UINT8 CompareLimit(T_FLOAT  _in val, T_FLOAT  _in range, T_UINT8  _in operator);	
+	 
+    END DEFINE
+    
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+--Environment of the hdudispftext.c
+
+--ENVIRONMENT ENV_hdudispftext_c
+
+    --None
+
+--END ENVIRONMENT -- ENV_hdudispftext_c
+--USE ENV_hdudispftext_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TextDrawChar
+--------------------------------------------------------------------------------
+SERVICE TextDrawChar
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT8 u8_char;
+    #T_UINT16 u16_dis_x;
+    #T_UINT16 u16_dis_y;
+    #T_BFC_FONT p_font;
+    #T_EPENCOLOR e_color;
+    -- By function returned type declaration
+    #T_UINT16 ret_TextDrawChar;
+    
+    --Local variable declaration
+    -- created for passing the address for pProp in structure T_BFC_FONT
+    #T_BFC_FONT_PROP PTU_pProp;
+
+    ENVIRONMENT ENV_TextDrawChar
+
+    VAR u8_char,            init = 0,       ev = init
+
+    VAR u16_dis_x,          init = 0,       ev = init
+
+    VAR u16_dis_y,          init = 0,       ev = init
+
+    STRUCTURE p_font,       init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, p_var_type => { pProp =>&PTU_pProp } }, 
+                                          & ev = init
+
+    VAR e_color,            init = BLACK,   ev = init
+
+    VAR ret_TextDrawChar,   init = 0,       ev = init
+
+    END ENVIRONMENT -- ENV_TextDrawChar
+
+    USE ENV_TextDrawChar
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This test case is exercised for minimum value of function parameters
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-001]
+    COMMENT The Function TextDrawChar sets cbit map to return value of function Pu8GetCharBitMap,
+    COMMENT width to width of the return value of function PsGetCharInfo and
+    COMMENT height to FontHeight of p_font
+    COMMENT
+    COMMENT Equivalence Class 17,18
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-003]
+    COMMENT The Function TextDrawChar sets pixel dot address to
+    COMMENT Vp_fgfb2 plus u16_dis_x(0) multiply with TWO plus u16_dis_y(0) multiply with TWO multiply S16_panel_width((T_INT16)-32768,),
+    COMMENT when E_orientation is E_LAND_SCAPE_PORTRAIT_UNKNOWN
+    COMMENT
+    COMMENT Equivalence Class 27
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-010]
+    COMMENT The Function TextDrawChar calls function Dma2dDrawChar with parameters cbit map,pixel dot address,
+    COMMENT width,height and e_color,when E_orientation is E_LAND_SCAPE_PORTRAIT_UNKNOWN and e_color is BLACK  
+    COMMENT
+    COMMENT Equivalence Class 19,21,23
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-011]
+    COMMENT The Function TextDrawChar returns width.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT      
+    COMMENT </TD> 
+ 
+        ELEMENT
+        COMMENT INPUT SECTION:
+
+            VAR u8_char,                    init = 0,                                ev = init
+            VAR u16_dis_x,                  init = 0,                                ev = init
+            VAR u16_dis_y,                  init = 0,                                ev = init
+            STRUCTURE p_font,               init = { FontType => 0, FontHeight => 0, Baseline => 0, Reversed => 0, p_var_type => { pProp =>&PTU_pProp} },  
+                                                                    &                ev = init
+            VAR e_color,                    init = BLACK,                            ev = init
+            VAR ret_TextDrawChar,           init = 1,                                ev = 0
+            STRUCTURE PTU_PsGetCharInfo,    init = { Width => 0, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },
+                                                                    &                ev = init
+            VAR Vp_fgfb2,                   init = &PTU_Vp_fgfb2,                    ev = init
+            VAR S16_panel_width,            init = (T_INT16)-32768,                           ev = init
+            VAR E_orientation,              init = E_LAND_SCAPE_PORTRAIT_UNKNOWN,    ev = init
+
+        COMMENT OUTPUT SECTION:
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_IN_Pu8GetCharBitMap,        ev = &p_font
+            VAR PTU_IN_PsGetCharInfo,       init =  &PTU_IN_PsGetCharInfo,           ev = &p_font
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,               ev = &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = (T_UINT16 *) ((T_UINT32)Vp_fgfb2+262138),          ev = (T_UINT16 *) ((T_UINT32)Vp_fgfb2)
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            -- None
+            
+            --Stub Calls:
+        SIMUL
+            STUB Pu8GetCharBitMap(0) &PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo(0)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar(0,0,BLACK)
+        END SIMUL
+        
+        -- Calling the Unit Under Test        
+            #ret_TextDrawChar = TextDrawChar(u8_char, u16_dis_x, u16_dis_y, &p_font, e_color);
+        END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This test case is exercised for maximum value  of function parameters
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-001]
+    COMMENT The Function TextDrawChar sets cbit map to return value of function Pu8GetCharBitMap,
+    COMMENT width of the return value of function PsGetCharInfo and 
+    COMMENT height to FontHeight of p_font
+    COMMENT
+    COMMENT Equivalence Class 17,18
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-002]
+    COMMENT The Function TextDrawChar sets u16_dis_x to u16_dis_x((T_UINT16)65535) plus width and
+    COMMENT pixel dot address to Vp_fgfb2 plus S16_panel_height(0) minus u16_dis_x((T_UINT16)65535) multiply with S16_panel_width((T_INT16)32767) plus u16_dis_y((T_UINT16)65535) multiply with TWO,
+    COMMENT When E_orientation is equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Equivalence Class 26
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-010]
+    COMMENT The Function TextDrawChar Calls function Dma2dDrawChar with parameters cbit map,pixel dot address,
+    COMMENT width,height and e_color,
+    COMMENT when E_orientation is E_PORTRAIT and e_color is CAS_WHITE+1.(max+1)
+    COMMENT
+    COMMENT Equivalence Class 19,21,23
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-011]
+    COMMENT The Function TextDrawChar returns width.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT      
+    COMMENT </TD>
+
+        ELEMENT
+        COMMENT INPUT SECTION:
+
+            VAR u8_char,                    init = (T_UINT8)255,                                 ev = init
+            VAR u16_dis_x,                  init = (T_UINT16)65535,                               ev = init
+            VAR u16_dis_y,                  init = (T_UINT16)65535,                               ev = init
+            STRUCTURE p_font,               init = { FontType => (T_UINT32)4294967295, FontHeight => (T_UINT16)65535, Baseline => (T_UINT16)65535, Reversed => (T_UINT32)4294967295, p_var_type => { pProp =>&PTU_pProp} }, 
+                                                                        &               ev = init
+            VAR e_color,                    init = CAS_WHITE+1,                            ev = init
+            STRUCTURE PTU_PsGetCharInfo,    init = { Width => (T_UINT16)65535, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },
+                                                                        &               ev = init
+            VAR Vp_fgfb2,                   init = &PTU_Vp_fgfb2,                       ev = init
+            VAR S16_panel_width,            init = (T_INT16)32767,                               ev = init
+            VAR S16_panel_height,           init = 0,                                   ev = init
+            VAR E_orientation,              init = E_PORTRAIT,                          ev = init
+
+        COMMENT OUTPUT SECTION:
+            VAR ret_TextDrawChar,           init = 0,                                   ev = (T_UINT16)65535
+            VAR PTU_IN_Pu8GetCharBitMap,    init = &PTU_IN_Pu8GetCharBitMap,            ev = &p_font
+            VAR PTU_IN_PsGetCharInfo,       init = &PTU_IN_PsGetCharInfo,               ev = &p_font
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,                  ev = &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = (T_UINT16 *) ((T_UINT32)Vp_fgfb2),      ev = (T_UINT16 *) ((T_UINT32)Vp_fgfb2+393210)
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            -- None
+            
+            --Stub Calls:
+        SIMUL
+            STUB Pu8GetCharBitMap((T_UINT8)255) &PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo((T_UINT8)255)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar((T_UINT16)65535,(T_UINT16)65535,CAS_WHITE+1)
+        END SIMUL
+        
+            -- Calling the Unit Under Test        
+            #ret_TextDrawChar = TextDrawChar(u8_char, u16_dis_x, u16_dis_y, &p_font, e_color);
+        END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This test case is exercised for nominal value of function parameters and max value for e_color
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-001]
+    COMMENT The Function TextDrawChar sets cbit map to return value of function Pu8GetCharBitMap,
+    COMMENT width of the return value of function PsGetCharInfo and 
+    COMMENT height to FontHeight of p_font
+    COMMENT
+    COMMENT Equivalence Class 17,18
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-003]
+    COMMENT The Function TextDrawChar sets pixel dot address to
+    COMMENT Vp_fgfb2 plus u16_dis_x(20) multiply with TWO plus u16_dis_y(20) multiply with TWO multiply S16_panel_width((T_UINT16)65535),
+    COMMENT when E_orientation is E_LAND_SCAPE
+    COMMENT
+    COMMENT Equivalence Class 27
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-004]
+    COMMENT The Function TextDrawChar calls function Dma2dDrawChar with parameter cbit map, pixel dot address,,
+    COMMENT  width, height and e_color when E_orientation is E_LAND_SCAPE.
+    COMMENT
+    COMMENT Equivalence Class 19,20
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-007]
+    COMMENT The Function TextDrawChar calls function Dma2dDrawChar  with parameter cbit map, pixel dot address,,
+    COMMENT  width, height and e_color ,
+    COMMENT when E_orientation is E_LAND_SCAPE and e_color is CAS_WHITE.
+    COMMENT
+    COMMENT Equivalence Class 19,20,23
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-011]
+    COMMENT The Function TextDrawChar returns width.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT      
+    COMMENT </TD>   
+
+        ELEMENT
+        COMMENT INPUT SECTION:
+
+            VAR u8_char,                    init = 205,                     ev = init
+            VAR u16_dis_x,                  init = 20,                      ev = init
+            VAR u16_dis_y,                  init = 20,                      ev = init
+            STRUCTURE p_font,               init = { FontType => 985, FontHeight => 50, Baseline => 655, Reversed => 955, p_var_type => { pProp =>&PTU_pProp} },        ev = init
+            VAR e_color,                    init = CAS_WHITE,                  ev = init
+            STRUCTURE PTU_PsGetCharInfo,    init = { Width => 40, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } }, 
+                                                                        &   ev = init
+            VAR Vp_fgfb2,                   init = &PTU_Vp_fgfb2,           ev = init
+            VAR S16_panel_width,            init = (T_INT16)32767,                   ev = init
+            VAR S16_panel_height,           init = (T_INT16)-32768,                  ev = init
+            VAR E_orientation,              init = E_LAND_SCAPE,            ev = init
+
+        COMMENT OUTPUT SECTION:
+            VAR ret_TextDrawChar,           init = 0,                           ev = 40
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_IN_Pu8GetCharBitMap,   ev = &p_font
+            VAR PTU_IN_PsGetCharInfo,       init =  &PTU_IN_PsGetCharInfo,      ev = &p_font
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,          ev = &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = (T_UINT16 *) ((T_UINT32)Vp_fgfb2) ,      ev = (T_UINT16 *) ((T_UINT32)Vp_fgfb2+1310720)
+         
+        COMMENT INPUT/OUTPUT SECTION:
+        -- None
+        
+            --Stub Calls:
+        SIMUL
+            STUB Pu8GetCharBitMap(205) &PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo(205)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar(40,50,CAS_WHITE)
+            STUB Dma2dDrawChar(40,50,CAS_WHITE)
+        END SIMUL
+        
+        -- Calling the Unit Under Test        
+            #ret_TextDrawChar = TextDrawChar(u8_char, u16_dis_x, u16_dis_y, &p_font, e_color);
+        END ELEMENT
+
+END TEST -- TEST 3
+        
+TEST 4
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This test case is exercised for nominal value of function parameters
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-001]
+    COMMENT The Function TextDrawChar sets cbit map to return value of function Pu8GetCharBitMap,
+    COMMENT width of the return value of function PsGetCharInfo and 
+    COMMENT height to FontHeight of p_font
+    COMMENT
+    COMMENT Equivalence Class 17,18
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-003]
+    COMMENT The Function TextDrawChar sets pixel dot address to
+    COMMENT Vp_fgfb2 plus u16_dis_x(20) multiply with TWO plus u16_dis_y(20) multiply with TWO multiply S16_panel_width((T_UINT16)32767),
+    COMMENT when E_orientation is E_LAND_SCAPE
+    COMMENT
+    COMMENT Equivalence Class 27
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-004]
+    COMMENT The Function TextDrawChar calls function Dma2dDrawChar with parameter cbit map, pixel dot address,,
+    COMMENT  width, height and e_color ,
+    COMMENT when E_orientation is E_LAND_SCAPE.
+    COMMENT
+    COMMENT Equivalence Class 19,20
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-005]
+    COMMENT The Function TextDrawChar calls function Dma2dDrawChar with parameter cbit map, pixel dot address, width, height and CAS_REV_RED ,
+    COMMENT sets cbit map to return value of function Pu8GetCharBitMap  with parameter p_font 
+    COMMENT and result of bitwise AND of u8_char and EXTRACT_1_7_BIT and
+    COMMENT calls function Dma2dDrawChar with parameter cbit map, pixel dot address, width, height and WHITE
+    COMMENT when E_orientation is E_LAND_SCAPE and
+    COMMENT e_color is CAS_RED and result of bitwise AND of u8_char and EXTRACT_8_BIT is equal to TRUE.
+    COMMENT
+    COMMENT Equivalence Class 19,17,20,22,38
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-011]
+    COMMENT Function returns width.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT      
+    COMMENT </TD>
+
+        ELEMENT
+        COMMENT INPUT SECTION:
+
+            VAR u8_char,                    init = 128,                         ev = init
+            VAR u16_dis_x,                  init = 20,                          ev = init
+            VAR u16_dis_y,                  init = 20,                          ev = init
+            STRUCTURE p_font,               init = { FontType => 985, FontHeight => 50, Baseline => 655, Reversed => 955, p_var_type => { pProp =>&PTU_pProp} },        ev = init
+            VAR e_color,                    init = CAS_RED,                     ev = init
+            STRUCTURE PTU_PsGetCharInfo,    init = { Width => 40, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            VAR Vp_fgfb2,                   init = &PTU_Vp_fgfb2,               ev = init
+            VAR S16_panel_width,            init = (T_INT16)32767,                       ev = init
+            VAR S16_panel_height,           init = 0,                           ev = init
+            VAR E_orientation,              init = E_LAND_SCAPE,                ev = init
+
+        COMMENT OUTPUT SECTION:
+            VAR ret_TextDrawChar,           init = 0,                           ev = 40
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_IN_Pu8GetCharBitMap,   ev = &p_font
+            VAR PTU_IN_PsGetCharInfo,       init =  &PTU_IN_PsGetCharInfo,      ev = &p_font
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,          ev = &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = (T_UINT16 *) ((T_UINT32)Vp_fgfb2),      ev = (T_UINT16 *) ((T_UINT32)Vp_fgfb2+1310720)
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            -- None
+            
+            --Stub Calls:
+        SIMUL
+            STUB Pu8GetCharBitMap(128) &PTU_Pu8GetCharBitMap
+            STUB Pu8GetCharBitMap(0) &PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo(128)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar(40,50,CAS_RED)
+            STUB Dma2dDrawChar(40,50,CAS_REV_RED)
+            STUB Dma2dDrawChar(40,50,WHITE)
+        END SIMUL
+        
+        -- Calling the Unit Under Test        
+            #ret_TextDrawChar = TextDrawChar(u8_char, u16_dis_x, u16_dis_y, &p_font, e_color);
+        END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This test case is exercised for nominal value of function parameters
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-001]
+    COMMENT The Function TextDrawChar sets cbit map to return value of function Pu8GetCharBitMap,
+    COMMENT width of the return value of function PsGetCharInfo and
+    COMMENT height to FontHeight of p_font.
+    COMMENT
+    COMMENT Equivalence Class 17,18
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-003]
+    COMMENT The Function TextDrawChar sets pixel dot address to
+    COMMENT Vp_fgfb2 plus u16_dis_x(20) multiply with TWO plus u16_dis_y(20) multiply with TWO multiply S16_panel_width((T_INT16)32767),
+    COMMENT when E_orientation is E_LAND_SCAPE
+    COMMENT
+    COMMENT Equivalence Class 27
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-004]
+    COMMENT The Function TextDrawChar calls function Dma2dDrawChar with parameter cbit map, pixel dot address,,
+    COMMENT  width, height and e_color ,
+    COMMENT when E_orientation is E_LAND_SCAPE.
+    COMMENT
+    COMMENT Equivalence Class 19,20
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-007]
+    COMMENT The Function TextDrawChar calls function Dma2dDrawChar with parameter cbit map, pixel dot address,,
+    COMMENT  width, height and e_color ,when E_orientation is E_LAND_SCAPE 
+    COMMENT and e_color is CAS_RED and result of bitwise AND of u8_char and EXTRACT_8_BIT is equal to FALSE.
+    COMMENT
+    COMMENT Equivalence Class 19,20,22,39
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-011]
+    COMMENT The Function TextDrawChar returns width.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT      
+    COMMENT </TD>
+
+        ELEMENT
+        COMMENT INPUT SECTION:
+
+            VAR u8_char,                    init = 110,                         ev = init
+            VAR u16_dis_x,                  init = 20,                          ev = init
+            VAR u16_dis_y,                  init = 20,                          ev = init
+            STRUCTURE p_font,               init = { FontType => 985, FontHeight => 50, Baseline => 655, Reversed => 955, p_var_type => { pProp =>&PTU_pProp} },        ev = init
+            VAR e_color,                    init = CAS_RED,                     ev = init
+            STRUCTURE PTU_PsGetCharInfo,    init = { Width => 40, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            VAR Vp_fgfb2,                   init = &PTU_Vp_fgfb2,               ev = init
+            VAR S16_panel_width,            init = (T_INT16)32767,                       ev = init
+            VAR S16_panel_height,           init = 0,                           ev = init
+            VAR E_orientation,              init = E_LAND_SCAPE,                ev = init
+
+        COMMENT OUTPUT SECTION:
+            VAR ret_TextDrawChar,           init = 0,                           ev = 40
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_IN_Pu8GetCharBitMap,   ev = &p_font
+            VAR PTU_IN_PsGetCharInfo,       init =  &PTU_IN_PsGetCharInfo,      ev = &p_font
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,          ev= &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = (T_UINT16 *) ((T_UINT32)Vp_fgfb2) ,      ev= (T_UINT16 *) ((T_UINT32)Vp_fgfb2+1310720)
+                    
+        COMMENT INPUT/OUTPUT SECTION:
+            -- None
+            
+            --Stub Calls:
+        SIMUL
+            STUB Pu8GetCharBitMap(110) &PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo(110)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar(40,50,CAS_RED)
+            STUB Dma2dDrawChar(40,50,CAS_RED)
+        END SIMUL
+        
+        -- Calling the Unit Under Test        
+            #ret_TextDrawChar = TextDrawChar(u8_char, u16_dis_x, u16_dis_y, &p_font, e_color);
+        END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 7
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This test case is exercised for nominal value of function parameters
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-001]
+    COMMENT The Function TextDrawChar sets cbit map to return value of function Pu8GetCharBitMap,
+    COMMENT width of the return value of function PsGetCharInfo and
+    COMMENT height to FontHeight of p_font.
+    COMMENT
+    COMMENT Equivalence Class 17,18
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-002]
+    COMMENT The Function TextDrawChar sets u16_dis_x to u16_dis_x(20) plus width and
+    COMMENT pixel dot address to Vp_fgfb2 plus S16_panel_height(60) minus u16_dis_x(20) multiply with S16_panel_width((T_INT16)32767) plus u16_dis_y(20) multiply with TWO,
+    COMMENT When E_orientation is equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Equivalence Class 26
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-008]
+    COMMENT The Function TextDrawChar calls function Dma2dDrawChar with parameter cbit map, pixel dot address,,
+    COMMENT  width, height and CAS_REV_RED ,
+    COMMENT cbit map to return value of function Pu8GetCharBitMap with parameter p_font
+    COMMENT and result of bitwise AND of u8_char and EXTRACT_1_7_BIT and
+    COMMENT calls function Dma2dDrawChar with parameter cbit map, pixel dot address,,
+    COMMENT  width, height and WHITE ,
+    COMMENT when E_orientation is E_PORTRAIT and e_color is CAS_RED and result of bitwise AND of u8_char and EXTRACT_8_BIT is equal to TRUE.
+    COMMENT
+    COMMENT Equivalence Class 19,17,21,22,38
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-011]
+    COMMENT The Function TextDrawChar returns width.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT      
+    COMMENT </TD>
+
+        ELEMENT
+        COMMENT INPUT SECTION:
+
+            VAR u8_char,                    init = 128,                             ev = init
+            VAR u16_dis_x,                  init = 20,                              ev = init
+            VAR u16_dis_y,                  init = 20,                              ev = init
+            STRUCTURE p_font,               init = { FontType => 985, FontHeight => 50, Baseline => 655, Reversed => 955, p_var_type => { pProp =>&PTU_pProp} },        ev = init
+            VAR e_color,                    init = CAS_RED,                         ev = init
+            STRUCTURE PTU_PsGetCharInfo,    init = { Width => 40, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            VAR Vp_fgfb2,                   init = &PTU_Vp_fgfb2,                   ev = init
+            VAR S16_panel_width,            init = (T_INT16)32767,                           ev = init
+            VAR S16_panel_height,           init = (T_INT16)-32768,                          ev = init
+            VAR E_orientation,              init = E_PORTRAIT,                      ev = init
+
+        COMMENT OUTPUT SECTION:
+            VAR ret_TextDrawChar,           init = 0,                               ev = 40
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_IN_Pu8GetCharBitMap,       ev = &p_font
+            VAR PTU_IN_PsGetCharInfo,       init =  &PTU_IN_PsGetCharInfo,          ev = &p_font
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,              ev= &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = (T_UINT16 *) ((T_UINT32)Vp_fgfb2+262138) ,  ev= (T_UINT16 *) ((T_UINT32)Vp_fgfb2+2143617184)
+        
+        COMMENT INPUT/OUTPUT SECTION:
+                -- None
+            
+            --Stub Calls:
+        SIMUL
+            STUB Pu8GetCharBitMap(128) &PTU_Pu8GetCharBitMap
+            STUB Pu8GetCharBitMap(0) &PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo(128)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar(50,40,CAS_REV_RED)
+            STUB Dma2dDrawChar(50,40,WHITE)
+        END SIMUL
+        
+        -- Calling the Unit Under Test        
+            #ret_TextDrawChar = TextDrawChar(u8_char, u16_dis_x, u16_dis_y, &p_font, e_color);
+        END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 9
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT This test case is exercised for nominal value of function parameters
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-001]
+    COMMENT The Function TextDrawChar sets cbit map to return value of function Pu8GetCharBitMap,
+    COMMENT width of the return value of function PsGetCharInfo and
+    COMMENT height to FontHeight of p_font
+    COMMENT
+    COMMENT Equivalence Class 17,18
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-002]
+    COMMENT The Function TextDrawChar sets u16_dis_x to u16_dis_x(20) plus width and
+    COMMENT pixel dot address to Vp_fgfb2 plus S16_panel_height((T_INT16)32767) minus u16_dis_x(20) multiply with S16_panel_width((T_INT16)32767) plus u16_dis_y(20) multiply with TWO,
+    COMMENT When E_orientation is equal to E_PORTRAIT.
+    COMMENT
+    COMMENT Equivalence Class 26
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-010]
+    COMMENT The Function TextDrawChar Calls function Dma2dDrawChar with parameters cbit map,pixel dot address,
+    COMMENT width,height and e_color,when E_orientation is E_PORTRAIT and e_color is CAS_RED 
+    COMMENT and result of bitwise AND of u8_char and EXTRACT_8_BIT is equal to FALSE.
+    COMMENT
+    COMMENT Equivalence Class 19,21,22,39
+    COMMENT
+    COMMENT [hdudispftext-TextDrawChar-DB-LLR-011]
+    COMMENT The Function TextDrawChar returns width.
+    COMMENT
+    COMMENT Equivalence Class None
+    COMMENT      
+    COMMENT </TD>
+
+        ELEMENT
+        COMMENT INPUT SECTION:
+
+            VAR u8_char,                    init = 110,                                 ev = init
+            VAR u16_dis_x,                  init = 20,                                  ev = init
+            VAR u16_dis_y,                  init = 20,                                  ev = init
+            STRUCTURE p_font,               init = { FontType => 985, FontHeight => 50, Baseline => 655, Reversed => 955, p_var_type => { pProp =>&PTU_pProp} },        ev = init
+            VAR e_color,                    init = CAS_RED,                             ev = init
+            STRUCTURE PTU_PsGetCharInfo,    init = { Width => 40, DataSize => 0, p_var_type => { pData8 =>&PTU_pData8 } },  ev=init
+            VAR Vp_fgfb2,                   init = &PTU_Vp_fgfb2,                       ev = init
+            VAR S16_panel_width,            init = (T_INT16)32767,                               ev = init
+            VAR S16_panel_height,           init = (T_INT16)32767,                               ev = init
+            VAR E_orientation,              init = E_PORTRAIT,                          ev = init
+
+        COMMENT OUTPUT SECTION:
+            VAR ret_TextDrawChar,           init = 0,                                   ev = 40
+            VAR PTU_IN_Pu8GetCharBitMap,    init =  &PTU_IN_Pu8GetCharBitMap,           ev = &p_font
+            VAR PTU_IN_PsGetCharInfo,       init =  &PTU_IN_PsGetCharInfo,              ev = &p_font
+            VAR PTU_Dma2dDrawChar,          init = &PTU_Dma2dDrawChar,                  ev= &PTU_Pu8GetCharBitMap 
+            VAR PTU_write_loc,              init = (T_UINT16 *) ((T_UINT32)Vp_fgfb2+40),      ev= (T_UINT16 *) ((T_UINT32)Vp_fgfb2+2143420578) 
+            
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            -- None
+            
+            
+            --Stub Calls:
+        SIMUL
+            STUB Pu8GetCharBitMap(110) &PTU_Pu8GetCharBitMap
+            STUB PsGetCharInfo(110)&PTU_PsGetCharInfo
+            STUB Dma2dDrawChar(50,40,CAS_RED)
+        END SIMUL
+        
+        -- Calling the Unit Under Test        
+            #ret_TextDrawChar = TextDrawChar(u8_char, u16_dis_x, u16_dis_y, &p_font, e_color);
+        END ELEMENT
+
+END TEST -- TEST 9
+
+-- Test case is commented since it is crashing
+--TEST 10
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT 
+--    COMMENT [hdudispftext-TextDrawChar-DB-LLR-001]
+--    COMMENT The function TextDrawChar, Parameter 'p_font' is exercised for NULL value.
+--    COMMENT 
+--    COMMENT Equivalence Class 34,36
+--    COMMENT 
+--    COMMENT      
+--    COMMENT </TD> 
+-- 
+--        ELEMENT
+--        COMMENT INPUT SECTION:
+--
+--            VAR u8_char,                  init = 0,       ev = init
+--            VAR u16_dis_x,                init = 0,       ev = init
+--            VAR u16_dis_y,                init = 0,       ev = init
+--            VAR e_color,                  init = BLACK,   ev = init
+--            VAR ret_TextDrawChar,         init = 0,       ev = init
+--
+--        COMMENT OUTPUT SECTION:
+--                --None 
+--        
+--        COMMENT INPUT/OUTPUT SECTION:
+--                --None 
+--
+--            
+--            --Stub Calls:
+--        SIMUL
+--                --None 
+--        END SIMUL
+--        
+--        -- Calling the Unit Under Test        
+--            #ret_TextDrawChar = TextDrawChar(u8_char, u16_dis_x, u16_dis_y, NULL, e_color);
+--        END ELEMENT
+--
+--END TEST -- TEST 10
+
+END SERVICE -- TextDrawChar
+
+
+
+
+

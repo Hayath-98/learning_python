@@ -1,0 +1,1329 @@
+HEADER hdulibstm32756gevalsdram,Source Code Ver : 1.2,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Manu K M
+--
+-- File Name           : hdulibstm32756gevalsdram.ptu
+--
+-- Test Creation Date  : 20.09.2017
+--
+-- Tested Functions    : BspSdramInit
+--                       BspSdramInitializationSequence
+--                       BspSdramMspInit
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE              TESTER NAME        MODIFICATIONS
+--  ------------        ---------              -----------        -------------
+--     1.1              20.09.2017             Manu K M           Created the ptu file.
+--     1.2              10.11.2017             Manu K M           Updated as per #PR100171
+--     1.3              14.11.2017             Manu K M           Updated as per #PR100171
+--
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdulibstm32756gevalsdram.h"  
+##include "hdulibstm32f7xxhalfmc.h"     
+##include "hdulibbasictypes.h"          
+##include "hdulibstm32f7xxhalgpio.h"    
+##include "hdulibstm32f7xxhaldma.h"     
+##include "hdulibstm32f7xxhalsdram.h"   
+##include "hdulibstm32f7xxhalrccex.h"   
+##include "hdulibstm32f7xxhalcortex.h"  
+##include "hdulibstm32f7xxhal.h"        
+##include "hdulibcorecm7.h"             
+##include "hdulibstm32hallegacy.h"      
+##include "hdulibstm32f7xxhalgpioex.h"  
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    ##define SDRAM_TIMEOUT          ((T_UINT32)0xFFFF)
+    
+-- Declarations of the temporary variable
+    
+    --Variable created to verify the function HalDmaDeInit.
+    #T_DMA_HANDLE PTU_hdma_1_in;
+    
+    --Variable created to verify the function HalDmaInit.
+    #T_DMA_HANDLE PTU_hdma_2_in;
+    
+    --Variable created to verify the function HalGpioInit.
+    #T_GPIO_INIT PTU_GPIO_Init[100];
+    #T_UINT16 PTU_index2;
+    
+    --Variable created to verify the function HalSdramProgramRefreshRate.
+    #T_SDRAM_HANDLE PTU_hsdram_1_in;
+    
+    --Variable created to verify the function HalSdramSendCommand.
+    #T_SDRAM_HANDLE PTU_hsdram_2_in;
+    #T_FMC_SDRAM_COMMAND PTU_Command[100];
+    #T_UINT16 PTU_index1;
+    
+    --Variable created to verify the function HALSdramInit.
+    #T_SDRAM_HANDLE PTU_hsdram_3;
+    #T_FMC_SDRAM_TIMING PTU_Timing; 
+
+--------------------------------------------------------------------------------
+
+BEGIN
+    
+    COMMENT Author Name      :  Manu K M
+    COMMENT
+    COMMENT File Name        :  hdulibstm32756gevalsdram.ptu
+    COMMENT
+    COMMENT Tested Functions :  BspSdramInit
+    COMMENT                     BspSdramInitializationSequence
+    COMMENT                     BspSdramMspInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s): 
+    COMMENT 
+    COMMENT 1.Header file "hdulibstm32f7xxhalfmc.h" is modified for testing purpose. The following macros are modified
+    COMMENT for stubbing hardware address.
+    COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define FMC_SDRAM_DEVICE               FMC_BANK5_6*/
+    COMMENT 
+    COMMENT /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_FMC_BANK5_6 PTU_FMC_SDRAM_DEVICE[100];
+    COMMENT #define FMC_SDRAM_DEVICE               ((T_FMC_BANK5_6 *)(&PTU_FMC_SDRAM_DEVICE[0]))
+    COMMENT
+    COMMENT 2.Header file "hdulibstm32f746xx.h" is modified for testing purpose. The following macros are modified
+    COMMENT for stubbing hardware address.
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define GPIOD               ((T_GPIO *) GPIOD_BASE)*/
+    COMMENT  
+    COMMENT /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_GPIO PTU_GPIOD;
+    COMMENT #define GPIOD               ((T_GPIO *)&PTU_GPIOD)
+    COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define GPIOE               ((T_GPIO *) GPIOE_BASE)*/
+    COMMENT
+    COMMENT /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_GPIO PTU_GPIOE;
+    COMMENT #define GPIOE               ((T_GPIO *) &PTU_GPIOE)
+    COMMENT
+    COMMENT /*Commented for testing purpose*/d
+    COMMENT /*#define GPIOF               ((T_GPIO *) GPIOF_BASE)*/
+    COMMENT 
+    COMMENT /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT  T_GPIO PTU_GPIOF;
+    COMMENT  #define GPIOF              ((T_GPIO *) &PTU_GPIOF)
+    COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define GPIOG               ((T_GPIO *) GPIOG_BASE)*/
+    COMMENT
+    COMMENT /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_GPIO PTU_GPIOG;
+    COMMENT #define GPIOG               ((T_GPIO *) &PTU_GPIOG)
+    COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define GPIOH               ((T_GPIO *) GPIOH_BASE)*/
+    COMMENT
+    COMMENT /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_GPIO PTU_GPIOH;
+    COMMENT #define GPIOH               ((T_GPIO *) &PTU_GPIOH)
+    COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define GPIOI               ((T_GPIO *) GPIOI_BASE)*/
+    COMMENT 
+    COMMENT /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_GPIO PTU_GPIOI;
+    COMMENT #define GPIOI               ((T_GPIO *) &PTU_GPIOI)
+    COMMENT
+    COMMENT 
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define RCC                 ((T_RCC *) RCC_BASE)*/
+    COMMENT
+    COMMENT /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_RCC PTU_RCC;
+    COMMENT #define RCC                 ((T_RCC *) &PTU_RCC)
+    COMMENT
+    COMMENT 3.Header file "hdulibstm32756gevalsdram.h" is modified for testing purpose. The following macros are modified
+    COMMENT  for stubbing hardware address.
+    COMMENT
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define SDRAM_DMAX_STREAM                 DMA2_STREAM0*/
+    COMMENT 
+    COMMENT /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_DMA_STREAM PTU_SDRAM_DMAX_STREAM;
+    COMMENT #define SDRAM_DMAX_STREAM             (T_DMA_STREAM*)&PTU_SDRAM_DMAX_STREAM
+    COMMENT
+    COMMENT 4.For the below snippet 'do..while' loop cannot be covered for 2 times or more since it is controlled by magical number in the function 'BspSdramMspInit'.
+    COMMENT   Code snippet:
+    COMMENT     /*hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-001*/
+    COMMENT     /* Enable FMC clock */
+    COMMENT     __HAL_RCC_FMC_CLK_ENABLE();
+    COMMENT   
+    COMMENT     /*hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-002*/
+    COMMENT     /* Enable chosen DMAx clock */
+    COMMENT     __DMAX_CLK_ENABLE();
+    COMMENT   
+    COMMENT    /*hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-003*/
+    COMMENT     /* Enable GPIOs clock */
+    COMMENT     __HAL_RCC_GPIOD_CLK_ENABLE();
+    COMMENT     __HAL_RCC_GPIOE_CLK_ENABLE();
+    COMMENT     __HAL_RCC_GPIOF_CLK_ENABLE();
+    COMMENT     __HAL_RCC_GPIOG_CLK_ENABLE();
+    COMMENT     __HAL_RCC_GPIOH_CLK_ENABLE();
+    COMMENT     __HAL_RCC_GPIOI_CLK_ENABLE();   
+    COMMENT     /* Associate the DMA handle */
+    COMMENT     __HAL_LINKDMA(h_sdram, hdma, dma_handle);
+    COMMENT 
+    COMMENT 
+    COMMENT 5.Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+    COMMENT warning #191-D: type qualifier is meaningless on cast type
+    COMMENT
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function 'BspSdramInit', calls 'BspSdramMspInit' function.
+    COMMENT   
+    COMMENT Class 2
+    COMMENT Function 'BspSdramInit', calls the function 'HALSdramInit' and its return value is not HAL_OK.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT Function 'BspSdramInit', calls the function 'HALSdramInit' and its return value is HAL_OK.
+    COMMENT 
+    COMMENT Class 4
+    COMMENT Function 'BspSdramInit', calls 'BspSdramInitializationSequence' function. 
+    COMMENT
+    COMMENT Class 5
+    COMMENT Function 'BspSdramInitializationSequence', calls the function 'HalSdramSendCommand'. 
+    COMMENT 
+    COMMENT Class 6
+    COMMENT Function 'BspSdramInitializationSequence', calls the function 'HalDelay'.
+    COMMENT 
+    COMMENT Class 7
+    COMMENT Function 'BspSdramInitializationSequence', calls the function 'HalSdramProgramRefreshRate'.
+    COMMENT
+    COMMENT Class 8
+    COMMENT Function 'BspSdramMspInit', calls the function 'HalGpioInit'.
+    COMMENT
+    COMMENT Class 9
+    COMMENT Function 'BspSdramMspInit', calls the function 'HalDmaDeInit'.
+    COMMENT
+    COMMENT Class 10
+    COMMENT Function 'BspSdramMspInit', calls the function 'HalDmaInit'.
+    COMMENT
+    COMMENT Class 11
+    COMMENT Function 'BspSdramMspInit', calls the function 'HalNvicSetPriority'.
+    COMMENT
+    COMMENT Class 12
+    COMMENT Function 'BspSdramMspInit', calls the function 'HalNvicEnableIrq'.
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT Class 13
+    COMMENT In function 'BspSdramMspInit',NULL is passed to h_sdram parameter.
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hdulibstm32756gevalsdram_c
+
+        #void HalNvicEnableIrq(T_IRQN_TYPE _in IRQn); 
+    
+        #void HalNvicSetPriority(T_IRQN_TYPE _in IRQn, T_UINT32 _in PreemptPriority, T_UINT32 _in SubPriority); 
+        
+        --Parameter *hdma is made _no since local variable address cannot be expected.
+        #T_HAL_STATUS HalDmaInit(T_DMA_HANDLE _no *hdma)
+        #{
+        #   PTU_hdma_2_in = *hdma;
+        #}
+    
+        --Parameter *hdma is made _no since local variable address cannot be expected.
+        #T_HAL_STATUS HalDmaDeInit(T_DMA_HANDLE _no *hdma)
+        #{
+        #   PTU_hdma_1_in = *hdma;
+        #}
+
+        --Parameter *GPIO_Init is made _no since local variable address cannot be expected.
+        #void HalGpioInit(T_GPIO _in *GPIOx, T_GPIO_INIT _no *GPIO_Init)
+        #{
+        #   PTU_GPIO_Init[PTU_index2++] = *GPIO_Init;
+        #}
+   
+        --Parameter *hsdram is made _no since local variable address cannot be expected.
+        #T_HAL_STATUS HalSdramProgramRefreshRate(T_SDRAM_HANDLE _no *hsdram, T_UINT32 _in RefreshRate)
+        #{   
+        #   *hsdram = PTU_hsdram_1_in;
+        #}
+    
+        #void HalDelay( volatile  T_UINT32 _in Delay); 
+    
+        --Parameter *hsdram and *Command are  made _no since local variable address cannot be expected.
+        #T_HAL_STATUS HalSdramSendCommand(T_SDRAM_HANDLE _no *hsdram, T_FMC_SDRAM_COMMAND _no *Command, T_UINT32 _in Timeout)
+        #{
+        #   PTU_Command[PTU_index1++] = *Command;
+        #   *hsdram = PTU_hsdram_2_in;
+        #}
+    
+        --Parameter *hsdram and *Timing are made _no since local variable address cannot be expected.
+        #T_HAL_STATUS HALSdramInit(T_SDRAM_HANDLE _no *hsdram, T_FMC_SDRAM_TIMING _no *Timing)
+        #{
+        #   PTU_hsdram_3 = *hsdram;
+        #   PTU_Timing = *Timing;
+        #}
+    
+    END DEFINE
+
+ELSE_SIMUL
+
+  -- No action defined as of now if the module is not simulated
+ 
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now.
+
+--END IF 
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdulibstm32f7xxhalsdram.c
+
+--ENVIRONMENT hdulibstm32f7xxhalsdram
+
+    --None
+
+--END ENVIRONMENT --ENV_hdulibstm32f7xxhalsdram_c
+
+--USE ENV_hdulibstm32f7xxhalsdram_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BspSdramInit
+--------------------------------------------------------------------------------
+SERVICE BspSdramInit
+SERVICE_TYPE extern
+
+-- By function returned type declaration
+
+    #T_UINT8 ret_BspSdramInit;
+
+ENVIRONMENT ENV_BspSdramInit
+    
+    VAR ret_BspSdramInit,       init = 0,       ev = init
+        
+END ENVIRONMENT -- ENV_BspSdramInit
+    
+USE ENV_BspSdramInit
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInit-DB-LLR-001]
+    COMMENT The function sets Instance of Sdram Handle to FMC_SDRAM_DEVICE
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInit-DB-LLR-002]
+    COMMENT The function does the following:
+    COMMENT 1. Sets LoadToActiveDelay of Timing to TWO.
+    COMMENT 2. Sets ExitSelfRefreshDelay of Timing to SEVEN.
+    COMMENT 3. Sets SelfRefreshTime of Timing to FOUR.
+    COMMENT 4. Sets RowCycleDelay of Timing to SEVEN.
+    COMMENT 5. Sets WriteRecoveryTime of Timing to TWO.
+    COMMENT 6. Sets RPDelay of Timing to TWO.
+    COMMENT 7. Sets RCDDelay of Timing to TWO.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInit-DB-LLR-003]
+    COMMENT The function does the following:
+    COMMENT 1. Sets SDBank of Init of Sdram Handle  to FMC_SDRAM_BANK1,
+    COMMENT 2. Sets ColumnBitsNumber of Init of Sdram Handle  to FMC_SDRAM_COLUMN_BITS_NUM_9.
+    COMMENT 3. Sets RowBitsNumber of Init of Sdram Handle  to FMC_SDRAM_ROW_BITS_NUM_12.
+    COMMENT 4. Sets MemoryDataWidth of Init of Sdram Handle  to SDRAM_MEMORY_WIDTH.
+    COMMENT 5. Sets InternalBankNumber of Init of Sdram Handle  to FMC_SDRAM_INTERN_BANKS_NUM_4.
+    COMMENT 6. Sets CASLatency of Init of Sdram Handle to FMC_SDRAM_CAS_LATENCY_3.
+    COMMENT 7. Sets WriteProtection of Init of Sdram Handle  to FMC_SDRAM_WRITE_PROTECTION_DISABLE.
+    COMMENT 8. Sets SDClockPeriod of Init of Sdram Handle  to SDCLOCK_PERIOD.
+    COMMENT 9. Sets ReadBurst of Init of Sdram Handle   to FMC_SDRAM_RBURST_ENABLE.
+    COMMENT 10. Sets ReadPipeDelay of Init of Sdram Handle  to FMC_SDRAM_RPIPE_DELAY_0.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInit-DB-LLR-004]
+    COMMENT The function calls the function BspSdramMspInit with reference to Sdram Handle as its parameter.
+    COMMENT Equivalence Class 1
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInit-DB-LLR-005]
+    COMMENT The function sets SDRAM status to SDRAM_ERROR when return value of the function HALSdramInit with reference 
+    COMMENT to Sdram Handle and reference to Timing as parameter is not equal to HAL_OK.
+    COMMENT Equivalence Class 2
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInit-DB-LLR-007]
+    COMMENT The function calls the function BspSdramInitializationSequence with REFRESH_COUNT as parameter.
+    COMMENT Equivalence Class 4
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInit-DB-LLR-008]
+    COMMENT The function returns the SDRAM status from the function.
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+            
+            --None
+                              
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None          
+
+        COMMENT OUTPUT SECTION:
+            
+            --Set Instance of Sdram Handle to FMC_SDRAM_DEVICE.
+            VAR PTU_hsdram_3.Instance,                          init = NULL,                        ev = FMC_SDRAM_DEVICE
+            
+            --Set LoadToActiveDelay of Timing to TWO.
+            VAR PTU_Timing.LoadToActiveDelay,                   init = ONE,                         ev = TWO
+
+            --Set ExitSelfRefreshDelay of Timing to SEVEN.
+            VAR PTU_Timing.ExitSelfRefreshDelay,                init = ONE,                         ev = SEVEN
+            
+            --Set SelfRefreshTime of Timing to FOUR.
+            VAR PTU_Timing.SelfRefreshTime,                     init = ONE,                         ev = FOUR
+            
+            --Set RowCycleDelay of Timing to SEVEN.
+            VAR PTU_Timing.RowCycleDelay,                       init = ONE,                         ev = SEVEN
+            
+            --Set WriteRecoveryTime of Timing to TWO.
+            VAR PTU_Timing.WriteRecoveryTime,                   init = ONE,                         ev = TWO
+            
+            --Set RPDelay of Timing to TWO.
+            VAR PTU_Timing.RPDelay,                             init = ONE,                         ev = TWO
+            
+            --Set RCDDelay of Timing to TWO.
+            VAR PTU_Timing.RCDDelay,                            init = ONE,                         ev = TWO
+            
+            --Set SDBank of Init of Sdram Handle  to FMC_SDRAM_BANK1.
+            VAR PTU_hsdram_3.Init.SDBank,                       init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_BANK1
+            
+            --Set ColumnBitsNumber of Init of Sdram Handle  to FMC_SDRAM_COLUMN_BITS_NUM_9.
+            VAR PTU_hsdram_3.Init.ColumnBitsNumber,             init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_COLUMN_BITS_NUM_9
+            
+            --Set RowBitsNumber of Init of Sdram Handle  to FMC_SDRAM_ROW_BITS_NUM_12.
+            VAR PTU_hsdram_3.Init.RowBitsNumber,                init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_ROW_BITS_NUM_12
+            
+            --Set MemoryDataWidth of Init of Sdram Handle  to SDRAM_MEMORY_WIDTH.
+            VAR PTU_hsdram_3.Init.MemoryDataWidth,              init =  FMC_SDRAM_BANK2,            ev = SDRAM_MEMORY_WIDTH
+            
+            -- Set InternalBankNumber of Init of Sdram Handle  to FMC_SDRAM_INTERN_BANKS_NUM_4.
+            VAR PTU_hsdram_3.Init.InternalBankNumber,           init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_INTERN_BANKS_NUM_4
+            
+            --Set CASLatency of Init of Sdram Handle to FMC_SDRAM_CAS_LATENCY_3.
+            VAR PTU_hsdram_3.Init.CASLatency,                   init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_CAS_LATENCY_3
+            
+            --Set WriteProtection of Init of Sdram Handle  to FMC_SDRAM_WRITE_PROTECTION_DISABLE.
+            VAR PTU_hsdram_3.Init.WriteProtection,              init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_WRT_PRTCTN_DISABLE
+            
+            --Set SDClockPeriod of Init of Sdram Handle  to SDCLOCK_PERIOD.
+            VAR PTU_hsdram_3.Init.SDClockPeriod,                init =  FMC_SDRAM_BANK2,            ev = SDCLOCK_PERIOD
+            
+            --Set ReadBurst of Init of Sdram Handle   to FMC_SDRAM_RBURST_ENABLE.
+            VAR PTU_hsdram_3.Init.ReadBurst,                    init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_RBURST_ENABLE
+            
+            --Set ReadPipeDelay of Init of Sdram Handle  to FMC_SDRAM_RPIPE_DELAY_0.
+            VAR PTU_hsdram_3.Init.ReadPipeDelay,                init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_RPIPE_DELAY_0
+            
+            --The function shall set SDRAM status to SDRAM_OK  
+            VAR ret_BspSdramInit,                               init = SDRAM_ERROR,                 ev = SDRAM_OK
+            
+        --Stub Calls :
+        SIMUL
+            
+            --Function HALSdramInit initializes Sdram
+            STUB HALSdramInit()HAL_OK 
+            
+            --Function HalSdramSendCommand sends command to the SDRAM bank.
+            STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK 
+            
+            --Function HalDelay provides delay based on the value present in the function parameter
+            STUB HalDelay(ONE)
+            
+            --Function HalSdramSendCommand sends command to the SDRAM bank.
+            STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+            
+            --Function HalSdramSendCommand sends command to the SDRAM bank.
+            STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+            
+            --Function HalSdramSendCommand sends command to the SDRAM bank.
+            STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+            
+            --Function HalGpioInit initializes the GPIO peripheral.
+            STUB HalGpioInit(GPIOD)
+            
+            STUB HalGpioInit(GPIOE)
+            
+            STUB HalGpioInit(GPIOF)
+            
+            STUB HalGpioInit(GPIOG)
+            
+            STUB HalGpioInit(GPIOH)
+            
+            STUB HalGpioInit(GPIOI)
+            
+            --Function HalDmaDeInit de-initializes the DMA peripheral
+            STUB HalDmaDeInit()HAL_OK
+            
+            --Function HalDmaInit initializes the DMA peripheral
+            STUB HalDmaInit()HAL_OK
+            
+            --Function HalSdramProgramRefreshRate Programs the SDRAM Memory Refresh rate.
+            STUB HalSdramProgramRefreshRate(REFRESH_COUNT)HAL_OK
+            
+            --Function HalNvicSetPriority sets the priority grouping field (preemption priority
+            --and sub priority) using the required unlock sequence.
+            STUB HalNvicSetPriority(SDRAM_DMAX_IRQN, MASK_LSB, ZERO)
+            
+            --Function HalNvicEnableIrq enables a device specific interrupt in the NVIC interrupt controller.
+            STUB HalNvicEnableIrq(SDRAM_DMAX_IRQN)
+
+        END SIMUL
+
+        --Calling unit under test
+        #ret_BspSdramInit = BspSdramInit();
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInit-DB-LLR-006]
+    COMMENT The function sets SDRAM status to SDRAM_OK  when return value of the function HALSdramInit with reference to Sdram Handle  
+    COMMENT and reference to Timing as parameter is equal to HAL_OK.
+    COMMENT Equivalence Class 3
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+            
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --Set Instance of Sdram Handle to FMC_SDRAM_DEVICE.
+            VAR PTU_hsdram_3.Instance,                      init = NULL,                        ev = FMC_SDRAM_DEVICE
+            
+            --Set LoadToActiveDelay of Timing to TWO.
+            VAR PTU_Timing.LoadToActiveDelay,               init = ONE,                         ev = TWO
+
+            --Set ExitSelfRefreshDelay of Timing to SEVEN.
+            VAR PTU_Timing.ExitSelfRefreshDelay,            init = ONE,                         ev = SEVEN
+            
+            --Set SelfRefreshTime of Timing to FOUR.
+            VAR PTU_Timing.SelfRefreshTime,                 init = ONE,                         ev = FOUR
+            
+            --Set RowCycleDelay of Timing to SEVEN.
+            VAR PTU_Timing.RowCycleDelay,                   init = ONE,                         ev = SEVEN
+                
+            --Set WriteRecoveryTime of Timing to TWO.
+            VAR PTU_Timing.WriteRecoveryTime,               init = ONE,                         ev = TWO
+            
+            --Set RPDelay of Timing to TWO.
+            VAR PTU_Timing.RPDelay,                         init = ONE,                         ev = TWO
+            
+            --Set RCDDelay of Timing to TWO.
+            VAR PTU_Timing.RCDDelay,                        init = ONE,                         ev = TWO
+            
+            --Set SDBank of Init of Sdram Handle  to FMC_SDRAM_BANK1.
+            VAR PTU_hsdram_3.Init.SDBank,                   init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_BANK1
+            
+            --Set ColumnBitsNumber of Init of Sdram Handle  to FMC_SDRAM_COLUMN_BITS_NUM_9.
+            VAR PTU_hsdram_3.Init.ColumnBitsNumber,         init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_COLUMN_BITS_NUM_9
+            
+            --Set RowBitsNumber of Init of Sdram Handle  to FMC_SDRAM_ROW_BITS_NUM_12.
+            VAR PTU_hsdram_3.Init.RowBitsNumber,            init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_ROW_BITS_NUM_12
+            
+            --Set MemoryDataWidth of Init of Sdram Handle  to SDRAM_MEMORY_WIDTH.
+            VAR PTU_hsdram_3.Init.MemoryDataWidth,          init =  FMC_SDRAM_BANK2,            ev = SDRAM_MEMORY_WIDTH
+            
+            -- Set InternalBankNumber of Init of Sdram Handle  to FMC_SDRAM_INTERN_BANKS_NUM_4.
+            VAR PTU_hsdram_3.Init.InternalBankNumber,       init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_INTERN_BANKS_NUM_4
+            
+            --Set CASLatency of Init of Sdram Handle to FMC_SDRAM_CAS_LATENCY_3.
+            VAR PTU_hsdram_3.Init.CASLatency,               init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_CAS_LATENCY_3
+            
+            --Set WriteProtection of Init of Sdram Handle  to FMC_SDRAM_WRITE_PROTECTION_DISABLE.
+            VAR PTU_hsdram_3.Init.WriteProtection,          init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_WRT_PRTCTN_DISABLE
+            
+            --Set SDClockPeriod of Init of Sdram Handle  to SDCLOCK_PERIOD.
+            VAR PTU_hsdram_3.Init.SDClockPeriod,            init =  FMC_SDRAM_BANK2,            ev = SDCLOCK_PERIOD
+            
+            --Set ReadBurst of Init of Sdram Handle   to FMC_SDRAM_RBURST_ENABLE.
+            VAR PTU_hsdram_3.Init.ReadBurst,                init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_RBURST_ENABLE
+            
+            --Set ReadPipeDelay of Init of Sdram Handle  to FMC_SDRAM_RPIPE_DELAY_0.
+            VAR PTU_hsdram_3.Init.ReadPipeDelay,            init =  FMC_SDRAM_BANK2,            ev = FMC_SDRAM_RPIPE_DELAY_0
+                
+            --The function shall set SDRAM status to SDRAM_ERROR.  
+            VAR ret_BspSdramInit,                           init = SDRAM_OK,                    ev = SDRAM_ERROR
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        --Stub Calls :
+        SIMUL
+            
+            --Function HalDelay provides delay based on the value present in the function parameter         
+            STUB HalDelay(ONE)
+            
+            --Function HalSdramSendCommand sends command to the SDRAM bank.
+            STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+            
+            STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+            
+            STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+            
+            STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+            
+            --Function HalGpioInit initializes the GPIO peripheral.
+            STUB HalGpioInit(GPIOD)
+            
+            STUB HalGpioInit(GPIOE)
+            
+            STUB HalGpioInit(GPIOF)
+            
+            STUB HalGpioInit(GPIOG)
+            
+            STUB HalGpioInit(GPIOH)
+            
+            STUB HalGpioInit(GPIOI)
+            
+            --Function HalDmaDeInit de-initializes the DMA peripheral
+            STUB HalDmaDeInit()HAL_OK
+            
+            --Function HalDmaInit initializes the DMA peripheral
+            STUB HalDmaInit()HAL_OK
+            
+            --Function HalNvicSetPriority sets the priority grouping field (preemption priority
+            --and sub priority) using the required unlock sequence.
+            STUB HalNvicSetPriority(SDRAM_DMAX_IRQN, MASK_LSB, ZERO)
+            
+            --Function HalNvicEnableIrq enables a device specific interrupt in the NVIC interrupt controller.
+            STUB HalNvicEnableIrq(SDRAM_DMAX_IRQN)  
+            
+            --Function HalSdramProgramRefreshRate Programs the SDRAM Memory Refresh rate.
+            STUB HalSdramProgramRefreshRate(REFRESH_COUNT)HAL_OK
+            
+            --Function HALSdramInit initializes Sdram
+            STUB HALSdramInit()HAL_ERROR
+
+        END SIMUL
+
+        --Calling unit under test
+        #ret_BspSdramInit = BspSdramInit();
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- BspSdramInit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BspSdramInitializationSequence
+--------------------------------------------------------------------------------
+SERVICE BspSdramInitializationSequence
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+
+    #T_UINT32 refresh_count;
+
+ENVIRONMENT ENV_BspSdramInitializationSequence
+
+    VAR refresh_count,      init = 0,       ev = init
+
+END ENVIRONMENT -- ENV_BspSdramInitializationSequence
+
+USE ENV_BspSdramInitializationSequence
+
+TEST 1
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInitializationSequence-DB-LLR-001]
+    COMMENT The function does the following to configure a clock configuration enable command.
+    COMMENT 1.Sets CommandMode of Command to FMC_SDRAM_CMD_CLK_ENABLE.
+    COMMENT 2.Sets CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+    COMMENT 3.Sets AutoRefreshNumber of Command to ONE.
+    COMMENT 4.Sets ModeRegisterDefinition of Command to ZERO.
+    COMMENT 5.Calls the function HalSdramSendCommand with reference to Sdram Handle ,reference to Command 
+    COMMENT and SDRAM_TIMEOUT as its parameter.
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInitializationSequence-DB-LLR-002]
+    COMMENT The function calls the function HalDelay with ONE as parameter.
+    COMMENT Equivalence Class 6
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInitializationSequence-DB-LLR-003]
+    COMMENT The function does the following to configure a PALL command.
+    COMMENT 1.Sets CommandMode of Command to FMC_SDRAM_CMD_PALL.
+    COMMENT 2.Sets CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+    COMMENT 3.Sets AutoRefreshNumber of Command to ONE.
+    COMMENT 4.Sets ModeRegisterDefinition of Command to ZERO.
+    COMMENT 5.Calls the function HalSdramSendCommand with reference to Sdram Handle,reference to Command
+    COMMENT and SDRAM_TIMEOUT as its parameter.
+    COMMENT Equivalence Class 5 
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInitializationSequence-DB-LLR-004]
+    COMMENT The function does the following to configure a Auto Refresh command.
+    COMMENT 1.Sets CommandMode of Command to FMC_SDRAM_CMD_AUTOREFRESH_MODE.
+    COMMENT 2.Sets CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+    COMMENT 3.Sets AutoRefreshNumber of Command to EIGHT.
+    COMMENT 4.Sets ModeRegisterDefinition of Command to ZERO.
+    COMMENT 5.Calls the function HalSdramSendCommand with reference to Sdram Handle, reference to Command 
+    COMMENT and SDRAM_TIMEOUT as its parameters.
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInitializationSequence-DB-LLR-005]
+    COMMENT The function does the following to program the external memory mode register..
+    COMMENT 1.Sets CommandMode of Command to FMC_SDRAM_CMD_LOAD_MODE.
+    COMMENT 2.Sets CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+    COMMENT 3.Sets AutoRefreshNumber of Command to ONE.
+    COMMENT 4.Sets ModeRegisterDefinition of Command to SDRAM_MODEREG_BURST_LENGTH_1 Bitwise OR  SDRAM_MODEREG_BURST_TYPE_SEQUEN  Bitwise OR
+    COMMENT SDRAM_MODEREG_CAS_LATENCY_3 Bitwise OR SDRAM_MODEREG_OPERATING_MODE_STD Bitwise OR SDRAM_MODEREG_WRBURST_MODE_PRG.
+    COMMENT 5.Calls the function HalSdramSendCommand with reference to Sdram Handle, reference to Command and SDRAM_TIMEOUT as its parameter.
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInitializationSequence-DB-LLR-006]
+    COMMENT The function calls the function HalSdramProgramRefreshRate with reference to Sdram Handle 
+    COMMENT and refresh_count as its parameter.(refresh_count is checked for min value)
+    COMMENT Equivalence Class 7
+    COMMENT </TD>
+
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            
+            --Refresh count is set to zero
+            VAR refresh_count,                              init = 0,                                   ev = init
+        
+            --PTU_hsdram_2_in is set to zero
+            STRUCTURE PTU_hsdram_2_in.Instance,            init = FMC_SDRAM_DEVICE,                    ev = init
+            
+            --PTU_hsdram_1_in is set to zero
+            STRUCTURE PTU_hsdram_1_in.Instance,            init = FMC_SDRAM_DEVICE,                    ev = init
+            
+        COMMENT OUTPUT SECTION:
+        
+            --Set CommandMode of Command to FMC_SDRAM_CMD_CLK_ENABLE.
+            VAR PTU_Command[0].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_CLK_ENABLE
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[0].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to ONE.
+            VAR PTU_Command[0].AutoRefreshNumber,           init = ZERO,                                ev = ONE
+            
+            --Set ModeRegisterDefinition of Command to ZERO.
+            VAR PTU_Command[0].ModeRegisterDefinition,      init = ONE,                                 ev = ZERO
+
+            --Set CommandMode of Command to FMC_SDRAM_CMD_PALL.
+            VAR PTU_Command[1].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_PALL
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[1].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to ONE.
+            VAR PTU_Command[1].AutoRefreshNumber,           init = ZERO,                                ev = ONE
+            
+            --Set ModeRegisterDefinition of Command to ZERO.
+            VAR PTU_Command[1].ModeRegisterDefinition,      init = ONE,                                 ev = ZERO
+            
+            --Set CommandMode of Command to FMC_SDRAM_CMD_AUTOREFRESH_MODE.
+            VAR PTU_Command[2].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_AUTOREFRESH_MODE
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[2].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to EIGHT.
+            VAR PTU_Command[2].AutoRefreshNumber,           init = ZERO,                                ev = EIGHT
+            
+            --Set ModeRegisterDefinition of Command to ZERO.
+            VAR PTU_Command[2].ModeRegisterDefinition,      init = ONE,                                 ev = ZERO
+
+            --Set CommandMode of Command to FMC_SDRAM_CMD_LOAD_MODE.
+            VAR PTU_Command[3].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_LOAD_MODE
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[3].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to ONE.
+            VAR PTU_Command[3].AutoRefreshNumber,           init = ZERO,                                ev = ONE
+            
+            --Set ModeRegisterDefinition of Command
+            VAR PTU_Command[3].ModeRegisterDefinition,      init = ONE,                                 ev = 0x30
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --Checks the index value for the array PTU_Command.
+            VAR PTU_index1,                                     init = 0,                               ev = 4
+        
+        
+            --Stub Calls :
+            SIMUL
+        
+                --Function HalSdramSendCommand sends command to the SDRAM bank.
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                --Function HalDelay provides delay based on the value present in the function parameter
+                STUB HalDelay(ONE)
+                
+                --Function HalSdramSendCommand sends command to the SDRAM bank.
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                --Function HalSdramProgramRefreshRate Programs the SDRAM Memory Refresh rate.
+                STUB HalSdramProgramRefreshRate(refresh_count)HAL_ERROR
+                
+            END SIMUL
+            
+        -- Calling the Unit Under Test :    
+        #BspSdramInitializationSequence(refresh_count);
+       
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInitializationSequence-DB-LLR-006]
+    COMMENT The function calls the function HalSdramProgramRefreshRate with reference to Sdram Handle 
+    COMMENT and refresh_count as its parameter.(refresh_count is checked for nominal value)
+    COMMENT Equivalence Class 7
+    COMMENT </TD>
+
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            
+            --Refresh count is set to zero
+            VAR refresh_count,                              init = 0x150,                               ev = init
+            
+        COMMENT OUTPUT SECTION:
+        
+            --Set CommandMode of Command to FMC_SDRAM_CMD_CLK_ENABLE.
+            VAR PTU_Command[0].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_CLK_ENABLE
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[0].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to ONE.
+            VAR PTU_Command[0].AutoRefreshNumber,           init = ZERO,                                ev = ONE
+            
+            --Set ModeRegisterDefinition of Command to ZERO.
+            VAR PTU_Command[0].ModeRegisterDefinition,      init = ONE,                                 ev = ZERO
+
+            --Set CommandMode of Command to FMC_SDRAM_CMD_PALL.
+            VAR PTU_Command[1].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_PALL
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[1].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to ONE.
+            VAR PTU_Command[1].AutoRefreshNumber,           init = ZERO,                                ev = ONE
+            
+            --Set ModeRegisterDefinition of Command to ZERO.
+            VAR PTU_Command[1].ModeRegisterDefinition,      init = ONE,                                 ev = ZERO
+            
+            --Set CommandMode of Command to FMC_SDRAM_CMD_AUTOREFRESH_MODE.
+            VAR PTU_Command[2].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_AUTOREFRESH_MODE
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[2].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to EIGHT.
+            VAR PTU_Command[2].AutoRefreshNumber,           init = ZERO,                                ev = EIGHT
+            
+            --Set ModeRegisterDefinition of Command to ZERO.
+            VAR PTU_Command[2].ModeRegisterDefinition,      init = ONE,                                 ev = ZERO
+
+            --Set CommandMode of Command to FMC_SDRAM_CMD_LOAD_MODE.
+            VAR PTU_Command[3].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_LOAD_MODE
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[3].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to ONE.
+            VAR PTU_Command[3].AutoRefreshNumber,           init = ZERO,                                ev = ONE
+            
+            --Set ModeRegisterDefinition of Command
+            VAR PTU_Command[3].ModeRegisterDefinition,      init = ONE,                                 ev = 0x30
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --Checks the index value for the array PTU_Command.
+            VAR PTU_index1,                                     init = 0,                               ev = 4
+                   
+        
+            --Stub Calls :
+            SIMUL
+        
+                --Function HalSdramSendCommand sends command to the SDRAM bank.
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                --Function HalDelay provides delay based on the value present in the function parameter
+                STUB HalDelay(ONE)
+                
+                --Function HalSdramSendCommand sends command to the SDRAM bank.
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                --Function HalSdramProgramRefreshRate Programs the SDRAM Memory Refresh rate.
+                STUB HalSdramProgramRefreshRate(refresh_count)HAL_ERROR
+                
+            END SIMUL
+            
+        -- Calling the Unit Under Test :    
+        #BspSdramInitializationSequence(refresh_count);
+       
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+    
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32756gevalsdram-BspSdramInitializationSequence-DB-LLR-006]
+    COMMENT The function calls the function HalSdramProgramRefreshRate with reference to Sdram Handle 
+    COMMENT and refresh_count as its parameter.(refresh_count is checked for maximum value)
+    COMMENT Equivalence Class 7
+    COMMENT </TD>
+
+    ELEMENT
+        
+        COMMENT INPUT SECTION:
+            
+            --Refresh count is set to zero
+            VAR refresh_count,                              init = (T_UINT32)0xFFFFFFFF,                          ev = init
+            
+            
+        COMMENT OUTPUT SECTION:
+        
+            --Set CommandMode of Command to FMC_SDRAM_CMD_CLK_ENABLE.
+            VAR PTU_Command[0].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_CLK_ENABLE
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[0].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to ONE.
+            VAR PTU_Command[0].AutoRefreshNumber,           init = ZERO,                                ev = ONE
+            
+            --Set ModeRegisterDefinition of Command to ZERO.
+            VAR PTU_Command[0].ModeRegisterDefinition,      init = ONE,                                 ev = ZERO
+
+            --Set CommandMode of Command to FMC_SDRAM_CMD_PALL.
+            VAR PTU_Command[1].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_PALL
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[1].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to ONE.
+            VAR PTU_Command[1].AutoRefreshNumber,           init = ZERO,                                ev = ONE
+            
+            --Set ModeRegisterDefinition of Command to ZERO.
+            VAR PTU_Command[1].ModeRegisterDefinition,      init = ONE,                                 ev = ZERO
+            
+            --Set CommandMode of Command to FMC_SDRAM_CMD_AUTOREFRESH_MODE.
+            VAR PTU_Command[2].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_AUTOREFRESH_MODE
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[2].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to EIGHT.
+            VAR PTU_Command[2].AutoRefreshNumber,           init = ZERO,                                ev = EIGHT
+            
+            --Set ModeRegisterDefinition of Command to ZERO.
+            VAR PTU_Command[2].ModeRegisterDefinition,      init = ONE,                                 ev = ZERO
+
+            --Set CommandMode of Command to FMC_SDRAM_CMD_LOAD_MODE.
+            VAR PTU_Command[3].CommandMode,                 init = FMC_SDRAM_CMD_TARGET_BANK1,          ev = FMC_SDRAM_CMD_LOAD_MODE
+            
+            --Set CommandTarget of Command to FMC_SDRAM_CMD_TARGET_BANK1.
+            VAR PTU_Command[3].CommandTarget,               init = FMC_SDRAM_CMD_CLK_ENABLE,            ev = FMC_SDRAM_CMD_TARGET_BANK1
+            
+            --Set AutoRefreshNumber of Command to ONE.
+            VAR PTU_Command[3].AutoRefreshNumber,           init = ZERO,                                ev = ONE
+            
+            --Set ModeRegisterDefinition of Command
+            VAR PTU_Command[3].ModeRegisterDefinition,      init = ONE,                                 ev = 0x30
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --Checks the index value for the array PTU_Command.
+            VAR PTU_index1,                                     init = 0,                               ev = 4
+                   
+        
+            --Stub Calls :
+            SIMUL
+        
+                --Function HalSdramSendCommand sends command to the SDRAM bank.
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                --Function HalDelay provides delay based on the value present in the function parameter
+                STUB HalDelay(ONE)
+                
+                --Function HalSdramSendCommand sends command to the SDRAM bank.
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                STUB HalSdramSendCommand(SDRAM_TIMEOUT)HAL_OK
+                
+                --Function HalSdramProgramRefreshRate Programs the SDRAM Memory Refresh rate.
+                STUB HalSdramProgramRefreshRate(refresh_count)HAL_ERROR
+                
+            END SIMUL
+            
+        -- Calling the Unit Under Test :    
+        #BspSdramInitializationSequence(refresh_count);
+       
+    END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- BspSdramInitializationSequence
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BspSdramMspInit
+--------------------------------------------------------------------------------
+SERVICE BspSdramMspInit
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+
+    #T_SDRAM_HANDLE h_sdram;
+    
+ENVIRONMENT ENV_BspSdramMspInit
+
+    STRUCTURE h_sdram,              init = { Instance => NIL, Init => { SDBank => 0, ColumnBitsNumber => 0, RowBitsNumber => 0, 
+    &                                       MemoryDataWidth => 0, InternalBankNumber => 0, CASLatency => 0, WriteProtection => 0, 
+    &                                       SDClockPeriod => 0, ReadBurst => 0, ReadPipeDelay => 0 }, State => HAL_SDRAM_STATE_RESET, 
+    &                                       Lock => HAL_UNLOCKED},                  ev = init
+    
+END ENVIRONMENT -- ENV_BspSdramMspInit
+  
+USE ENV_BspSdramMspInit
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-001]
+    COMMENT The function calls the macro__HAL_RCC_FMC_CLK_ENABLE to enable FMC clock.
+    COMMENT Equivalence Class None 
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-002]
+    COMMENT The function calls the macro __DMAX_CLK_ENABLE to enable chosen DMAx clock.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-003]
+    COMMENT The function does the following to enable GPIOs clock:
+    COMMENT 1.Calls the macro __HAL_RCC_GPIOD_CLK_ENABLE. 
+    COMMENT 2.Calls the macro __HAL_RCC_GPIOE_CLK_ENABLE. 
+    COMMENT 3.Calls the macro __HAL_RCC_GPIOF_CLK_ENABLE. 
+    COMMENT 4.Calls the macro __HAL_RCC_GPIOG_CLK_ENABLE. 
+    COMMENT 5.Calls the macro __HAL_RCC_GPIOH_CLK_ENABLE. 
+    COMMENT 6.Calls the macro __HAL_RCC_GPIOI_CLK_ENABLE. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-004]
+    COMMENT The function does the following to Common GPIO configuration:
+    COMMENT 1.Sets Mode of GPIO Init structure to GPIO_MODE_AF_PP.
+    COMMENT 2.Sets Pull of GPIO Init structure to GPIO_PULLUP.
+    COMMENT 3.Sets Speed of GPIO Init structure to GPIO_SPEED_FAST.
+    COMMENT 4.Sets Alternate of GPIO Init structure of GPIO_AF12_FMC.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-005]
+    COMMENT The function does the following to configure GPIOD.
+    COMMENT 1.Sets Pin of GPIO Init Structure to GPIO_PIN_0 Bitwise OR GPIO_PIN_1 Bitwise OR GPIO_PIN_8 Bitwise OR
+    COMMENT GPIO_PIN_9 Bitwise OR GPIO_PIN_10 Bitwise OR GPIO_PIN_14 Bitwise OR GPIO_PIN_15
+    COMMENT 2.Calls the function HalGpioInit with parameter GPIOD and reference of GPIO Init Structure.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-006]
+    COMMENT The function does the following to configure GPIOE.
+    COMMENT 1.Sets Pin of GPIO Init Structure to GPIO_PIN_0 Bitwise OR GPIO_PIN_1 Bitwise OR GPIO_PIN_7 Bitwise OR GPIO_PIN_8
+    COMMENT Bitwise OR GPIO_PIN_9 Bitwise OR GPIO_PIN_10 Bitwise OR  GPIO_PIN_11 Bitwise OR GPIO_PIN_12 Bitwise OR GPIO_PIN_13 
+    COMMENT Bitwise OR GPIO_PIN_14 Bitwise OR GPIO_PIN_15.
+    COMMENT 2.Calls the function HalGpioInit with parameter GPIOE and reference of GPIO Init Structure.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-007]
+    COMMENT The function does the following to configure GPIOF.
+    COMMENT 1.Sets Pin of GPIO Init Structure to GPIO_PIN_0 Bitwise OR GPIO_PIN_1 Bitwise OR GPIO_PIN_2 Bitwise OR GPIO_PIN_3
+    COMMENT Bitwise OR GPIO_PIN_4 Bitwise OR GPIO_PIN_5 Bitwise OR GPIO_PIN_11 Bitwise OR GPIO_PIN_12 Bitwise OR GPIO_PIN_13 
+    COMMENT Bitwise OR GPIO_PIN_14 Bitwise OR GPIO_PIN_15.
+    COMMENT 2.Calls the function HalGpioInit with parameter GPIOF and reference of GPIO Init Structure.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-008]
+    COMMENT The function does the following to configure GPIOG.
+    COMMENT 1.Sets Pin of GPIO Init Structure to GPIO_PIN_0 Bitwise OR GPIO_PIN_1 Bitwise OR GPIO_PIN_4 Bitwise OR GPIO_PIN_5 
+    COMMENT Bitwise OR GPIO_PIN_8 Bitwise OR GPIO_PIN_15.
+    COMMENT 2.Calls the function HalGpioInit with parameter GPIOG and reference of GPIO Init Structure.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-009]
+    COMMENT The function does the following to configure GPIOH.
+    COMMENT 1.Sets Pin of GPIO Init Structure to GPIO_PIN_2 Bitwise OR GPIO_PIN_3 Bitwise OR GPIO_PIN_5 Bitwise OR GPIO_PIN_8 Bitwise OR GPIO_PIN_9 Bitwise OR GPIO_PIN_10 Bitwise OR GPIO_PIN_11 Bitwise OR GPIO_PIN_12 Bitwise OR GPIO_PIN_13 Bitwise OR GPIO_PIN_14 Bitwise OR GPIO_PIN_15.
+    COMMENT 2.Calls the function HalGpioInit with parameter GPIOH and reference of GPIO Init Structure.
+    COMMENT Equivalence Class 8 
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-010]
+    COMMENT The function does the following to configure GPIOI.
+    COMMENT 1.Sets Pin of GPIO Init Structure to GPIO_PIN_0 Bitwise OR GPIO_PIN_1 Bitwise OR GPIO_PIN_2 Bitwise OR GPIO_PIN_3 
+    COMMENT Bitwise OR GPIO_PIN_4 Bitwise OR GPIO_PIN_5 Bitwise OR GPIO_PIN_6 Bitwise OR GPIO_PIN_7 Bitwise OR GPIO_PIN_9
+    COMMENT Bitwise OR GPIO_PIN_10.
+    COMMENT 2.Calls the function HalGpioInit with parameter GPIOI and reference of GPIO Init Structure.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-011]
+    COMMENT The function does the following to configure common DMA parameters.
+    COMMENT 1.Sets Channel of Init of  DMA handle to SDRAM_DMAX_CHANNEL.
+    COMMENT 2.Sets Direction  of Init of  DMA handle to DMA_MEMORY_TO_MEMORY.
+    COMMENT 3.Sets PeriphInc of Init of  DMA handle to DMA_PINC_ENABLE.
+    COMMENT 4.Sets MemInc of Init of  DMA handle to DMA_MINC_ENABLE.
+    COMMENT 5.Sets PeriphDataAlignment of Init of  DMA handleto     DMA_PDATAALIGN_WORD.
+    COMMENT 6.Sets MemDataAlignment of Init of  DMA handle   to DMA_MDATAALIGN_WORD.
+    COMMENT 7.Sets Mode  of Init of  DMA handle to DMA_NORMAL.
+    COMMENT 8.Sets Priority  of Init of  DMA handle to DMA_PRIORITY_HIGH.
+    COMMENT 9.Sets FIFOMode  of Init of  DMA handle to DMA_FIFOMODE_DISABLE.         
+    COMMENT 10.Sets FIFOThreshold of Init of  DMA handle to DMA_FIFO_THRESHOLD_FULL.
+    COMMENT 11.Sets MemBurst of Init of  DMA handle to DMA_MBURST_SINGLE.
+    COMMENT 12.Sets PeriphBurst of Init of  DMA handle to DMA_PBURST_SINGLE.  
+    COMMENT 13.Sets Instance of DMA handle to SDRAM_DMAX_STREAM
+    COMMENT 14.Calls the function __HAL_LINKDMA with h_sdram,hdma and DMA handle as its parameter.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-012]
+    COMMENT The function calls HalDmaDeInit with reference to DMA handle as parameter to deinitialize the stream for new transfer.
+    COMMENT Equivalence Class 9
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-013]
+    COMMENT The function calls HalDmaInit with reference to DMA handle as parameter to configure the DMA stream.
+    COMMENT Equivalence Class 10
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-014]
+    COMMENT The function calls the function HalNvicSetPriority with parameters SDRAM_DMAX_IRQN, MASK_LSB, ZERO.
+    COMMENT Equivalence Class 11
+    COMMENT
+    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-015]
+    COMMENT The function calls the function HalNvicEnableIrq with parameter SDRAM_DMAX_IRQN.
+    COMMENT Equivalence Class 12
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+        --None
+            
+        COMMENT OUTPUT SECTION:
+        
+            --Set AHB3ENR field of RCC register. 
+            VAR RCC->AHB3ENR,                           init = 0x0,                             ev = 0x00000001
+            
+            --Set AHB1ENR field of RCC register. 
+            VAR RCC->AHB1ENR,                           init = 0x00100000,                      ev = 0x5001F8
+
+            --Set Mode of GPIO Init structure to GPIO_MODE_AF_PP.
+            VAR PTU_GPIO_Init[0].Mode,                  init = GPIO_MODE_AF_OD,                 ev = GPIO_MODE_AF_PP
+            
+            --Set Pull of GPIO Init structure to GPIO_PULLUP.
+            VAR PTU_GPIO_Init[0].Pull,                  init = GPIO_MODE_AF_OD,                 ev = GPIO_PULLUP
+            
+            --Set Speed of GPIO Init structure to GPIO_SPEED_FAST.
+            VAR PTU_GPIO_Init[0].Speed,                 init = GPIO_MODE_AF_OD,                 ev = GPIO_SPEED_FREQ_HIGH
+            
+            --Set Alternate of GPIO Init structure of GPIO_AF12_FMC.
+            VAR PTU_GPIO_Init[0].Alternate,             init = GPIO_MODE_AF_OD,                 ev = GPIO_AF12_FMC
+            
+            --Set Pin of GPIO Init structure to calculated value.
+            VAR PTU_GPIO_Init[0].Pin,                   init = 0,                               ev = 0xC703
+            VAR PTU_GPIO_Init[1].Pin,                   init = 0,                               ev = 0xFF83 
+            VAR PTU_GPIO_Init[2].Pin,                   init = 0,                               ev = 0xF83F
+            VAR PTU_GPIO_Init[3].Pin,                   init = 0,                               ev = 0x8133 
+            VAR PTU_GPIO_Init[4].Pin,                   init = 0,                               ev = 0xFF2C 
+            VAR PTU_GPIO_Init[5].Pin,                   init = 0,                               ev = 0x06FF  
+            
+            --Configure common DMA parameters for HalDmaDeInit
+            VAR PTU_hdma_1_in.Init.Channel,             init = 1,                               ev = SDRAM_DMAX_CHANNEL
+            VAR PTU_hdma_1_in.Init.Direction,           init = 0,                               ev = DMA_MEMORY_TO_MEMORY
+            VAR PTU_hdma_1_in.Init.PeriphInc,           init = DMA_PINC_DISABLE,                ev = DMA_PINC_ENABLE
+            VAR PTU_hdma_1_in.Init.MemInc,              init = DMA_PINC_DISABLE,                ev = DMA_MINC_ENABLE
+            VAR PTU_hdma_1_in.Init.PeriphDataAlignment, init = 0,                               ev = DMA_PDATAALIGN_WORD
+            VAR PTU_hdma_1_in.Init.MemDataAlignment,    init = 0,                               ev = DMA_MDATAALIGN_WORD
+            VAR PTU_hdma_1_in.Init.Mode,                init = 1,                               ev = DMA_NORMAL
+            VAR PTU_hdma_1_in.Init.Priority,            init = DMA_PRIORITY_LOW,                ev = DMA_PRIORITY_HIGH
+            VAR PTU_hdma_1_in.Init.FIFOMode,            init = DMA_FIFOMODE_ENABLE,             ev = DMA_FIFOMODE_DISABLE
+            VAR PTU_hdma_1_in.Init.FIFOThreshold,       init = 0,                               ev = DMA_FIFO_THRESHOLD_FULL
+            VAR PTU_hdma_1_in.Init.MemBurst,            init = 1,                               ev = DMA_MBURST_SINGLE
+            VAR PTU_hdma_1_in.Init.PeriphBurst,         init = 1,                               ev = DMA_PBURST_SINGLE 
+            
+            --Configure common DMA parameters for HalDmaInit 
+            VAR PTU_hdma_2_in.Init.Channel,             init = 1,                               ev = SDRAM_DMAX_CHANNEL
+            VAR PTU_hdma_2_in.Init.Direction,           init = 0,                               ev = DMA_MEMORY_TO_MEMORY
+            VAR PTU_hdma_2_in.Init.PeriphInc,           init = DMA_PINC_DISABLE,                ev = DMA_PINC_ENABLE
+            VAR PTU_hdma_2_in.Init.MemInc,              init = DMA_PINC_DISABLE,                ev = DMA_MINC_ENABLE
+            VAR PTU_hdma_2_in.Init.PeriphDataAlignment, init = 0,                               ev = DMA_PDATAALIGN_WORD
+            VAR PTU_hdma_2_in.Init.MemDataAlignment,    init = 0,                               ev = DMA_MDATAALIGN_WORD
+            VAR PTU_hdma_2_in.Init.Mode,                init = 1,                               ev = DMA_NORMAL
+            VAR PTU_hdma_2_in.Init.Priority,            init = DMA_PRIORITY_LOW,                ev = DMA_PRIORITY_HIGH
+            VAR PTU_hdma_2_in.Init.FIFOMode,            init = DMA_FIFOMODE_ENABLE,             ev = DMA_FIFOMODE_DISABLE
+            VAR PTU_hdma_2_in.Init.FIFOThreshold,       init = 0,                               ev = DMA_FIFO_THRESHOLD_FULL
+            VAR PTU_hdma_2_in.Init.MemBurst,            init = 1,                               ev = DMA_MBURST_SINGLE
+            VAR PTU_hdma_2_in.Init.PeriphBurst,         init = 1,                               ev = DMA_PBURST_SINGLE
+            
+        COMMENT INPUT/OUTPUT SECTION:
+            
+            --Checks the index value for the array PTU_GPIO_Init.
+            VAR PTU_index2,                             init = 0,                               ev = 6
+        
+        --Stub Calls :
+        SIMUL
+        
+            --Function HalGpioInit initializes the GPIO peripheral.
+            STUB HalGpioInit(GPIOD)
+            
+            STUB HalGpioInit(GPIOE)
+            
+            STUB HalGpioInit(GPIOF)
+            
+            STUB HalGpioInit(GPIOG)
+            
+            STUB HalGpioInit(GPIOH)
+            
+            STUB HalGpioInit(GPIOI) 
+            
+            --Function HalDmaDeInit de-initializes the DMA peripheral
+            STUB HalDmaDeInit()HAL_OK
+            
+            --Function HalDmaInit initializes the DMA peripheral
+            STUB HalDmaInit()HAL_OK
+            
+            --Function HalNvicSetPriority sets the priority grouping field (preemption priority
+            --and sub priority) using the required unlock sequence.
+            STUB HalNvicSetPriority(SDRAM_DMAX_IRQN, MASK_LSB, ZERO)
+            
+            --Function HalNvicEnableIrq enables a device specific interrupt in the NVIC interrupt controller.
+            STUB HalNvicEnableIrq(SDRAM_DMAX_IRQN)
+        
+        END SIMUL
+        
+        -- Calling the Unit Under Test :
+        #BspSdramMspInit(&h_sdram);
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+--TEST 2
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT
+--    COMMENT [hdulibstm32756gevalsdram-BspSdramMspInit-DB-LLR-001]
+--    COMMENT For the function 'BspSdramMspInit' the input parameter 'h_sdram' is passed as NULL, hence the function does not execute. 
+--    COMMENT Equivalence Class 13
+--    COMMENT
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--
+--            --None
+--
+--        COMMENT OUTPUT SECTION:
+--
+--            --None
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--
+--            --None
+--
+--        --Stub Calls :
+--        SIMUL
+--
+--            --No Stubs
+--
+--        END SIMUL
+--
+--        --Calling the Unit Under Test :
+--        #BspSdramMspInit(NULL);
+--
+--    END ELEMENT
+--   
+--END TEST -- TEST 2
+
+END SERVICE -- BspSdramMspInit
+

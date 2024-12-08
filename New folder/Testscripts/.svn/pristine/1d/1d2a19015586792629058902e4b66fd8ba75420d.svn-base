@@ -1,0 +1,382 @@
+HEADER hducommftbase, Source Code Ver : 1.1, TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Priyanka N
+--
+-- File Name           : hducommftbase_3.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : TbaseTaskSignaling
+--
+-- Version  History    :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--  1.1                 30.10.2017       Priyanka N        Created the PTU file.
+--  1.2                 11.11.2017       Priyanka N        Updated as per #PR100171
+--  1.3                 14.11.2017       Priyanka N        Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommftbase.h" 
+##include "hdulibbasicfunc.h"
+##include "hducommfhw.h"
+##include "hducommfoscfg.h"
+##include "hdulibcorecm4.h"
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+   -- None
+
+-- Declarations of the temporary variable
+    
+    -- Temporary variable created for loop usage
+    #T_UINT8 PTU_i;
+
+    -- Temporary variable created to handle static variable.
+    #T_OS_EVENT *PTU_p_event;
+    
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hducommftbase_3.ptu
+    COMMENT
+    COMMENT Tested Functions : TbaseTaskSignaling
+    COMMENT                    TbaseIntrHandler
+    COMMENT                    TbaseInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1. Header file "hdulibcorecm4.h" is modified for testing purpose. The macros 'SCB','SYSTICK','NVIC' are modified
+    COMMENT for stubbing hardware address.
+    COMMENT a.  /*Commented for testing purpose*/
+    COMMENT /* #define SCB                 ((T_SCB_TYPE*)SCB_BASE) */
+    COMMENT
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_SCB_TYPE PTU_SCB;
+    COMMENT #define SCB    ((T_SCB_TYPE *)& PTU_SCB)
+    COMMENT
+    COMMENT b.  /*Commented for testing purpose*/
+    COMMENT /* #define SYSTICK             ((T_SYSTICK_TYPE*)SYSTICK_BASE  ) */
+    COMMENT
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_SYSTICK_TYPE PTU_SYSTICK;
+    COMMENT #define SYSTICK    ((T_SYSTICK_TYPE *)&PTU_SYSTICK)
+    COMMENT 
+    COMMENT c.  /*Commented for testing purpose*/
+    COMMENT /* #define NVIC                ((T_NVIC_TYPE *)NVIC_BASE)*/
+    COMMENT
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_NVIC_TYPE PTU_NVIC;
+    COMMENT #define NVIC    ((T_NVIC_TYPE *)& PTU_NVIC) 
+    COMMENT
+    COMMENT 2. Due to static variable dependency PTUs are split into 4 PTUs.
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function "TbaseIntrHandler", calls the function "OsIntEnter".
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function "TbaseIntrHandler", calls the function "OsTimeTick".
+    COMMENT
+    COMMENT Class 3
+    COMMENT Function "TbaseIntrHandler", calls the function "OsIntExit".
+    COMMENT
+    COMMENT Class 4
+    COMMENT Function "TbaseIntrHandler", calls the function "OsSemPost".
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function "TbaseIntrHandler", task tick counter is lesser than task ticks of the corresponding task 
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In function "TbaseIntrHandler", task tick counter is equal to task ticks of the corresponding task 
+    COMMENT 
+    COMMENT Class 8
+    COMMENT In function "TbaseInit",SysTickConfig is called
+    COMMENT
+    COMMENT Class 9
+    COMMENT In "TbaseTaskSignaling", number of installed tasks is lesser than OS_MAX_TASKS.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In "TbaseTaskSignaling", number of installed tasks is equal to OS_MAX_TASKS.
+    COMMENT
+    COMMENT Class 11
+    COMMENT In "TbaseTaskSignaling", number of installed tasks is greater than OS_MAX_TASKS.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function "TbaseIntrHandler", task tick counter is greater than task ticks of the corresponding task
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT Class 13
+    COMMENT In function "TbaseTaskSignaling" parameter 'ps_semaphore' is passed with invalid reference.
+    COMMENT
+    COMMENT </ECD>
+    
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hducommftbase_c
+
+        #void OsIntExit(void);
+
+        --Parameter p_event is made _no hence it is verified explicitly
+        #T_UINT8 OsSemPost(T_OS_EVENT _no *p_event) 
+        #{
+        #   PTU_p_event=p_event;
+        #}
+
+        #void OsTimeTick(void);
+
+        #void OsIntEnter(void);
+
+    END DEFINE 
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+--Enviornment of the file hducommftbase.c
+
+    --ENVIRONMENT ENV_hducommftbase_c
+
+        --None
+
+    --END ENVIRONMENT --hducommftbase_c
+
+--USE ENV_hducommftbase_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TbaseTaskSignaling
+--------------------------------------------------------------------------------
+SERVICE TbaseTaskSignaling
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT16 u16_task_ticks;
+    #struct os_event ps_semaphore;
+
+    ENVIRONMENT ENV_TbaseTaskSignaling
+    
+    -- Parameter is initialized before usage
+    VAR u16_task_ticks,     	init = 0,       		ev = init
+    
+    -- Structure members are initialized before usage
+    STRUCTURE ps_semaphore,     init = { os_event_grp => 0, os_event_tbl => { others => 0 }, os_event_cnt => 0, os_event_ptr => NIL },
+    &								ev = init
+    
+    END ENVIRONMENT -- ENV_TbaseTaskSignaling
+    
+    USE ENV_TbaseTaskSignaling
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hducommftbase-TbaseTaskSignaling-CB-LLR-001]
+    COMMENT Function does nothing when the total number of installed tasks are lesser than the maximum limit of OS_MAX_TASKS.
+    COMMENT Note: Number installed tasks are 19.
+    COMMENT Equivalence Class 9
+    COMMENT
+    COMMENT [hducommftbase-TbaseTaskSignaling-CB-LLR-002]
+    COMMENT Reset the Tick Counter of the Timebase Task List to DEC_ZERO.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hducommftbase-TbaseTaskSignaling-CB-LLR-003]
+    COMMENT Save u16_task_ticks to the task ticks of the Timebase Task List.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hducommftbase-TbaseTaskSignaling-CB-LLR-004]
+    COMMENT Save ps_semaphore to the Semaphore of the Timebase Task List.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT [hducommftbase-TbaseTaskSignaling-CB-LLR-005]
+    COMMENT Increment number of installed tasks by DEC_ONE.
+    COMMENT Equivalence Class none
+    COMMENT
+    COMMENT Note :Variable 'As_task_list' and 'U8_installed_tasks' are static, hence these variables are not expected in the output section 
+    COMMENT  and the functionality of the requirement is verified implicitly.
+    COMMENT </TD>
+    
+    ELEMENT
+        
+      COMMENT INPUT SECTION:
+
+        --Task ticks to delay thread
+        VAR u16_task_ticks,     	init=10,         	ev=init
+
+      COMMENT OUTPUT SECTION:
+
+        --None
+
+      COMMENT INPUT/OUTPUT SECTION:
+
+        --Used as a loop index
+        VAR PTU_i,              	init=0,        	 	ev=20
+
+      --Stub Calls
+      SIMUL 
+
+        --No stubs
+
+      END SIMUL
+        
+        --Function 'TbaseTaskSignaling' is called 20 times to verify that the number of installed tasks is less 
+        --than the maximum limit of OS_MAX_TASKS.
+        #for(PTU_i=0;PTU_i<20;PTU_i++)
+        --Calling the Unit Under Test:
+        #TbaseTaskSignaling(u16_task_ticks, &ps_semaphore);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hducommftbase-TbaseTaskSignaling-CB-LLR-001]
+    COMMENT Function returns when the total number of installed tasks are equal to the maximum limit of OS_MAX_TASKS.
+    COMMENT Note: Number installed tasks are 20.
+    COMMENT Equivalence Class 10
+    COMMENT
+    COMMENT Note :Variable 'As_task_list' and 'U8_installed_tasks' are static, hence these variables are not expected in the output section 
+    COMMENT  and the functionality of the requirement is verified implicitly.
+    COMMENT </TD>
+    
+    ELEMENT
+        
+      COMMENT INPUT SECTION:
+
+        --Task ticks to delay thread
+        VAR u16_task_ticks,     	init=65535,         	ev=init
+
+      COMMENT OUTPUT SECTION:
+
+        --None
+
+      COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+
+        --Stub Calls
+      SIMUL 
+
+        --No stubs
+
+      END SIMUL
+        
+        --Function 'TbaseTaskSignaling' is called 1 times to verify that the number of installed tasks is equal to OS_MAX_TASKS.
+        --Calling the Unit Under Test:
+        #TbaseTaskSignaling(u16_task_ticks, &ps_semaphore);
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hducommftbase-TbaseTaskSignaling-CB-LLR-001]
+    COMMENT Function returns when the total number of installed tasks are greater than the maximum limit of OS_MAX_TASKS.
+    COMMENT Note: Number installed tasks are 21.
+    COMMENT Equivalence Class 11
+    COMMENT
+    COMMENT Note :Variable 'As_task_list' and 'U8_installed_tasks' are static, hence these variables are not expected in the output section 
+    COMMENT  and the functionality of the requirement is verified implicitly.
+    COMMENT </TD>
+    
+    ELEMENT
+        
+      COMMENT INPUT SECTION:
+
+        --Task ticks to delay thread
+        VAR u16_task_ticks,     	init=0,         	ev=init
+
+      COMMENT OUTPUT SECTION:
+
+        --None
+
+      COMMENT INPUT/OUTPUT SECTION:
+
+        --None
+
+      --Stub Calls
+      SIMUL 
+
+        --No stubs
+
+      END SIMUL
+        
+        --Calling the Unit Under Test:
+        --Function 'TbaseTaskSignaling' is called 1 times to verify that the number of installed tasks is greater than OS_MAX_TASKS.
+        #TbaseTaskSignaling(u16_task_ticks, &ps_semaphore);
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- TbaseTaskSignaling
+
+

@@ -1,0 +1,3889 @@
+HEADER hdulibstm32f4xxcan, Source Code Ver : 1.2 , TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name      	: Gowrima E
+--
+-- File Name        	: hdulibstm32f4xxcan.ptu
+--
+-- Test Creation Date  	: 30.10.2017
+--
+-- Tested Functions 	: CanDeInit
+--			  			  CanInitBoot
+--			  			  CanInitApp
+--			  			  CanFilterInit
+--			  			  CanTransmit
+--			  			  CanReceive
+--			  			  CanItConfig
+--
+-- Version History      :
+--
+-- TEST-VERSION      TEST-DATE   		TESTER NAME   		MODIFICATIONS
+-- ------------      ---------	        -----------	        -------------
+-- 1.1          	 30.10.2017         Gowrima E         	Created the PTU file.
+-- 1.2          	 10.11.2017         Gowrima E         	Updated as per PR100171.
+-- 1.3          	 14.11.2017         Gowrima E         	Updated as per PR100171.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibbasicfunc.h"       
+##include "hdulibstm32f4xxcan.h"    
+##include "hdulibstm32f4xxrcc.h"   
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	--None
+
+-- Declarations of the temporary variable of the tested file
+
+	--None
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      :	Gowrima E 
+	COMMENT
+	COMMENT File Name        : 	hdulibstm32f4xxcan.c
+	COMMENT
+	COMMENT Tested Functions : 	CanDeInit
+	COMMENT						CanInitBoot
+	COMMENT						CanInitApp
+	COMMENT						CanFilterInit
+	COMMENT						CanTransmit
+	COMMENT						CanReceive
+	COMMENT						CanItConfig
+	COMMENT
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT
+	COMMENT Assumption(s):
+	COMMENT None
+	COMMENT
+	COMMENT Constraint(s):
+	COMMENT 1.Header file "hdulibstm32f4xx.h" is modified for testing purpose. The macros 'CAN1',
+	COMMENT 'CAN2' are modified for stubbing hardware address.
+	COMMENT 
+	COMMENT  a) /*Commented for testing purpose*/
+	COMMENT     /*#define CAN1                	((T_CAN_TYPE *) CAN1_BASE)*/
+	COMMENT
+	COMMENT     /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT     T_CAN_TYPE PTU_CAN1;
+	COMMENT     #define CAN1         			((T_CAN_TYPE *) &PTU_CAN1 )
+	COMMENT
+	COMMENT  b) /*Commented for testing purpose*/
+	COMMENT     /*#define CAN2                	((T_CAN_TYPE *) CAN2_BASE)*/
+	COMMENT
+	COMMENT     /* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT     T_CAN_TYPE PTU_CAN2;
+	COMMENT     #define CAN2          			((T_CAN_TYPE *) &PTU_CAN2 )
+	COMMENT 
+	COMMENT 2.In LLR 'hdulibstm32f4xxcan-CanInitApp-CB-LLR-008', 'do while' loop cannot be covered for 1 time,
+	COMMENT   since it is controlled by local variable 'wait_ack' initialized to macro DEC_ZERO
+	COMMENT   Therefore 100% coverage cannot be achieved.
+	COMMENT
+	COMMENT	4. Test case number 8 is commented in Service Name : CanReceive, because the variable 
+	COMMENT    "fifo_number" is checked for maximum value which leads to array out of bound.  
+	COMMENT
+	COMMENT 5. In LLR 'hdulibstm32f4xxcan-CanInitBoot-CB-LLR-019', 'while' loop cannot be covered
+	COMMENT    for 1 time, since it is controlled by local variable 'wait_ack' initialized to macro DEC_ZERO
+	COMMENT    Therefore 100% coverage cannot be achieved.
+	COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT 
+	COMMENT Valid Class(es)
+	COMMENT 
+	COMMENT Class 1
+	COMMENT In function 'CanDeInit', parameter can_x is equal to CAN1
+	COMMENT 
+	COMMENT Class 2
+	COMMENT In function 'CanDeInit', parameter can_x is not equal to CAN1
+	COMMENT 
+	COMMENT Class 3
+	COMMENT In function 'CanDeInit', RccApb1PeriphResetCmd function is called 
+	COMMENT 
+	COMMENT Class 7
+	COMMENT In function 'CanInitBoot', INAK bit in MSR register of can_x is 0
+	COMMENT  
+	COMMENT Class 8  
+	COMMENT In function 'CanInitBoot', INAK bit in MSR register of can_x is not set to 0
+	COMMENT 
+	COMMENT Class 9
+	COMMENT In function 'CanInitBoot', loop count is equal to INAK_TIMEOUT
+	COMMENT 
+	COMMENT Class 10  
+	COMMENT In function 'CanInitBoot', loop count is not equal to INAK_TIMEOUT
+	COMMENT 
+	COMMENT Class 13
+	COMMENT In function 'CanFilterInit', CAN_FilterScale of can_filter_init_struct is 
+	COMMENT equal to CAN_FILTERSCALE_16BIT
+	COMMENT 
+	COMMENT Class 14
+	COMMENT In function 'CanFilterInit', CAN_FilterScale of can_filter_init_struct is not 
+	COMMENT equal to CAN_FILTERSCALE_16BIT
+	COMMENT 
+	COMMENT Class 15
+	COMMENT In function 'CanFilterInit', CAN_FilterScale of can_filter_init_struct is 
+	COMMENT equal to CAN_FILTERSCALE_32BIT
+	COMMENT 
+	COMMENT Class 16
+	COMMENT In function 'CanFilterInit', CAN_FilterScale of can_filter_init_struct is 
+	COMMENT not equal to CAN_FILTERSCALE_32BIT 
+	COMMENT 
+	COMMENT Class 17
+	COMMENT In function 'CanFilterInit', CAN_FilterMode of can_filter_init_struct is 
+	COMMENT equal to CAN_FILTERMODE_IDMASK 
+	COMMENT 
+	COMMENT Class 18
+	COMMENT In function 'CanFilterInit', CAN_FilterMode of can_filter_init_struct is 
+	COMMENT not equal to CAN_FILTERMODE_IDMASK
+	COMMENT 
+	COMMENT Class 19
+	COMMENT In function 'CanFilterInit', CAN_FilterFIFOAssignment of can_filter_init_struct 
+	COMMENT is equal to CAN_FILTER_FIFO0
+	COMMENT 
+	COMMENT Class 20
+	COMMENT In function 'CanFilterInit', CAN_FilterFIFOAssignment of can_filter_init_struct 
+	COMMENT is not equal to CAN_FILTER_FIFO0
+	COMMENT 
+	COMMENT Class 21
+	COMMENT In function 'CanFilterInit', CAN_FilterFIFOAssignment of can_filter_init_struct 
+	COMMENT is equal to CAN_FILTER_FIFO1 
+	COMMENT 
+	COMMENT Class 22
+	COMMENT In function 'CanFilterInit', CAN_FilterFIFOAssignment of can_filter_init_struct 
+	COMMENT is not equal to CAN_FILTER_FIFO1
+	COMMENT 
+	COMMENT Class 23
+	COMMENT In function 'CanFilterInit', CAN_FilterActivation of can_filter_init_struct is ENABLE  
+	COMMENT 
+	COMMENT Class 24
+	COMMENT In function 'CanFilterInit', CAN_FilterActivation of can_filter_init_struct is not ENABLE 
+	COMMENT 
+	COMMENT Class 25
+	COMMENT In function 'CanTransmit', TME0 bit in TSR register of can_x is equal to 1.
+	COMMENT 
+	COMMENT Class 26
+	COMMENT In function 'CanTransmit', TME0 bit in TSR register of can_x is not equal to 1.
+	COMMENT 
+	COMMENT Class 27
+	COMMENT In function 'CanTransmit', TME1 bit in TSR register of can_x is equal to 1
+	COMMENT 
+	COMMENT Class 28
+	COMMENT In function 'CanTransmit', TME1 bit in TSR register of can_x is not equal to 1
+	COMMENT 
+	COMMENT Class 29
+	COMMENT In function 'CanTransmit', TME2 bit in TSR register of can_x is equal to 1 
+	COMMENT 
+	COMMENT Class 30
+	COMMENT In function 'CanTransmit', TME2 bit in TSR register of can_x is not equal to 1  
+	COMMENT 
+	COMMENT Class 31
+	COMMENT In function 'CanTransmit', transmit mailbox is empty 
+	COMMENT 
+	COMMENT Class 32
+	COMMENT In function 'CanTransmit', transmit mailbox is not empty 
+	COMMENT 
+	COMMENT Class 33
+	COMMENT In function 'CanTransmit', IDE of tx_message is equal to CAN_ID_STANDARD
+	COMMENT 
+	COMMENT Class 34
+	COMMENT In function 'CanTransmit', IDE of tx_message is not equal to CAN_ID_STANDARD 
+	COMMENT 
+	COMMENT Class 36
+	COMMENT In function 'CanReceive', IDE of rx_message is equal to CAN_ID_STANDARD
+	COMMENT 
+	COMMENT Class 37
+	COMMENT In function 'CanReceive', IDE of rx_message is not equal to CAN_ID_STANDARD 
+	COMMENT 
+	COMMENT Class 38
+	COMMENT In function 'CanReceive', fifo_number is equal to CAN_FIFO0
+	COMMENT 
+	COMMENT Class 39
+	COMMENT In function 'CanReceive', fifo_number is not equal to CAN_FIFO0 
+	COMMENT 
+	COMMENT Class 40
+	COMMENT In function 'CanItConfig', new_state of CAN interrupt is ENABLE
+	COMMENT 
+	COMMENT Class 41
+	COMMENT In function 'CanItConfig', new_state of CAN interrupt is DISABLE 
+	COMMENT 
+	COMMENT Class 51
+	COMMENT In function 'CanInitBoot', CAN_TTCM of can_init_struct is Equal to ENABLE 
+	COMMENT
+	COMMENT Class 52
+	COMMENT In function 'CanInitBoot', CAN_ABOM of can_init_struct is Equal to ENABLE 
+	COMMENT
+	COMMENT Class 53
+	COMMENT In function 'CanInitBoot', CAN_AWUM of can_init_struct is Equal to ENABLE 
+	COMMENT
+	COMMENT Class 54
+	COMMENT In function 'CanInitBoot', CAN_NART of can_init_struct is Equal to ENABLE 
+	COMMENT
+	COMMENT Class 55
+	COMMENT In function 'CanInitBoot', CAN_RFLM of can_init_struct is Equal to ENABLE 
+	COMMENT
+	COMMENT Class 56
+	COMMENT In function 'CanInitBoot', CAN_TXFP of can_init_struct is Equal to ENABLE 
+	COMMENT
+	COMMENT Class 57
+	COMMENT In function 'CanInitBoot', CAN_TTCM of can_init_struct is not Equal to ENABLE 
+	COMMENT
+	COMMENT Class 58
+	COMMENT In function 'CanInitBoot', CAN_ABOM of can_init_struct is not Equal to ENABLE 
+	COMMENT
+	COMMENT Class 59
+	COMMENT In function 'CanInitBoot', CAN_AWUM of can_init_struct is not Equal to ENABLE 
+	COMMENT
+	COMMENT Class 60
+	COMMENT In function 'CanInitBoot', CAN_NART of can_init_struct is not Equal to ENABLE 
+	COMMENT
+	COMMENT Class 61
+	COMMENT In function 'CanInitBoot', CAN_RFLM of can_init_struct is not Equal to ENABLE 
+	COMMENT
+	COMMENT Class 62
+	COMMENT In function 'CanInitBoot', CAN_TXFP of can_init_struct is not Equal to ENABLE 
+	COMMENT
+	COMMENT Class 65 
+	COMMENT In function 'CanInitApp', INAK bit in MSR register of can_x is set to 0
+	COMMENT  
+	COMMENT Class 66 
+	COMMENT In function 'CanInitApp', INAK bit in MSR register of can_x is not set to 0
+	COMMENT 
+	COMMENT Class 67 
+	COMMENT In function 'CanInitApp', loop count is equal to INAK_TIMEOUT
+	COMMENT 
+	COMMENT Class 68  
+	COMMENT In function 'CanInitApp', loop count is not equal to INAK_TIMEOUT
+	COMMENT
+	COMMENT Invalid Class(es)
+	COMMENT 
+	COMMENT Class 42
+	COMMENT In function 'CanDeInit', Invalid Reference is passed to can_x parameter
+	COMMENT 
+	COMMENT Class 43
+	COMMENT In function 'CanInitBoot', Invalid Reference is passed to can_x parameter
+	COMMENT 
+	COMMENT Class 44
+	COMMENT In function 'CanInitBoot', Invalid Reference is passed to can_init_struct parameter
+	COMMENT 
+	COMMENT Class 45
+	COMMENT In function 'CanFilterInit', Invalid Reference is passed to can_filter_init_struct parameter
+	COMMENT
+	COMMENT Class 46
+	COMMENT In function 'CanTransmit', Invalid Reference is passed to can_x parameter
+	COMMENT
+	COMMENT Class 47
+	COMMENT In function 'CanTransmit', Invalid Reference is passed to tx_message parameter
+	COMMENT
+	COMMENT Class 48
+	COMMENT In function 'CanReceive', Invalid Reference is passed to can_x parameter
+	COMMENT
+	COMMENT Class 49
+	COMMENT In function 'CanReceive', Invalid Reference is passed to rx_message parameter
+	COMMENT
+	COMMENT Class 50
+	COMMENT In function 'CanItConfig', Invalid Reference is passed to can_x parameter
+	COMMENT
+	COMMENT Class 63
+	COMMENT In function 'CanInitApp', Invalid Reference is passed to can_x parameter
+	COMMENT 
+	COMMENT Class 64
+	COMMENT In function 'CanInitApp', Invalid Reference is passed to can_init_struct parameter
+	COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdulibstm32f4xxcan_c
+	
+		#void RccApb1PeriphResetCmd(T_UINT32  _in rcc_ahb1_periph, T_FUNCTIONAL_STATE  _in new_state); 
+	
+	END DEFINE
+
+ELSE_SIMUL
+
+-- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+--No special things that have to be done on the host to run the test.
+
+--ELSE
+
+--No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdulibstm32f4xxcan.c
+
+--ENVIRONMENT ENV_hdulibstm32f4xxcan_c
+
+--None
+
+--END ENVIRONMENT -- ENV_hdulibstm32f4xxcan_c
+
+--USE ENV_hdulibstm32f4xxcan_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CanReceive
+--------------------------------------------------------------------------------
+SERVICE CanReceive
+SERVICE_TYPE extern
+
+	-- Tested service parameters declarations
+	#T_CAN_TYPE can_x;
+	#T_UINT8 fifo_number;
+	#T_CAN_RX_MSG rx_message;
+
+	-- Default Variables
+	ENVIRONMENT ENV_CanReceive
+
+		--can_x structure initialization
+		STRUCTURE can_x,			init = { MCR => 0, MSR => 0, TSR => 0, RF0R => 0, RF1R => 0, 
+									&		 IER => 0, ESR => 0, BTR => 0, RESERVED0 => { others => 0 },
+									& 		 sTxMailBox => { others => { TIR => 0, TDTR => 0, TDLR => 0, 
+									&		 TDHR => 0 } }, sFIFOMailBox => { others => { RIR => 0, RDTR
+									&		 => 0, RDLR => 0, RDHR => 0 } }, RESERVED1 => { others => 0 }, 
+									& 		 FMR => 0, FM1R => 0, RESERVED2 => 0, FS1R => 0, 
+									& 		 RESERVED3 => 0, FFA1R => 0, RESERVED4 => 0, FA1R => 0, 
+									&		 RESERVED5 => { others => 0 }, sFilterRegister =>
+									& 		 { others => { FR1 => 0, FR2 => 0 } } },	ev = init
+
+		--Variable fifo_number initialization
+		VAR fifo_number,			init = 0,											ev = init
+
+	END ENVIRONMENT -- ENV_CanReceive
+
+	USE ENV_CanReceive
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-001]
+	COMMENT The function 'CanReceive' sets IDE of rx_message with IDE (identifier extension) bit 
+	COMMENT value in receive FIFO 
+	COMMENT mailbox identifier register (RIR) of sFIFOMailBox of can_x for the received  fifo_number.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-002]
+	COMMENT The function 'CanReceive' sets StdId of rx_message with Standard identifier value in  
+	COMMENT receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for the received  
+	COMMENT fifo_number when IDE of rx_message is standard (CAN_ID_STANDARD).
+	COMMENT Equivalence Class 36
+	COMMENT
+	COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-004]
+	COMMENT The function 'CanReceive' sets RTR of rx_message with remote transmission request value  
+	COMMENT in receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for the 
+	COMMENT received fifo_number. 
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-005]
+	COMMENT The function 'CanReceive' sets DLC of rx_message with DLC (Data length code) in RDTR of
+	COMMENT sFIFOMailBox of can_x for the received fifo_number. 
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-006] 
+	COMMENT The function 'CanReceive' sets FMI of rx_message with FMI (Filter match index) in RDTR 
+	COMMENT register of sFIFOMailBox of can_x for the received fifo_number.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-007]
+	COMMENT The function 'CanReceive' sets Data of rx_message with data bytes in RDLR and RDHR of
+	COMMENT sFIFOMailBox of can_x for the received fifo_number.
+	COMMENT Equivalence Class None
+	COMMENT
+	COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-008]
+	COMMENT The function 'CanReceive' sets RFOM0 bit in receive FIFO 0 register(RF0R) of can_x 
+	COMMENT when 'fifo_number' is CAN_FIFO0.
+	COMMENT Tested for minimum values.
+	COMMENT Equivalence Class 38
+	COMMENT Since FIFO mailbox registers(RIR,RDTR,RDLR,RDHR) are write protected and the 
+	COMMENT reset value is (0xXXXXXXXX)
+	COMMENT These registers are tested for minimum values.    
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds Receive FIFO number
+			VAR fifo_number,                            init = 0,       ev = init
+
+			--CAN receive FIFO mailbox registers
+			VAR can_x.sFIFOMailBox[0].RIR,              init = 0,       ev = init
+
+			VAR can_x.sFIFOMailBox[0].RDTR,             init = 0,       ev = init
+
+			VAR can_x.sFIFOMailBox[0].RDLR,             init = 0,       ev = init
+
+			VAR can_x.sFIFOMailBox[0].RDHR,             init = 0,       ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		COMMENT OUTPUT SECTION:
+
+			-- Holds member values of structure 'rx_message'
+			ARRAY rx_message.Data,				init = {others=>1},		ev = {others =>0}
+
+			VAR rx_message.StdId,               init = 1,       		ev = 0
+
+			VAR rx_message.RTR,                 init = 1,       		ev = 0
+
+			VAR rx_message.DLC,                 init = 1,       		ev = 0
+
+			VAR rx_message.FMI,                 init = 1,       		ev = 0
+
+			VAR rx_message.IDE,                 init = 1,       		ev = CAN_ID_STANDARD
+
+			--Holds RF0R of can_x value
+			VAR can_x.RF0R,                     init = 0,       		ev = 32
+
+		-- Stub Calls
+		SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanReceive(&can_x,fifo_number,&rx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-001]
+    COMMENT The function 'CanReceive' sets IDE of rx_message with IDE (identifier extension) bit 
+    COMMENT value in receive FIFO 
+	COMMENT mailbox identifier register (RIR) of sFIFOMailBox of can_x for the received  fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-002]
+    COMMENT The function 'CanReceive' sets StdId of rx_message with Standard identifier value in  
+    COMMENT receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for the received  
+	COMMENT fifo_number when IDE of rx_message is standard (CAN_ID_STANDARD).
+    COMMENT Equivalence Class 36
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-004]
+    COMMENT The function 'CanReceive' sets RTR of rx_message with remote transmission request value  
+    COMMENT in receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for the 
+    COMMENT received fifo_number. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-005]
+    COMMENT The function 'CanReceive' sets DLC of rx_message with DLC (Data length code) in RDTR 
+    COMMENT register of sFIFOMailBox of can_x for the received fifo_number. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-006] 
+    COMMENT The function 'CanReceive' sets FMI of rx_message with FMI (Filter match index) in RDTR 
+    COMMENT register of sFIFOMailBox of can_x for the received fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-007]
+    COMMENT The function 'CanReceive' sets Data of rx_message with data bytes in RDLR and RDHR of 
+    COMMENT sFIFOMailBox of can_x for the received fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-009]
+    COMMENT The function 'CanReceive' sets RFOM1 bit in receive FIFO 1 register(RF1R) of can_x 
+    COMMENT when the CAN FIFO number 'fifo_number' is not CAN_FIFO0.
+    COMMENT This test case is evaluated by giving the minimum + 1 values to inputs.
+    COMMENT Equivalence Class 39
+    COMMENT Since FIFO mailbox registers(RIR,RDTR,RDLR,RDHR) are write protected and the reset 
+    COMMENT value is (0xXXXXXXXX)
+    COMMENT These registers are tested for minimum+1 values.
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds Receive FIFO number
+            VAR fifo_number,                    init = 1,       					ev = init
+
+			--CAN receive FIFO mailbox registers
+            VAR can_x.sFIFOMailBox[1].RIR,      init = 1,       					ev = init
+
+            VAR can_x.sFIFOMailBox[1].RDTR,     init = 1,       					ev = init
+
+            VAR can_x.sFIFOMailBox[1].RDLR,     init = 1,       					ev = init
+
+            VAR can_x.sFIFOMailBox[1].RDHR,     init = 1,       					ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds member values of structure 'rx_message'
+            VAR rx_message.IDE,        init = 1,       					ev = 0
+
+            VAR rx_message.StdId,      init = 1,       					ev = 0
+
+            VAR rx_message.RTR,        init = 1,       					ev = 0
+
+            VAR rx_message.DLC,        init = 0,       					ev = 1
+
+            VAR rx_message.FMI,        init = 1,       					ev = 0
+            
+			ARRAY rx_message.Data,	   init = {0=>0, 4=>0, others=>1},	ev = {0=>1, 4=>1, others=>0}
+              
+            --Holds RF1R of can_x value
+            VAR can_x.RF1R,            init = 0,      		 			ev = 0x20
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanReceive(&can_x,fifo_number,&rx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-001]
+    COMMENT The function 'CanReceive' sets IDE of rx_message with IDE (identifier extension) 
+    COMMENT bit value in receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of
+	COMMENT can_x for the received  fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-003]
+    COMMENT The function 'CanReceive' sets ExtId of rx_message with extended identifier value  
+    COMMENT in receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for the   
+    COMMENT received fifo_number when IDE of rx_message is not standard (CAN_ID_STANDARD).
+    COMMENT Equivalence Class 37
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-004]
+    COMMENT The function 'CanReceive' sets RTR of rx_message with remote transmission request value  
+    COMMENT in receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for the 
+    COMMENT received  fifo_number. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-005]
+    COMMENT The function 'CanReceive' sets DLC of rx_message with DLC (Data length code) in RDTR 
+    COMMENT register of sFIFOMailBox of can_x for the received fifo_number. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-006] 
+    COMMENT The function 'CanReceive' sets FMI of rx_message with FMI (Filter match index) in RDTR 
+    COMMENT register of sFIFOMailBox of can_x for the received fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-007]
+    COMMENT The function 'CanReceive' sets Data of rx_message with data bytes in RDLR and RDHR 
+    COMMENT of sFIFOMailBox of can_x for the received fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-009]
+    COMMENT The function 'CanReceive' sets RFOM1 bit in receive FIFO 1 register(RF1R) of can_x 
+    COMMENT when the CAN FIFO number 'fifo_number' is not CAN_FIFO0.
+    COMMENT This test case is evaluated by giving the nominal values to inputs.
+    COMMENT Equivalence Class 39
+    COMMENT Since FIFO mailbox registers(RIR,RDTR,RDLR,RDHR) are write protected and the 
+    COMMENT reset value is (0xXXXXXXXX)
+    COMMENT These registers are tested for nominal values.    
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds Receive FIFO number
+            VAR fifo_number,                                init = 1,           	ev = init
+
+			--CAN receive FIFO mailbox registers
+            VAR can_x.sFIFOMailBox[1].RIR,                  init = 100,         	ev = init
+
+            VAR can_x.sFIFOMailBox[1].RDTR,                 init = 100,         	ev = init
+
+            VAR can_x.sFIFOMailBox[1].RDLR,                 init = 100,         	ev = init
+
+            VAR can_x.sFIFOMailBox[1].RDHR,                 init = 100,         	ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds member values of structure 'rx_message'
+            VAR rx_message.IDE,        init = 0,           	ev = 4
+
+            VAR rx_message.ExtId,      init = 1,           	ev = 12
+
+            VAR rx_message.RTR,        init = 1,           	ev = 0
+
+            VAR rx_message.DLC,        init = 1,           	ev = 4
+
+            VAR rx_message.FMI,        init = 1,           	ev = 0
+
+			ARRAY rx_message.Data,	   init = {others=>1},  ev = {0=>100, 4=>100, others=>0}
+            
+            --Holds RF1R of can_x value
+            VAR can_x.RF1R,            init = 0,           	ev = 0x20
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanReceive(&can_x,fifo_number,&rx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-001]
+    COMMENT The function 'CanReceive' sets IDE of rx_message with IDE (identifier extension) bit  
+	COMMENT value in receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for 
+	COMMENT the received  fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-003]
+    COMMENT The function 'CanReceive' sets ExtId of rx_message with extended identifier value  
+    COMMENT in receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for the   
+    COMMENT received fifo_number when IDE of rx_message is not standard (CAN_ID_STANDARD).
+    COMMENT Equivalence Class 37
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-004]
+    COMMENT The function 'CanReceive' sets RTR of rx_message with remote transmission request value  
+    COMMENT in receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for the 
+    COMMENT received  fifo_number. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-005]
+    COMMENT The function 'CanReceive' sets DLC of rx_message with DLC (Data length code) in RDTR 
+    COMMENT register of sFIFOMailBox of can_x for the received fifo_number. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-006] 
+    COMMENT The function 'CanReceive' sets FMI of rx_message with FMI (Filter match index) in RDTR 
+    COMMENT register of sFIFOMailBox of can_x for the received fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-007]
+    COMMENT The function 'CanReceive' sets Data of rx_message with data bytes in RDLR and RDHR 
+    COMMENT of sFIFOMailBox of can_x for the received fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-009]
+    COMMENT The function 'CanReceive' sets RFOM1 bit in receive FIFO 1 register(RF1R) of can_x 
+    COMMENT when the CAN FIFO number 'fifo_number' is not CAN_FIFO0.
+    COMMENT This test case is evaluated by giving the maximum values to inputs.
+    COMMENT Equivalence Class 39
+    COMMENT Since FIFO mailbox registers(RIR,RDTR,RDLR,RDHR) are write protected and the reset 
+    COMMENT value is (0xXXXXXXXX)
+    COMMENT These registers are tested for maximum values.
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds Receive FIFO number
+            VAR fifo_number,                        init = 1,                           ev = init
+
+			--CAN receive FIFO mailbox registers
+            VAR can_x.sFIFOMailBox[1].RIR,          init = (T_VLT_UINT32)0xFFFFFFFF,    ev = init
+
+            VAR can_x.sFIFOMailBox[1].RDTR,         init = (T_VLT_UINT32)0xFFFFFFFF,    ev =init
+
+            VAR can_x.sFIFOMailBox[1].RDLR,         init = (T_VLT_UINT32)0xFFFFFFFF,    ev =init
+
+            VAR can_x.sFIFOMailBox[1].RDHR,         init = (T_VLT_UINT32)0xFFFFFFFF,    ev =init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+            
+        COMMENT OUTPUT SECTION:
+
+            -- Holds member values of structure 'rx_message'
+            VAR rx_message.IDE,                     init = 0x0,              ev = 0x4
+
+            VAR rx_message.ExtId,                   init = 0x1,              ev = 0x1FFFFFFF
+
+            VAR rx_message.RTR,                     init = 0x1,              ev = 0x2
+
+            VAR rx_message.FMI,                     init = 0x1,              ev = 0xFF
+
+			ARRAY rx_message.Data,					init = {others=>0x1},	 ev = {others=>0xFF}
+            
+            --Holds RF1R of can_x value
+            VAR can_x.RF1R,                         init = 0x0,              ev = 0x20
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanReceive(&can_x,fifo_number,&rx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-001]
+    COMMENT The function 'CanReceive' sets IDE of rx_message with IDE (identifier extension) bit  
+	COMMENT value in receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for 
+	COMMENT the received  fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-003]
+    COMMENT The function 'CanReceive' sets ExtId of rx_message with extended identifier value in  
+    COMMENT receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for the received  
+    COMMENT fifo_number when IDE of rx_message is not standard (CAN_ID_STANDARD).
+    COMMENT Equivalence Class 37
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-004]
+    COMMENT The function 'CanReceive' sets RTR of rx_message with remote transmission request value  
+    COMMENT in receive FIFO mailbox identifier register (RIR) of sFIFOMailBox of can_x for the 
+    COMMENT received  fifo_number. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-005]
+    COMMENT The function 'CanReceive' sets DLC of rx_message with DLC (Data length code) in RDTR 
+    COMMENT register of sFIFOMailBox of can_x for the received fifo_number. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-006] 
+    COMMENT The function 'CanReceive' sets FMI of rx_message with FMI (Filter match index) in RDTR 
+    COMMENT register of sFIFOMailBox of can_x for the received fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-007]
+    COMMENT The function 'CanReceive' sets Data of rx_message with data bytes in RDLR and RDHR 
+    COMMENT of sFIFOMailBox of can_x for the received fifo_number.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-009]
+    COMMENT The function 'CanReceive' sets RFOM1 bit in receive FIFO 1 register(RF1R) of can_x 
+    COMMENT when the CAN FIFO number 'fifo_number' is not CAN_FIFO0.
+    COMMENT This test case is evaluated by giving the maximum - 1 values to inputs.
+    COMMENT Equivalence Class 39
+    COMMENT Since FIFO mailbox registers(RIR,RDTR,RDLR,RDHR) are write protected and the reset 
+    COMMENT value is (0xXXXXXXXX)
+    COMMENT These registers are tested for maximum-1 values.
+    COMMENT </TD>
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --Holds Receive FIFO number
+            VAR fifo_number,        	               init = 1,                            ev = init
+
+			--CAN receive FIFO mailbox registers
+            VAR can_x.sFIFOMailBox[1].RIR,          init = (T_VLT_UINT32)0xFFFFFFFE,     ev = init
+
+            VAR can_x.sFIFOMailBox[1].RDTR,         init = (T_VLT_UINT32)0xFFFFFFFE,     ev = init
+
+            VAR can_x.sFIFOMailBox[1].RDLR,         init = (T_VLT_UINT32)0xFFFFFFFE,     ev = init
+
+            VAR can_x.sFIFOMailBox[1].RDHR,         init = (T_VLT_UINT32)0xFFFFFFFE,     ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+             -- Holds member values of structure 'rx_message'
+            VAR rx_message.IDE,            init = 0x0,             ev = 4
+
+            VAR rx_message.ExtId,          init = 0x1,             ev = (T_VLT_UINT32)0x1FFFFFFF
+
+            VAR rx_message.RTR,            init = 0x1,             ev = 2
+
+            VAR rx_message.FMI,            init = 0x1,             ev = 255
+
+			ARRAY rx_message.Data,		   init = {others=>0x1},   ev = {0=>254, 4=>254, others=>255}
+               
+            --Holds RF1R of can_x value
+            VAR can_x.RF1R,                init = 0x0,             ev = 0x20
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanReceive(&can_x,fifo_number,&rx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 5
+
+--TEST 6
+--FAMILY robustness
+--
+--  COMMENT Test Description
+--  COMMENT <TD> 
+--  COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-001]
+--  COMMENT This test case is evaluated by giving the invalid reference to input parameter can_x.
+--  COMMENT Equivalence Class 48
+--  COMMENT </TD>
+--
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --None
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      --Stub Calls :
+--      SIMUL
+--
+--          --No stubs
+--
+--      END SIMUL
+--
+--      --Calling the Unit Under Test :
+--      #CanReceive(NULL,fifo_number,&rx_message);
+--
+--  END ELEMENT
+-- 
+--END TEST -- TEST 6
+--
+--TEST 7
+--FAMILY robustness
+--
+--  COMMENT Test Description
+--  COMMENT <TD> 
+--  COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-001]
+--  COMMENT This test case is evaluated by giving the invalid reference to input parameter rx_message.
+--  COMMENT Equivalence Class 49
+--  COMMENT </TD>
+--
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --None
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      --Stub Calls :
+--      SIMUL
+--
+--          --No stubs
+--
+--      END SIMUL
+--
+--      --Calling the Unit Under Test :
+--      #CanReceive(&can_x,fifo_number,NULL);
+--
+--  END ELEMENT
+-- 
+--END TEST -- TEST 7
+
+--TEST 8
+--FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT [hdulibstm32f4xxcan-CanReceive-CB-LLR-001]
+--    COMMENT The function 'CanReceive',paramenter "fifo_number" is checked for maximun value 0xFF 
+-- 	  COMMENT which leads to array out of bound.
+--	  COMMENT Equivalence Class None
+--    COMMENT  
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--
+--            --Holds Receive FIFO number
+--            VAR fifo_number,                                init = 0xFF,          ev = init
+--
+--            --CAN receive FIFO mailbox registers
+--            VAR can_x.sFIFOMailBox[1].RIR,                  init = 100,         	ev = init
+--
+--            VAR can_x.sFIFOMailBox[1].RDTR,                 init = 100,         	ev = init
+--
+--            VAR can_x.sFIFOMailBox[1].RDLR,                 init = 100,         	ev = init
+--
+--            VAR can_x.sFIFOMailBox[1].RDHR,                 init = 100,         	ev = init
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--
+--            --None
+--
+--        COMMENT OUTPUT SECTION:
+--
+--            -- Holds member values of structure 'rx_message'
+--            VAR rx_message.IDE,                init = 0,           	ev = 4
+--
+--            VAR rx_message.ExtId,              init = 1,           	ev = 12
+--
+--            VAR rx_message.RTR,                init = 1,           	ev = 0
+--
+--            VAR rx_message.DLC,                init = 1,           	ev = 4
+--
+--            VAR rx_message.FMI,                init = 1,           	ev = 0
+--
+--			ARRAY rx_message.Data,				 init = {others=>1},	ev = {0=>100, 4=>100, others=>0}
+--            
+--            --Holds RF1R of can_x value
+--            VAR can_x.RF1R,                    init = 0,           	ev = 0x20
+--
+--        -- Stub Calls
+--        SIMUL
+--
+--            --No stubs
+--
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test :
+--        #CanReceive(&can_x,fifo_number,&rx_message);
+--
+--    END ELEMENT
+--
+--END TEST  -- TEST 8
+
+END SERVICE -- CanReceive
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CanItConfig
+--------------------------------------------------------------------------------
+SERVICE CanItConfig
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_TYPE can_x;
+    #T_UINT32 can_it;
+    #T_FUNCTIONAL_STATE new_state;
+
+	-- Default Variables 
+	ENVIRONMENT ENV_CanItConfig
+
+		--can_x structure initialization
+		STRUCTURE can_x,        init = { MCR => 0, MSR => 0, TSR => 0, RF0R => 0, RF1R => 0, 
+								&		 IER => 0, ESR => 0, BTR => 0, RESERVED0 => { others => 0 }, 
+								&		 sTxMailBox => { others => { TIR => 0, TDTR => 0, TDLR => 0, 
+								&		 TDHR => 0 } }, sFIFOMailBox => { others => { RIR => 0, RDTR
+								&		 => 0, RDLR => 0, RDHR => 0 } }, RESERVED1 => { others => 0 }, 
+								&		 FMR => 0, FM1R => 0, RESERVED2 => 0, FS1R => 0, 
+								&		 RESERVED3 => 0, FFA1R => 0, RESERVED4 => 0, FA1R => 0, 
+								&		 RESERVED5 => { others => 0 }, sFilterRegister =>
+								&		 { others => { FR1 => 0, FR2 => 0 } } },        ev = init
+
+		--parameter can_it initialization
+		VAR can_it,             init = 0,                   							ev = init
+
+		VAR new_state,          init = DISABLE,             							ev = init
+
+	END ENVIRONMENT -- ENV_CanItConfig
+
+	USE ENV_CanItConfig
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanItConfig-CB-LLR-001]
+    COMMENT The function configures interrupt enable register(IER) of can_x to enable the
+    COMMENT selected can_x interrupt can_it when new_state is ENABLE
+    COMMENT Tested for minimum values.
+    COMMENT Equivalence Class 40
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Specifies the CAN interrupt sources
+            VAR can_it,             init = 0,           ev = init
+
+            --Holds new state of the CAN interrupt
+            VAR new_state,          init = ENABLE,      ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds IER of can_x value
+            VAR can_x.IER,          init = 0x00000000,  ev = 0x00000000
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanItConfig(&can_x,can_it,new_state);
+
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanItConfig-CB-LLR-002]
+    COMMENT The function configures interrupt enable register(IER) of can_x to disable the
+    COMMENT selected can_x interrupt can_it when new_state is DISABLE
+    COMMENT This test case is evaluated by giving the nominal values to inputs.
+    COMMENT Equivalence Class 41
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Specifies the CAN interrupt sources
+            VAR can_it,             init = 2000,            ev = init
+
+            --Holds new state of the CAN interrupt
+            VAR new_state,          init = DISABLE,         ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds IER of can_x value
+            VAR can_x.IER,          init = 0x368,           ev = 0x28
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanItConfig(&can_x,can_it,new_state);
+
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanItConfig-CB-LLR-001]
+    COMMENT The function configures interrupt enable register(IER) of can_x to enable the
+    COMMENT selected can_x interrupt can_it when new_state is ENABLE
+    COMMENT This test case is evaluated by giving the maximum values to inputs.
+    COMMENT Equivalence Class 40
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Specifies the CAN interrupt sources
+            VAR can_it,             init = 0x38F7F,             ev = init
+
+            --Holds new state of the CAN interrupt
+            VAR new_state,          init = ENABLE,              ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds IER of can_x value
+            VAR can_x.IER,          init = 0x00000000,          ev = 0x38F7F
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanItConfig(&can_x,can_it,new_state);
+
+    END ELEMENT
+
+END TEST  -- TEST 3
+
+--TEST 4
+--FAMILY robustness
+-- 
+--  COMMENT Test Description
+--  COMMENT <TD> 
+--  COMMENT [hdulibstm32f4xxcan-CanItConfig-CB-LLR-001]
+--  COMMENT This test case is evaluated by passing Invalid Reference to can_x parameter
+--  COMMENT Equivalence Class 50
+--  COMMENT </TD> 
+--
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --None
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      --Stub Calls :
+--      SIMUL
+--
+--          --No stubs
+--
+--      END SIMUL
+--
+--      --Calling the Unit Under Test :
+--      #CanItConfig(NULL,can_it,new_state);
+--
+--  END ELEMENT
+--
+--END TEST -- TEST 4
+
+END SERVICE -- CanItConfig
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CanInitBoot
+--------------------------------------------------------------------------------
+SERVICE CanInitBoot
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_TYPE can_x;
+    #T_CAN_INIT can_init_struct;
+    -- By function returned type declaration
+    #T_UINT8 ret_CanInitBoot;
+
+	-- Default Variables 
+	ENVIRONMENT ENV_CanInitBoot
+
+		--can_x structure initialization
+		STRUCTURE can_x,                init = { MCR => 0, MSR => 0, TSR => 0, RF0R => 0, RF1R => 0, 
+										& 		 IER => 0, ESR => 0, BTR => 0, RESERVED0 => { others => 0 },
+										& 		 sTxMailBox => { others => { TIR => 0, TDTR => 0, TDLR => 0, 
+										&		 TDHR => 0 } }, sFIFOMailBox => { others => { RIR => 0, RDTR
+										&		 => 0, RDLR => 0, RDHR => 0 } }, RESERVED1 => { others => 0 }, 
+										&		 FMR => 0, FM1R => 0, RESERVED2 => 0, FS1R => 0, 
+										& 		 RESERVED3 => 0, FFA1R => 0, RESERVED4 => 0, FA1R => 0, 
+										&		 RESERVED5 => { others => 0 }, sFilterRegister =>
+										& 		 { others => { FR1 => 0, FR2 => 0 } } },     ev = init
+
+		--can_init_struct structure initialization
+		STRUCTURE can_init_struct,      init = { CAN_Prescaler => 0, CAN_Mode => 0, CAN_SJW => 0, 
+										& 		 CAN_BS1 => 0, CAN_BS2 => 0, CAN_TTCM => DISABLE, 
+										&  		 CAN_ABOM => DISABLE, CAN_AWUM => DISABLE, CAN_NART
+										&		 => DISABLE, CAN_RFLM => DISABLE,
+										&		 CAN_TXFP => DISABLE },                       ev = init
+
+		VAR ret_CanInitBoot,            init = 0,                                         	  ev = init
+
+
+	END ENVIRONMENT -- ENV_CanInitBoot
+
+	USE ENV_CanInitBoot
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-001]
+    COMMENT The function configures MCR of can_x to exit from sleep mode by setting bit 1 to 0. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-002]
+    COMMENT The function configures MCR  of can_x to request initialization by setting bit 0 to 1. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-003]
+    COMMENT The function loops till INAK bit in MSR register of can_x is set to 0 and 
+    COMMENT For 65534 number of loops, loop count is not equal to INAK_TIMEOUT hence MCDC TT 
+    COMMENT condition is tested.
+    COMMENT For 65535 loop, loop count is equal to INAK_TIMEOUT hence MCDC TF condition is tested.
+    COMMENT Equivalence Class 7,9,10
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-004]
+    COMMENT The function 'CanInitBoot' sets the return initialization status as CAN_INITSTATUS_FAILED 
+    COMMENT when INAK bit in MSR of can_x is 0. 
+    COMMENT Equivalence Class 7
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-020]
+    COMMENT The function return initialization status as CAN_INITSTATUS_FAILED.
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,              	init = 0x0,      	ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,              	init = 0x2,       	ev = 0x1
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of 'CanInitBoot'
+            VAR ret_CanInitBoot,            init = 0x0,       	ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL 
+
+        --Calling the Unit Under Test :
+        #ret_CanInitBoot = CanInitBoot(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-003]
+    COMMENT The function loops for 0th time when INAK bit in MSR register of can_x is set to 1. 
+    COMMENT MCDC condition FF is covered.
+    COMMENT Equivalence Class 8	
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-005]
+    COMMENT The function does the following when CAN_TTCM of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets TTCM bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 51
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-007]
+    COMMENT The function does the following when CAN_ABOM of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets ABOM bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 52
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-009]
+    COMMENT The function does the following when CAN_AWUM of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets AWUM bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 53
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-011]
+    COMMENT The function does the following when CAN_NART of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets NART bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 54
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-013]
+    COMMENT The function does the following when CAN_RFLM of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets RFLM bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 55
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-015]
+    COMMENT The function does the following when CAN_TXFP of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets TXFP bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 56
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-017]
+    COMMENT The function 'CanInitBoot' sets bit timing register as below when INAK bit in 
+    COMMENT MSR of can_x is 1: 
+    COMMENT a)Bit 30 with can_mode of can_init_struct 
+    COMMENT b)Bit 24 and 25 with can_sjw of can_init_struct
+    COMMENT c)Bit 16-19 with can_bs1 of can_init_struct 
+    COMMENT d)Bit 20-22 with can_bs2 of can_init_struct
+    COMMENT e)Bit 0-9 with (can_prescaler of can_init_struct) - DEC_ONE.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-018]
+    COMMENT The function Request leave initialization by setting INRQ bit in MCR of can_x to 0 
+    COMMENT when INAK bit in MSR of can_x is 1. 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-019]
+    COMMENT The function does the following when INAK bit in MSR register of can_x is 1 
+    COMMENT a.Loop till INAK bit in MSR register of can_x is 1 and loop count is not equal to 
+    COMMENT INAK_TIMEOUT.
+    COMMENT b.Sets the status to CAN_INITSTATUS_FAILED when INAK bit in MSR register of 
+    COMMENT can_x is 1 and 
+    COMMENT timeout has occurred. 
+    COMMENT Equivalence Class 8,9,10	
+    COMMENT This test case is evaluated by giving minimum values to the inputs. 
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 1,       ev = init
+
+            -- Holds member values of structure 'can_init_struct'
+            VAR can_init_struct.CAN_Mode,       init = 0,       ev = init
+
+            VAR can_init_struct.CAN_SJW,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_BS1,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_BS2,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_Prescaler,  init = 0,       ev = init
+            
+            VAR can_init_struct.CAN_TTCM, 		init = ENABLE,	ev = init
+
+	    	VAR can_init_struct.CAN_ABOM, 		init = ENABLE,	ev = init
+	    
+	   		VAR can_init_struct.CAN_AWUM, 		init = ENABLE,	ev = init
+	    
+	    	VAR can_init_struct.CAN_NART, 		init = ENABLE,	ev = init
+	    
+	    	VAR can_init_struct.CAN_RFLM, 		init = ENABLE,	ev = init
+	    
+	    	VAR can_init_struct.CAN_TXFP, 		init = ENABLE,	ev = init
+	    	
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 0x1,     ev = 0xFC
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds member 'BTR' value of structure 'can_x'
+            VAR can_x.BTR,                      init = 0x0,     ev = 0xFFFFFFFF
+
+            -- Holds the return value of function CanInitBoot
+            VAR ret_CanInitBoot,                init = 0x0,   	ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL  
+
+        --Calling the Unit Under Test :
+        #ret_CanInitBoot = CanInitBoot(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-003]
+    COMMENT The function loops for 0th time when INAK bit in MSR register of can_x is set to 1 
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-006]
+    COMMENT The function does the following when CAN_TTCM of can_init_struct is DISABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets TTCM bit in MCR of can_x to 0 
+    COMMENT Equivalence Class 57
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-008]
+    COMMENT The function does the following when CAN_ABOM of can_init_struct is DISABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets ABOM bit in MCR of can_x to 0 
+    COMMENT Equivalence Class 58
+	COMMENT
+	COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-010]
+    COMMENT The function does the following when CAN_AWUM of can_init_struct is DISABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets AWUM bit in MCR of can_x to 0 
+    COMMENT Equivalence Class 59
+	COMMENT
+	COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-012]
+    COMMENT The function does the following when CAN_NART of can_init_struct is DISABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets NART bit in MCR of can_x to 0 
+    COMMENT Equivalence Class 60
+	COMMENT
+	COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-014]
+    COMMENT The function does the following when CAN_RFLM of can_init_struct is DISABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets RFLM bit in MCR of can_x to 0 
+    COMMENT Equivalence Class 61
+	COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-016]
+    COMMENT The function does the following when CAN_TXFP of can_init_struct is DISABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets TXFP bit in MCR of can_x to 0 
+    COMMENT Equivalence Class 62
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-017]
+    COMMENT The function 'CanInitBoot' sets bit timing register as below when INAK bit in 
+    COMMENT MSR register of can_x is 1: 
+    COMMENT a)Bit 30 with can_mode of can_init_struct 
+    COMMENT b)Bit 24 and 25 with can_sjw of can_init_struct 
+    COMMENT c)Bit 16-19 with can_bs1 of can_init_struct 
+    COMMENT d)Bit 20-22 with can_bs2 of can_init_struct 
+    COMMENT e)Bit 0-9 with (can_prescaler of can_init_struct) - DEC_ONE
+    COMMENT Equivalence Class 7
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-018]
+    COMMENT The function Request leave initialization by setting INRQ bit in MCR of can_x 
+    COMMENT to 0 when INAK bit in MSR of can_x is 1. 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-019]
+    COMMENT The function does the following when INAK bit in MSR of can_x is 1 
+    COMMENT a.Loop till INAK bit in MSR of can_x is 1 and loop count is not equal to 
+    COMMENT INAK_TIMEOUT .
+    COMMENT Equivalence Class 8,9,10
+    COMMENT This test case is evaluated by giving minimum + 1 values to the inputs.
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 1,       ev = init
+
+            -- Holds member values of structure 'can_init_struct'
+            VAR can_init_struct.CAN_Mode,       init = 1,       ev = init
+
+            VAR can_init_struct.CAN_SJW,        init = 1,       ev = init
+
+            VAR can_init_struct.CAN_BS1,        init = 1,       ev = init
+
+            VAR can_init_struct.CAN_BS2,        init = 1,       ev = init
+
+            VAR can_init_struct.CAN_Prescaler,  init = 1,       ev = init
+            
+            VAR can_init_struct.CAN_TTCM, 		init = DISABLE,	ev = init
+			
+			VAR can_init_struct.CAN_ABOM, 		init = DISABLE,	ev = init
+				    
+			VAR can_init_struct.CAN_AWUM, 		init = DISABLE,	ev = init
+				    
+			VAR can_init_struct.CAN_NART, 		init = DISABLE,	ev = init
+				    
+			VAR can_init_struct.CAN_RFLM, 		init = DISABLE,	ev = init
+				    
+	    	VAR can_init_struct.CAN_TXFP, 		init = DISABLE,	ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 0x1,       ev = 0x0
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds member 'BTR' value of structure 'can_x'
+            VAR can_x.BTR,                      init = 0x0,       ev = (T_UINT32)0x41110000
+
+            -- Holds the return value of function CanInitBoot
+            VAR ret_CanInitBoot,                init = 0x0,  	  ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+         --Calling the Unit Under Test :
+        #ret_CanInitBoot = CanInitBoot(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-001]
+    COMMENT The function configures MCR of can_x to exit from sleep mode by setting bit 1 to 0. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-002]
+    COMMENT The function configures MCR  of can_x to request initialization by setting bit 0 to 1. 
+    COMMENT This test case is evaluated by giving nominal values to the inputs.
+    COMMENT Equivalence Class None  
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 0,       ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 15,      ev = 13
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds the return value of function CanInitBoot
+            VAR ret_CanInitBoot,                init = 0,     	ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        --Calling the Unit Under Test :
+        #ret_CanInitBoot = CanInitBoot(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-001]
+    COMMENT The function configures MCR of can_x to exit from sleep mode by setting bit 1 to 0. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-002]
+    COMMENT The function configures MCR  of can_x to request initialization by setting bit 0 to 1. 
+    COMMENT This test case is evaluated by giving maximum - 1 values to the inputs.
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 0xF1E,       	ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 0x180FE,     	ev = 0x180FD
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds the return value of function CanInitBoot
+            VAR ret_CanInitBoot,                init = 0,       		ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        --Calling the Unit Under Test :
+        #ret_CanInitBoot = CanInitBoot(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-001]
+    COMMENT The function configures MCR of can_x to exit from sleep mode by setting bit 1 to 0. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-002]
+    COMMENT The function configures MCR  of can_x to request initialization by setting bit 0 to 1. 
+    COMMENT This test case is evaluated by giving maximum values to the inputs.
+    COMMENT Equivalence Class None  
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 0xF1F,       ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 0x180FF,     ev = 0x18000
+
+        COMMENT OUTPUT SECTION:
+        
+            -- Holds member 'BTR' value of structure 'can_x'
+            VAR can_x.BTR,                      init = 0x0,       ev = (T_UINT32)0xFFFFFFFF
+
+            -- Holds the return value of function CanInitBoot
+            VAR ret_CanInitBoot,                init = 0,       	ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        --Calling the Unit Under Test :
+        #ret_CanInitBoot = CanInitBoot(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 6
+
+--TEST 7
+--FAMILY robustness
+--
+--  COMMENT Test Description
+--  COMMENT <TD> 
+--  COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-001]
+--  COMMENT This test case is evaluated by passing Invalid Reference to can_init_struct parameter
+--  COMMENT Equivalence Class 44   
+--  COMMENT </TD>
+--  
+--  ELEMENT
+--  
+--      COMMENT INPUT SECTION:
+--
+--          --None
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          VAR can_x.MCR,          init = 0,           ev = 1
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      --Stub Calls :
+--      SIMUL
+--
+--          --No stubs
+--
+--      END SIMUL
+--
+--      --Calling the Unit Under Test :
+--      #ret_CanInitBoot = CanInitBoot(&can_x, NULL);
+--
+--  END ELEMENT
+--
+--END TEST -- TEST 7
+--
+--TEST 8
+--FAMILY robustness
+--
+--  COMMENT Test Description
+--  COMMENT <TD> 
+--  COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-001]
+--  COMMENT This test case is evaluated by passing Invalid Reference to can_x parameter
+--  COMMENT Equivalence Class 43   
+--  COMMENT </TD>
+--  
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --None
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      --Stub Calls :
+--      SIMUL
+--
+--          --No stubs
+--
+--      END SIMUL
+--
+--      --Calling the Unit Under Test :
+--      #ret_CanInitBoot = CanInitBoot(NULL, &can_init_struct);
+--
+--  END ELEMENT
+--
+--END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-003]
+    COMMENT The function does not loop till INAK bit in MSR register of can_x is set to 1 
+    COMMENT and loop count is equal to INAK_TIMEOUT. 
+    COMMENT Equivalence Class 8, 9
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-005]
+    COMMENT The function does the following when CAN_TTCM of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets TTCM bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 51
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-007]
+    COMMENT The function does the following when CAN_ABOM of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets ABOM bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 52
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-009]
+    COMMENT The function does the following when CAN_AWUM of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets AWUM bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 53
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-011]
+    COMMENT The function does the following when CAN_NART of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets NART bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 54
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-013]
+    COMMENT The function does the following when CAN_RFLM of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets RFLM bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 55
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-015]
+    COMMENT The function does the following when CAN_TXFP of can_init_struct is ENABLE and 
+    COMMENT INAK bit in MSR of can_x is 1:
+    COMMENT a)sets TXFP bit in MCR of can_x to 1 
+    COMMENT Equivalence Class 56
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-017]
+    COMMENT The function 'CanInitBoot' sets bit timing register as below when INAK bit in MSR 
+    COMMENT of can_x is 1: 
+    COMMENT a)Bit 30 with can_mode of can_init_struct 
+    COMMENT b)Bit 24 and 25 with can_sjw of can_init_struct
+    COMMENT c)Bit 16-19 with can_bs1 of can_init_struct 
+    COMMENT d)Bit 20-22 with can_bs2 of can_init_struct
+    COMMENT e)Bit 0-9 with (can_prescaler of can_init_struct) - DEC_ONE.
+    COMMENT Equivalence Class 7
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-018]
+    COMMENT The function Request leave initialization by setting INRQ bit in MCR of can_x to 0 
+    COMMENT when INAK bit in MSR of can_x is 1. 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanInitBoot-CB-LLR-019]
+    COMMENT The function does the following when INAK bit in MSR register of can_x is 1 
+    COMMENT a.Loop till INAK bit in MSR register of can_x is 1 and loop count is not equal to 
+    COMMENT INAK_TIMEOUT .
+    COMMENT b.The function 'CanInitBoot' sets the return initialization status as CAN_INITSTATUS_FAILED 
+    COMMENT when INAK bit in MSR of can_x is 1 and 
+    COMMENT timeout has occurred. 
+    COMMENT Equivalence Class 8,9,10
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 1,       ev = init
+
+            -- Holds member values of structure 'can_init_struct'
+            VAR can_init_struct.CAN_Mode,       init = 0,       ev = init
+
+            VAR can_init_struct.CAN_SJW,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_BS1,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_BS2,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_Prescaler,  init = 0,       ev = init
+            
+            VAR can_init_struct.CAN_TTCM, 		init = ENABLE,	ev = init
+
+	    	VAR can_init_struct.CAN_ABOM, 		init = ENABLE,	ev = init
+	    
+	   		VAR can_init_struct.CAN_AWUM, 		init = ENABLE,	ev = init
+	    
+	    	VAR can_init_struct.CAN_NART, 		init = ENABLE,	ev = init
+	    
+	    	VAR can_init_struct.CAN_RFLM, 		init = ENABLE,	ev = init
+	    
+	    	VAR can_init_struct.CAN_TXFP, 		init = ENABLE,	ev = init
+	    	
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 0x00010002,     ev = 0x100FC
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds member 'BTR' value of structure 'can_x'
+            VAR can_x.BTR,                      init = 0x01230000,     ev = 0xFFFFFFFF
+
+            -- Holds the return value of function CanInitBoot
+            VAR ret_CanInitBoot,                init = 0x0,   		   ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL  
+
+        --Calling the Unit Under Test :
+        #ret_CanInitBoot = CanInitBoot(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 9
+
+END SERVICE -- CanInitBoot
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CanFilterInit
+--------------------------------------------------------------------------------
+SERVICE CanFilterInit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_FILTER_INIT can_filter_init_struct;
+
+	-- Default Variables 
+	ENVIRONMENT ENV_CanFilterInit
+
+		STRUCTURE can_filter_init_struct,       init = { CAN_FilterIdHigh => 0, 
+												&		 CAN_FilterIdLow => 0,
+												&		 CAN_FilterMaskIdHigh => 0,
+												& 		 CAN_FilterMaskIdLow => 0, 
+												& 		 CAN_FilterFIFOAssignment 
+												& 		 => 0, CAN_FilterNumber => 0, 
+												&		 CAN_FilterMode => 0, 
+												&		 CAN_FilterScale => 0,
+												&		 CAN_FilterActivation=> DISABLE },        
+												&		 ev = init
+
+	END ENVIRONMENT -- ENV_CanFilterInit
+
+	USE ENV_CanFilterInit
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>  
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-001]
+    COMMENT The function 'CanFilterInit' sets FINIT bit (bit 0) in FMR of CAN1 to 1.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-002]
+    COMMENT The function deactivates the filter x in FA1R register of CAN1 by setting the 
+    COMMENT corresponding bit to 0
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-003]
+    COMMENT The function does the following when CAN_FilterScale of can_filter_init_struct 
+    COMMENT is equal to CAN_FILTERSCALE_16BIT:
+    COMMENT a)Configures FS1R of CAN1 for Dual 16-bit scale configuration by setting the 
+    COMMENT corresponding FSCx bit to 0
+    COMMENT b)Sets FR1 CAN Filter bank register of sFilterRegister with index CAN_FilterNumber 
+    COMMENT of can_filter_init_struct of CAN1 to 
+    COMMENT LSB(16 bits) of CAN_FilterMaskIdLow can_filter_init_struct bitwise-OR with 
+    COMMENT CAN_FilterIdLow of can_filter_init_struct.
+    COMMENT c)Sets FR2 CAN Filter bank register of sFilterRegister with index CAN_FilterNumber 
+    COMMENT of can_filter_init_struct of CAN1 to 
+    COMMENT LSB(16 bits) of CAN_FilterMaskIdHigh of can_filter_init_struct bitwise-OR with 
+    COMMENT CAN_FilterIdHigh of can_filter_init_struct.
+    COMMENT Equivalence Class 13
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-004]
+    COMMENT The function does nothing when CAN_FilterScale of can_filter_init_struct is not 
+    COMMENT equal to CAN_FILTERSCALE_32BIT
+    COMMENT Equivalence Class 16
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-005]
+    COMMENT The function 'CanFilterInit' sets the FBMx bit in FM1R register of CAN1 to 0
+    COMMENT when CAN_FilterMode of can_filter_init_struct is equal to CAN_FILTERMODE_IDMASK.
+    COMMENT Equivalence Class 17
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-007]
+    COMMENT The function 'CanFilterInit' sets the FFAx bit in FFA1R register of CAN1 to 0 when 
+    COMMENT CAN_FilterFIFOAssignment of can_filter_init_struct 
+    COMMENT is equal to CAN_FILTER_FIFO0.
+    COMMENT Equivalence Class 19
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-008]
+    COMMENT The function does nothing when CAN_FilterFIFOAssignment of can_filter_init_struct 
+    COMMENT is not equal to CAN_FILTER_FIFO1.
+    COMMENT Equivalence Class 22
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-009]
+    COMMENT The function 'CanFilterInit' sets the FACTx bit in FA1R register of CAN1 to 1 when 
+    COMMENT CAN_FilterActivation of can_filter_init_struct is ENABLE.
+    COMMENT Equivalence Class 23
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-010]
+    COMMENT The function 'CanFilterInit' sets the FINIT bit to 0 in FMR of CAN1.
+    COMMENT This test case is evaluated by giving the minimum values to the inputs
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member values of structure 'can_filter_init_struct'
+            VAR can_filter_init_struct.CAN_FilterNumber,         init = 0,       				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterScale,          init = CAN_FILTERSCALE_16BIT,  ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMaskIdLow,      init = 0,       				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterIdLow,          init = 0,       				ev = init
+ 
+            VAR can_filter_init_struct.CAN_FilterMaskIdHigh,     init = 0,       				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterIdHigh,         init = 0,       				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMode,           init = CAN_FILTERMODE_IDMASK,  ev = init
+
+            VAR can_filter_init_struct.CAN_FilterFIFOAssignment, init = 0,       				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterActivation,     init = ENABLE,					ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds FMR value of CAN1 
+            VAR CAN1->FMR,                          init = 0,       					ev = 0
+
+            --Holds FA1R value of CAN1 
+            VAR CAN1->FA1R,                         init = 0,       					ev = 1
+
+            --Holds FS1R value of CAN1 
+            VAR CAN1->FS1R,                         init = 0,       					ev = 0
+
+            --Holds FM1R value of CAN1 
+            VAR CAN1->FM1R,                         init = 0,       					ev = 0
+
+            --Holds FFA1R value of CAN1 
+            VAR CAN1->FFA1R,                        init = 0,       					ev = 0
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds FR1 of sFilterRegister[0] of CAN1 value
+            VAR CAN1->sFilterRegister[0].FR1,                init = 1,       			ev = 0
+
+            --Holds FR2 of sFilterRegister[0] of CAN1 value  
+            VAR CAN1->sFilterRegister[0].FR2,                init = 1,       			ev = 0
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanFilterInit(&can_filter_init_struct);
+
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>  
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-001]
+    COMMENT The function 'CanFilterInit' sets FINIT bit (bit 0) in FMR of CAN1 to 1.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-002]
+    COMMENT The function deactivates the filter x in FA1R register of CAN1 by setting the 
+    COMMENT corresponding bit to 1
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-003]
+    COMMENT The function does nothing when CAN_FilterScale of can_filter_init_struct is not 
+    COMMENT equal to CAN_FILTERSCALE_16BIT
+    COMMENT Equivalence Class 14
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-004]
+    COMMENT The function does the following when CAN_FilterScale of can_filter_init_struct is 
+    COMMENT equal to CAN_FILTERSCALE_32BIT
+    COMMENT a)Configures FS1R of CAN1 for Dual 32-bit scale configuration by setting the 
+    COMMENT corresponding FSCx bit to 1.
+    COMMENT b)Sets FR1 CAN Filter bank register of sFilterRegister with index CAN_FilterNumber
+    COMMENT of can_filter_init_struct of CAN1 to 
+    COMMENT LSB(16 bits) of CAN_FilterIdHigh of can_filter_init_struct bitwise-OR with 
+    COMMENT CAN_FilterIdLow of can_filter_init_struct.
+    COMMENT c)Sets FR2 CAN Filter bank register of sFilterRegister with index CAN_FilterNumber 
+    COMMENT of can_filter_init_struct of CAN1 to 
+    COMMENT LSB(16 bits) of CAN_FilterMaskIdHigh of can_filter_init_struct bitwise-OR with 
+    COMMENT CAN_FilterMaskIdLow low of can_filter_init_struct.
+    COMMENT Equivalence Class 15
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-006]
+    COMMENT The function 'CanFilterInit' sets the FBMx bit in FM1R register of CAN1 to 1
+    COMMENT when CAN_FilterMode of can_filter_init_struct is not equal to CAN_FILTERMODE_IDMASK.
+    COMMENT Equivalence Class 18
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-007]
+    COMMENT The function does nothing when CAN_FilterFIFOAssignment of can_filter_init_struct 
+    COMMENT is not equal to CAN_FILTER_FIFO0.
+    COMMENT Equivalence Class 20
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-008]
+    COMMENT The function 'CanFilterInit' sets the FFAx bit in FFA1R register of CAN1 to 1 when
+    COMMENT CAN_FilterFIFOAssignment of can_filter_init_struct is equal to CAN_FILTER_FIFO1.    
+    COMMENT Equivalence Class 21
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-009]
+    COMMENT The function does nothing when CAN_FilterActivation of can_filter_init_struct is 
+    COMMENT not ENABLE.
+    COMMENT Equivalence Class 24
+    COMMENT This test case is evaluated by giving the minimum+1 values to the inputs
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member values of structure 'can_filter_init_struct' 
+            VAR can_filter_init_struct.CAN_FilterNumber,         init = 1,       				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterScale,          init = CAN_FILTERSCALE_32BIT,  ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMaskIdLow,      init = 1,      			 	ev = init
+
+            VAR can_filter_init_struct.CAN_FilterIdLow,          init = 1,       		 		ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMaskIdHigh,     init = 1,       		 		ev = init
+
+            VAR can_filter_init_struct.CAN_FilterIdHigh,         init = 1,       		 		ev = init
+ 
+            VAR can_filter_init_struct.CAN_FilterMode,           init = 1,       		 		ev = init
+
+            VAR can_filter_init_struct.CAN_FilterFIFOAssignment, init = CAN_FILTER_FIFO1,       ev = init
+
+            VAR can_filter_init_struct.CAN_FilterActivation,     init = DISABLE,      			ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds FMR value of CAN1
+            VAR CAN1->FMR,                                        init = 1,       		ev = 0
+
+            --Holds FA1R value of CAN1
+            VAR CAN1->FA1R,                                       init = 0,       		ev = 0
+
+            --Holds FS1R value of CAN1
+            VAR CAN1->FS1R,                                       init = 1,       		ev = 3
+
+            --Holds FM1R value of CAN1 
+            VAR CAN1->FM1R,                                       init = 1,       		ev = 3
+
+            --Holds FFA1R value of CAN1 
+            VAR CAN1->FFA1R,                                      init = 1,       		ev = 3
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds FR1 of sFilterRegister[1] of CAN1 value
+            VAR CAN1->sFilterRegister[1].FR1,                     init = 0,       		ev = 0x10001
+
+            --Holds FR2 of sFilterRegister[1] of CAN1 value
+            VAR CAN1->sFilterRegister[1].FR2,                     init = 0,       		ev = 0x10001
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanFilterInit(&can_filter_init_struct);
+
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>  
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-001]
+    COMMENT The function 'CanFilterInit' sets FINIT bit (bit 0) in FMR of CAN1 to 1.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-002]
+    COMMENT The function deactivates the filter x in FA1R register of CAN1 by setting the 
+    COMMENT corresponding bit to 0
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-003]
+    COMMENT The function does the following when CAN_FilterScale of can_filter_init_struct 
+    COMMENT is equal to CAN_FILTERSCALE_16BIT:
+    COMMENT a)Configures FS1R of CAN1 for Dual 16-bit scale configuration by setting the 
+    COMMENT corresponding FSCx bit to 0
+    COMMENT b)Sets FR1 CAN Filter bank register of sFilterRegister with index CAN_FilterNumber 
+    COMMENT of can_filter_init_struct of CAN1 to 
+    COMMENT LSB(16 bits) of CAN_FilterMaskIdLow can_filter_init_struct bitwise-OR with 
+    COMMENT CAN_FilterIdLow of can_filter_init_struct.
+    COMMENT c)Sets FR2 CAN Filter bank register of sFilterRegister with index CAN_FilterNumber 
+    COMMENT of can_filter_init_struct of CAN1 to 
+    COMMENT LSB(16 bits) of CAN_FilterMaskIdHigh of can_filter_init_struct bitwise-OR with
+    COMMENT CAN_FilterIdHigh of can_filter_init_struct
+    COMMENT Equivalence Class 13
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-004]
+    COMMENT The function does nothing when CAN_FilterScale of can_filter_init_struct is not equal
+    COMMENT to CAN_FILTERSCALE_32BIT
+    COMMENT Equivalence Class 16
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-006]
+    COMMENT The function 'CanFilterInit' sets the FBMx bit in FM1R register of CAN1 to 1
+    COMMENT when CAN_FilterMode of can_filter_init_struct is not equal to CAN_FILTERMODE_IDMASK.
+    COMMENT Equivalence Class 18
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-007]
+    COMMENT The function does nothing when CAN_FilterFIFOAssignment of can_filter_init_struct 
+    COMMENT is not equal to CAN_FILTER_FIFO0.
+    COMMENT Equivalence Class 20
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-008]
+    COMMENT The function 'CanFilterInit' sets the FFAx bit in FFA1R register of CAN1 to 1 when
+    COMMENT CAN_FilterFIFOAssignment of can_filter_init_struct is equal to CAN_FILTER_FIFO1.    
+    COMMENT Equivalence Class 21
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-009]
+    COMMENT The function 'CanFilterInit' sets the FACTx bit in FA1R register of CAN1 to 1 when 
+    COMMENT CAN_FilterActivation of can_filter_init_struct is ENABLE.
+    COMMENT Equivalence Class 23
+    COMMENT This test case is evaluated by giving the nominal values to the inputs
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member values of structure 'can_filter_init_struct' 
+            
+            VAR can_filter_init_struct.CAN_FilterNumber,         init = 6,       				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterScale,          init = CAN_FILTERSCALE_16BIT,  ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMaskIdLow,      init = 10,      				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterIdLow,          init = 10,      				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMaskIdHigh,     init = 10,      				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterIdHigh,         init = 10,      				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMode,           init = 120,     				ev = init
+
+            VAR can_filter_init_struct.CAN_FilterFIFOAssignment, init = CAN_FILTER_FIFO1,       ev = init
+
+            VAR can_filter_init_struct.CAN_FilterActivation,     init = ENABLE,  				ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds FMR value of CAN1 
+            
+            VAR CAN1->FMR,                                        	init = 1,       		ev = 0
+
+            --Holds FA1R value of CAN1 
+            
+            VAR CAN1->FA1R,                                       	init = 15,      		ev = 79
+
+            --Holds FS1R value of CAN1 
+            
+            VAR CAN1->FS1R,                                       	init = 15,      		ev = 15
+
+            --Holds FM1R value of CAN1 
+            
+            VAR CAN1->FM1R,                                       	init = 20,      		ev = 84
+
+            --Holds FFA1R value of CAN1 
+            
+            VAR CAN1->FFA1R,                                      	init = 10,      		ev = 74
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds FR1 of sFilterRegister[6] of CAN1 value
+            
+            VAR CAN1->sFilterRegister[6].FR1,                     	init = 0,       		ev = 0xA000A
+
+            --Holds FR2 of sFilterRegister[6] of CAN1 value
+            
+            VAR CAN1->sFilterRegister[6].FR2,                     	init = 0,       		ev = 0xA000A
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanFilterInit(&can_filter_init_struct);
+
+    END ELEMENT
+
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>  
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-001]
+    COMMENT The function 'CanFilterInit' sets FINIT bit (bit 0) in FMR of CAN1 to 1.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-002]
+    COMMENT The function deactivates the filter x in FA1R register of CAN1 by setting the 
+    COMMENT corresponding bit to 0
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-003]
+    COMMENT The function does the following when CAN_FilterScale of can_filter_init_struct 
+    COMMENT is equal to CAN_FILTERSCALE_16BIT:
+    COMMENT a)Configures FS1R of CAN1 for Dual 16-bit scale configuration by setting the 
+    COMMENT corresponding FSCx bit to 0
+    COMMENT b)Sets FR1 CAN Filter bank register of sFilterRegister with index CAN_FilterNumber 
+    COMMENT of can_filter_init_struct of CAN1 to
+    COMMENT LSB(16 bits) of CAN_FilterMaskIdLow can_filter_init_struct bitwise-OR with 
+    COMMENT CAN_FilterIdLow of can_filter_init_struct.
+    COMMENT c)Sets FR2 CAN Filter bank register of sFilterRegister with index CAN_FilterNumber
+    COMMENT of can_filter_init_struct of CAN1 to
+    COMMENT LSB(16 bits) of CAN_FilterMaskIdHigh of can_filter_init_struct bitwise-OR with 
+    COMMENT CAN_FilterIdHigh of can_filter_init_struct
+    COMMENT Equivalence Class 13
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-004]
+    COMMENT The function does nothing when CAN_FilterScale of can_filter_init_struct is not 
+    COMMENT equal to CAN_FILTERSCALE_32BIT
+    COMMENT Equivalence Class 16
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-006]
+    COMMENT The function 'CanFilterInit' sets the FBMx bit in FM1R register of CAN1 to 1
+    COMMENT when CAN_FilterMode of can_filter_init_struct is not equal to CAN_FILTERMODE_IDMASK.
+    COMMENT Equivalence Class 18
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-007]
+    COMMENT The function does nothing when CAN_FilterFIFOAssignment of can_filter_init_struct 
+    COMMENT is not equal to CAN_FILTER_FIFO0.
+    COMMENT Equivalence Class 20
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-008]
+    COMMENT The function 'CanFilterInit' sets the FFAx bit in FFA1R register of CAN1 to 1 when
+    COMMENT CAN_FilterFIFOAssignment of can_filter_init_struct is equal to CAN_FILTER_FIFO1.    
+    COMMENT Equivalence Class 21
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-009]
+    COMMENT The function 'CanFilterInit' sets the FACTx bit in FA1R register of CAN1 to 1 when 
+    COMMENT CAN_FilterActivation of can_filter_init_struct is ENABLE.
+    COMMENT Equivalence Class 23
+    COMMENT This test case is evaluated by giving the maximum values to the inputs
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member values of structure 'can_filter_init_struct' 
+            VAR can_filter_init_struct.CAN_FilterNumber,         init = 13,                     ev = init
+
+            VAR can_filter_init_struct.CAN_FilterScale,          init = CAN_FILTERSCALE_16BIT,  ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMaskIdLow,      init = 0xFFFF,                 ev = init
+
+            VAR can_filter_init_struct.CAN_FilterIdLow,          init = 0xFFFF,                 ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMaskIdHigh,     init = 0xFFFF,                 ev = init
+
+            VAR can_filter_init_struct.CAN_FilterIdHigh,         init = 0xFFFF,                 ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMode,           init = 255,                    ev = init
+
+            VAR can_filter_init_struct.CAN_FilterFIFOAssignment, init = CAN_FILTER_FIFO1,       ev = init
+
+            VAR can_filter_init_struct.CAN_FilterActivation,     init = ENABLE,                 ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds FMR of CAN1 value
+            VAR CAN1->FMR,          init = 1,                           ev = 0
+
+            --Holds FA1R of CAN1 value
+            VAR CAN1->FA1R,         init = (T_VLT_UINT32)0x0FFFFFFF,    ev = (T_VLT_UINT32)0x0FFFFFFF
+
+            --Holds FS1R of CAN1 value
+            VAR CAN1->FS1R,         init = (T_VLT_UINT32)0x0FFFFFFF,    ev = (T_VLT_UINT32)0x0FFFDFFF
+
+            --Holds FM1R of CAN1 value
+            VAR CAN1->FM1R,         init = (T_VLT_UINT32)0x0FFFFFFF,    ev = (T_VLT_UINT32)0x0FFFFFFF
+
+            --Holds FFA1R of CAN1 value
+            VAR CAN1->FFA1R,        init = (T_VLT_UINT32)0x0FFFFFFF,    ev = (T_VLT_UINT32)0x0FFFFFFF
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds FR1 of sFilterRegister[13] of CAN1 value
+            VAR CAN1->sFilterRegister[13].FR1,   init = 10,             ev = (T_VLT_UINT32)0xFFFFFFFF
+
+            --Holds FR2 of sFilterRegister[13] of CAN1 value
+            VAR CAN1->sFilterRegister[13].FR2,   init = 10,             ev = (T_VLT_UINT32)0xFFFFFFFF
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanFilterInit(&can_filter_init_struct);
+
+    END ELEMENT
+
+END TEST  -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-001]
+    COMMENT The function 'CanFilterInit' sets FINIT bit (bit 0) in FMR of CAN1 to 1.
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-002]
+    COMMENT The function deactivates the filter x in FA1R register of CAN1 by setting the 
+    COMMENT corresponding bit to 0
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-003]
+    COMMENT The function does the following when CAN_FilterScale of can_filter_init_struct 
+    COMMENT is equal to CAN_FILTERSCALE_16BIT:
+    COMMENT a)Configures FS1R of CAN1 for Dual 16-bit scale configuration by setting the 
+    COMMENT corresponding FSCx bit to 0
+    COMMENT b)Sets FR1 CAN Filter bank register of sFilterRegister with index CAN_FilterNumber 
+    COMMENT of can_filter_init_struct of CAN1 to
+    COMMENT LSB(16 bits) of CAN_FilterMaskIdLow can_filter_init_struct bitwise-OR with 
+    COMMENT CAN_FilterIdLow of can_filter_init_struct.
+    COMMENT c)Sets FR2 CAN Filter bank register of sFilterRegister with index CAN_FilterNumber 
+    COMMENT of can_filter_init_struct of CAN1 to
+    COMMENT LSB(16 bits) of CAN_FilterMaskIdHigh of can_filter_init_struct bitwise-OR with 
+    COMMENT CAN_FilterIdHigh of can_filter_init_struct.
+    COMMENT Equivalence Class 13
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-004]
+    COMMENT The function does nothing when CAN_FilterScale of can_filter_init_struct is not 
+    COMMENT equal to CAN_FILTERSCALE_32BIT
+    COMMENT Equivalence Class 16
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-006]
+    COMMENT The function 'CanFilterInit' sets the FBMx bit in FM1R register of CAN1 to 1
+    COMMENT when CAN_FilterMode of can_filter_init_struct is not equal to CAN_FILTERMODE_IDMASK.
+    COMMENT Equivalence Class 18
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-007]
+    COMMENT The function does nothing when CAN_FilterFIFOAssignment of can_filter_init_struct 
+    COMMENT is not equal to CAN_FILTER_FIFO0.
+    COMMENT Equivalence Class 20
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-008]
+    COMMENT The function 'CanFilterInit' sets the FFAx bit in FFA1R register of CAN1 to 1 when
+    COMMENT CAN_FilterFIFOAssignment of can_filter_init_struct is equal to CAN_FILTER_FIFO1.    
+    COMMENT Equivalence Class 21
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-009]
+    COMMENT The function 'CanFilterInit' sets the FACTx bit in FA1R register of CAN1 to 1 when 
+    COMMENT CAN_FilterActivation of can_filter_init_struct is ENABLE.
+    COMMENT Equivalence Class 23
+    COMMENT This test case is evaluated by giving the maximum-1 values to the inputs  
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member values of structure 'can_filter_init_struct' 
+            VAR can_filter_init_struct.CAN_FilterNumber,         init=12,                    ev = init
+
+            VAR can_filter_init_struct.CAN_FilterScale,          init=CAN_FILTERSCALE_16BIT, ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMaskIdLow,      init=0xFFFE,                ev = init
+
+            VAR can_filter_init_struct.CAN_FilterIdLow,          init=0xFFFE,                ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMaskIdHigh,     init=0xFFFE,                ev = init
+
+            VAR can_filter_init_struct.CAN_FilterIdHigh,         init=0xFFFE,                ev = init
+
+            VAR can_filter_init_struct.CAN_FilterMode,           init=254,                   ev = init
+
+            VAR can_filter_init_struct.CAN_FilterFIFOAssignment, init=1,                     ev = init
+
+            VAR can_filter_init_struct.CAN_FilterActivation,     init=ENABLE,                ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --Holds FMR of CAN1 value
+            VAR CAN1->FMR,             init=1,                         ev = 0
+
+            --Holds FA1R of CAN1 value
+            VAR CAN1->FA1R,            init=(T_VLT_UINT32)0x0FFFFFFE,  ev = (T_VLT_UINT32)0x0FFFFFFE
+
+            --Holds FS1R of CAN1 value
+            VAR CAN1->FS1R,            init=(T_VLT_UINT32)0x0FFFFFFE,  ev = (T_VLT_UINT32)0x0FFFEFFE
+
+            --Holds FM1R of CAN1 value
+            VAR CAN1->FM1R,            init=(T_VLT_UINT32)0x0FFFFFFE,  ev = (T_VLT_UINT32)0x0FFFFFFE
+
+            --Holds FFA1R of CAN1 value
+            VAR CAN1->FFA1R,           init=(T_VLT_UINT32)0x0FFFFFFE,  ev = (T_VLT_UINT32)0x0FFFFFFE
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds FR1 of sFilterRegister[13] of CAN1 value
+            VAR CAN1->sFilterRegister[12].FR1,  init=9,                          ev = (T_VLT_UINT32)0xFFFEFFFE
+
+            --Holds FR2 of sFilterRegister[13] of CAN1 value
+            VAR CAN1->sFilterRegister[12].FR2,  init=9,                          ev = (T_VLT_UINT32)0xFFFEFFFE
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CanFilterInit(&can_filter_init_struct);
+
+    END ELEMENT
+
+END TEST  -- TEST 5
+
+--TEST 6
+--FAMILY robustness
+--
+--  COMMENT Test Description
+--  COMMENT <TD> 
+--  COMMENT [hdulibstm32f4xxcan-CanFilterInit-CB-LLR-001]
+--  COMMENT This test case is evaluated by passing Invalid Reference to can_filter_init_struct 
+--	COMMENT parameter
+--  COMMENT Equivalence Class 45
+--  COMMENT </TD> 
+--
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --None
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      --Stub Calls :
+--      SIMUL
+--
+--          --No stubs
+--
+--      END SIMUL
+--
+--      --Calling the Unit Under Test :
+--      #CanFilterInit(NULL);
+--
+--  END ELEMENT
+--
+--END TEST -- TEST 6
+
+END SERVICE -- CanFilterInit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CanTransmit
+--------------------------------------------------------------------------------
+SERVICE CanTransmit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_TYPE can_x;
+    #T_CAN_TX_MSG tx_message;
+    -- By function returned type declaration
+    #T_UINT8 ret_CanTransmit;
+
+	-- Default Variables 
+	ENVIRONMENT ENV_CanTransmit
+
+		--can_x structure initialization
+		STRUCTURE can_x,            init = { MCR => 0, MSR => 0, TSR => 0, RF0R => 0, RF1R => 0, 
+									&		 IER => 0, ESR => 0, BTR => 0, RESERVED0 => { others => 0 },
+									&  		 sTxMailBox => { others => { TIR => 0, TDTR => 0, TDLR => 0, 
+									&		 TDHR => 0 } }, sFIFOMailBox => { others => { RIR => 0,
+									&   	 RDTR => 0, RDLR => 0, RDHR => 0 } }, 
+									&  		 RESERVED1 => { others => 0 }, FMR => 0, FM1R => 0, 
+									&        RESERVED2 => 0, FS1R => 0, RESERVED3 => 0, FFA1R => 0,
+									&  		 RESERVED4 => 0, FA1R => 0, RESERVED5 => { others => 0 }, 
+									& 		 sFilterRegister => { others => { FR1 => 0, FR2 => 0 } } },  
+									&  ev = init
+
+		--tx_message structure initialization
+		STRUCTURE tx_message,       init = { StdId => 0, ExtId => 0, IDE => 0, RTR => 0, DLC => 0, 
+									& 		 Data => { others => 0 } },     ev = init
+
+		VAR ret_CanTransmit,        init = 0,                               ev = init
+
+	END ENVIRONMENT -- ENV_CanTransmit
+
+	USE ENV_CanTransmit
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-001]
+    COMMENT The function 'CanTransmit' sets transmit mailbox to 0 when TME0 bit in TSR of can_x 
+    COMMENT is set to CAN_TSR_TME0.
+    COMMENT Equivalence Class 25
+    COMMENT     
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-005]
+    COMMENT The function resets TXRQ bit in TIR of sTxMailBox with index transmit mailbox of can_x 
+    COMMENT when TME0 of the transmit mailbox is empty.
+    COMMENT Equivalence Class 32
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-006]
+    COMMENT The function configures TIR of can_x with Standard identifier and RTR Data of tx_message
+    COMMENT when any of the transmit mailbox TME0 is empty and CAN identifier type is CAN_ID_STANDARD.
+    COMMENT Equivalence Class 32,33
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-008]
+    COMMENT The function clears the TDTR bits from 4-31 and configures with Data length code 
+    COMMENT when any of the transmit mailbox TME0 is empty.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-009]
+    COMMENT The function configures the TDLR and TDHR with Data of tx_message 
+    COMMENT when any of the transmit mailbox TME0 is empty.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-010]
+    COMMENT The function Requests for transmission set by setting TXRQ bit in TIR of sTxMailBox with  
+    COMMENT index transmit mailbox of can_x when any of the transmit mailbox TME0 is empty.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-011]
+    COMMENT The function returns the transmit mailbox
+    COMMENT Tested for minimum values.
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds TSR of can_x value
+            VAR can_x.TSR,                  	init = 0x04000000,      		ev = init
+
+            -- Holds member values of structure 'tx_message'
+            VAR tx_message.IDE,             	init = CAN_ID_STANDARD,         ev = init
+
+            VAR tx_message.StdId,          		init = 0,              			ev = init
+
+            VAR tx_message.RTR,             	init = 0,               		ev = init
+
+            VAR tx_message.DLC,             	init = 0,               		ev = init
+
+            VAR tx_message.Data,            	init = {others=>0},     		ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member values of structure 'can_x.sTxMailBox[0]'
+            VAR can_x.sTxMailBox[0].TIR,    	init = 0,               		ev = 1
+
+            VAR can_x.sTxMailBox[0].TDTR,   	init = 0,               		ev = 0
+
+            VAR can_x.sTxMailBox[0].TDLR,   	init = 0,               		ev = 0
+
+            VAR can_x.sTxMailBox[0].TDHR,   	init = 0,               		ev = 0
+
+        COMMENT OUTPUT SECTION:
+
+            VAR ret_CanTransmit,            	init = 0,               		ev = 0
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_CanTransmit = CanTransmit(&can_x,&tx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-002]
+    COMMENT The function 'CanTransmit' sets transmit mailbox to 1 when TME0 bit in TSR of can_x 
+    COMMENT is set to 0(not set to CAN_TSR_TME2) ,
+    COMMENT and TME1 bit in TSR of can_x is set to CAN_TSR_TME1.
+    COMMENT Equivalence Class 26,27
+    COMMENT     
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-005]
+    COMMENT The function resets TXRQ bit in TIR of sTxMailBox with index transmit mailbox of can_x 
+    COMMENT when TME1 of the transmit mailbox is empty.
+    COMMENT Equivalence Class 32
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-007]
+    COMMENT The function configures TIR of can_x with Extended identifier, identifier extension 
+    COMMENT and RTR Data of tx_message when any of the transmit mailbox TME1 is empty 
+    COMMENT and CAN identifier type is other than CAN_ID_STANDARD.
+    COMMENT Equivalence Class 32,34
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-008]
+    COMMENT The function clears the TDTR bits from 4-31 and configures with Data length code 
+    COMMENT when any of the transmit mailbox TME1 is empty.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-009]
+    COMMENT The function configures the TDLR and TDHR with Data of tx_message 
+    COMMENT when any of the transmit mailbox TME1 is empty.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-010]
+    COMMENT The function Requests for transmission set by setting TXRQ bit in TIR of sTxMailBox  
+    COMMENT with index transmit mailbox of can_x when any of the transmit mailbox TME1 is empty.
+    COMMENT Equivalence Class None
+    COMMENT This test case is evaluated by giving the minimum+1 values to inputs.
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds TSR of can_x value
+            VAR can_x.TSR,                  init = 0x08000000,          ev = init
+
+            -- Holds member values of structure 'tx_message'
+            VAR tx_message.IDE,             init = 1,                   ev = init
+
+            VAR tx_message.ExtId,          	init = 1,                   ev = init
+
+            VAR tx_message.RTR,             init = 1,                   ev = init
+
+            VAR tx_message.DLC,             init = 1,                   ev = init
+
+            VAR tx_message.Data,            init = {others=>1},         ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member values of structure 'can_x.sTxMailBox[0]'
+            VAR can_x.sTxMailBox[1].TIR,    init = 1,                   ev = 9
+
+            VAR can_x.sTxMailBox[1].TDTR,   init = 1,                   ev = 1
+
+            VAR can_x.sTxMailBox[1].TDLR,   init = 0x0,                 ev = 0x1010101
+
+            VAR can_x.sTxMailBox[1].TDHR,   init = 0x0,                 ev = 0x1010101
+
+        COMMENT OUTPUT SECTION:
+
+            VAR ret_CanTransmit,            init = 0,                   ev = 1
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_CanTransmit = CanTransmit(&can_x,&tx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-003]
+    COMMENT The function 'CanTransmit' sets transmit mailbox to 2 when TME0 bit in TSR of can_x 
+    COMMENT is set to 0(not set to CAN_TSR_TME2) ,
+    COMMENT TME1 bit in TSR of can_x is set to 0(not set to CAN_TSR_TME2) and TME2 bit in TSR of
+    COMMENT can_x is set to CAN_TSR_TME2.
+    COMMENT Equivalence Class 26,28,29
+    COMMENT     
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-005]
+    COMMENT The function resets TXRQ bit in TIR of sTxMailBox with index transmit mailbox of can_x 
+    COMMENT when TME2 of the transmit mailbox is empty.
+    COMMENT Equivalence Class 32
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-007]
+    COMMENT The function configures TIR of can_x with Extended identifier, identifier extension 
+    COMMENT and RTR Data of tx_message when any of the transmit mailbox TME2 is empty 
+    COMMENT and CAN identifier type is other than CAN_ID_STD.
+    COMMENT Equivalence Class 32,34
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-008]
+    COMMENT The function clears the TDTR bits from 4-31 and configures with Data length code 
+    COMMENT when any of the transmit mailbox TME2 is empty.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-009]
+    COMMENT The function configures the TDLR and TDHR with Data of tx_message 
+    COMMENT when any of the transmit mailbox TME2 is empty.
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-010]
+    COMMENT The function Requests for transmission set by setting TXRQ bit in TIR of sTxMailBox with 
+    COMMENT index transmit mailbox 
+    COMMENT of can_x when any of the transmit mailbox TME2 is empty.
+    COMMENT Equivalence Class None
+    COMMENT This test case is evaluated by giving the nominal values to inputs.
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds TSR of can_x value
+            VAR can_x.TSR,                  init = 0x10000000,          ev = init
+
+             -- Holds member values of structure 'tx_message'
+            VAR tx_message.IDE,             init = 123,                 ev = init
+
+            VAR tx_message.ExtId,          init = 0xFFFFFFF,           	ev = init
+
+            VAR tx_message.RTR,             init = 123,                 ev = init
+
+            VAR tx_message.DLC,             init = 4,                   ev = init
+
+            VAR tx_message.Data,            init = {others=>0x7F},      ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member values of structure 'can_x.sTxMailBox[0]'
+            VAR can_x.sTxMailBox[2].TDTR,   init = 0x7FFFFFFF,          ev = 0x7FFFFFF4
+
+            VAR can_x.sTxMailBox[2].TIR,    init = 0x7FFFFFFF,          ev = 0x7FFFFFFB
+
+            VAR can_x.sTxMailBox[2].TDLR,   init = 0x0,                 ev = 0x7F7F7F7F
+
+            VAR can_x.sTxMailBox[2].TDHR,   init = 0x0,                 ev = 0x7F7F7F7F
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of CanTransmit
+            VAR ret_CanTransmit,            init = 0,                   ev = 2
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_CanTransmit = CanTransmit(&can_x,&tx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-004]
+    COMMENT The function 'CanTransmit' sets transmit mailbox to CAN_TXSTATUS_NOMAILBOX  when 
+    COMMENT TME0,TME1,TME2 bits in TSR of can_x 
+    COMMENT are set to 0.
+    COMMENT Equivalence Class 26,28,30
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-005]
+    COMMENT The function does nothing when transmit mailbox is equal to CAN_TXSTATUS_NOMAILBOX
+    COMMENT Equivalence Class 31
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds TSR of can_x value
+            VAR can_x.TSR,              init = 0x1,         ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of CanTransmit
+            VAR ret_CanTransmit,        init = 0,           ev = CAN_TXSTATUS_NOMAILBOX
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_CanTransmit = CanTransmit(&can_x,&tx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-003]
+    COMMENT The function 'CanTransmit' sets transmit mailbox to 2 when TME2 bit in TSR of can_x 
+    COMMENT is set to CAN_TSR_TME2.
+    COMMENT Equivalence Class 28,29
+    COMMENT     
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-007]
+    COMMENT The function configures TIR of can_x with Extended identifier, identifier extension 
+    COMMENT and RTR Data of tx_message when any of the transmit mailbox TME2 is empty 
+    COMMENT and CAN identifier type is other than CAN_ID_STANDARD.
+    COMMENT This test case is evaluated by giving the maximum values to inputs.
+    COMMENT Equivalence Class 32,34
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds TSR of can_x value
+            VAR can_x.TSR,                          init = 0x10000000,                      ev = init
+
+            -- Holds member values of structure 'tx_message'
+            VAR tx_message.IDE,                     init = 255,                             ev = init
+
+            VAR tx_message.ExtId,                  init = (T_VLT_UINT32)0xFFFFFFFF,        	ev = init
+
+            VAR tx_message.RTR,                     init = 255,                             ev = init
+
+            VAR tx_message.DLC,                     init = 8,                               ev = init
+
+            VAR tx_message.Data,                    init = {others=>0xFF},                  ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member values of structure 'can_x.sTxMailBox[2]'
+            VAR can_x.sTxMailBox[2].TDTR, init = (T_VLT_UINT32)0xFFFFFFFF, ev = (T_VLT_UINT32)0xFFFFFFF8
+
+            VAR can_x.sTxMailBox[2].TIR,  init = (T_VLT_UINT32)0xFFFFFFFF, ev = (T_VLT_UINT32)0xFFFFFFFF
+
+            VAR can_x.sTxMailBox[2].TDLR, init = (T_VLT_UINT32)0xFFFFFFFF, ev = (T_VLT_UINT32)0xFFFFFFFF
+
+            VAR can_x.sTxMailBox[2].TDHR, init = (T_VLT_UINT32)0xFFFFFFFF, ev = (T_VLT_UINT32)0xFFFFFFFF
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of CanTransmit
+            VAR ret_CanTransmit,          init = 0,                        ev = 2
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_CanTransmit = CanTransmit(&can_x,&tx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-003]
+    COMMENT The function 'CanTransmit' sets transmit mailbox to 2 when TME2 bit in TSR of can_x 
+    COMMENT is set to CAN_TSR_TME2.
+    COMMENT Equivalence Class 28,29    
+    COMMENT This test case is evaluated by giving the maximum-1 values to inputs.
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --Holds TSR of can_x value
+            VAR can_x.TSR,                      init = 0x10000000,                      ev = init
+
+            -- Holds member values of structure 'tx_message'
+            VAR tx_message.IDE,                 init = 254,                             ev = init
+
+            VAR tx_message.ExtId,              	init = (T_VLT_UINT32)0xFFFFFFFE,        ev = init
+
+            VAR tx_message.RTR,                 init = 254,                             ev = init
+
+            VAR tx_message.DLC,                 init = 7,                               ev = init
+
+            VAR tx_message.Data,                init = {others=>0xFE},                  ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member values of structure 'can_x.sTxMailBox[2]'
+            VAR can_x.sTxMailBox[2].TDTR,  init = (T_VLT_UINT32)0xFFFFFFFE, ev = (T_VLT_UINT32)0xFFFFFFF7
+
+            VAR can_x.sTxMailBox[2].TIR,   init = (T_VLT_UINT32)0xFFFFFFFE, ev = (T_VLT_UINT32)0xFFFFFFFF
+
+            VAR can_x.sTxMailBox[2].TDLR,  init = 0,                        ev = (T_VLT_UINT32)0xFEFEFEFE
+
+            VAR can_x.sTxMailBox[2].TDHR,  init = 0,                        ev = (T_VLT_UINT32)0xFEFEFEFE
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of CanTransmit
+            VAR ret_CanTransmit,           init = 0,                  		ev = 2
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_CanTransmit = CanTransmit(&can_x,&tx_message);
+
+    END ELEMENT
+
+END TEST  -- TEST 6
+
+--TEST 7
+--FAMILY robustness
+--
+--  COMMENT Test Description
+--  COMMENT <TD>
+--  COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-001]
+--  COMMENT This test case is evaluated by passing Invalid Reference to can_x parameter
+--  COMMENT Equivalence Class 46 
+--  COMMENT </TD> 
+-- 
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --None
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      --Stub Calls :
+--      SIMUL
+--
+--          --No stubs
+--
+--      END SIMUL
+--
+--      --Calling the Unit Under Test :
+--      #ret_CanTransmit = CanTransmit(NULL,&tx_message);
+--
+--  END ELEMENT
+-- 
+--END TEST -- TEST 7
+--
+--TEST 8
+--FAMILY robustness
+--
+--  COMMENT Test Description
+--  COMMENT <TD> 
+--  COMMENT [hdulibstm32f4xxcan-CanTransmit-CB-LLR-001]
+--  COMMENT This test case is evaluated by passing Invalid Reference to tx_message parameter
+--  COMMENT Equivalence Class 47
+--  COMMENT </TD> 
+--
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --None
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      --Stub Calls :
+--      SIMUL
+--
+--          --No stubs
+--
+--      END SIMUL
+--
+--      --Calling the Unit Under Test :
+--      #ret_CanTransmit = CanTransmit(&can_x,NULL);
+--
+--  END ELEMENT
+-- 
+--END TEST -- TEST 8
+
+END SERVICE -- CanTransmit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CanInitApp
+--------------------------------------------------------------------------------
+SERVICE CanInitApp
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_TYPE can_x;
+    #T_CAN_INIT can_init_struct;
+    -- By function returned type declaration
+    #T_UINT8 ret_CanInitApp;
+
+	-- Default Variables 
+	ENVIRONMENT ENV_CanInitApp
+
+		--can_x structure initialization
+		STRUCTURE can_x,                init = { MCR => 0, MSR => 0, TSR => 0, RF0R => 0, RF1R => 0, 
+										&		 IER => 0, ESR => 0, BTR => 0, RESERVED0 => 
+										&		 { others => 0 }, sTxMailBox => { others => 
+										&		 { TIR => 0, TDTR => 0, TDLR => 0, TDHR => 0 } }, 
+										&		 sFIFOMailBox => { others => { RIR => 0, RDTR
+										&		 => 0, RDLR => 0, RDHR => 0 } }, RESERVED1 => 
+										&	 	 { others => 0 }, FMR => 0, FM1R => 0, RESERVED2 => 0, 
+										&		 FS1R => 0, RESERVED3 => 0, FFA1R => 0, RESERVED4 => 0, 
+										&		 FA1R => 0, RESERVED5 => { others => 0 }, 
+										&		 sFilterRegister => { others => { FR1 => 0, 
+										& 		 FR2 => 0 } } },     							ev = init
+
+		--can_init_struct structure initialization
+		STRUCTURE can_init_struct,      init = { CAN_Prescaler => 0, CAN_Mode => 0, CAN_SJW => 0, 
+										&		 CAN_BS1 => 0, CAN_BS2 => 0, CAN_TTCM => DISABLE, 
+										&  		 CAN_ABOM => DISABLE, CAN_AWUM => DISABLE, CAN_NART 
+										&		 => DISABLE, CAN_RFLM => DISABLE, CAN_TXFP
+										&		 => DISABLE },                                  ev = init
+
+		VAR ret_CanInitApp,            	init = 0,                                               ev = init
+
+
+	END ENVIRONMENT -- ENV_CanInitApp
+
+	USE ENV_CanInitApp
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-001]
+    COMMENT The function configures MCR of can_x to exit from sleep mode by setting bit 1 to 0. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-002]
+    COMMENT The function configures MCR  of can_x to request initialization by setting bit 0 to 1. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-003]
+    COMMENT The function loops till INAK bit in MSR of can_x is set to 0 and 
+    COMMENT For 65534 loops, loop count is not equal to INAK_TIMEOUT hence MCDC TT condition is tested.
+    COMMENT For 65535th loop, loop count is equal to INAK_TIMEOUT hence MCDC TF condition is tested.
+    COMMENT Equivalence Class 65,67,68
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-004]
+    COMMENT The function 'CanInitApp' sets the return initialization status as 
+    COMMENT CAN_INITSTATUS_FAILED when INAK bit in MSR of can_x is 0. 
+    COMMENT Equivalence Class 65
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,              init = 0,       ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,              init = 0x2,     ev = 0x1
+
+        COMMENT OUTPUT SECTION:
+
+            --Holds return value of 'CanInitApp'
+            VAR ret_CanInitApp,         init = 0,       ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL 
+
+        --Calling the Unit Under Test :
+        #ret_CanInitApp = CanInitApp(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-003]
+    COMMENT The function does not loop till INAK bit in MSR of can_x is set to 1 and loop count 
+    COMMENT is not equal to INAK_TIMEOUT. 
+    COMMENT Equivalence Class 66, 68
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-005]
+    COMMENT The function does the following when INAK bit in MSR of can_x is 1:
+    COMMENT a.sets TTCM bit in MCR of can_x to 0 
+    COMMENT b.sets ABOM bit in MCR of can_x to 1
+    COMMENT c.sets AWUM bit in MCR of can_x to 0
+    COMMENT d.sets NART bit in MCR of can_x to 0
+    COMMENT e.sets RFLM bit in MCR of can_x to 0
+    COMMENT f.sets TXFP bit in MCR of can_x to 0
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-006]
+    COMMENT The function 'CanInitApp' sets bit timing register as below when INAK bit in MSR of 
+    COMMENT can_x is 1: 
+    COMMENT a)Bit 30 with can_mode of can_init_struct (after left shifting by BTR_CAN_MODE times)
+    COMMENT b)Bit 24 and 25 with can_sjw of can_init_struct (after left shifting by BTR_CAN_SJW times)
+    COMMENT c)Bit 16-19 with can_bs1 of can_init_struct (after left shifting by BTR_CAN_BS1 times)
+    COMMENT d)Bit 20-22 with can_bs2 of can_init_struct (after left shifting by BTR_CAN_BS2 times)
+    COMMENT e)Bit 0-9 with (can_prescaler of can_init_struct - DEC_ONE)
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-007]
+    COMMENT The function Request leave initialization by setting INRQ bit in MCR of can_x to 0 
+    COMMENT when INAK bit in MSR of can_x is 1. 
+    COMMENT Equivalence Class 66
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-008]
+    COMMENT The function does the following when INAK bit in MSR of can_x is 1 
+    COMMENT a.Loop till INAK bit in MSR of can_x is 1 and loop count is not equal to INAK_TIMEOUT .
+	COMMENT Tested for MCDC TT and TF
+    COMMENT Equivalence Class 66,68
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-009]
+    COMMENT The function returns initialization status as CAN_INITSTATUS_SUCCESS 
+    COMMENT This test case is evaluated by giving minimum values to the inputs. 
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 1,       ev = init
+
+            -- Holds member values of structure 'can_init_struct'
+            VAR can_init_struct.CAN_Mode,       init = 0,       ev = init
+
+            VAR can_init_struct.CAN_SJW,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_BS1,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_BS2,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_Prescaler,  init = 0,       ev = init
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 0x1,     ev = 0x40
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds member 'BTR' value of structure 'can_x'
+            VAR can_x.BTR,                      init = 0,       ev = 0xFFFFFFFF
+
+            -- Holds the return value of function CanInitApp
+            VAR ret_CanInitApp,                 init = 0,       ev = CAN_INITSTATUS_SUCCESS
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL  
+
+        --Calling the Unit Under Test :
+        #ret_CanInitApp = CanInitApp(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-003]
+    COMMENT The function does not loop till INAK bit in MSR of can_x is set to 1 and loop count 
+    COMMENT is not equal to INAK_TIMEOUT. 
+    COMMENT Equivalence Class 66, 68
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-005]
+    COMMENT The function does the following when INAK bit in MSR of can_x is 1:
+    COMMENT a.sets TTCM bit in MCR of can_x to 0 
+    COMMENT b.sets ABOM bit in MCR of can_x to 1
+    COMMENT c.sets AWUM bit in MCR of can_x to 0
+    COMMENT d.sets NART bit in MCR of can_x to 0
+    COMMENT e.sets RFLM bit in MCR of can_x to 0
+    COMMENT f.sets TXFP bit in MCR of can_x to 0
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-006]
+    COMMENT The function 'CanInitApp' sets bit timing register as below when INAK bit in MSR of 
+    COMMENT can_x is 1: 
+    COMMENT a)Bit 30 with can_mode of can_init_struct (after left shifting by BTR_CAN_MODE times)
+    COMMENT b)Bit 24 and 25 with can_sjw of can_init_struct (after left shifting by BTR_CAN_SJW times)
+    COMMENT c)Bit 16-19 with can_bs1 of can_init_struct (after left shifting by BTR_CAN_BS1 times)
+    COMMENT d)Bit 20-22 with can_bs2 of can_init_struct (after left shifting by BTR_CAN_BS2 times)
+    COMMENT e)Bit 0-9 with (can_prescaler of can_init_struct - DEC_ONE)
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-007]
+    COMMENT The function Request leave initialization by setting INRQ bit in MCR of can_x to 0 when 
+    COMMENT INAK bit in MSR of can_x is 1. 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT This test case is evaluated by giving minimum + 1 values to the inputs.
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 1,       ev = init
+
+            -- Holds member values of structure 'can_init_struct'
+            VAR can_init_struct.CAN_Mode,       init = 1,       ev = init
+
+            VAR can_init_struct.CAN_SJW,        init = 1,       ev = init
+
+            VAR can_init_struct.CAN_BS1,        init = 1,       ev = init
+
+            VAR can_init_struct.CAN_BS2,        init = 1,       ev = init
+
+            VAR can_init_struct.CAN_Prescaler,  init = 1,       ev = init
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 1,       ev = 64
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds member 'BTR' value of structure 'can_x'
+            VAR can_x.BTR,                      init = 0,       ev = (T_UINT32)0x41110000
+
+            -- Holds the return value of function CanInitApp
+            VAR ret_CanInitApp,                 init = 0,       ev = CAN_INITSTATUS_SUCCESS
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+         --Calling the Unit Under Test :
+        #ret_CanInitApp = CanInitApp(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-001]
+    COMMENT The function configures MCR of can_x to exit from sleep mode by setting bit 1 to 0. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-002]
+    COMMENT The function configures MCR  of can_x to request initialization by setting bit 0 to 1. 
+    COMMENT This test case is evaluated by giving nominal values to the inputs.
+    COMMENT Equivalence Class None  
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 0,       ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 15,      ev = 13
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds the return value of function CanInitApp
+            VAR ret_CanInitApp,                init = 0,       ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        --Calling the Unit Under Test :
+        #ret_CanInitApp = CanInitApp(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-001]
+    COMMENT The function configures MCR of can_x to exit from sleep mode by setting bit 1 to 0. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-002]
+    COMMENT The function configures MCR  of can_x to request initialization by setting bit 0 to 1. 
+    COMMENT This test case is evaluated by giving maximum - 1 values to the inputs.
+    COMMENT Equivalence Class None
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 0,       ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 254,     ev = 253
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds the return value of function CanInitApp
+            VAR ret_CanInitApp,                 init = 0,       ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        --Calling the Unit Under Test :
+        #ret_CanInitApp = CanInitApp(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-001]
+    COMMENT The function configures MCR of can_x to exit from sleep mode by setting bit 1 to 0. 
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-002]
+    COMMENT The function configures MCR  of can_x to request initialization by setting bit 0 to 1. 
+    COMMENT This test case is evaluated by giving maximum values to the inputs.
+    COMMENT Equivalence Class None  
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 0,       ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 255,     ev = 253
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds the return value of function CanInitApp
+            VAR ret_CanInitApp,                	init = 0,       ev = CAN_INITSTATUS_FAILED
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        --Calling the Unit Under Test :
+        #ret_CanInitApp = CanInitApp(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 6
+
+--TEST 7
+--FAMILY robustness
+--
+--  COMMENT Test Description
+--  COMMENT <TD> 
+--  COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-001]
+--  COMMENT This test case is evaluated by passing Invalid Reference to can_init_struct parameter
+--  COMMENT Equivalence Class 64   
+--  COMMENT </TD>
+--  
+--  ELEMENT
+--  
+--      COMMENT INPUT SECTION:
+--
+--          --None
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          VAR can_x.MCR,          init = 0,           ev = 1
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      --Stub Calls :
+--      SIMUL
+--
+--          --No stubs
+--
+--      END SIMUL
+--
+--      --Calling the Unit Under Test :
+--      #ret_CanInitApp = CanInitApp(&can_x, NULL);
+--
+--  END ELEMENT
+--
+--END TEST -- TEST 7
+--
+--TEST 8
+--FAMILY robustness
+--
+--  COMMENT Test Description
+--  COMMENT <TD> 
+--  COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-001]
+--  COMMENT This test case is evaluated by passing Invalid Reference to can_x parameter
+--  COMMENT Equivalence Class 63   
+--  COMMENT </TD>
+--  
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --None
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --None
+--
+--      --Stub Calls :
+--      SIMUL
+--
+--          --No stubs
+--
+--      END SIMUL
+--
+--      --Calling the Unit Under Test :
+--      #ret_CanInitApp = CanInitApp(NULL, &can_init_struct);
+--
+--  END ELEMENT
+--
+--END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-003]
+    COMMENT The function does not loop till INAK bit in MSR of can_x is set to 1 and loop count 
+    COMMENT is not equal to INAK_TIMEOUT. 
+    COMMENT Equivalence Class 66, 68
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-005]
+    COMMENT The function does the following when INAK bit in MSR of can_x is 1:
+    COMMENT a.sets TTCM bit in MCR of can_x to 0 
+    COMMENT b.sets ABOM bit in MCR of can_x to 1
+    COMMENT c.sets AWUM bit in MCR of can_x to 0
+    COMMENT d.sets NART bit in MCR of can_x to 0
+    COMMENT e.sets RFLM bit in MCR of can_x to 0
+    COMMENT f.sets TXFP bit in MCR of can_x to 0
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-006]
+    COMMENT The function 'CanInitApp' sets bit timing register as below when INAK bit in MSR of 
+    COMMENT can_x is 1: 
+    COMMENT a)Bit 30 with can_mode of can_init_struct (after left shifting by BTR_CAN_MODE times)
+    COMMENT b)Bit 24 and 25 with can_sjw of can_init_struct (after left shifting by BTR_CAN_SJW times)
+    COMMENT c)Bit 16-19 with can_bs1 of can_init_struct (after left shifting by BTR_CAN_BS1 times)
+    COMMENT d)Bit 20-22 with can_bs2 of can_init_struct (after left shifting by BTR_CAN_BS2 times)
+    COMMENT e)Bit 0-9 with (can_prescaler of can_init_struct - DEC_ONE)
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdulibstm32f4xxcan-CanInitApp-CB-LLR-007]
+    COMMENT The function Request leave initialization by setting INRQ bit in MCR of can_x to 0 
+    COMMENT when INAK bit in MSR of can_x is 1. 
+    COMMENT Equivalence Class 66
+    COMMENT 
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Holds member 'MSR' value of structure 'can_x'
+            VAR can_x.MSR,                      init = 1,       ev = init
+
+            -- Holds member values of structure 'can_init_struct'
+            VAR can_init_struct.CAN_Mode,       init = 0,       ev = init
+
+            VAR can_init_struct.CAN_SJW,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_BS1,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_BS2,        init = 0,       ev = init
+
+            VAR can_init_struct.CAN_Prescaler,  init = 0,       ev = init
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Holds member 'MCR' value of structure 'can_x'
+            VAR can_x.MCR,                      init = 0x00010002,      ev = 0x10040
+
+        COMMENT OUTPUT SECTION:
+
+            -- Holds member 'BTR' value of structure 'can_x'
+            VAR can_x.BTR,                      init = 0x01230000,      ev = 0xFFFFFFFF
+
+            -- Holds the return value of function CanInitApp
+            VAR ret_CanInitApp,                 init = 0,      	 	    ev = CAN_INITSTATUS_SUCCESS
+
+        -- Stub Calls
+        SIMUL
+
+            --No stubs
+
+        END SIMUL  
+
+        --Calling the Unit Under Test :
+        #ret_CanInitApp = CanInitApp(&can_x, &can_init_struct);
+
+    END ELEMENT
+
+END TEST -- TEST 9
+
+END SERVICE -- CanInitApp
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CanDeInit
+--------------------------------------------------------------------------------
+SERVICE CanDeInit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_TYPE *can_x;
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanDeInit-CB-LLR-001]
+    COMMENT The function does the following when CAN1 is equal to can_x: 
+    COMMENT a)Enables CAN1 reset state by calling the function RccApb1PeriphResetCmd with 
+    COMMENT parameters RCC_APB1PERIPH_CAN1 and ENABLE.
+    COMMENT b)Releases CAN1 from reset state by calling the function RccApb1PeriphResetCmd 
+    COMMENT with parameters RCC_APB1PERIPH_CAN1 and DISABLE . 
+    COMMENT Equivalence Class 1,3
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION
+
+            --pointer to CAN peripheral
+            VAR can_x,      init = CAN1,      ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION
+
+            --None
+
+        -- Stub Calls
+        SIMUL
+
+            --Enable CAN1 reset state
+            STUB RccApb1PeriphResetCmd(RCC_APB1PERIPH_CAN1,ENABLE)
+
+            --Disable CAN1 reset state
+            STUB RccApb1PeriphResetCmd(RCC_APB1PERIPH_CAN1,DISABLE)
+
+        END SIMUL
+    
+    --Calling Unit Under test
+    #CanDeInit(can_x);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanDeInit-CB-LLR-002]
+    COMMENT The function does the following when CAN1 is not equal to can_x:
+    COMMENT a)Enables CAN2 reset state by calling the function RccApb1PeriphResetCmd 
+    COMMENT with parameters RCC_APB1PERIPH_CAN2 and ENABLE
+    COMMENT b)Releases CAN2 from reset state by calling the function RccApb1PeriphResetCmd 
+    COMMENT with parameters RCC_APB1PERIPH_CAN2 and DISABLE.
+    COMMENT Equivalence Class 2,3
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION
+
+            --pointer to CAN peripheral
+            VAR can_x,      init = CAN2,      ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION
+
+            --None
+
+        -- Stub Calls
+        SIMUL
+
+            --Enable CAN2 reset state
+            STUB RccApb1PeriphResetCmd(RCC_APB1PERIPH_CAN2,ENABLE)
+
+            --Disable CAN2 reset state
+            STUB RccApb1PeriphResetCmd(RCC_APB1PERIPH_CAN2,DISABLE)
+
+        END SIMUL
+
+    --Calling Unit Under test
+    #CanDeInit(can_x);
+
+    END ELEMENT
+
+END TEST -- TEST 2
+    
+TEST 3
+FAMILY robustness
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdulibstm32f4xxcan-CanDeInit-CB-LLR-002]
+    COMMENT This test case is written to test can_x by passing invalid reference  
+    COMMENT Equivalence Class 42 
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION
+
+            --pointer to CAN peripheral
+            VAR can_x,      init = NULL,        ev = init
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION
+
+            --None
+
+        -- Stub Calls
+        SIMUL
+
+            --Enable CAN2 reset state
+            STUB RccApb1PeriphResetCmd(RCC_APB1PERIPH_CAN2,ENABLE)
+
+            --Disable CAN2 reset state
+            STUB RccApb1PeriphResetCmd(RCC_APB1PERIPH_CAN2,DISABLE)
+
+        END SIMUL
+
+    --Calling Unit Under test
+    #CanDeInit(can_x);
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- CanDeInit
+

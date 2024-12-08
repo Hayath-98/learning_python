@@ -1,0 +1,3311 @@
+HEADER hducommfarinc825,Source Code Ver : 1.5,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Kavya M,
+--                       Soumya Patil, 
+--                       Samhitha Prasad
+--
+-- File Name           : hducommfarinc825.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : A825Init
+--                       DoNvicConfig
+--                       DoCanConfig
+--                       ReceiveMessage
+--                       BufferCheck
+--                       RxQueueInsert
+--                       A825Xmit
+--                       TxQueueInsert
+--                       BuildBroadcastExtId
+--                       BuildPeerToPeerExtId
+--                       XmitFromBuff
+--                       A825GetMessage
+--                       RxQueueRemove
+--                       
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE        TESTER NAME        MODIFICATIONS
+-- ------------        ---------        -----------        -------------
+--    1.1              30.10.2017       Kavya M,
+--                                      Soumya Patil,
+--                                      Samhitha Prasad    Created the ptu file.
+--    1.2              11.11.2017       Kavya M,
+--                                      Soumya Patil,
+--                                      Samhitha Prasad    Updated as per #PR100171.
+--    1.3              14.11.2017       Kavya M,
+--                                      Soumya Patil,
+--                                      Samhitha Prasad    Updated as per #PR100171.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hducommfarinc825.h"    
+##include "hducommfdauprofile.h"  
+##include "hducommfhw.h"          
+##include "hducommfintr.h"       
+##include "hducommfoscfg.h"       
+##include "hducommftbase.h"       
+##include "hdulibstm32f4xxcan.h"  
+##include "hdulibstm32f4xxrcc.h"  
+##include "hdulibmisc.h"          
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	-- None
+
+-- Declarations of the temporary variable
+
+	--Temporary variable to hold gpio_init_struct
+	#T_GPIO_TYPE_INIT PTU_gpio_init_structure;
+
+	--Temporary variable to hold can_init_struct
+	#T_CAN_INIT PTU_can_init_structure;
+
+	--Temporary variable to hold can_filter_init_struct
+	#T_CAN_FILTER_INIT PTU_can_filter_init_structure;
+
+	--Temporary variables to hold nvic_init_struct
+	#T_NVIC_INIT PTU_nvic_init_struct1;
+	#T_NVIC_INIT PTU_nvic_init_struct2;
+
+	--variable for stub call count and loop
+	#T_UINT16 PTU_stub_call, PTU_i;
+
+	--Temporary variable to hold rx_message
+	#T_CAN_RX_MSG PTU_rx_message;
+
+	--Temporary variable to hold tx_message
+	#T_CAN_TX_MSG PTU_tx_message;
+	
+--------------------------------------------------------------------------------
+BEGIN
+
+   COMMENT Author Names     : Soumya Patil,
+   COMMENT                    Samhitha Prasad, 
+   COMMENT                    Kavya M 
+   COMMENT
+   COMMENT File Name        : hducommfarinc825.ptu
+   COMMENT
+   COMMENT Tested Functions : A825Init
+   COMMENT                    DoNvicConfig
+   COMMENT                    DoCanConfig
+   COMMENT                    ReceiveMessage
+   COMMENT                    BufferCheck
+   COMMENT                    RxQueueInsert
+   COMMENT                    A825Xmit
+   COMMENT                    TxQueueInsert
+   COMMENT                    BuildBroadcastExtId
+   COMMENT                    BuildPeerToPeerExtId
+   COMMENT                    XmitFromBuff
+   COMMENT                    A825GetMessage
+   COMMENT                    RxQueueRemove
+   COMMENT
+   COMMENT Assumptions and Constraints
+   COMMENT <AC>
+   COMMENT Assumption(s):
+   COMMENT None
+   COMMENT 
+   COMMENT Constraint(s):
+   COMMENT  1.Header file 'hdulibstm32f4xx.h' is modified for testing purpose./*Commented for testing purpose*/
+   COMMENT /*#define CAN1                  ((T_CAN_TYPE *) CAN1_BASE)*/
+   COMMENT /* Modified for stubbing hardware address */
+   COMMENT T_CAN_TYPE PTU_CAN1;
+   COMMENT #define CAN1                  ((T_CAN_TYPE *) &PTU_CAN1)
+   COMMENT
+   COMMENT /*Commented for testing purpose*/
+   COMMENT /*                 ((T_GPIO_TYPE *) GPIOA_BASE)*/
+   COMMENT /* Modified for stubbing hardware address */
+   COMMENT T_GPIO_TYPE PTU_GPIOA;
+   COMMENT #define GPIOA                 ((T_GPIO_TYPE *) &PTU_GPIOA)
+   COMMENT </AC>
+
+   COMMENT Equivalence Class Description
+   COMMENT <ECD>
+   COMMENT 
+   COMMENT Valid Class(es)
+   COMMENT Class 1
+   COMMENT In function "A825Xmit", selected channel is NOC     
+   COMMENT 
+   COMMENT Class 2
+   COMMENT The function "A825Xmit", calls BuildBroadcastExtId function
+   COMMENT 
+   COMMENT Class 3
+   COMMENT In function "A825Xmit", selected channel is NSC     
+   COMMENT 
+   COMMENT Class 4
+   COMMENT The function "A825Xmit", calls BuildPeerToPeerExtId function
+   COMMENT 
+   COMMENT Class 5
+   COMMENT The function "A825Xmit", returns A825_BAD_CHANNEL
+   COMMENT 
+   COMMENT Class 6
+   COMMENT In function "A825Xmit", number of bytes of payload is lesser than BYTES_OF_PYLD
+   COMMENT 
+   COMMENT Class 7
+   COMMENT In function "A825Xmit", number of bytes of payload is greater than BYTES_OF_PYLD
+   COMMENT 
+   COMMENT Class 8
+   COMMENT In function "A825Xmit", number of bytes of payload is equal to BYTES_OF_PYLD    
+   COMMENT 
+   COMMENT Class 9
+   COMMENT The function "A825Xmit", returns A825_BAD_PAYLOAD_SIZE
+   COMMENT 
+   COMMENT Class 10
+   COMMENT The function "A825Xmit", calls TxQueueInsert function
+   COMMENT 
+   COMMENT Class 11
+   COMMENT The function "BuildBroadcastExtId",  returns 29 bit CAN identifier.
+   COMMENT 
+   COMMENT Class 12
+   COMMENT The function "BuildPeerToPeerExtId",  returns 29 bit CAN identifier.
+   COMMENT 
+   COMMENT Class 13
+   COMMENT In function "BufferCheck", messages in the Tx queue (TxCntr of NOC transmit queue)is 
+   COMMENT equal to DEC_ZERO
+   COMMENT
+   COMMENT Class 14
+   COMMENT In function "BufferCheck", messages in the Tx queue (TxCntr of NOC transmit queue)is 
+   COMMENT not equal to DEC_ZERO 
+   COMMENT
+   COMMENT Class 15
+   COMMENT The function "BufferCheck", 'XmitFromBuff' is called.  
+   COMMENT
+   COMMENT Class 16
+   COMMENT In function "BufferCheck", return value of 'XmitFromBuff' function is equal to 
+   COMMENT CAN_TXSTATUS_NOMAILBOX
+   COMMENT
+   COMMENT Class 17
+   COMMENT In function "BufferCheck", return value of 'XmitFromBuff' function is not equal to 
+   COMMENT CAN_TXSTATUS_NOMAILBOX
+   COMMENT
+   COMMENT Class 18
+   COMMENT In function "BufferCheck",  messages in the Tx queue (TxCntr of NSC transmit queue) is
+   COMMENT  equal to DEC_ZERO
+   COMMENT
+   COMMENT Class 19
+   COMMENT In function "BufferCheck",  messages in the Tx queue (TxCntr of NSC transmit queue) is 
+   COMMENT not equal to DEC_ZERO 
+   COMMENT
+   COMMENT Class 20
+   COMMENT The function "BufferCheck", 'XmitFromBuff'is called.  
+   COMMENT
+   COMMENT Class 23
+   COMMENT The function "BufferCheck", calls CanItConfig function
+   COMMENT  
+   COMMENT Class 24
+   COMMENT In function "XmitFromBuff", "CanTransmit" function is called
+   COMMENT 
+   COMMENT Class 25
+   COMMENT In function "XmitFromBuff", return value of 'CanTransmit' is equal to 
+   COMMENT CAN_TXSTATUS_NOMAILBOX
+   COMMENT 
+   COMMENT Class 26
+   COMMENT In function "XmitFromBuff",return value of 'CanTransmit' is not equal to 
+   COMMENT CAN_TXSTATUS_NOMAILBOX
+   COMMENT 
+   COMMENT Class 27
+   COMMENT In function "XmitFromBuff", The next CAN1 message to transmit is in the Transmit message
+   COMMENT Queue Size range (TxBuf[CAN_X_Q_SIZE] of ps_which_q)
+   COMMENT 
+   COMMENT Class 28
+   COMMENT In function "XmitFromBuff", The next CAN1 message to transmit is not in the Transmit 
+   COMMENT message Queue Size range (TxBuf[CAN_X_Q_SIZE] of ps_which_q)
+   COMMENT 
+   COMMENT Class 29
+   COMMENT In function "XmitFromBuff", returns mail_box    
+   COMMENT
+   COMMENT Class 30
+   COMMENT The function "TxQueueInsert", calls CanItConfig
+   COMMENT
+   COMMENT Class 31
+   COMMENT In function "TxQueueInsert",  number of messages in the Tx queue (TxCntr of ps_which_q) 
+   COMMENT is equal to CAN_X_Q_SIZE
+   COMMENT
+   COMMENT Class 32
+   COMMENT In function "TxQueueInsert",  number of messages in the Tx queue (TxCntr of ps_which_q) 
+   COMMENT is not equal to CAN_X_Q_SIZE
+   COMMENT
+   COMMENT Class 33
+   COMMENT The function "TxQueueInsert", returns A825_XM_OVERFLOW.
+   COMMENT
+   COMMENT Class 34
+   COMMENT In function "TxQueueInsert", the next message to insert is in the Transmit message Queue 
+   COMMENT Size range of ps_which_q.
+   COMMENT
+   COMMENT Class 35
+   COMMENT In function "TxQueueInsert", the next message to insert is in the Transmit message Queue 
+   COMMENT Size range of ps_which_q.
+   COMMENT
+   COMMENT Class 36
+   COMMENT The function "TxQueueInsert", calls BufferCheck function
+   COMMENT
+   COMMENT Class 37
+   COMMENT The function "TxQueueInsert", returns A825_XM_OK.
+   COMMENT
+   COMMENT Class 38
+   COMMENT In function "A825Init", "DoNvicConfig" function is called
+   COMMENT 
+   COMMENT Class 39
+   COMMENT In function "A825Init", "DoCanConfig" function is called
+   COMMENT 
+   COMMENT Class 40
+   COMMENT In function "DoCanConfig", "RccAhb1PeriphClockCmd" function is called
+   COMMENT 
+   COMMENT Class 41
+   COMMENT In function "DoCanConfig", "GpioPinAFConfig" function is called
+   COMMENT 
+   COMMENT Class 42
+   COMMENT In function "DoCanConfig", "GpioInit" function is called
+   COMMENT 
+   COMMENT Class 43
+   COMMENT In function "DoCanConfig", "RccApb1PeriphClockCmd" function is called
+   COMMENT 
+   COMMENT Class 44
+   COMMENT In function "DoCanConfig", "CanDeInit" function is called
+   COMMENT 
+   COMMENT Class 45
+   COMMENT In function "DoCanConfig", "CanInitApp" function is called
+   COMMENT 
+   COMMENT Class 46
+   COMMENT In function "DoCanConfig", "CanFilterInit" function is called
+   COMMENT  
+   COMMENT Class 47
+   COMMENT In function "DoCanConfig", "CanItConfig" function is called
+   COMMENT
+   COMMENT Class 48
+   COMMENT In function "DoNvicConfig", "IntrInstall" function is called
+   COMMENT 
+   COMMENT Class 49
+   COMMENT In function "DoNvicConfig", "IntrInstall" function is called
+   COMMENT 
+   COMMENT Class 50
+   COMMENT In function "DoNvicConfig", "NvicInit" function is called
+   COMMENT
+   COMMENT Class 51
+   COMMENT The function "ReceiveMessage", calls OsIntEnter function
+   COMMENT 
+   COMMENT Class 52
+   COMMENT The function "ReceiveMessage", calls CanReceive function
+   COMMENT 
+   COMMENT Class 53
+   COMMENT In function "ReceiveMessage", channel is set to NOC channel
+   COMMENT 
+   COMMENT Class 54
+   COMMENT The function "ReceiveMessage", calls RxQueueInsert function
+   COMMENT 
+   COMMENT Class 55
+   COMMENT In function "ReceiveMessage", channel is set to NSC channel
+   COMMENT 
+   COMMENT Class 56
+   COMMENT In function "ReceiveMessage", channel is other than NOC or NSC
+   COMMENT
+   COMMENT Class 57
+   COMMENT In function "ReceiveMessage", return value of RxQueueInsert is not equal to A825_RX_OK
+   COMMENT 
+   COMMENT Class 58
+   COMMENT In function "ReceiveMessage", return value of RxQueueInsert is equal to A825_RX_OK
+   COMMENT
+   COMMENT Class 59
+   COMMENT The function "ReceiveMessage", calls OsIntExit function 
+   COMMENT 
+   COMMENT Class 60
+   COMMENT In function "RxQueueInsert", RxCntr of ps_which_q is equal to CAN_R_Q_SIZE
+   COMMENT
+   COMMENT Class 61
+   COMMENT In function "RxQueueInsert", RxCntr of ps_which_q is not equal to CAN_R_Q_SIZE
+   COMMENT
+   COMMENT Class 62
+   COMMENT The function "RxQueueInsert", returns A825_RX_OVERFLOW
+   COMMENT
+   COMMENT Class 63
+   COMMENT In function "RxQueueInsert", next message to insert is in the message queue size range (RxBuf[CAN_R_Q_SIZE] of ps_which_q)
+   COMMENT
+   COMMENT Class 64
+   COMMENT In function "RxQueueInsert", next message to insert is not in the message queue size range (RxBuf[CAN_R_Q_SIZE] of ps_which_q)
+   COMMENT
+   COMMENT Class 65
+   COMMENT The function "RxQueueInsert", returns A825_RX_OK
+   COMMENT
+   COMMENT Class 66
+   COMMENT In function "A825GetMessage", parameter "e_channel" is set to NOC channel
+   COMMENT 
+   COMMENT Class 67
+   COMMENT In function "A825GetMessage", parameter "e_channel" is set to NSC channel
+   COMMENT 
+   COMMENT Class 68
+   COMMENT In function "A825GetMessage", parameter "e_channel" is neither NOC nor NSC 
+   COMMENT 
+   COMMENT Class 69
+   COMMENT The function "A825GetMessage", calls  RxQueueRemove function.
+   COMMENT
+   COMMENT Class 70
+   COMMENT In function "RxQueueRemove", number of messages in the Rx queue is DEC_ZERO 
+   COMMENT 
+   COMMENT Class 71
+   COMMENT In function "RxQueueRemove", number of messages in the Rx queue is not DEC_ZERO 
+   COMMENT 
+   COMMENT Class 72
+   COMMENT The function "RxQueueRemove", returns A825_RX_QUEUE_EMPTY
+   COMMENT 
+   COMMENT Class 73
+   COMMENT The function "RxQueueRemove", calls CanItConfig function     
+   COMMENT 
+   COMMENT Class 74
+   COMMENT In function "RxQueueRemove", RxHead of ps_which_q is equal to address of RxBuf of ps_which_q    
+   COMMENT 
+   COMMENT Class 75
+   COMMENT In function "RxQueueRemove", RxHead of ps_which_q is not equal to address of RxBuf of ps_which_q    
+   COMMENT 
+   COMMENT Class 76
+   COMMENT In function "RxQueueRemove", LCC of ARINC 825 message is NOC    
+   COMMENT 
+   COMMENT Class 77
+   COMMENT In function "RxQueueRemove", LCC of ARINC 825 message is not NOC    
+   COMMENT 
+   COMMENT Class 78
+   COMMENT In function "RxQueueRemove", u8PaySize of ARINC 825 message is equal to BYTES_OF_PYLD
+   COMMENT 
+   COMMENT Class 79
+   COMMENT In function "RxQueueRemove", u8PaySize of ARINC 825 message is greater than BYTES_OF_PYLD
+   COMMENT 
+   COMMENT Class 80
+   COMMENT In function "RxQueueRemove", u8PaySize of ARINC 825 message is lesser than BYTES_OF_PYLD
+   COMMENT 
+   COMMENT Class 81
+   COMMENT The function "RxQueueRemove", returns 'A825_RX_OK'
+   COMMENT
+   COMMENT Class 82
+   COMMENT The function 'A825GetMessage',returns 'A825_RX_BAD_CHANNEL'
+   COMMENT 
+   COMMENT Class 83 
+   COMMENT The function 'A825GetMessage',returns 'A825_RX_QUEUE_EMPTY' 
+   COMMENT    
+   COMMENT Invalid Class(es)
+   COMMENT Class 84
+   COMMENT In function "A825GetMessage",parameter ps_destination is passed with invalid reference.
+   COMMENT
+   COMMENT Class 88
+   COMMENT In function "A825Xmit", invalid reference to arinc825 message is passed.
+   COMMENT </ECD>
+   
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+    
+DEFINE STUB hducommfarinc825_c 744
+
+    --In stub NvicInit, 'nvic_init_struct' variable made as _no because local varible address cannot be expected.   
+    #void NvicInit(T_NVIC_INIT _no *nvic_init_struct)
+    #{
+    # if(PTU_stub_call==1)
+    # {  
+    #       PTU_nvic_init_struct1 = *nvic_init_struct;
+    # }
+    # if(PTU_stub_call==2)
+    # {
+    #       PTU_nvic_init_struct2 = *nvic_init_struct;
+    # }
+    # PTU_stub_call++;
+    #}
+
+    --In stub IntrInstall, 'IntrFunction'  made as _no because function cannot be expected.
+    #void IntrInstall(T_UINT8 _in u8_index, T_INTR_FN  _no *intr_function)
+    #{
+    # intr_function();
+    #}      
+    
+     --In stub CanFilterInit, 'can_filter_init_struct' variable made as _no because local varible address cannot be expected.
+    #void CanFilterInit(T_CAN_FILTER_INIT _no *can_filter_init_struct)
+    #{
+    #  PTU_can_filter_init_structure=*can_filter_init_struct;
+    #}
+    
+    --In stub CanInitApp, 'can_init_struct' variable made as _no because local varible address cannot be expected.  
+    #T_UINT8 CanInitApp(T_CAN_TYPE _in *can_x, T_CAN_INIT _no *can_init_struct)
+    #{
+    #   PTU_can_init_structure=*can_init_struct;
+    #} 
+      
+    #void CanDeInit(T_CAN_TYPE _in *can_x);
+ 
+    #void RccApb1PeriphClockCmd(T_UINT32 _in rcc_apb1_periph, T_FUNCTIONAL_STATE _in new_state);
+    
+    --In stub GpioInit, 'gpio_init_struct' variable made as _no because local varible address cannot be expected.
+    #void GpioInit(T_GPIO_TYPE _in *gpio_x, T_GPIO_TYPE_INIT _no *gpio_init_struct)
+    #{
+    #   PTU_gpio_init_structure=*gpio_init_struct;
+    #}
+    
+    #void GpioPinAFConfig(T_GPIO_TYPE _in *gpio_x, T_UINT16 _in gpio_pinsource, T_UINT8 _in gpio_af); 
+
+    #void RccAhb1PeriphClockCmd(T_UINT32 _in rcc_ahb1_periph, T_FUNCTIONAL_STATE _in new_state);
+
+    #void OsIntExit(void); 
+
+    --In stub CanReceive, 'rx_message' variable made as _no because local varible address cannot be expected.
+    #void CanReceive(T_CAN_TYPE _in *can_x, T_UINT8 _in fifo_number, T_CAN_RX_MSG _no *rx_message)
+    #{
+    # *rx_message = PTU_rx_message;
+    #}
+
+    #void OsIntEnter(void);
+        
+    #void CanItConfig(T_CAN_TYPE _in *can_x, T_UINT32 _in can_it, T_FUNCTIONAL_STATE _in new_state);
+    
+    --In stub CanTransmit, 'tx_message' variable made as _no because local varible address cannot be expected. 
+    #T_UINT8 CanTransmit(T_CAN_TYPE _in *can_x, T_CAN_TX_MSG _no *tx_message)
+    #{
+    #PTU_tx_message=*tx_message;
+    #}  
+END DEFINE
+
+ELSE_SIMUL
+
+ -- No action defined as of now if the module is not simulated
+ 
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+-- Environment of the file hducommfarinc825.c
+-- ENVIRONMENT ENV_hducommfarinc825_c
+
+-- None
+
+-- END ENVIRONMENT -- ENV_hducommfarinc825_c
+
+-- USE ENV_hducommfarinc825_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service A825GetMessage
+--------------------------------------------------------------------------------
+SERVICE A825GetMessage
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_LCC_TYPE e_channel;
+    #T_A825_MESSAGE ps_destination;
+    -- By function returned type declaration
+    #T_A825_REC_RESULT ret_A825GetMessage;
+    
+    
+
+    ENVIRONMENT ENV_A825GetMessage
+
+    VAR e_channel,      init = EEC,     ev = init
+    STRUCTURE ps_destination,       init = { lcc => EEC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, doc => 0, rci => 0, spare                                       => 0 } }, u8PaySize => 0, u8PayLoad => { others => 0 } },       ev = init
+    VAR ret_A825GetMessage,     init = A825_RX_OK,      ev = init
+
+    END ENVIRONMENT -- ENV_A825GetMessage
+
+    USE ENV_A825GetMessage
+
+    TEST 1
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT  [hducommfarinc825-A825GetMessage-CB-LLR-001]
+    COMMENT The function calls  RxQueueRemove function with parameters ps_destination and reference to NOC 
+    COMMENT receive queue when the channel(e_channel) is Normal Operating Channel.
+    COMMENT Equivalence Class 66,69
+    COMMENT  [hducommfarinc825-RxQueueRemove-CB-LLR-001]
+    COMMENT The function returns A825_RX_QUEUE_EMPTY when the number of messages in the Rx queue is DEC_ZERO
+    COMMENT Equivalence Class 72,83
+    
+    ELEMENT
+            
+            COMMENT INPUT section :
+                
+                --Holds the reference to receive queue  
+                 VAR e_channel,     init = NOC,     ev = init
+        
+            COMMENT INPUT/OUTPUT section :
+                --None
+
+            
+            COMMENT OUTPUT section :
+                --Holds the return value of the function A825GetMessage
+                VAR ret_A825GetMessage, init=A825_RX_OK , ev= A825_RX_QUEUE_EMPTY
+
+    --Stub Calls
+    SIMUL
+
+        --No Stubs
+
+    END SIMUL
+        
+         
+    --calling unit under test
+    #ret_A825GetMessage = A825GetMessage(e_channel, &ps_destination);
+    
+    END ELEMENT
+
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT
+    COMMENT [hducommfarinc825-A825GetMessage-CB-LLR-002]
+    COMMENT The function retrieves a message from the specified receive queue by calling  RxQueueRemove function 
+    COMMENT with parameters ps_destination and reference to NSC receive queue when the channel(e_channel) is Node Service Channel.
+    COMMENT Equivalence Class 67
+    COMMENT 
+    COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-001]
+    COMMENT The function returns A825_RX_QUEUE_EMPTY when the number of messages in the Rx queue is DEC_ZERO
+    COMMENT Equivalence Class 70,83
+    COMMENT   
+  
+    ELEMENT
+            
+            COMMENT INPUT section :
+           
+           		--Holds the reference to receive queue  
+                    VAR e_channel,      init = NSC,     ev = init               
+            COMMENT INPUT/OUTPUT section :
+            
+            	--None
+            
+            COMMENT OUTPUT section :
+            
+            	--Holds the return value of the function A825GetMessage
+                VAR ret_A825GetMessage, init=A825_RX_OK , ev= A825_RX_QUEUE_EMPTY
+        
+    --Stub Calls
+    SIMUL
+
+            --No Stubs
+
+    END SIMUL
+            
+    --calling unit under test
+    #ret_A825GetMessage = A825GetMessage(e_channel, &ps_destination);
+       
+    END ELEMENT
+    
+    END TEST -- TEST 2
+    
+    TEST 3
+    FAMILY nominal
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT  [hducommfarinc825-A825GetMessage-CB-LLR-003]
+        COMMENT The function sets the return value to A825_RX_BAD_CHANNEL when the channel(e_channel) is other than NOC and NSC
+        COMMENT Equivalence Class 68,82
+        COMMENT </TD>
+        
+        ELEMENT
+            
+            COMMENT INPUT section :
+            
+				--Holds the reference to receive queue 
+				 VAR e_channel,     init = EEC,     ev = init                       
+            
+            COMMENT INPUT/OUTPUT section :
+				--None
+            
+            COMMENT OUTPUT section :
+				--Holds the return value of the function A825GetMessage
+				   VAR ret_A825GetMessage, init =A825_RX_OK,    ev=A825_RX_BAD_CHANNEL
+
+    	--Stub Calls
+    	SIMUL
+
+            --No Stubs
+
+    	END SIMUL
+            
+    --calling unit under test
+    #ret_A825GetMessage = A825GetMessage(e_channel, &ps_destination);
+    
+    END ELEMENT
+    
+    END TEST -- TEST 3
+     
+    TEST 4
+    FAMILY nominal
+		COMMENT Test Description
+		COMMENT <TD> 
+		COMMENT  [hducommfarinc825-A825GetMessage-CB-LLR-001]
+		COMMENT The function  calls  RxQueueRemove function 
+		COMMENT with parameters ps_destination and reference to NOC receive queue when the channel(e_channel) is NOC.
+		COMMENT 
+		COMMENT Equivalence Class 66
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-001]
+		COMMENT The function shall return A825_RX_QUEUE_EMPTY when the number of messages in the Rx queue is DEC_ZERO ,
+		COMMENT here the implicit else part is covered.
+		COMMENT Equivalence Class 71
+		COMMENT
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-002]
+		COMMENT The function  disable the Can Receiver Transmit Interrupt by calling CanItConfig function with parameters CAN1, CAN_IT_FMP0 and DISABLE.
+		COMMENT Equvivalence Class 73
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-003]
+		COMMENT The function retrieves the CAN message from the receive queue.
+		COMMENT Equivalence Class None
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-004]
+		COMMENT The function adjusts the head and check for a wrap by decrementing number of messages in the Rx queue (rx_cntr of ps_which_q) 
+		COMMENT by DEC_ONE and incrementing the next message to receive(rx_head of ps_which_q) by DEC_ONE.
+		COMMENT Equivalence Class None
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-005]
+		COMMENT The function shall set next message to receive (RxHead of ps_which_q) to the
+		COMMENT  Rx buffer (RxBuf of ps_which_q) when the next message to receive is in the message queue 
+		COMMENT  size range (RxBuf[CAN_R_Q_SIZE] of ps_which_q).
+		COMMENT Equivalence Class 74    
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-006]
+		COMMENT The function enables the Can Receiver Interrupt by calling CanItConfig function 
+		COMMENT with parameters CAN1,CAN_IT_FMP0 and ENABLE.
+		COMMENT Equivalence Class 73    
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-007]
+		COMMENT The function identifies the Logical communication channel from the received CAN message  
+		COMMENT Equivalence Class None
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-008]
+		COMMENT The function translates CAN MESSAGE to ARINC 825 Broadcast MESSAGE when the message is a broadcast message 
+		COMMENT i.e. LCC of ARINC 825 message is NOC.
+		COMMENT Equivalence Class 76
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-010]
+		COMMENT The function translates CAN message DLC to A825 PaySize.
+		COMMENT Equivalence Class None
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-011]
+		COMMENT The function sets number of bytes of payload (u8PaySize) of ARINC 825 message to
+		COMMENT BYTES_OF_PYLD when number of bytes of payload (u8PaySize) of ARINC 825 message is greater than BYTES_OF_PYLD.
+		COMMENT Equivalence Class 79
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-012]
+		COMMENT The function loops till the local counter is less than arinc 825 u8PaySize and 
+		COMMENT copy the data from CAN message to the A825 payload.
+		COMMENT here, the looping is done for 0,1 and 2 or more times in Element 1 and ELEMENT 2 BLOCK respectively
+		COMMENT Equivalence Class None
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-013]
+		COMMENT The function copies A825 message to the destination and return A825_RX_OK.
+		COMMENT Equivalence Class 81
+		COMMENT 
+		COMMENT [hducommfarinc825-A825Init-CB-LLR-001]
+		COMMENT The function performs NVIC configuration by calling DoNvicConfig function.
+		COMMENT Equivalence Class 38
+		COMMENT 
+		COMMENT [hducommfarinc825-A825Init-CB-LLR-002]
+		COMMENT The function performs CAN configuration by calling DoCanConfig function.
+		COMMENT Equivalence Class 39
+		COMMENT 
+		COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-001]
+		COMMENT The function sets up the CAN1 receive interrupt vector by calling the function IntrInstall
+		COMMENT with parameters INTR_CAN_1_RX_0 and reference to function ReceiveMessage.
+		COMMENT Equivalence Class 48
+		COMMENT 
+		COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-003]
+		COMMENT The function does the following
+		COMMENT - sets irq channel of NVIC init structure to CAN1_RX0_IRQN
+		COMMENT - sets pre-emption priority, sub-priority level for the irq channel CAN1_RX0_IRQN of NVIC init structure to HEX_ZERO
+		COMMENT - sets irq channel CAN1_RX0_IRQN defined of NVIC init structure to ENABLE
+		COMMENT - initializes the NVIC peripheral for the irq channel CAN1_RX0_IRQN by calling the function NvicInit 
+		COMMENT   with parameter reference to NVIC init structure.
+		COMMENT Equivalence Class 50
+		COMMENT 
+		COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-004]
+		COMMENT The function does the following
+		COMMENT - sets irq channel of NVIC init structure to CAN1_TX_IRQN
+		COMMENT - sets pre-emption priority, sub-priority level for the irq channel CAN1_TX_IRQN of NVIC init structure to DEC_ZERO
+		COMMENT - sets irq channel CAN1_TX_IRQN defined of NVIC init structure to ENABLE
+		COMMENT - initializes the NVIC peripheral for the irq channel CAN1_TX_IRQN by calling the function NvicInit 
+		COMMENT   with parameter reference to NVIC init structure.
+		COMMENT Equivalence Class 50
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-001]
+		COMMENT The function enables GPIO clock by calling the function RccAhb1PeriphClockCmd 
+		COMMENT with parameters RCC_AHB1PERIPH_GPIOA and ENABLE.
+		COMMENT Equivalence Class 40
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-002]
+		COMMENT The function connects CAN1 pins to AF9(PA11) by calling the function GpioPinAFConfig 
+		COMMENT with parameters GPIOA, GPIO_PINSOURCE11 and GPIO_AF_CAN1.
+		COMMENT Equivalence Class 41
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-003]
+		COMMENT The function connects CAN pins to AF9 (PA12) by calling the function GpioPinAFConfig 
+		COMMENT with parameters GPIOA, GPIO_PINSOURCE12 and GPIO_AF_CAN1.
+		COMMENT Equivalence Class 41
+		COMMENT
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-004]
+		COMMENT - set GPIO_Pin of GPIO Init structure to HW_GPIOA_CAN_RX1 | HW_GPIOA_CAN_TX1
+		COMMENT - set operating mode(GPIO_Mode) for the selected pin of GPIO Init structure to GPIO_MODE_AF
+		COMMENT - set speed(GPIO_Speed) for the selected pin of GPIO Init structure to GPIO_SPEED_50MHZ
+		COMMENT - set operating output type(GPIO_OType) for the selected pin of GPIO Init structure to GPIO_OTYPE_PP
+		COMMENT - set operating Pull-up/Pull down(GPIO_PuPd) for the selected pin of GPIO Init structure to GPIO_PUPD_UP
+		COMMENT - initializes the GPIOA peripheral by calling GpioInit function with parameters GPIOA and reference to GPIO Init structure
+		COMMENT Equivalence Class 42
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-005]
+		COMMENT The function enables CAN1 clock by calling the function RccApb1PeriphClockCmd with parameters RCC_APB1PERIPH_CAN1 and ENABLE.
+		COMMENT Equivalence Class 43
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-006]
+		COMMENT The function de-initializes the CAN1 peripheral registers by calling the function CanDeInit with parameter CAN1.
+		COMMENT Equivalence Class 44
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-007]
+		COMMENT - disables time triggered communication (CAN_TTCM) of CAN Init structure
+		COMMENT - enables automatic bus-off management (CAN_ABOM) of CAN Init structure
+		COMMENT - disables the automatic wake-up mode (CAN_AWUM) of CAN Init structure
+		COMMENT - disables the non-automatic retransmission mode (CAN_NART) of CAN Init structure
+		COMMENT - disables the Receive FIFO Locked mode (CAN_RFLM) of CAN Init structure
+		COMMENT - disables the transmit FIFO priority (CAN_TXFP) of CAN Init structure
+		COMMENT - sets CAN operating mode (CAN_Mode) of CAN Init structure to CAN_MODE_NORMAL
+		COMMENT - sets CAN synchronization jump width (CAN_SJW) of CAN Init structure to CAN_SJW_1TQ
+		COMMENT - sets time quanta in Bit Segment 1 (CAN_BS1) of CAN Init structure to CAN_BS1_15TQ
+		COMMENT - sets time quanta in Bit Segment 2 (CAN_BS2) of CAN Init structure to CAN_BS2_5TQ
+		COMMENT - sets length of a time quantum (CAN_Prescaler) of CAN Init structure to DEC_TWO
+		COMMENT - initialize the CAN peripheral registers by calling the function CanInitApp with parameters CAN1 and reference to CAN init
+		COMMENT structure.
+		COMMENT Equvivalence Class 45
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-008]
+		COMMENT The function does the following
+		COMMENT - set filter(CAN_FilterNumber) which will be initialized of CAN filter Init structure to HEX_ZERO
+		COMMENT - set filter mode (CAN_FilterMode) to be initialized of CAN filter
+		COMMENT   Init structure to CAN_FILTERMODE_IDMASK
+		COMMENT - set filter scale(CAN_FilterScale) of CAN filter Init structure to CAN_FILTERSCALE_32BIT
+		COMMENT - set filter identification number high(CAN_FilterIdHigh), filter identification number low(CAN_FilterIdLow), filter mask number
+		COMMENT  high(CAN_FilterMaskIdHigh), filter mask number             low (CAN_FilterMaskIdLow) of CAN filter Init structure to HEX_ZERO
+		COMMENT - set FIFO assigned (CAN_FilterFIFOAssignment) to the filter of CAN filter Init structure to HEX_ZERO
+		COMMENT - set can filter activation (CAN_FilterActivation) of CAN filter Init structure to ENABLE
+		COMMENT - configures the CAN1 reception filter by calling the function CanFilterInit with parameter reference to CAN filter init structure.
+		COMMENT Equivalence Class 46
+		COMMENT	
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-009]
+		COMMENT The function enables FIFO 0 message pending Interrupt by calling CanItConfig function
+		COMMENT with parameters CAN1,CAN_IT_FMP0 and ENABLE.
+		COMMENT Equivalence Class 47
+		COMMENT </TD>
+
+		ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+               --Holds the reference to receive queue 
+               VAR e_channel,       init = NOC,               ev = init
+               
+              --temporary variable to hold rx_message structure members
+               STRUCTURE PTU_rx_message, init= {StdId=>0, ExtId =>0x08A0FFFF, IDE =>0, RTR=>1, DLC=>9, Data=>{others=>0x12},FMI=>0},
+              &                             ev = init
+                    
+              --variable to hold ps_destination structure members
+              STRUCTURE ps_destination,           init = { lcc =>NOC, sID =>{ BID =>{ sfid =>1, rsd =>1, lcl =>1, pvt =>1, doc =>1, rci =>1,spare=>1 }}, 
+                &        u8PaySize =>9, u8PayLoad =>{ others =>1 }  }  ,
+                &        ev = { lcc =>NOC, sID =>{ BID =>{ sfid =>20, rsd =>0, lcl =>0, pvt =>0, doc =>16383, rci =>3,spare=>0 }  } , 
+                &        u8PaySize =>8, u8PayLoad =>{ others =>18 }  }           
+
+            
+            COMMENT INPUT/OUTPUT SECTION :
+          
+				--Variable intialized to test DoNvicConfig function since A825Init and A825GetMessage is called 212 times each
+				VAR PTU_stub_call,                      init = DEC_ONE,         ev = 3
+
+				--Holds the member values of structure nvic_init_struct
+				VAR PTU_nvic_init_struct1.NVIC_IRQChannel,                      init = ADC_IRQN,        ev = CAN1_RX0_IRQN
+				VAR PTU_nvic_init_struct1.NVIC_IRQChannelPreemptionPriority,    init = DEC_ONE,         ev = HEX_ZERO
+				VAR PTU_nvic_init_struct1.NVIC_IRQChannelSubPriority ,          init = DEC_ONE,         ev = HEX_ZERO
+				VAR PTU_nvic_init_struct1.NVIC_IRQChannelCmd ,                  init = DISABLE,         ev = ENABLE 
+
+				VAR PTU_nvic_init_struct2.NVIC_IRQChannel,                      init = ADC_IRQN,        ev = CAN1_TX_IRQN
+				VAR PTU_nvic_init_struct2.NVIC_IRQChannelPreemptionPriority,    init = DEC_ONE,         ev = HEX_ZERO
+				VAR PTU_nvic_init_struct2.NVIC_IRQChannelSubPriority ,          init = DEC_ONE,         ev = HEX_ZERO
+				VAR PTU_nvic_init_struct2.NVIC_IRQChannelCmd ,                  init = DISABLE,         ev = ENABLE         
+
+					--Holds the member values of structure gpio_init_structure
+				VAR PTU_gpio_init_structure.GPIO_Pin,                           init = 0,                       ev = 0x1800
+				VAR PTU_gpio_init_structure.GPIO_Mode,                          init = GPIO_MODE_IN,            ev = GPIO_MODE_AF
+				VAR PTU_gpio_init_structure.GPIO_Speed,                         init = GPIO_SPEED_2MHZ,         ev = GPIO_SPEED_50MHZ
+				VAR PTU_gpio_init_structure.GPIO_OType,                         init = GPIO_OTYPE_OD,           ev = GPIO_OTYPE_PP
+				VAR PTU_gpio_init_structure.GPIO_PuPd,                          init = GPIO_PUPD_NOPULL,        ev = GPIO_PUPD_UP   
+
+				--Holds the member values of structure can_init_structure
+				VAR PTU_can_init_structure.CAN_TTCM,                            init = ENABLE,          ev = DISABLE
+				VAR PTU_can_init_structure.CAN_ABOM,                            init = DISABLE,         ev = ENABLE
+				VAR PTU_can_init_structure.CAN_AWUM,                            init = ENABLE,          ev = DISABLE
+				VAR PTU_can_init_structure.CAN_NART,                            init = ENABLE,          ev = DISABLE
+				VAR PTU_can_init_structure.CAN_RFLM,                            init = ENABLE,          ev = DISABLE
+				VAR PTU_can_init_structure.CAN_TXFP,                            init = ENABLE,          ev = DISABLE
+				VAR PTU_can_init_structure.CAN_Mode,                            init = CAN_MODESTATUS_FAILED, 
+				&																						ev = CAN_MODE_NORMAL
+				VAR PTU_can_init_structure.CAN_SJW,                             init = 1,               ev = CAN_SJW_1TQ
+				VAR PTU_can_init_structure.CAN_BS1,                             init = 1,               ev = CAN_BS1_15TQ
+				VAR PTU_can_init_structure.CAN_BS2,                             init = 1,               ev = CAN_BS2_5TQ
+				VAR PTU_can_init_structure.CAN_Prescaler,                       init = DEC_ONE,         ev = DEC_TWO
+
+				--Holds the member values of structure can_filter_init_structure
+				VAR PTU_can_filter_init_structure.CAN_FilterNumber,                 init = 1,               ev = DEC_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterMode,                   init = 1,                   ev = CAN_FILTERMODE_IDMASK
+				VAR PTU_can_filter_init_structure.CAN_FilterScale,                  init = CAN_FILTERSCALE_16BIT,                   ev = CAN_FILTERSCALE_32BIT
+				VAR PTU_can_filter_init_structure.CAN_FilterIdHigh,                 init = 1,                   ev = HEX_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterIdLow,                  init = 1,                   ev = HEX_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterMaskIdHigh,             init = 1,                   ev = HEX_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterMaskIdLow,              init = 1,                   ev = HEX_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterFIFOAssignment,         init = 1,                   ev = DEC_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterActivation,             init = DISABLE,             ev = ENABLE     
+
+            COMMENT OUTPUT SECTION :
+             
+				 --Variables tested for function RxQueueRemove    
+				VAR ret_A825GetMessage,                                           init= A825_RX_QUEUE_EMPTY , ev= A825_RX_OK
+
+                    --Stub Calls
+            SIMUL
+				--Sets up the CAN receive interrupt vector
+				STUB IntrInstall(INTR_CAN_1_RX_0)
+
+				--Sets up the CAN transmit interrupt vector.
+				STUB IntrInstall(INTR_CAN_1_TX)
+
+
+				 --Initializes the NVIC Peripheral
+				STUB NvicInit 1..2=>()
+
+
+				--GpioPinAFConfig Connects CAN pins
+
+				STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE11, GPIO_AF_CAN1)
+				--GpioPinAFConfig Connects CAN pins
+				STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE12, GPIO_AF_CAN1)
+
+				--Enables GPIO clock
+				STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+
+				--Configures CAN RX and TX pins
+				STUB GpioInit (GPIOA)
+
+				--Enables CAN clock
+				STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_CAN1, ENABLE)
+
+				--Initializes CAN register 
+				STUB CanDeInit(CAN1)
+
+				--Initializes CAN cell
+				STUB CanInitApp(CAN1)0
+
+				--Initializes CAN Filter
+				STUB CanFilterInit()
+
+
+
+				--Enters the interrupt service routine
+				STUB OsIntEnter ()
+
+				--Retrieves the can messagge
+				STUB CanReceive (CAN1, CAN_FIFO0)    
+
+				--Exits the interrupt service routine
+				STUB OsIntExit ()
+
+				--Disables FIFO 0 message pending Interrupt
+				STUB CanItConfig (CAN1,CAN_IT_TME, DISABLE) 
+
+				--Enables FIFO 0 message pending Interrupt
+				STUB  CanItConfig (CAN1,  CAN_IT_FMP0, ENABLE)
+
+				--Enables FIFO 0 message pending Interrupt
+				STUB  CanItConfig (CAN1, CAN_IT_FMP0, DISABLE)
+
+				--Enables FIFO 0 message pending Interrupt
+				STUB  CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+
+    	 END SIMUL                
+			--Calling A825Init function to increment rx counter 
+			#A825Init();        
+        
+        --Calling Unit Under Test
+        #ret_A825GetMessage = A825GetMessage(e_channel, &ps_destination);
+             
+           
+     END ELEMENT
+		
+		--To make Message to receive(rx_head of ps_which_q) is in the message queue size range(rxbuf[CAN_R_Q_SIZE] of ps_which_q).  
+		--Initializing stub count back to zero 
+		#for(PTU_i=0;PTU_i<160;PTU_i++)
+		#   A825Init();
+	                    
+	                    
+	   --Calling Unit Under Test
+	   #for(PTU_i=0;PTU_i<160;PTU_i++)
+	   #ret_A825GetMessage = A825GetMessage(e_channel, &ps_destination);
+	   
+	 --to Verify for the 161th time call for A825GetMessage. 
+	 
+	 --SECOND ELEMENT BLOCK
+	 ELEMENT
+	
+			COMMENT INPUT section :
+
+			   --Holds the reference to receive queue 
+			   VAR e_channel,       init = NOC,               ev = init
+
+			  --temporary variable to hold rx_message structure members
+			   STRUCTURE PTU_rx_message, init= {StdId=>0, ExtId =>0x08A0FFFF, IDE =>0, RTR=>1, DLC=>9, Data=>{others=>0x12},FMI=>0},
+			  &                             ev = init
+
+			  --variable to hold ps_destination structure members
+			  STRUCTURE ps_destination,           init = { lcc =>NOC, sID =>{ BID =>{ sfid =>1, rsd =>1, lcl =>1, pvt =>1, doc =>1, rci =>1,spare=>1 }}, 
+				&        u8PaySize =>9, u8PayLoad =>{ others =>1 }  }  ,
+				&        ev = { lcc =>NOC, sID =>{ BID =>{ sfid =>20, rsd =>0, lcl =>0, pvt =>0, doc =>16383, rci =>3,spare=>0 }  } , 
+				&        u8PaySize =>8, u8PayLoad =>{ others =>18 }  }           
+
+
+			COMMENT INPUT/OUTPUT section :
+
+				--Variable used for Loop count 
+				VAR PTU_stub_call,                      init = DEC_ONE,         ev = 3
+
+				--Holds the member values of structure nvic_init_struct
+				VAR PTU_nvic_init_struct1.NVIC_IRQChannel,                      init = ADC_IRQN,        ev = CAN1_RX0_IRQN
+				VAR PTU_nvic_init_struct1.NVIC_IRQChannelPreemptionPriority,    init = DEC_ONE,         ev = HEX_ZERO
+				VAR PTU_nvic_init_struct1.NVIC_IRQChannelSubPriority ,          init = DEC_ONE,         ev = HEX_ZERO
+				VAR PTU_nvic_init_struct1.NVIC_IRQChannelCmd ,                  init = DISABLE,         ev = ENABLE 
+
+				VAR PTU_nvic_init_struct2.NVIC_IRQChannel,                      init = ADC_IRQN,        ev = CAN1_TX_IRQN
+				VAR PTU_nvic_init_struct2.NVIC_IRQChannelPreemptionPriority,    init = DEC_ONE,         ev = HEX_ZERO
+				VAR PTU_nvic_init_struct2.NVIC_IRQChannelSubPriority ,          init = DEC_ONE,         ev = HEX_ZERO
+				VAR PTU_nvic_init_struct2.NVIC_IRQChannelCmd ,                  init = DISABLE,         ev = ENABLE         
+
+						--Holds the member values of structure gpio_init_structure
+				VAR PTU_gpio_init_structure.GPIO_Pin,                           init = 0,                       ev = 0x1800
+				VAR PTU_gpio_init_structure.GPIO_Mode,                          init = GPIO_MODE_IN,            ev = GPIO_MODE_AF
+				VAR PTU_gpio_init_structure.GPIO_Speed,                         init = GPIO_SPEED_2MHZ,         ev = GPIO_SPEED_50MHZ
+				VAR PTU_gpio_init_structure.GPIO_OType,                         init = GPIO_OTYPE_OD,           ev = GPIO_OTYPE_PP
+				VAR PTU_gpio_init_structure.GPIO_PuPd,                          init = GPIO_PUPD_NOPULL,        ev = GPIO_PUPD_UP   
+
+				--Holds the member values of structure can_init_structure
+				VAR PTU_can_init_structure.CAN_TTCM,                            init = ENABLE,          ev = DISABLE
+				VAR PTU_can_init_structure.CAN_ABOM,                            init = DISABLE,         ev = ENABLE
+				VAR PTU_can_init_structure.CAN_AWUM,                            init = ENABLE,          ev = DISABLE
+				VAR PTU_can_init_structure.CAN_NART,                            init = ENABLE,          ev = DISABLE
+				VAR PTU_can_init_structure.CAN_RFLM,                            init = ENABLE,          ev = DISABLE
+				VAR PTU_can_init_structure.CAN_TXFP,                            init = ENABLE,          ev = DISABLE
+				VAR PTU_can_init_structure.CAN_Mode,                            init = CAN_MODESTATUS_FAILED,   
+				&																						ev = CAN_MODE_NORMAL
+				VAR PTU_can_init_structure.CAN_SJW,                             init = 1,               ev = CAN_SJW_1TQ
+				VAR PTU_can_init_structure.CAN_BS1,                             init = 1,               ev = CAN_BS1_15TQ
+				VAR PTU_can_init_structure.CAN_BS2,                             init = 1,               ev = CAN_BS2_5TQ
+				VAR PTU_can_init_structure.CAN_Prescaler,                       init = DEC_ONE,         ev = DEC_TWO
+
+				--Holds the member values of structure can_filter_init_structure
+				VAR PTU_can_filter_init_structure.CAN_FilterNumber,                 init = 1,               ev = DEC_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterMode,                   init = 1,                   ev = CAN_FILTERMODE_IDMASK
+				VAR PTU_can_filter_init_structure.CAN_FilterScale,                  init = CAN_FILTERSCALE_16BIT,                   ev = CAN_FILTERSCALE_32BIT
+				VAR PTU_can_filter_init_structure.CAN_FilterIdHigh,                 init = 1,                   ev = HEX_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterIdLow,                  init = 1,                   ev = HEX_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterMaskIdHigh,             init = 1,                   ev = HEX_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterMaskIdLow,              init = 1,                   ev = HEX_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterFIFOAssignment,         init = 1,                   ev = DEC_ZERO
+				VAR PTU_can_filter_init_structure.CAN_FilterActivation,             init = DISABLE,             ev = ENABLE     
+
+			COMMENT OUTPUT section :
+			
+				--Variable used to hold return value of Unit under test
+				VAR ret_A825GetMessage,              init = A825_RX_QUEUE_EMPTY,              ev = A825_RX_OK  
+
+							--Stub Calls
+				SIMUL
+				--Sets up the CAN receive interrupt vector
+				STUB IntrInstall(INTR_CAN_1_RX_0)
+
+				--Sets up the CAN transmit interrupt vector.
+				STUB IntrInstall(INTR_CAN_1_TX)
+
+				 --Initializes the NVIC Peripheral
+				STUB NvicInit 1..2=>()
+
+
+				STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE11, GPIO_AF_CAN1)
+				--GpioPinAFConfig Connects CAN pins
+				STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE12, GPIO_AF_CAN1)
+
+				--Enables GPIO clock
+				STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+
+				--Configures CAN RX and TX pins
+				STUB GpioInit (GPIOA)
+
+				--Enables CAN clock
+				STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_CAN1, ENABLE)
+
+				--Initializes CAN register 
+				STUB CanDeInit(CAN1)
+
+				--Initializes CAN cell
+				STUB CanInitApp(CAN1)0
+
+				--Initializes CAN Filter
+				STUB CanFilterInit()
+
+				--Enters the interrupt service routine
+				STUB OsIntEnter()
+
+				--Retrieves the can messagge
+				STUB CanReceive(CAN1, CAN_FIFO0)    
+
+				--Exits the interrupt service routine
+				STUB OsIntExit()
+
+
+				--Disables FIFO 0 message pending Interrupt
+				STUB CanItConfig (CAN1,CAN_IT_TME, DISABLE) 
+
+				--Enables FIFO 0 message pending Interrupt
+				STUB  CanItConfig (CAN1,  CAN_IT_FMP0, ENABLE)
+
+				--Enables FIFO 0 message pending Interrupt
+				STUB  CanItConfig (CAN1, CAN_IT_FMP0, DISABLE)
+
+				--Enables FIFO 0 message pending Interrupt
+				STUB  CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+			
+    END SIMUL  
+
+   			--Calling A825Init function to increment rx counter 
+       		 #A825Init();        
+        
+       		--Calling Unit Under Test
+        	#ret_A825GetMessage = A825GetMessage(e_channel, &ps_destination);
+         
+	END ELEMENT
+  END TEST -- TEST 4
+    
+    
+    TEST 5
+	FAMILY nominal
+
+		COMMENT Test Description
+		COMMENT <TD> 
+		COMMENT  [hducommfarinc825-A825GetMessage-CB-LLR-001]
+		COMMENT The function retrieves a message from the specified receive queue by calling  RxQueueRemove function 
+		COMMENT with parameters ps_destination and reference to NSC receive queue when the channel(e_channel) is NSC.
+		COMMENT Equivalence Class 67
+		COMMENT
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-005]
+		COMMENT The function shall set next message to receive (RxHead of ps_which_q) to the
+		COMMENT  Rx buffer (RxBuf of ps_which_q) when the next message to receive is in the message queue 
+		COMMENT  size range (RxBuf[CAN_R_Q_SIZE] of ps_which_q).
+		COMMENT Equivalence Class 74
+		COMMENT
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-009]
+		COMMENT The function translates CAN MESSAGE to ARINC 825 Broadcast MESSAGE when the message is a broadcast message 
+		COMMENT i.e. LCC of ARINC 825 message is NSC.
+		COMMENT Equivalence Class 77
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-011]
+		COMMENT The Function does nothing
+		COMMENT when number of bytes of payload (u8PaySize) of ARINC 825 message is equal to  BYTES_OF_PYLD
+		COMMENT In  ELEMENT BLOCK 2
+		COMMENT Equivalence Class 78
+		COMMENT 
+		COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-011]
+		COMMENT The Function does nothing
+		COMMENT when number of bytes of payload (u8PaySize) of ARINC 825 message is Less than BYTES_OF_PYLD
+		COMMENT In ELEMENT BLOCK 1
+		COMMENT Equivalence Class 80
+		COMMENT 
+		COMMENT [hducommfarinc825-A825Init-CB-LLR-001]
+		COMMENT The function performs NVIC configuration by calling DoNvicConfig function.
+		COMMENT Equivalence Class 38
+		COMMENT 
+		COMMENT [hducommfarinc825-A825Init-CB-LLR-002]
+		COMMENT The function performs CAN configuration by calling DoCanConfig function.
+		COMMENT Equivalence Class 39
+		COMMENT 
+		COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-001]
+		COMMENT The function sets up the CAN1 receive interrupt vector by calling the function IntrInstall
+		COMMENT with parameters INTR_CAN_1_RX_0 and reference to function ReceiveMessage.
+		COMMENT Equivalence Class 48
+		COMMENT 
+		COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-002]
+		COMMENT The function sets up the CAN1 transmit interrupt vector by calling the function IntrInstall
+		COMMENT with parameters INTR_CAN_1_TX and reference to function BufferCheck.
+		COMMENT Equivalence Class 49
+		COMMENT 
+		COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-003]
+		COMMENT The function does the following
+		COMMENT - sets irq channel of NVIC init structure to CAN1_RX0_IRQN
+		COMMENT - sets pre-emption priority, sub-priority level for the irq channel CAN1_RX0_IRQN of NVIC init structure to HEX_ZERO
+		COMMENT - sets irq channel CAN1_RX0_IRQN defined of NVIC init structure to ENABLE
+		COMMENT - initializes the NVIC peripheral for the irq channel CAN1_RX0_IRQN by calling the function NvicInit 
+		COMMENT   with parameter reference to NVIC init structure.
+		COMMENT Equivalence Class 50
+		COMMENT 
+		COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-004]
+		COMMENT The function does the following
+		COMMENT - sets irq channel of NVIC init structure to CAN1_TX_IRQN
+		COMMENT - sets pre-emption priority, sub-priority level for the irq channel CAN1_TX_IRQN of NVIC init structure to DEC_ZERO
+		COMMENT - sets irq channel CAN1_TX_IRQN defined of NVIC init structure to ENABLE
+		COMMENT - initializes the NVIC peripheral for the irq channel CAN1_TX_IRQN by calling the function NvicInit 
+		COMMENT   with parameter reference to NVIC init structure.
+		COMMENT Equivalence Class 50
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-001]
+		COMMENT The function enables GPIO clock by calling the function RccAhb1PeriphClockCmd 
+		COMMENT with parameters RCC_AHB1PERIPH_GPIOA and ENABLE.
+		COMMENT Equivalence Class 40
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-002]
+		COMMENT The function connects CAN1 pins to AF9(PA11) by calling the function GpioPinAFConfig 
+		COMMENT with parameters GPIOA, GPIO_PINSOURCE11 and GPIO_AF_CAN1.
+		COMMENT Equivalence Class 41
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-003]
+		COMMENT The function connects CAN pins to AF9 (PA12) by calling the function GpioPinAFConfig 
+		COMMENT with parameters GPIOA, GPIO_PINSOURCE12 and GPIO_AF_CAN1.
+		COMMENT Equivalence Class 41
+		COMMENT
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-004]
+		COMMENT - set GPIO_Pin of GPIO Init structure to HW_GPIOA_CAN_RX1 | HW_GPIOA_CAN_TX1
+		COMMENT - set operating mode(GPIO_Mode) for the selected pin of GPIO Init structure to GPIO_MODE_AF
+		COMMENT - set speed(GPIO_Speed) for the selected pin of GPIO Init structure to GPIO_SPEED_50MHZ
+		COMMENT - set operating output type(GPIO_OType) for the selected pin of GPIO Init structure to GPIO_OTYPE_PP
+		COMMENT - set operating Pull-up/Pull down(GPIO_PuPd) for the selected pin of GPIO Init structure to GPIO_PUPD_UP
+		COMMENT - initializes the GPIOA peripheral by calling GpioInit function with parameters GPIOA and reference to GPIO Init structure
+		COMMENT Equivalence Class 42
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-005]
+		COMMENT The function enables CAN1 clock by calling the function RccApb1PeriphClockCmd with parameters RCC_APB1PERIPH_CAN1 and ENABLE.
+		COMMENT Equivalence Class 43
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-006]
+		COMMENT The function de-initializes the CAN1 peripheral registers by calling the function CanDeInit with parameter CAN1.
+		COMMENT Equivalence Class 44
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-007]
+		COMMENT - disable time triggered communication (CAN_TTCM) of CAN Init structure
+		COMMENT - enable automatic bus-off management (CAN_ABOM) of CAN Init structure
+		COMMENT - disable the automatic wake-up mode (CAN_AWUM) of CAN Init structure
+		COMMENT - disable the non-automatic retransmission mode (CAN_NART) of CAN Init structure
+		COMMENT - disable the Receive FIFO Locked mode (CAN_RFLM) of CAN Init structure
+		COMMENT - disable the transmit FIFO priority (CAN_TXFP) of CAN Init structure
+		COMMENT - set CAN operating mode (CAN_Mode) of CAN Init structure to CAN_MODE_NORMAL
+		COMMENT - set CAN synchronization jump width (CAN_SJW) of CAN Init structure to CAN_SJW_1TQ
+		COMMENT - set time quanta in Bit Segment 1 (CAN_BS1) of CAN Init structure to CAN_BS1_15TQ
+		COMMENT - set time quanta in Bit Segment 2 (CAN_BS2) of CAN Init structure to CAN_BS2_5TQ
+		COMMENT - set length of a time quantum (CAN_Prescaler) of CAN Init structure to DEC_TWO
+		COMMENT - initialize the CAN peripheral registers by calling the function CanInitApp with parameters CAN1 and reference to CAN init structure.
+		COMMENT Equvivalence Class 45
+		COMMENT 
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-008]
+		COMMENT The function does the following
+		COMMENT - set filter(CAN_FilterNumber) which will be initialized of CAN filter Init structure to HEX_ZERO
+		COMMENT - set filter mode (CAN_FilterMode) to be initialized of CAN filter
+		COMMENT     Init structure to CAN_FILTERMODE_IDMASK
+		COMMENT - set filter scale(CAN_FilterScale) of CAN filter Init structure to CAN_FILTERSCALE_32BIT
+		COMMENT - set filter identification number high(CAN_FilterIdHigh), filter identification number low(CAN_FilterIdLow), 
+		COMMENT   filter mask number high(CAN_FilterMaskIdHigh), filter mask number 
+		COMMENT   low (CAN_FilterMaskIdLow) of CAN filter Init structure to HEX_ZERO
+		COMMENT - set FIFO assigned (CAN_FilterFIFOAssignment) to the filter of CAN filter Init structure to HEX_ZERO
+		COMMENT - set can filter activation (CAN_FilterActivation) of CAN filter Init structure to ENABLE
+		COMMENT - configures the CAN reception filter by calling the function CanFilterInit with parameter reference to CAN filter init structure.
+		COMMENT Equivalence Class 46
+		COMMENT     
+		COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-009]
+		COMMENT The function enables FIFO 0 message pending Interrupt by calling CanItConfig function
+		COMMENT with parameters CAN1,CAN_IT_FMP0 and ENABLE.
+		COMMENT Equivalence Class 47
+		COMMENT </TD>
+
+		ELEMENT
+	        
+				COMMENT INPUT SECTION:
+	
+					--Holds the reference to receive queue 
+					VAR e_channel,                      init = NSC,                         ev = init
+	
+					--temporary variable to hold rx_message structure members
+	
+					STRUCTURE PTU_rx_message,           init= {StdId=>0, ExtId =>0x10000000, IDE =>0, RTR=>1, DLC=>0, Data=>{others=>0x12},FMI=>0},
+            &                                                                       ev = init   
+
+            --variable to hold ps_destination structure members
+            STRUCTURE ps_destination,           init = { lcc =>NSC,sID =>{ BID =>{ sfid =>1, rsd =>1, lcl =>1, pvt =>1, doc =>1,rci=>1,spare=>0 }  } , u8PaySize=>1,u8PayLoad =>{ others =>1 }  }  ,                                    
+            &                           ev = { lcc =>NSC,sID =>{ BID =>{ sfid =>0, rsd =>0, lcl =>0, pvt =>0, doc =>0, rci =>0,spare=>0 }  } , 
+            &                                   u8PaySize=>0,u8PayLoad =>{ others =>0 }  }
+                    
+				COMMENT INPUT/OUTPUT SECTION:   
+	
+					--Variables tested for function RxQueueRemove       
+	
+					VAR ret_A825GetMessage,                                             init = A825_RX_QUEUE_EMPTY, ev = A825_RX_OK
+	
+					--Variable intialized to test DoNvicConfig function
+					VAR PTU_stub_call,                                                  init = DEC_ONE,             ev = DEC_ONE+2
+	
+					--Holds the member values of structure can_filter_init_structure
+					VAR PTU_nvic_init_struct1.NVIC_IRQChannel,                          init = ADC_IRQN,            ev = CAN1_RX0_IRQN
+					VAR PTU_nvic_init_struct1.NVIC_IRQChannelPreemptionPriority,        init = DEC_ONE,             ev = HEX_ZERO
+					VAR PTU_nvic_init_struct1.NVIC_IRQChannelSubPriority,               init = DEC_ONE,             ev = HEX_ZERO
+					VAR PTU_nvic_init_struct1.NVIC_IRQChannelCmd,                       init = DISABLE,             ev = ENABLE 
+	
+					VAR PTU_nvic_init_struct2.NVIC_IRQChannel,                          init = ADC_IRQN,            ev = CAN1_TX_IRQN
+					VAR PTU_nvic_init_struct2.NVIC_IRQChannelPreemptionPriority,        init = DEC_ONE,             ev = HEX_ZERO
+					VAR PTU_nvic_init_struct2.NVIC_IRQChannelSubPriority ,              init = DEC_ONE,             ev = HEX_ZERO
+					VAR PTU_nvic_init_struct2.NVIC_IRQChannelCmd,                       init = DISABLE,             ev = ENABLE         
+	
+					--Holds the member values of structure gpio_init_structure
+					VAR PTU_gpio_init_structure.GPIO_Pin,                               init = 0,                   ev = 0x1800
+					VAR PTU_gpio_init_structure.GPIO_Mode,                              init = GPIO_MODE_IN,        ev = GPIO_MODE_AF
+					VAR PTU_gpio_init_structure.GPIO_Speed,                             init = GPIO_SPEED_2MHZ,     ev = GPIO_SPEED_50MHZ
+					VAR PTU_gpio_init_structure.GPIO_OType,                             init = GPIO_OTYPE_OD,       ev = GPIO_OTYPE_PP
+					VAR PTU_gpio_init_structure.GPIO_PuPd,                              init = GPIO_PUPD_NOPULL,    ev = GPIO_PUPD_UP   
+	
+					--Holds the member values of structure can_init_structure
+					VAR PTU_can_init_structure.CAN_TTCM,                                init = ENABLE,              ev = DISABLE
+					VAR PTU_can_init_structure.CAN_ABOM,                                init = DISABLE,             ev = ENABLE
+					VAR PTU_can_init_structure.CAN_AWUM,                                init = ENABLE,              ev = DISABLE
+					VAR PTU_can_init_structure.CAN_NART,                                init = ENABLE,              ev = DISABLE
+					VAR PTU_can_init_structure.CAN_RFLM,                                init = ENABLE,              ev = DISABLE
+					VAR PTU_can_init_structure.CAN_TXFP,                                init = ENABLE,              ev = DISABLE
+					VAR PTU_can_init_structure.CAN_Mode,                                init = CAN_MODESTATUS_FAILED,
+					&																								ev = CAN_MODE_NORMAL
+					VAR PTU_can_init_structure.CAN_SJW,                                 init = 1,                   ev = CAN_SJW_1TQ
+					VAR PTU_can_init_structure.CAN_BS1,                                 init = 1,                   ev = CAN_BS1_15TQ
+					VAR PTU_can_init_structure.CAN_BS2,                                 init = 1,                   ev = CAN_BS2_5TQ
+					VAR PTU_can_init_structure.CAN_Prescaler,                           init = DEC_ONE,             ev = DEC_TWO
+	
+					--Holds the member values of structure can_filter_init_structure
+					VAR PTU_can_filter_init_structure.CAN_FilterNumber,                 init = 1,                   ev = DEC_ZERO
+					VAR PTU_can_filter_init_structure.CAN_FilterMode,                   init = 1,                   ev = CAN_FILTERMODE_IDMASK
+					VAR PTU_can_filter_init_structure.CAN_FilterScale,                  init = CAN_FILTERSCALE_16BIT,                   ev = CAN_FILTERSCALE_32BIT
+					VAR PTU_can_filter_init_structure.CAN_FilterIdHigh,                 init = 1,                   ev = HEX_ZERO
+					VAR PTU_can_filter_init_structure.CAN_FilterIdLow,                  init = 1,                   ev = HEX_ZERO
+					VAR PTU_can_filter_init_structure.CAN_FilterMaskIdHigh,             init = 1,                   ev = HEX_ZERO
+					VAR PTU_can_filter_init_structure.CAN_FilterMaskIdLow,              init = 1,                   ev = HEX_ZERO
+					VAR PTU_can_filter_init_structure.CAN_FilterFIFOAssignment,         init = 1,                   ev = DEC_ZERO
+					VAR PTU_can_filter_init_structure.CAN_FilterActivation,             init = DISABLE,             ev = ENABLE     
+	
+				COMMENT OUTPUT SECTION:
+					--None
+	
+	        --Stub Calls
+	        SIMUL
+	            
+	            --Sets up the CAN receive interrupt vector
+	            STUB IntrInstall (INTR_CAN_1_RX_0)
+	            
+	            --Sets up the CAN transmit interrupt vector.
+	            STUB IntrInstall (INTR_CAN_1_TX)
+	            
+	            --Initializes the NVIC Peripheral
+	            STUB NvicInit 1..2=>()
+	            
+	            --Enables GPIO clock
+	            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+	            
+	            --GpioPinAFConfig Connects CAN pins
+	            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE11, GPIO_AF_CAN1)
+	            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE12, GPIO_AF_CAN1)    
+	            
+	            --Configures CAN RX and TX pins
+	            STUB GpioInit (GPIOA)
+	            
+	            --Enables CAN clock
+	            STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_CAN1, ENABLE)
+	            
+	            --Initializes CAN register 
+	            STUB CanDeInit (CAN1)
+	            
+	            --Initializes CAN cell
+	            STUB CanInitApp (CAN1)0
+	            
+	            --Initializes CAN Filter
+	            STUB CanFilterInit ()   
+	
+	            --Enters the interrupt service routine
+	            STUB OsIntEnter()
+	
+	            --Retrieves the can messagge
+	            STUB CanReceive (CAN1, CAN_FIFO0)    
+	            
+	            --Exits the interrupt service routine
+	            STUB OsIntExit()
+	
+	            --Disables the Can Transmit Interrupt
+	            STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE) 
+	                                                                            
+	            --Enables FIFO 0 message pending Interrupt
+	            STUB CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+	            
+	            --Disables FIFO 0 message pending Interrupt
+	            STUB CanItConfig (CAN1, CAN_IT_FMP0, DISABLE)           
+	            
+	            --Enables FIFO 0 message pending Interrupt
+	            STUB CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+	            
+	        END SIMUL
+	    
+	        --Calling A825Init function to increment rx counter 
+	        #A825Init();        
+	        
+	        --Calling Unit Under Test
+	        #ret_A825GetMessage = A825GetMessage(e_channel, &ps_destination);
+	                
+	        
+	    END ELEMENT
+	
+    -- To choose NOC channel
+    #PTU_rx_message.ExtId =0x08000000;
+    -- To increment ps_which_q->rx_head 160 times 
+    -- Second Element block is used to verify 161st loop 
+    #for(PTU_i=0;PTU_i<160;PTU_i++)
+    #{
+    #A825Init();
+    #}
+			-- Second Element block is used to verify 161st loop 
+			
+	    ELEMENT 
+	        
+	        COMMENT INPUT SECTION:
+	        
+	            --Holds the reference to receive queue 
+	            VAR e_channel,                      init = NSC,                                 ev = init
+	
+	            --temporary variable to hold rx_message structure members
+	            STRUCTURE PTU_rx_message,           init= {StdId=>0, ExtId =>0x10000000, IDE =>0, RTR=>1, DLC=>1, Data=>{others=>0x12},FMI=>0},
+	            &                                                                               ev = init
+	
+	        COMMENT INPUT/OUTPUT SECTION:   
+	        
+            --Variables tested for function RxQueueRemove
+            STRUCTURE ps_destination,   init = { lcc =>NOC, sID =>{ BID =>{ sfid =>1, rsd =>1, lcl =>1, pvt =>1, doc =>1, rci =>1,spare=>0 }}, 
+            &                                   u8PaySize =>8, u8PayLoad =>{ others =>1 }  }  ,
+            &
+            & ev = { lcc =>NSC,sID =>{ BID =>{  sfid =>0, rsd =>0, lcl =>0, pvt =>0, doc =>0, rci =>0,spare=>0 } } , 
+            &                                   u8PaySize =>1, u8PayLoad =>{1=>0,2=>0,3=>0,4=>0,5=>0,6=>0,7=>0, others =>18 }  }
+
+            VAR ret_A825GetMessage,             init = A825_RX_QUEUE_EMPTY,                 ev = A825_RX_OK
+	
+	
+	            --Variable intialized to test DoNvicConfig function
+	            VAR PTU_stub_call,                      init = DEC_ONE,                             ev = DEC_ONE+2          
+	
+	        COMMENT OUTPUT SECTION:
+	        
+	            --None
+	
+	        --Stub Calls
+	        SIMUL
+	        
+	            --Sets up the CAN receive interrupt vector
+	            STUB IntrInstall (INTR_CAN_1_RX_0)
+	            
+	            --Sets up the CAN transmit interrupt vector.
+	            STUB IntrInstall (INTR_CAN_1_TX)
+	            
+	            --Initializes the NVIC Peripheral
+	            STUB NvicInit 1..2=>()
+	            
+	            --Enables GPIO clock
+	            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+	            
+	            --GpioPinAFConfig Connects CAN pins
+	            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE11, GPIO_AF_CAN1)
+	            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE12, GPIO_AF_CAN1)    
+	            
+	            --Configures CAN RX and TX pins
+	            STUB GpioInit (GPIOA)
+	            
+	            --Enables CAN clock
+	            STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_CAN1, ENABLE)
+	            
+	            --Initializes CAN register 
+	            STUB CanDeInit (CAN1)
+	            
+	            --Initializes CAN cell
+	            STUB CanInitApp (CAN1)0
+	            
+	            --Initializes CAN Filter
+	            STUB CanFilterInit ()
+	            
+	            --Disables the Can Transmit Interrupt
+	            STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE) 
+	
+	            --Enters the interrupt service routine
+	            STUB OsIntEnter()
+	
+	            --Retrieves the can messagge
+	            STUB CanReceive (CAN1, CAN_FIFO0)    
+	            
+	            --Exits the interrupt service routine
+	            STUB OsIntExit()
+	                                                                            
+	            --Enables FIFO 0 message pending Interrupt
+	            STUB CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+	            
+	            --Disables FIFO 0 message pending Interrupt
+	            STUB CanItConfig (CAN1, CAN_IT_FMP0, DISABLE)           
+	            
+	             --Enables FIFO 0 message pending Interrupt
+		     STUB CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+	            
+	                        
+	        END SIMUL
+	    
+	        --Calling A825Init function to increment rx counter 
+	        #A825Init();        
+	        
+	        --Calling Unit Under Test
+	        #ret_A825GetMessage = A825GetMessage(e_channel, &ps_destination);
+	                        
+	    END ELEMENT
+	    
+END TEST -- TEST 5
+
+--TEST 6
+--FAMILY robustness
+--
+--    COMMENT Test Description 
+--    COMMENT <TD>
+--    COMMENT [hducommfarinc825-A825GetMessage-CB-LLR-003]
+--    COMMENT The function is tested by passing invalid reference to function parameter
+--    COMMENT 'ps_destination'
+--    COMMENT Equivalence Class 84
+--    COMMENT </TD>    
+--
+--    ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--
+--            VAR e_channel,     init = EEC,     ev = init   
+--
+--        COMMENT OUTPUT SECTION:
+--
+--            --None
+--
+--        COMMENT INPUT/OUTPUT SECTION
+--
+--            --None
+--
+--        -- Stub Calls :
+--        SIMUL
+--
+--            -- None 
+--
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test 
+--        # ret_A825GetMessage = A825GetMessage(e_channel,NULL);
+--
+--      END ELEMENT
+--
+--END TEST  -- TEST 6
+
+
+TEST 7
+FAMILY nominal
+
+	COMMENT
+	COMMENT Test Description 
+	COMMENT <TD>
+	COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-001] 
+	COMMENT The function shall return The function shall return A825_RX_QUEUE_EMPTY when the number of messages in the Rx queue is DEC_ZERO when the number of messages in the Rx queue is DEC_ZERO
+	COMMENT 
+	COMMENT Equivalence Class 72	
+	COMMENT [hducommfarinc825-RxQueueRemove-CB-LLR-005] 
+	COMMENT The function shall set next message to receive (RxHead of ps_which_q) to the Rx buffer (RxBuf of ps_which_q) 
+	COMMENT when the next message to receive is in the message queue size range (RxBuf[CAN_R_Q_SIZE] of ps_which_q).
+	COMMENT 
+	COMMENT Equivalence Class 75        
+	COMMENT </TD>
+
+	ELEMENT
+      
+		COMMENT INPUT SECTION :
+                
+			--Holds the reference to receive queue 
+			VAR e_channel,       init = NOC,               ev = init
+
+			--temporary variable to hold rx_message structure members
+			STRUCTURE PTU_rx_message, init= {StdId=>0, ExtId =>0x08A0FFFF, IDE =>0, RTR=>1, DLC=>9, Data=>{others=>0x12},FMI=>0},
+			&                             ev = init
+
+			--variable to hold ps_destination lcc members         
+			VAR ps_destination.lcc, init = NSC, ev = NOC
+            
+		COMMENT INPUT/OUTPUT SECTION :
+          
+			--Variable intialized to test DoNvicConfig function since A825Init and A825GetMessage is called 212 times each
+			VAR PTU_stub_call,                      init = DEC_ONE,         ev = 3
+
+			--Holds the member values of structure nvic_init_struct
+			VAR PTU_nvic_init_struct1.NVIC_IRQChannel,                      init = ADC_IRQN,        ev = CAN1_RX0_IRQN
+			VAR PTU_nvic_init_struct1.NVIC_IRQChannelPreemptionPriority,    init = DEC_ONE,         ev = HEX_ZERO
+			VAR PTU_nvic_init_struct1.NVIC_IRQChannelSubPriority ,          init = DEC_ONE,         ev = HEX_ZERO
+			VAR PTU_nvic_init_struct1.NVIC_IRQChannelCmd ,                  init = DISABLE,         ev = ENABLE 
+
+			VAR PTU_nvic_init_struct2.NVIC_IRQChannel,                      init = ADC_IRQN,        ev = CAN1_TX_IRQN
+			VAR PTU_nvic_init_struct2.NVIC_IRQChannelPreemptionPriority,    init = DEC_ONE,         ev = HEX_ZERO
+			VAR PTU_nvic_init_struct2.NVIC_IRQChannelSubPriority ,          init = DEC_ONE,         ev = HEX_ZERO
+			VAR PTU_nvic_init_struct2.NVIC_IRQChannelCmd ,                  init = DISABLE,         ev = ENABLE         
+
+			--Holds the member values of structure gpio_init_structure
+			VAR PTU_gpio_init_structure.GPIO_Pin,                           init = 0,                       ev = 0x1800
+			VAR PTU_gpio_init_structure.GPIO_Mode,                          init = GPIO_MODE_IN,            ev = GPIO_MODE_AF
+			VAR PTU_gpio_init_structure.GPIO_Speed,                         init = GPIO_SPEED_2MHZ,         ev = GPIO_SPEED_50MHZ
+			VAR PTU_gpio_init_structure.GPIO_OType,                         init = GPIO_OTYPE_OD,           ev = GPIO_OTYPE_PP
+			VAR PTU_gpio_init_structure.GPIO_PuPd,                          init = GPIO_PUPD_NOPULL,        ev = GPIO_PUPD_UP   
+
+			--Holds the member values of structure can_init_structure
+			VAR PTU_can_init_structure.CAN_TTCM,                            init = ENABLE,          ev = DISABLE
+			VAR PTU_can_init_structure.CAN_ABOM,                            init = DISABLE,         ev = ENABLE
+			VAR PTU_can_init_structure.CAN_AWUM,                            init = ENABLE,          ev = DISABLE
+			VAR PTU_can_init_structure.CAN_NART,                            init = ENABLE,          ev = DISABLE
+			VAR PTU_can_init_structure.CAN_RFLM,                            init = ENABLE,          ev = DISABLE
+			VAR PTU_can_init_structure.CAN_TXFP,                            init = ENABLE,          ev = DISABLE
+			VAR PTU_can_init_structure.CAN_Mode,                            init = CAN_MODESTATUS_FAILED,       
+			&																						ev = CAN_MODE_NORMAL
+			VAR PTU_can_init_structure.CAN_SJW,                             init = 1,               ev = CAN_SJW_1TQ
+			VAR PTU_can_init_structure.CAN_BS1,                             init = 1,               ev = CAN_BS1_15TQ
+			VAR PTU_can_init_structure.CAN_BS2,                             init = 1,               ev = CAN_BS2_5TQ
+			VAR PTU_can_init_structure.CAN_Prescaler,                       init = DEC_ONE,         ev = DEC_TWO
+
+			--Holds the member values of structure can_filter_init_structure
+			VAR PTU_can_filter_init_structure.CAN_FilterNumber,                 init = 1,               ev = DEC_ZERO
+			VAR PTU_can_filter_init_structure.CAN_FilterMode,                   init = 1,                   ev = CAN_FILTERMODE_IDMASK
+			VAR PTU_can_filter_init_structure.CAN_FilterScale,                  init = CAN_FILTERSCALE_16BIT,                   ev = CAN_FILTERSCALE_32BIT
+			VAR PTU_can_filter_init_structure.CAN_FilterIdHigh,                 init = 1,                   ev = HEX_ZERO
+			VAR PTU_can_filter_init_structure.CAN_FilterIdLow,                  init = 1,                   ev = HEX_ZERO
+			VAR PTU_can_filter_init_structure.CAN_FilterMaskIdHigh,             init = 1,                   ev = HEX_ZERO
+			VAR PTU_can_filter_init_structure.CAN_FilterMaskIdLow,              init = 1,                   ev = HEX_ZERO
+			VAR PTU_can_filter_init_structure.CAN_FilterFIFOAssignment,         init = 1,                   ev = DEC_ZERO
+			VAR PTU_can_filter_init_structure.CAN_FilterActivation,             init = DISABLE,             ev = ENABLE     
+
+		COMMENT OUTPUT SECTION :
+             
+			 --Variables tested for function RxQueueRemove    
+			VAR ret_A825GetMessage,                                           init= A825_RX_QUEUE_EMPTY , ev= A825_RX_OK
+
+		--Stub Calls
+		SIMUL
+
+			--Sets up the CAN receive interrupt vector
+			STUB IntrInstall(INTR_CAN_1_RX_0)
+
+			--Sets up the CAN transmit interrupt vector.
+			STUB IntrInstall(INTR_CAN_1_TX)
+
+			 --Initializes the NVIC Peripheral
+			STUB NvicInit 1..2=>()
+
+			--GpioPinAFConfig Connects CAN pins
+			STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE11, GPIO_AF_CAN1)
+			--GpioPinAFConfig Connects CAN pins
+			STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE12, GPIO_AF_CAN1)
+
+			--Enables GPIO clock
+			STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+
+			--Configures CAN RX and TX pins
+			STUB GpioInit (GPIOA)
+
+			--Enables CAN clock
+			STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_CAN1, ENABLE)
+
+			--Initializes CAN register 
+			STUB CanDeInit(CAN1)
+
+			--Initializes CAN cell
+			STUB CanInitApp(CAN1)0
+
+			--Initializes CAN Filter
+			STUB CanFilterInit()
+
+			--Enters the interrupt service routine
+			STUB OsIntEnter ()
+
+			--Retrieves the can messagge
+			STUB CanReceive (CAN1, CAN_FIFO0)    
+
+			--Exits the interrupt service routine
+			STUB OsIntExit ()
+
+			--Disables FIFO 0 message pending Interrupt
+			STUB CanItConfig (CAN1,CAN_IT_TME, DISABLE) 
+
+			--Enables FIFO 0 message pending Interrupt
+			STUB  CanItConfig (CAN1,  CAN_IT_FMP0, ENABLE)
+
+			--Enables FIFO 0 message pending Interrupt
+			STUB  CanItConfig (CAN1, CAN_IT_FMP0, DISABLE)
+
+			--Enables FIFO 0 message pending Interrupt
+			STUB  CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+
+    	 END SIMUL
+
+        --Calling A825Init function to increment rx counter 
+        #A825Init();        
+        
+        --Calling Unit Under Test
+        #ret_A825GetMessage = A825GetMessage(e_channel, &ps_destination);
+             
+	END ELEMENT
+  
+  	    -- To choose NSC channel
+  	    #PTU_rx_message.ExtId =0x10000000;
+  	    -- To increment ps_which_q->rx_head 160 times 
+  	    
+  	    #for(PTU_i=0;PTU_i<161;PTU_i++)
+  	    #{
+  	    #A825Init();
+  	    #}
+
+	-- Second Element block is used to verify 161st loop 
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the reference to receive queue 
+			VAR e_channel,                      init = NSC,                                 ev = init
+
+			--temporary variable to hold rx_message structure members
+			STRUCTURE PTU_rx_message,           init= {StdId=>0, ExtId =>0x10000000, IDE =>0, RTR=>1, DLC=>1, Data=>{others=>0x12},FMI=>0},
+			&                                                                               ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:   
+
+			--Variables tested for function RxQueueRemove
+
+			VAR ret_A825GetMessage,             init = A825_RX_QUEUE_EMPTY,                 ev = A825_RX_OK
+
+
+			--Variable intialized to test DoNvicConfig function
+			VAR PTU_stub_call,                      init = DEC_ONE,                             ev = DEC_ONE+2          
+
+			  --variable to hold ps_destination structure members
+			  STRUCTURE ps_destination,           init = { lcc =>NOC, sID =>{ BID =>{ sfid =>1, rsd =>1, lcl =>1, pvt =>1, doc =>1, rci =>1,spare=>1 }}, 
+			  &        u8PaySize =>9, u8PayLoad =>{ others =>1 }  }  ,
+			  &        ev = { lcc =>NSC, sID =>{ BID =>{ sfid =>0, rsd =>0, lcl =>0, pvt =>0, doc =>0, rci =>0,spare=>0 }  } , 
+			  &        u8PaySize =>8, u8PayLoad =>{ others =>18 }  }           
+
+
+		COMMENT OUTPUT SECTION:
+			--None
+
+		--Stub Calls
+		SIMUL
+
+			--Sets up the CAN receive interrupt vector
+			STUB IntrInstall (INTR_CAN_1_RX_0)
+
+			--Sets up the CAN transmit interrupt vector.
+			STUB IntrInstall (INTR_CAN_1_TX)
+
+			--Initializes the NVIC Peripheral
+			STUB NvicInit 1..2=>()
+
+			--Enables GPIO clock
+			STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+
+			--GpioPinAFConfig Connects CAN pins
+			STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE11, GPIO_AF_CAN1)
+			STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE12, GPIO_AF_CAN1)    
+
+			--Configures CAN RX and TX pins
+			STUB GpioInit (GPIOA)
+
+			--Enables CAN clock
+			STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_CAN1, ENABLE)
+
+			--Initializes CAN register 
+			STUB CanDeInit (CAN1)
+
+			--Initializes CAN cell
+			STUB CanInitApp (CAN1)0
+
+			--Initializes CAN Filter
+			STUB CanFilterInit ()
+
+			--Disables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE) 
+
+			--Enters the interrupt service routine
+			STUB OsIntEnter()
+
+			--Retrieves the can messagge
+			STUB CanReceive (CAN1, CAN_FIFO0)    
+
+			--Exits the interrupt service routine
+			STUB OsIntExit()
+
+			--Enables FIFO 0 message pending Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+
+			--Disables FIFO 0 message pending Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_FMP0, DISABLE)           
+
+			 --Enables FIFO 0 message pending Interrupt
+			 STUB CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+
+		END SIMUL
+
+		--Calling A825Init function to increment rx counter 
+		#A825Init();        
+
+		--Calling Unit Under Test
+		#ret_A825GetMessage = A825GetMessage(e_channel, &ps_destination);
+  	                        
+  	    END ELEMENT
+
+END TEST 7
+
+END SERVICE -- A825GetMessage
+--------------------------------------------------------------------------------
+-- Declaration of the service A825Init
+--------------------------------------------------------------------------------
+SERVICE A825Init
+SERVICE_TYPE extern    
+
+TEST 1 
+FAMILY nominal
+
+   COMMENT Test Description
+   COMMENT <TD> 
+   COMMENT [hducommfarinc825-A825Init-CB-LLR-001]
+   COMMENT The function performs NVIC configuration by calling DoNvicConfig function.
+   COMMENT Equivalence Class 38
+   COMMENT 
+   COMMENT [hducommfarinc825-A825Init-CB-LLR-002]
+   COMMENT The function performs CAN configuration by calling DoCanConfig function.
+   COMMENT Equivalence Class 39
+   COMMENT 
+   COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-001]
+   COMMENT The function sets up the CAN1 receive interrupt vector by calling the function IntrInstall
+   COMMENT with parameters INTR_CAN_1_RX_0 and pointer to function ReceiveMessage.
+   COMMENT Equivalence Class 48
+   COMMENT 
+   COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-002]
+   COMMENT The function sets up the CAN1 transmit interrupt vector by calling the function IntrInstall
+   COMMENT with parameters INTR_CAN_1_TX and pointer to function BufferCheck.
+   COMMENT Equivalence Class 49
+   COMMENT 
+   COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-003]
+   COMMENT The function does the following
+   COMMENT - sets irq channel of NVIC init structure to CAN1_RX0_IRQN
+   COMMENT - sets pre-emption priority(NVIC_IRQChannelPreemptionPriority), sub-priority 
+   COMMENT   (NVIC_IRQChannelSubPriority) level for the irq channel 
+   COMMENT   CAN1_RX0_IRQN of NVIC init structure to HEX_ZERO
+   COMMENT - sets irq channel command (NVIC_IRQChannelCmd) of NVIC init structure to ENABLE.
+   COMMENT - initializes the NVIC peripheral for the irq channel CAN1_RX0_IRQN by calling the function  
+   COMMENT   NvicInit with parameter reference to NVIC init structure.
+   COMMENT Equivalence Class 50
+   COMMENT 
+   COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-004]   
+   COMMENT The function does the following
+   COMMENT - sets irq channel (NVIC_IRQChannel) of NVIC init structure to CAN1_TX_IRQN
+   COMMENT - sets pre-emption priority(NVIC_IRQChannelPreemptionPriority), sub-priority (NVIC_IRQChannelSubPriority)
+   COMMENT  level for the irq channel
+   COMMENT   CAN1_TX_IRQN of NVIC init structure to HEX_ZERO
+   COMMENT - sets irq channel command (NVIC_IRQChannelCmd) of NVIC init structure to ENABLE
+   COMMENT - initializes the NVIC peripheral for the irq channel CAN1_TX_IRQN by calling the function NvicInit with 
+   COMMENT   parameter reference to NVIC init structure
+   COMMENT Equivalence Class 50
+   COMMENT 
+   COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-001]
+   COMMENT The function enables GPIO clock by calling the function RccAhb1PeriphClockCmd 
+   COMMENT with parameters RCC_AHB1PERIPH_GPIOA and ENABLE.
+   COMMENT Equivalence Class 40
+   COMMENT 
+   COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-002]
+   COMMENT The function connects CAN1 pins to AF9(PA11) by calling the function GpioPinAFConfig 
+   COMMENT with parameters GPIOA, GPIO_PINSOURCE11 and GPIO_AF_CAN1.
+   COMMENT Equivalence Class 41
+   COMMENT 
+   COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-003]
+   COMMENT The function connects CAN1 pins to AF9 (PA12) by calling the function GpioPinAFConfig 
+   COMMENT with parameters GPIOA, GPIO_PINSOURCE12 and GPIO_AF_CAN1.
+   COMMENT Equivalence Class 41
+   COMMENT
+   COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-004]
+   COMMENT The function does the following
+   COMMENT - sets GPIO_Pin of GPIO Init structure to HW_GPIOA_CAN_RX1 | HW_GPIOA_CAN_TX1
+   COMMENT - sets operating mode(GPIO_Mode) for the selected pin of GPIO Init structure to GPIO_MODE_AF
+   COMMENT - sets speed(GPIO_Speed) for the selected pin of GPIO Init structure to GPIO_SPEED_50MHZ
+   COMMENT - sets operating output type(GPIO_OType) for the selected pin of GPIO Init structure to GPIO_OTYPE_PP
+   COMMENT - sets operating Pull-up/Pull down(GPIO_PuPd) for the selected pin of GPIO Init structure to GPIO_PUPD_UP
+   COMMENT - initializes the GPIOA peripheral by calling GpioInit function with parameters 
+   COMMENT   GPIOA and reference to GPIO Init structure.
+   COMMENT Equivalence Class 42
+   COMMENT 
+   COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-005]
+   COMMENT The function enables CAN1 clock by calling the function RccApb1PeriphClockCmd with parameters 
+   COMMENT RCC_APB1PERIPH_CAN1 and ENABLE.
+   COMMENT Equivalence Class 43
+   COMMENT 
+   COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-006]
+   COMMENT The function de-initializes the CAN1 peripheral registers by calling the function CanDeInit with 
+   COMMENT parameter CAN1.
+   COMMENT Equivalence Class 44
+   COMMENT 
+   COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-007]
+   COMMENT The function does the following
+   COMMENT - disables time triggered communication (CAN_TTCM) of CAN Init structure
+   COMMENT - enables automatic bus-off management (CAN_ABOM) of CAN Init structure.
+   COMMENT - disables the automatic wake-up mode (CAN_AWUM) of CAN Init structure.
+   COMMENT - disables the non-automatic retransmission mode (CAN_NART) of CAN Init structure.
+   COMMENT - disables the Receive FIFO Locked mode (CAN_RFLM) of CAN Init structure.
+   COMMENT - disables the transmit FIFO priority (CAN_TXFP) of CAN Init structure.
+   COMMENT - sets CAN operating mode (CAN_Mode) of CAN Init structure to CAN_MODE_NORMAL.
+   COMMENT - sets CAN synchronization jump width (CAN_SJW) of CAN Init structure to CAN_SJW_1TQ.
+   COMMENT - sets time quanta in Bit Segment 1 (CAN_BS1) of CAN Init structure to CAN_BS1_15TQ.
+   COMMENT - sets time quanta in Bit Segment 2 (CAN_BS2) of CAN Init structure to CAN_BS2_5TQ.
+   COMMENT - sets length of a time quantum (CAN_Prescaler) of CAN Init structure to DEC_TWO.
+   COMMENT - initializes the CAN1 peripheral registers by calling the function CanInitApp with parameters CAN1 
+   COMMENT   and reference to CAN init structure.
+   COMMENT Equivalence Class 45
+   COMMENT 
+   COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-008]
+   COMMENT The function does the following
+   COMMENT - sets filter(CAN_FilterNumber) which will be initialized of CAN filter Init structure to HEX_ZERO.
+   COMMENT - sets filter mode (CAN_FilterMode) to be initialized of CAN filter Init structure to CAN_FILTERMODE_IDMASK.
+   COMMENT - sets filter scale(CAN_FilterScale) of CAN filter Init structure to CAN_FILTERSCALE_32BIT.
+   COMMENT - sets filter identification number high(CAN_FilterIdHigh), filter identification number low(CAN_FilterIdLow), 
+   COMMENT   filter mask number high(CAN_FilterMaskIdHigh), filter mask number low (CAN_FilterMaskIdLow) of 
+   COMMENT   CAN filter Init structure to HEX_ZERO.
+   COMMENT - sets FIFO assigned (CAN_FilterFIFOAssignment) to the filter of CAN filter Init structure to HEX_ZERO.
+   COMMENT - sets can filter activation (CAN_FilterActivation) of CAN filter Init structure to ENABLE.
+   COMMENT - configures the CAN1 reception filter by calling the function CanFilterInit with parameter reference to 
+   COMMENT   CAN filter init structure.
+   COMMENT Equivalence Class 46
+   COMMENT  
+   COMMENT [hducommfarinc825-DoCanConfig-CB-LLR-009]
+   COMMENT The function enable FIFO 0 message pending Interrupt by calling CanItConfig function with parameters CAN1, 
+   COMMENT CAN_IT_FMP0 and ENABLE.
+   COMMENT Equivalence Class 47
+   COMMENT  
+   COMMENT [hducommfarinc825-ReceiveMessage-CB-LLR-001]
+   COMMENT The function calls OsIntEnter to inform uCOS that it is entering the ISR.
+   COMMENT Equivalence Class 51
+   COMMENT  
+   COMMENT [hducommfarinc825-ReceiveMessage-CB-LLR-002]
+   COMMENT The function retrieves the CAN message by calling CanReceive function with parameters CAN1, CAN_FIFO0 and 
+   COMMENT  reference to local CAN Rx message.
+   COMMENT Equivalence Class 52
+   COMMENT  
+   COMMENT [hducommfarinc825-ReceiveMessage-CB-LLR-003]
+   COMMENT The function determines the logical communication channel and RCI from the received CAN message.
+   COMMENT Equivalence Class None
+   COMMENT  
+   COMMENT [hducommfarinc825-ReceiveMessage-CB-LLR-004]
+   COMMENT The function does the following when the channel is NOC,
+   COMMENT a) Inserts a CAN message into the selected queue by calling RxQueueInsert with parameters reference to 
+   COMMENT local CAN Rx message, reference to NOC receive queue
+   COMMENT Equivalence Class 53,54
+   COMMENT 
+   COMMENT [hducommfarinc825-RxQueueInsert-CB-LLR-001]
+   COMMENT ELEMENT BLOCK 1   
+   COMMENT The function returns A825_RX_OVERFLOW when number of messages in the Rx queue (RxCntr of ps_which_q) 
+   COMMENT is CAN_R_Q_SIZE.
+   COMMENT Equivalence Class 60,62
+   COMMENT ELEMENT BLOCK 2
+   COMMENT The function does nothing when number of messages in the Rx queue (RxCntr of ps_which_q) is not equal 
+   COMMENT to CAN_R_Q_SIZE.
+   COMMENT Equivalence Class 61
+   COMMENT 
+   COMMENT [hducommfarinc825-RxQueueInsert-CB-LLR-002]
+   COMMENT The function inserts the new message (ps_new_mess) into the next message in the queue (RxTail of ps_which_q).
+   COMMENT Equivalence Class None
+   COMMENT 
+   COMMENT [hducommfarinc825-RxQueueInsert-CB-LLR-003]
+   COMMENT The function adjusts the tail and check for a wrap by incrementing number of messages in the 
+   COMMENT Rx queue(RxCntr of ps_which_q) 
+   COMMENT by DEC_ONE and incrementing the next message to insert(RxTail of ps_which_q) by DEC_ONE.
+   COMMENT Equivalence Class None
+   COMMENT 
+   COMMENT [hducommfarinc825-RxQueueInsert-CB-LLR-004]
+   COMMENT ELEMENT BLOCK 1
+   COMMENT The function sets next message to insert (RxTail of ps_which_q) to the Rx buffer  
+   COMMENT (RxBuf of ps_which_q) when the next message to insert is in the 
+   COMMENT message queue size range (RxBuf[CAN_R_Q_SIZE] of ps_which_q).
+   COMMENT Equivalence Class 63
+   COMMENT ELEMENT BLOCK 2
+   COMMENT The function does nothing when the next message to insert is not in the message queue size range.
+   COMMENT Equivalence Class 64
+   COMMENT
+   COMMENT [hducommfarinc825-RxQueueInsert-CB-LLR-005]
+   COMMENT The function returns A825_RX_OK when the received message is successfully placed in the queue.
+   COMMENT Equivalence Class 65 
+   COMMENT
+   COMMENT [hducommfarinc825-ReceiveMessage-CB-LLR-007]
+   COMMENT The function increments the error counter by one when local result is other than A825_RX_OK.
+   COMMENT Equivalence Class 57
+   COMMENT </TD>
+   
+    --Value of ps_which_q->RxCntr is 1
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --temporary variable to hold rx_message structure members
+            STRUCTURE PTU_rx_message,   init= {StdId=>0, ExtId =>0x08A0FFFF, IDE =>0, RTR=>1, DLC=>9, Data=>{others=>0x12},FMI=>0},
+            &                           ev= init
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            --None
+        
+      
+         COMMENT OUTPUT SECTION:
+         
+            --None
+            
+         --Stub Calls
+         SIMUL
+    
+            --Sets up the CAN receive interrupt vector
+            STUB IntrInstall (INTR_CAN_1_RX_0)
+            
+            --Sets up the CAN transmit interrupt vector.
+            STUB IntrInstall (INTR_CAN_1_TX)
+            
+            --Initializes the NVIC Peripheral
+            STUB NvicInit 1..2 =>()
+            
+            --Enables GPIO clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+            
+            --GpioPinAFConfig Connects CAN pins
+            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE11, GPIO_AF_CAN1)
+            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE12, GPIO_AF_CAN1)  
+            
+            --Configures CAN RX and TX pins
+            STUB GpioInit (GPIOA)
+            
+            --Enables CAN clock
+            STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_CAN1, ENABLE)
+            
+            --Initializes CAN register 
+            STUB CanDeInit (CAN1)
+            
+            --Initializes CAN cell
+            STUB CanInitApp (CAN1)0
+            
+            --Initializes CAN Filter
+            STUB CanFilterInit ()                
+                                                    
+            --Enters the interrupt service routine
+            STUB OsIntEnter()
+            
+            --Retrieves the can messagge
+            STUB CanReceive (CAN1, CAN_FIFO0)    
+            
+            --Exits the interrupt service routine
+            STUB OsIntExit()            
+
+            --Disables the Can Transmit Interrupt
+            STUB CanItConfig (CAN1, CAN_IT_TME  , DISABLE)
+
+            --Enables FIFO 0 message pending Interrupt
+            STUB CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+
+        END SIMUL
+    
+    --Calling Unit Under Test
+    #A825Init();
+    
+    END ELEMENT
+    
+    --To increment ps_which_q->RxCntr to 160
+    #for(PTU_i=0;PTU_i<159;PTU_i++)
+    #{
+    #A825Init();
+    #}
+
+    --Value of ps_which_q->RxCntr is 161
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+         --temporary variable to hold rx_message structure members
+         STRUCTURE PTU_rx_message,           init= {StdId=>0, ExtId =>0x08A0FFFF, IDE =>0, RTR=>1, DLC=>9, 
+         &                                   Data=>{others=>0x12},FMI=>0},
+         &                                                                                   ev= init
+
+        COMMENT INPUT/OUTPUT SECTION:
+      
+         --Variable intialized to test DoNvicConfig function
+         VAR PTU_stub_call,                                           init = 1,              ev = 3
+
+         --Holds the member values of structure nvic_init_struct
+         VAR PTU_nvic_init_struct1.NVIC_IRQChannel,                   init = ADC_IRQN,       ev = CAN1_RX0_IRQN
+         VAR PTU_nvic_init_struct1.NVIC_IRQChannelPreemptionPriority, init = DEC_ONE,        ev = HEX_ZERO
+         VAR PTU_nvic_init_struct1.NVIC_IRQChannelSubPriority ,       init = DEC_ONE,        ev = HEX_ZERO
+         VAR PTU_nvic_init_struct1.NVIC_IRQChannelCmd ,               init = DISABLE,        ev = ENABLE 
+
+         VAR PTU_nvic_init_struct2.NVIC_IRQChannel,                   init = ADC_IRQN,       ev = CAN1_TX_IRQN
+         VAR PTU_nvic_init_struct2.NVIC_IRQChannelPreemptionPriority, init = DEC_ONE,        ev = HEX_ZERO
+         VAR PTU_nvic_init_struct2.NVIC_IRQChannelSubPriority ,       init = DEC_ONE,        ev = HEX_ZERO
+         VAR PTU_nvic_init_struct2.NVIC_IRQChannelCmd ,               init = DISABLE,        ev = ENABLE          
+
+         --Holds the member values of structure gpio_init_structure
+         VAR PTU_gpio_init_structure.GPIO_Pin,                        init = 0,               ev = 0x1800
+         VAR PTU_gpio_init_structure.GPIO_Mode,                       init = GPIO_MODE_IN,    ev = GPIO_MODE_AF
+         VAR PTU_gpio_init_structure.GPIO_Speed,                      init = GPIO_SPEED_2MHZ, ev = GPIO_SPEED_50MHZ
+         VAR PTU_gpio_init_structure.GPIO_OType,                      init = GPIO_OTYPE_OD,   ev = GPIO_OTYPE_PP
+         VAR PTU_gpio_init_structure.GPIO_PuPd,                       init = GPIO_PUPD_NOPULL,ev = GPIO_PUPD_UP 
+
+         --Holds the member values of structure can_init_structure
+         VAR PTU_can_init_structure.CAN_TTCM,                         init = ENABLE,          ev = DISABLE
+         VAR PTU_can_init_structure.CAN_ABOM,                         init = DISABLE,         ev = ENABLE
+         VAR PTU_can_init_structure.CAN_AWUM,                         init = ENABLE,          ev = DISABLE
+         VAR PTU_can_init_structure.CAN_NART,                         init = ENABLE,          ev = DISABLE
+         VAR PTU_can_init_structure.CAN_RFLM,                         init = ENABLE,          ev = DISABLE
+         VAR PTU_can_init_structure.CAN_TXFP,                         init = ENABLE,          ev = DISABLE
+         VAR PTU_can_init_structure.CAN_Mode,                         init = CAN_MODESTATUS_FAILED,
+         &																					  ev = CAN_MODE_NORMAL
+         VAR PTU_can_init_structure.CAN_SJW,                          init = 1,               ev = CAN_SJW_1TQ
+         VAR PTU_can_init_structure.CAN_BS1,                          init = 1,               ev = CAN_BS1_15TQ
+         VAR PTU_can_init_structure.CAN_BS2,                          init = 1,               ev = CAN_BS2_5TQ
+         VAR PTU_can_init_structure.CAN_Prescaler,                      init = DEC_ONE,       ev = DEC_TWO
+   
+         --Holds the member values of structure can_filter_init_structure
+         VAR PTU_can_filter_init_structure.CAN_FilterNumber,          init = 1,               ev = DEC_ZERO
+         VAR PTU_can_filter_init_structure.CAN_FilterMode,            init = 1,               ev = CAN_FILTERMODE_IDMASK
+         VAR PTU_can_filter_init_structure.CAN_FilterScale,           init = 0,               ev = CAN_FILTERSCALE_32BIT
+         VAR PTU_can_filter_init_structure.CAN_FilterIdHigh,          init = 1,               ev = HEX_ZERO
+         VAR PTU_can_filter_init_structure.CAN_FilterIdLow,           init = 1,               ev = HEX_ZERO
+         VAR PTU_can_filter_init_structure.CAN_FilterMaskIdHigh,      init = 1,               ev = HEX_ZERO
+         VAR PTU_can_filter_init_structure.CAN_FilterMaskIdLow,       init = 1,               ev = HEX_ZERO
+         VAR PTU_can_filter_init_structure.CAN_FilterFIFOAssignment,  init = 1,               ev = DEC_ZERO
+         VAR PTU_can_filter_init_structure.CAN_FilterActivation,      init = DISABLE,         ev = ENABLE    
+      
+         COMMENT OUTPUT SECTION:
+ 
+         --None
+            
+        --Stub Calls
+        SIMUL
+    
+            --Sets up the CAN receive interrupt vector
+            STUB IntrInstall (INTR_CAN_1_RX_0)
+            
+            --Sets up the CAN transmit interrupt vector.
+            STUB IntrInstall (INTR_CAN_1_TX)
+            
+            --Initializes the NVIC Peripheral
+            STUB NvicInit 1..2 =>()
+            
+            --Enables GPIO clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+            
+            --GpioPinAFConfig Connects CAN pins
+            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE11, GPIO_AF_CAN1)
+            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE12, GPIO_AF_CAN1)  
+            
+            --Configures CAN RX and TX pins
+            STUB GpioInit (GPIOA)
+            
+            --Enables CAN clock
+            STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_CAN1, ENABLE)
+            
+            --Initializes CAN register 
+            STUB CanDeInit (CAN1)
+            
+            --Initializes CAN cell
+            STUB CanInitApp (CAN1)0
+            
+            --Initializes CAN Filter
+            STUB CanFilterInit ()                
+                                                    
+            --Enters the interrupt service routine
+            STUB OsIntEnter()
+            
+            --Retrieves the can messagge
+            STUB CanReceive (CAN1, CAN_FIFO0)    
+            
+            --Exits the interrupt service routine
+            STUB OsIntExit()            
+
+            --Disables the Can Transmit Interrupt
+            STUB CanItConfig (CAN1, CAN_IT_TME  , DISABLE)
+
+            --Enables FIFO 0 message pending Interrupt
+            STUB CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+
+        END SIMUL
+    
+		--Calling Unit Under Test
+		#A825Init();    
+    
+    END ELEMENT
+    
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+   COMMENT Test Description
+   COMMENT <TD>    
+   COMMENT [hducommfarinc825-ReceiveMessage-CB-LLR-005]
+   COMMENT The function does the following when the channel is NSC
+   COMMENT a) extracts SID and SMT from the received CAN message
+   COMMENT b) Inserts a CAN message into the selected queue by calling RxQueueInsert 
+   COMMENT    with parameters reference to local CAN Rx message, reference to NSC receive queue
+   COMMENT Equivalence Class 55
+   COMMENT 
+   COMMENT [hducommfarinc825-ReceiveMessage-CB-LLR-007]
+   COMMENT The function does nothing when local result is equal to A825_RX_OK.
+   COMMENT Equivalence Class 58
+   COMMENT 
+   COMMENT [hducommfarinc825-ReceiveMessage-CB-LLR-008]
+   COMMENT The function calls OsIntExit to inform uCOS that it is leaving the ISR.
+   COMMENT Equivalence Class 59
+   COMMENT 
+   COMMENT [hducommfarinc825-DoNvicConfig-CB-LLR-002]
+   COMMENT The function set up the CAN transmit interrupt vector by calling the function IntrInstall 
+   COMMENT with parameters INTR_CAN_1_TX and 
+   COMMENT reference to function BufferCheck.
+   COMMENT Equivalence Class 49
+   COMMENT 
+   COMMENT [hducommfarinc825-BufferCheck-CB-LLR-001]
+   COMMENT The function does not loop when number of messages in the Tx queue (TxCntr of NOC transmit queue)is equal to DEC_ZERO.
+   COMMENT Equivalence Class 14
+   COMMENT 
+   COMMENT [hducommfarinc825-BufferCheck-CB-LLR-003]
+   COMMENT The function does not loop when number of messages in the Tx queue (TxCntr of NSC transmit queue)is equal to DEC_ZERO.
+   COMMENT Equivalence Class 19
+   COMMENT
+   COMMENT [hducommfarinc825-BufferCheck-CB-LLR-005]
+   COMMENT The function disables the Can Transmit Interrupt by calling CanItConfig function 
+   COMMENT with parameters CAN1, CAN_IT_TME and DISABLE.
+   COMMENT Equivalence Class 23
+   COMMENT </TD>
+
+   ELEMENT
+            
+         COMMENT INPUT SECTION:  
+         
+            --temporary variable to hold rx_message structure members    
+            STRUCTURE PTU_rx_message, init={StdId=>0, ExtId =>0x10000000, IDE =>0, RTR=>1, DLC=>9, Data=>{others=>0x12},FMI=>0}, 
+            & 																				ev=init
+    
+         COMMENT INPUT/OUTPUT SECTION:
+         
+            --None            
+   
+    
+         COMMENT OUTPUT SECTION:
+         
+            --None            
+        
+        
+         SIMUL
+    
+            --initializes the NVIC Peripheral
+            STUB NvicInit ()
+                    
+            STUB NvicInit ()
+        
+            STUB OsIntEnter()
+        
+            STUB CanReceive (CAN1, CAN_FIFO0)
+                    
+            STUB  OsIntExit()
+                    
+            STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+            
+            --Enables GPIO clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+    
+            --GpioPinAFConfig Connects CAN pins
+            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE11, GPIO_AF_CAN1)
+            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE12, GPIO_AF_CAN1)
+  
+            --Configures CAN RX and TX pins
+            STUB GpioInit (GPIOA) 
+  
+            --Enables CAN clock
+            STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_CAN1, ENABLE)
+  
+            --Initializes CAN register 
+            STUB CanDeInit (CAN1)
+  
+            --Initializes CAN cell
+            STUB CanInitApp (CAN1)0
+  
+            --Initializes CAN Filter
+            STUB CanFilterInit ()
+
+            --Enable FIFO 0 message pending Interrupt
+            STUB CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+            
+            --Set up the CAN receive interrupt vector.
+            STUB IntrInstall (INTR_CAN_1_RX_0)
+
+            --Set up the CAN transmit interrupt vector. 
+            STUB IntrInstall (INTR_CAN_1_TX)
+    
+         END SIMUL
+    
+		--Calling Unit Under Test
+		#A825Init();
+    
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+   COMMENT Test Description
+   COMMENT <TD> 
+   COMMENT [hducommfarinc825-ReceiveMessage-CB-LLR-006]
+   COMMENT The function sets a local result to A825_RX_BAD_CHANNEL when the channel is other than NOC or NSC.
+   COMMENT Equivalence Class 56
+   COMMENT
+   COMMENT [hducommfarinc825-ReceiveMessage-CB-LLR-007]
+   COMMENT The function increments the error counter by one when local result is other than A825_RX_OK.
+   COMMENT Equivalence Class 57
+   COMMENT </TD>
+
+    ELEMENT
+            
+         COMMENT INPUT SECTION:   
+         
+            --temporary variable to hold rx_message structure members    
+            STRUCTURE PTU_rx_message,   init={StdId=>0, ExtId =>0, IDE =>0, RTR=>0, DLC=>0, Data=>{others=>0},FMI=>0}, 
+            &               ev=init
+    
+         COMMENT INPUT/OUTPUT SECTION:
+ 
+            --None
+       
+         COMMENT OUTPUT SECTION:
+ 
+         
+            --None            
+        
+         SIMUL
+ 
+            --initializes the NVIC Peripheral
+            STUB NvicInit ()
+                    
+            STUB NvicInit ()
+        
+            STUB OsIntEnter()
+        
+            STUB CanReceive (CAN1, CAN_FIFO0)
+                    
+            STUB  OsIntExit()
+                    
+            STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+            
+            --Enables GPIO clock
+            STUB RccAhb1PeriphClockCmd (RCC_AHB1PERIPH_GPIOA, ENABLE)
+    
+            --GpioPinAFConfig Connects CAN pins
+            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE11, GPIO_AF_CAN1)
+            STUB GpioPinAFConfig (GPIOA, GPIO_PINSOURCE12, GPIO_AF_CAN1)
+  
+            --Configures CAN RX and TX pins
+            STUB GpioInit (GPIOA) 
+  
+            --Enables CAN clock
+            STUB RccApb1PeriphClockCmd (RCC_APB1PERIPH_CAN1, ENABLE)
+  
+            --Initializes CAN register 
+            STUB CanDeInit (CAN1)
+  
+            --Initializes CAN cell
+            STUB CanInitApp (CAN1)0
+  
+            --Initializes CAN Filter
+            STUB CanFilterInit ()
+
+            --Enable FIFO 0 message pending Interrupt
+            STUB CanItConfig (CAN1, CAN_IT_FMP0, ENABLE)
+            
+            --Set up the CAN receive interrupt vector.
+            STUB IntrInstall (INTR_CAN_1_RX_0)
+
+            --Set up the CAN transmit interrupt vector. 
+            STUB IntrInstall (INTR_CAN_1_TX)
+    
+         END SIMUL
+
+		--Calling Unit Under Test
+		#A825Init();
+
+    END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- A825Init
+--------------------------------------------------------------------------------
+-- Declaration of the service A825Xmit
+--------------------------------------------------------------------------------
+SERVICE A825Xmit
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_A825_MESSAGE ps_xm;
+-- By function returned type declaration
+#T_A825_XMIT_RESULT ret_A825Xmit;
+#T_UINT8 loop_index;
+
+	ENVIRONMENT ENV_A825Xmit
+
+		STRUCTURE ps_xm,      init = { lcc => EEC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0,
+		&							   doc => 0, rci => 0, spare => 0 } }, u8PaySize => 0, u8PayLoad => { others => 0 } },
+		&																		ev = init
+		VAR ret_A825Xmit,     init = 0,     									ev = A825_XM_OK
+
+	END ENVIRONMENT -- ENV_A825Xmit
+	
+	USE ENV_A825Xmit
+    
+       
+TEST 1
+FAMILY nominal
+
+	COMMENT  Test Description
+    COMMENT  <TD>
+    COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-001]
+    COMMENT  The function locates Queue(NOC transmit queue) and builds the 29 bit ID 
+    COMMENT  by calling BuildBroadcastExtId with parameter pointer to the ARINC 825 message(ps_xm).
+    COMMENT  when the selected channel is NOC
+    COMMENT  Equivalence Class 1,2
+    COMMENT  
+    COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-004]
+    COMMENT  The function returns A825_BAD_PAYLOAD_SIZE when number of bytes of 
+    COMMENT  payload(u8PaySize of ps_xm) is greater than BYTES_OF_PYLD.
+    COMMENT  Equivalence Class 7
+    COMMENT  
+    COMMENT  [hducommfarinc825-BuildBroadcastExtId-CB-LLR-001]
+    COMMENT  The function builds the 29 bit CAN identifier for an ARINC 825 broadcast type message 
+    COMMENT  Equivalence Class None
+    COMMENT
+    COMMENT  [hducommfarinc825-BuildBroadcastExtId-CB-LLR-002]
+    COMMENT  The function returns 29 bit CAN identifier.
+    COMMENT  Equivalence Class 11       
+	COMMENT  
+	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-005]
+	COMMENT  The function fills in the CAN TX message Data i.e 
+	COMMENT  i)extended identifier is set to local extended ID,
+	COMMENT  ii)type of identifier to CAN_ID_EXTENDED, 
+	COMMENT  iii)type of frame for the received message to CAN_RTR_DATA and 
+	COMMENT  iv)length of the frame that will be received to the payload size(u8paysize of ps_xm).
+	COMMENT  Equivalence Class None
+	COMMENT  </TD>
+
+	ELEMENT
+  
+		COMMENT INPUT SECTION 
+     
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,     init = { lcc => NOC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0,
+			&  pvt => 0, doc => 0, rci => 0, spare => 0 } }, u8PaySize => 9, u8PayLoad => 
+        	& { others => 4 } },    ev = init
+        	
+		COMMENT INPUT/OUTPUT SECTION
+		   --None
+
+		COMMENT OUTPUT SECTION
+
+		   --Holds the return value of A825Xmit function
+		   VAR ret_A825Xmit,    init = A825_XM_OK,      ev = A825_BAD_PAYLOAD_SIZE
+		   
+		   
+		-- Stub calls
+		SIMUL
+  
+			--No Stubs
+  
+  		END SIMUL
+  
+		--Calling Unit Under Test
+		#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+
+END TEST -- TEST 1
+       
+TEST 2
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD>
+    COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-003]
+    COMMENT  The function returns A825_BAD_CHANNEL when selected channel is other than NOC and NSC.
+    COMMENT  Equivalence Class 5
+    COMMENT  </TD>
+    
+    ELEMENT
+   
+		COMMENT INPUT SECTION
+        
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,     init = { lcc => EEC, sID => { PID => { cfid => 0, smt => 0,
+			&			lcl => 0, pvt => 0, sfid => 0, sid => 0, rci => 0,spare => 0 } },
+			&         u8PaySize => 0, u8PayLoad => { others => 5 } },      ev = init
+   
+        COMMENT INPUT/OUTPUT SECTION
+        
+			--None
+        
+        COMMENT OUTPUT SECTION
+        
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,    init = A825_XM_OK,      ev = A825_BAD_CHANNEL
+			
+			   
+        --Stub Calls
+        SIMUL
+   
+           --No Stubs
+   
+        END SIMUL
+     
+		--Calling Unit Under Test
+		#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+   
+END TEST -- TEST 2
+    
+TEST 3
+FAMILY nominal
+
+	COMMENT  Test Description
+    COMMENT  <TD>
+    COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-002]
+    COMMENT  The function locates Queue(NSC transmit queue) and builds the 29 bit ID by calling 
+    COMMENT  BuildPeerToPeerExtId with parameter pointer to the ARINC 825 message(ps_xm) when
+    COMMENT  a) selected channel is not NOC
+    COMMENT  b) selected channel is NSC.
+    COMMENT  Equivalence Class 3,4
+    COMMENT  
+    COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-004]
+    COMMENT  The function returns A825_BAD_PAYLOAD_SIZE when number of bytes of 
+    COMMENT  payload(u8PaySize of ps_xm) is greater than BYTES_OF_PYLD.
+    COMMENT  Equivalence Class 7,9
+    COMMENT  
+    COMMENT  [hducommfarinc825-BuildPeerToPeerExtId-CB-LLR-001]
+    COMMENT  The function builds the 29 bit CAN identifier for an ARINC 825 peer to peer type message
+    COMMENT  Equivalence Class None.
+    COMMENT
+    COMMENT  [hducommfarinc825-BuildPeerToPeerExtId-CB-LLR-002]
+    COMMENT  The function returns 29 bit CAN identifier.
+    COMMENT  Equivalence Class 12  
+	COMMENT  
+	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-005]
+	COMMENT  The function fills in the CAN TX message Data i.e 
+	COMMENT  i)extended identifier is set to local extended ID,
+	COMMENT  ii)type of identifier to CAN_ID_EXTENDED, 
+	COMMENT  iii)type of frame for the received message to CAN_RTR_DATA and 
+	COMMENT  iv)length of the frame that will be received to the payload size(u8paysize of ps_xm).
+	COMMENT  Equivalence Class None
+	COMMENT  </TD>
+    
+    ELEMENT
+  
+		COMMENT INPUT SECTION 
+
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,     init = { lcc => NSC, sID => { PID => { cfid => 0, smt => 0, lcl => 0,
+			&							pvt => 0, sfid => 0, sid => 0, rci => 0,spare => 0 } },
+			&        					u8PaySize => 9, u8PayLoad => { others => 0 } },      ev = init
+
+		COMMENT INPUT/OUTPUT SECTION
+		   
+			--None
+	   
+		COMMENT OUTPUT SECTION
+
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,    init = A825_XM_OK,      ev = A825_BAD_PAYLOAD_SIZE
+			
+		--Stub Calls
+		SIMUL
+
+		   --No Stubs
+
+		END SIMUL
+  
+		--Calling Unit Under Test
+		#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+
+END TEST -- TEST 3    
+
+TEST 4
+FAMILY nominal
+
+	COMMENT  Test Description
+	COMMENT  <TD>
+	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-001]
+	COMMENT  The function locates Queue(NOC transmit queue) and builds the 29 bit ID 
+	COMMENT  by calling BuildBroadcastExtId with parameter pointer to the ARINC 825 message(ps_xm) 
+	COMMENT  when the selected channel is NOC.
+	COMMENT  Equivalence Class 1,2
+	COMMENT  
+	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-004]
+	COMMENT  The function does nothing when number of bytes of payload(u8PaySize of ps_xm) is 
+	COMMENT  less than BYTES_OF_PYLD.
+	COMMENT  Equivalence Class 6
+	COMMENT  
+	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-005]
+	COMMENT  The function fills in the CAN TX message Data i.e 
+	COMMENT  i)extended identifier is set to local extended ID,
+	COMMENT  ii)type of identifier to CAN_ID_EXTENDED, 
+	COMMENT  iii)type of frame for the received message to CAN_RTR_DATA and 
+	COMMENT  iv)length of the frame that will be received to the payload size(u8paysize of ps_xm).
+	COMMENT  Equivalence Class None
+	COMMENT 
+	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-006]
+	COMMENT  The function loops till the local counter is less than arinc 825 Paysize and copies 
+	COMMENT  the payload to CAN Data for loop covered for 1 time
+	COMMENT  Equivalence Class None
+	COMMENT 
+	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-007]
+	COMMENT  The function inserts a CAN message into the selected queue by calling TxQueueInsert 
+	COMMENT  function with parameters reference to Message to be transmitted and pointer to message
+	COMMENT  queue and returns the result of the function TxQueueInsert.
+	COMMENT  Equivalence Class 10
+	COMMENT 
+	COMMENT  [hducommfarinc825-TxQueueInsert-CB-LLR-001]
+	COMMENT  The function disables the CAN1 Transmit Interrupt by calling CanItConfig function with 
+	COMMENT  parameters CAN1,CAN_IT_TME and DISABLE.
+	COMMENT  Equivalence Class 30
+	COMMENT 
+	COMMENT  [hducommfarinc825-TxQueueInsert-CB-LLR-002]
+	COMMENT  The function does nothing when number of messages in the Tx queue is not equal to 
+	COMMENT  CAN_X_Q_SIZE.
+	COMMENT  Equivalence Class 32
+	COMMENT 
+	COMMENT  [hducommfarinc825-TxQueueInsert-CB-LLR-003]
+	COMMENT  The function inserts the new message into the next message in the queue
+	COMMENT  Equivalence Class None
+	COMMENT 
+	COMMENT  [hducommfarinc825-TxQueueInsert-CB-LLR-004]
+	COMMENT  The function does the following:
+	COMMENT  a)Adjusts the tail and check for a wrap by incrementing number of messages in the Tx queue
+	COMMENT  by DEC_ONE and Next message to insert by DEC_ONE.
+	COMMENT  Equivalence Class None
+	COMMENT  
+	COMMENT  [hducommfarinc825-TxQueueInsert-CB-LLR-005]
+	COMMENT  The function does nothing when the next message to insert is not in the Transmit 
+	COMMENT  message Queue Size range
+	COMMENT  Equivalence Class 35
+	COMMENT 
+	COMMENT  [hducommfarinc825-TxQueueInsert-CB-LLR-006]
+	COMMENT  The function enables the CAN1 Transmit Interrupt by calling CanItConfig function with 
+	COMMENT  parameters CAN1,CAN_IT_TME and ENABLE.
+	COMMENT  Equivalence Class 30 
+	COMMENT 
+	COMMENT  [hducommfarinc825-TxQueueInsert-CB-LLR-007]
+	COMMENT  The function calls BufferCheck for immediate transmit and returns A825_XM_OK.
+	COMMENT  Equivalence Class 36,37
+	COMMENT  
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-001]
+	COMMENT  The function loops till number of messages in the Tx queue(TxCntr  of NOC transmit 
+	COMMENT  queue)is not equal to DEC_ZERO.while loop covered for one time
+	COMMENT  Equivalence Class 14
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-002]
+	COMMENT  The function does nothing when there is mailbox free for transmission 
+	COMMENT  i.e the return value of the function XmitFromBuff with parameter reference to NOC 
+	COMMENT  transmit queue is not CAN_TXSTATUS_NOMAILBOX.
+	COMMENT  Equivalence Class 15,17
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-005]
+	COMMENT  The function disables the Can Transmit Interrupt by calling CanItConfig function 
+	COMMENT  with parameters CAN1,CAN_IT_TME and DISABLE.
+	COMMENT  Equivalence Class 23 
+	COMMENT
+	COMMENT  [hducommfarinc825-XmitFromBuff-CB-LLR-001]
+	COMMENT  The function transmits a CAN frame message by calling CanTransmit with parameters CAN1,
+	COMMENT  next message to transmit
+	COMMENT  Equivalence Class 24
+	COMMENT 
+	COMMENT  [hducommfarinc825-XmitFromBuff-CB-LLR-002]
+	COMMENT  The function adjusts the head and check for a wrap by decrementing number of messages 
+	COMMENT  in the Tx queue(TxCntr  of ps_which_q) by ONE and incrementing next message to transmit
+	COMMENT  (TxHead  of ps_which_q) by DEC_ONE when the function CanTransmit of CAN1 returns other
+	COMMENT  than CAN_TXSTATUS_NOMAILBOX.
+	COMMENT  Equivalence Class 26
+	COMMENT 
+	COMMENT  [hducommfarinc825-XmitFromBuff-CB-LLR-003]
+	COMMENT  The function does nothing when
+	COMMENT  a) The next CAN1 message to transmit is not in the Transmit message Queue Size range 
+	COMMENT  b) Result of the function CanTransmit is other than CAN_TXSTATUS_NOMAILBOX.
+	COMMENT  Equivalence Class 28
+	COMMENT 
+	COMMENT  [hducommfarinc825-XmitFromBuff-CB-LLR-004]   
+	COMMENT  The function returns the number of the mailbox that is used for transmission.
+	COMMENT  Equivalence Class 29
+	COMMENT 
+	COMMENT  </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,           init = { lcc => NOC, sID => { BID => { sfid => 0, rsd => 0,
+			& lcl => 0, pvt => 0, doc => 0, rci => 0, spare => 0 } }, u8PaySize => 1, u8PayLoad => 
+			& { others => 0 } },    ev = init 
+
+		COMMENT INPUT/OUTPUT SECTION:
+		
+			-- None
+
+		COMMENT OUTPUT SECTION:
+
+			--Temporary variable to hold txessage structure members
+			STRUCTURE PTU_tx_message,     init = {StdId => 1,ExtId => 1 ,IDE => 0,RTR => 0,DLC => 0, 
+			& Data=>{others=>0}}, ev = {StdId => 0,ExtId => 134217728 ,IDE => CAN_ID_EXTENDED,RTR => 
+			& CAN_RTR_DATA,DLC => 1,Data=>{others=>0}} 
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,          init = A825_BAD_PAYLOAD_SIZE,    ev = A825_XM_OK
+
+		--Stub Calls
+		SIMUL
+
+			--Disables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+			--Enables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+
+			--Transmits a CAN frame message 
+			STUB CanTransmit (CAN1) CAN_TXSTATUS_NOMAILBOX
+
+		END SIMUL
+
+		--Calling Unit Under Test
+		#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5 
+FAMILY nominal
+
+	COMMENT  Test Description
+	COMMENT  <TD>
+	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-004]
+	COMMENT  The function does nothing when number of bytes of payload (u8PaySize of ps_xm) is not 
+	COMMENT  greater than BYTES_OF_PYLD.
+	COMMENT  Equivalence Class 8
+	COMMENT  
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-001]
+	COMMENT  The function loops till number of messages in the Tx queue(TxCntr of NOC transmit queue)
+	COMMENT  is not equal to DEC_ZERO. while loop covered for 2 or more times in element block 2
+	COMMENT  Equivalence Class 14
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-002]
+	COMMENT  The function returns when there is no mailbox free for  transmission i.e the return 
+	COMMENT  value of the function XmitFromBuff with parameter reference to NOC transmit queue is 
+	COMMENT  CAN_TXSTATUS_NOMAILBOX.
+	COMMENT  Equivalence Class 16
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-003]
+	COMMENT  The function does nothing when number of messages in the Tx queue
+	COMMENT  (TxCntr  of NSC transmit queue)is equal to DEC_ZERO. while loop covered for 0 times.
+	COMMENT  Equivalence Class 18
+	COMMENT
+	COMMENT  [hducommfarinc825-XmitFromBuff-CB-LLR-003]
+	COMMENT  The function sets next message to transmit (TxHead  of ps_which_q) to the Tx buffer
+	COMMENT  (TxBuf of ps_which_q) when
+	COMMENT  a) The next CAN1 message to transmit is in the Transmit message Queue Size range (
+	COMMENT  TxBuf[CAN_X_Q_SIZE] of ps_which_q) 
+	COMMENT  b) Result of the function CanTransmit is other than CAN_TXSTATUS_NOMAILBOX.
+	COMMENT  Equivalence Class 27
+	COMMENT
+    COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-006]
+    COMMENT  The function loops till the local counter is less than u8PaySize of ps_xm and copies 
+	COMMENT  the payload (u8PayLoad of ps_xm) to CAN data(Data of CAN TX message).
+	COMMENT  for loop covered for 2 or more times.
+    COMMENT  Equivalence Class None. 
+	COMMENT  </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,           init = { lcc => NOC, sID => { BID => { sfid => 1, rsd => 1, 
+			& lcl => 1, pvt => 1, doc => 1, rci => 1, spare => 1 } }, u8PaySize => 8, u8PayLoad =>
+			& { others => 5 } },    ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+		  
+			-- None
+		  
+		COMMENT OUTPUT SECTION:
+
+			--Temporary variable to hold tx_message structure members
+			STRUCTURE PTU_tx_message,     init = {StdId => 1,ExtId => 1 ,IDE => 1,RTR => 1,DLC => 1, 
+			& Data=>{others=>0}}, ev = {StdId => 0,ExtId => 134217728 ,IDE => CAN_ID_EXTENDED,RTR => 
+			& CAN_RTR_DATA,DLC => 1,Data=>{others=>0}}  
+
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,          init = A825_BAD_PAYLOAD_SIZE,    ev = A825_XM_OK
+
+		--Stub Calls
+		SIMUL
+
+			--Disables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+			--Enables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+
+			--Disables the Can Transmit Interrupt
+			--STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+			--Transmits a CAN frame message 
+			STUB CanTransmit (CAN1) CAN_TXSTATUS_NOMAILBOX
+
+		END SIMUL
+
+		--Calling Unit Under Test
+		#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+	
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,           init = { lcc => NOC, sID => { BID => { sfid => 1, rsd => 1, 
+			& lcl => 1, pvt => 1, doc => 1, rci => 1, spare => 1 } }, u8PaySize => 8, u8PayLoad =>
+			& { others => 5 } },    ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+		  
+			-- None
+		  
+		COMMENT OUTPUT SECTION:
+
+			--Temporary variable to hold tx_message structure members
+			STRUCTURE PTU_tx_message,     init = {StdId => 1,ExtId => 1 ,IDE => 1,RTR => 1,DLC => 1, 
+			& Data=>{others=>0}}, ev = {StdId => 0,ExtId => 135200773 ,IDE => CAN_ID_EXTENDED,RTR => 
+			& CAN_RTR_DATA,DLC => 8,Data=>{others=>5}}  
+
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,          init = A825_BAD_PAYLOAD_SIZE,    ev = A825_XM_OK
+
+		--Stub Calls
+		SIMUL
+
+			--Disables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+			--Enables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+
+			--Disables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+			--Transmits a CAN frame message 
+			STUB CanTransmit 1..3 =>(CAN1) 0x2
+
+		END SIMUL
+
+		--Calling Unit Under Test
+		#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT	
+
+END TEST -- TEST 5
+
+TEST 6 
+FAMILY nominal
+
+	COMMENT  Test Description
+	COMMENT  <TD>
+	COMMENT  [hducommfarinc825-XmitFromBuff-CB-LLR-002]
+	COMMENT  The function does nothing 
+	COMMENT  when return value ofthe function CanTransmit of CAN1 is other than 
+	COMMENT  CAN_TXSTATUS_NOMAILBOX.
+	COMMENT  Equivalence Class 25
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-001]
+	COMMENT  The function loops till number of messages in the Tx queue(TxCntr  of NOC transmit 
+	COMMENT  queue)is not equal to DEC_ZERO.while loop covered for 1 time
+	COMMENT  Equivalence Class 14
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-002]
+	COMMENT  The function returns when there is no mailbox free for  transmission i.e the return 
+	COMMENT  value of the function XmitFromBuff with parameter reference to NOC transmit queue is 
+	COMMENT  CAN_TXSTATUS_NOMAILBOX.
+	COMMENT  Equivalence Class 16 
+	COMMENT  </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,           init = { lcc => NOC, sID => { BID => { sfid => 4, rsd => 0, 
+			& lcl => 1, pvt => 0, doc => 7, rci => 2, spare => 5 } }, u8PaySize => 0, u8PayLoad =>
+			&  { others => 0 } },    ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+		  
+			-- None
+		  
+		COMMENT OUTPUT SECTION:
+
+			--Temporary variable to hold tx_message structure members
+			STRUCTURE PTU_tx_message,     init = {StdId => 1,ExtId => 1 ,IDE => 1,RTR => 1,DLC => 1,
+			& Data=>{others=>0}}, ev = {StdId => 0,ExtId => 136445982 ,IDE => CAN_ID_EXTENDED,
+			& RTR => CAN_RTR_DATA,DLC => 0,Data=>{others=>0}}  
+
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,          init = A825_BAD_PAYLOAD_SIZE,    ev = A825_XM_OK
+
+		--Stub Calls
+		SIMUL
+
+			--Disables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+			--ENABLE the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+
+			--Transmits a CAN frame message 
+			STUB CanTransmit (CAN1) 0x4
+
+		END SIMUL
+
+		--Calling Unit Under Test
+		#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+
+END TEST -- TEST 6
+    
+TEST 7
+FAMILY nominal
+
+	COMMENT  Test Description
+	COMMENT  <TD>
+	COMMENT  [hducommfarinc825-TxQueueInsert-CB-LLR-002]
+	COMMENT  For ELEMENT Block 2
+	COMMENT  The function enables the CAN1 Transmit Interrupt by calling CanItConfig function with 
+	COMMENT  parameters CAN1,CAN_IT_TME and ENABLE and returns A825_XM_OVERFLOW when number of 
+	COMMENT  messages in the Tx queue (TxCntr  of ps_which_q) is equal to CAN_X_Q_SIZE.
+	COMMENT  Equivalence Class 31,33
+	COMMENT 
+	COMMENT  [hducommfarinc825-TxQueueInsert-CB-LLR-005]
+	COMMENT  The function sets next message to insert(TxTail  of ps_which_q) to the Tx buffer
+	COMMENT  (TxBuf  of ps_which_q) when the next message to insert is in the Transmit message Queue 
+	COMMENT  Size range(TxBuf [CAN_X_Q_SIZE] of ps_which_q).
+	COMMENT  Equivalence Class 34
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-001]
+	COMMENT  The function loops till number of messages in the Tx queue(TxCntr  of NOC transmit 
+	COMMENT  queue)is not equal to DEC_ZERO.
+	COMMENT  Equivalence Class 14
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-002]
+	COMMENT  The function does nothing when there is mailbox free for transmission 
+	COMMENT  i.e the return value of the function XmitFromBuff with parameter reference to NOC 
+	COMMENT  transmit queue is CAN_TXSTATUS_NOMAILBOX.
+	COMMENT  Equivalence Class 16 
+	COMMENT  </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,           init = { lcc => NOC, sID => { BID => { sfid => 0, rsd => 0, 
+			& lcl => 0, pvt => 0,doc => 0, rci => 0, spare => 0 } }, u8PaySize => 1, u8PayLoad => 
+			& { others => 0 } },    ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+		   --
+		COMMENT OUTPUT SECTION:
+
+			--Temporary variable to hold tx_message structure members
+			STRUCTURE PTU_tx_message,     init = {StdId => 0,ExtId => 1 ,IDE => 0,RTR => 0,DLC => 0, 
+			& Data => {others => 0}}, ev = {StdId => 0,ExtId => 136445982 ,IDE => CAN_ID_EXTENDED,
+			& RTR => CAN_RTR_DATA,DLC => 0,Data=>{others=>0}} 
+
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,          init = A825_XM_OVERFLOW,      ev = A825_XM_OK
+
+		--Stub Calls
+		SIMUL
+
+			--Disables and Enables Can Transmit Interrupt alternatively
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+			STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+
+
+			--Transmits a CAN frame message 
+			STUB CanTransmit (CAN1) CAN_TXSTATUS_NOMAILBOX
+
+
+		END SIMUL
+
+	--Calling Unit Under Test
+	#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+  
+	--looping to increment  number of messages in the Tx queue to 120
+	--To verify the 121st loop second element block is used
+	#for(loop_index=0;loop_index<119;loop_index++)
+	#ret_A825Xmit = A825Xmit(&ps_xm);
+
+
+
+END TEST -- TEST 7
+    
+TEST 8
+FAMILY nominal
+
+	COMMENT  Test Description
+	COMMENT  <TD>
+	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-002]
+	COMMENT  The function locates Queue(NSC transmit queue) and builds the 29 bit ID by calling 
+	COMMENT  BuildPeerToPeerExtId with parameter pointer to the ARINC 825 message(ps_xm) when
+	COMMENT  a) selected channel is not NOC
+	COMMENT  b) selected channel is NSC.
+	COMMENT  Equivalence Class 9,10  
+    COMMENT
+	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-005]
+	COMMENT  The function fills in the CAN TX message Data i.e 
+	COMMENT  i)extended identifier is set to local extended ID,
+	COMMENT  ii)type of identifier to CAN_ID_EXTENDED, 
+	COMMENT  iii)type of frame for the received message to CAN_RTR_DATA and 
+	COMMENT  iv)length of the frame that will be received to the payload size(u8paysize of ps_xm).
+	COMMENT  Equivalence Class None
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-004]
+	COMMENT  The function returns when there is no mailbox free for transmission i.e the return 
+	COMMENT  value of the function XmitFromBuff with parameter reference to NSC transmit queue 
+	COMMENT  is CAN_TXSTATUS_NOMAILBOX.
+	COMMENT  Equivalence Class 20,22  
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-003]
+	COMMENT  For ELEMENT block 2
+	COMMENT  The function loops till number of messages in the Tx queue(TxCntr  of NSC transmit 
+	COMMENT  queue)is not equal to DEC_ZERO.while loop is coverred for two or more times.
+	COMMENT  Equivalence Class 19
+	COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-004]
+	COMMENT  For ELEMENT block 2  
+	COMMENT  The function does nothing when there is  mailbox free for transmission i.e the return 
+	COMMENT  value of the function XmitFromBuff with parameter reference to NSC transmit queue is 
+	COMMENT  not CAN_TXSTATUS_NOMAILBOX.
+	COMMENT  Equivalence Class 21
+	COMMENT  </TD>
+
+	ELEMENT
+   
+		COMMENT INPUT SECTION 
+
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,     init = { lcc => NSC, sID => { PID => { cfid => 0, smt => 0, 
+			& lcl => 0, pvt => 0, sfid => 0, sid => 0, rci => 0, spare => 0 } }, u8PaySize => 5, 
+			& u8PayLoad => { others => 10 } },      ev = init
+
+		COMMENT INPUT/OUTPUT SECTION
+			
+			--None
+
+		COMMENT OUTPUT SECTION
+
+			--Temporary variable to hold tx_message structure members
+			STRUCTURE PTU_tx_message,     init = {StdId => 1,ExtId => 1 ,IDE => 1,RTR => 1,DLC => 1,
+			& Data=>{others=>0}}, ev = {StdId => 0,ExtId => 136445982 ,IDE => CAN_ID_EXTENDED,RTR => 
+			& CAN_RTR_DATA, DLC => 0,Data=>{others => 0}}  
+
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,    init = A825_BAD_PAYLOAD_SIZE,    ev = A825_XM_OK
+
+		--Stub Calls
+		SIMUL
+
+			--Disables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+			--Enables the Can Transmit Interrupt
+			STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+
+			--Transmits a CAN frame message
+			STUB CanTransmit (CAN1) CAN_TXSTATUS_NOMAILBOX
+
+
+		END SIMUL
+   
+	--Calling Unit Under Test
+	#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+
+	--  To verify [hducommfarinc825-BufferCheck-CB-LLR-003] and [hducommfarinc825-CB-BufferCheck-LLR-004] 
+	--  To verify while loop in hducommfarinc825-BufferCheck-CB-LLR-003 Second element block is used.
+	ELEMENT
+   
+		COMMENT INPUT SECTION 
+
+		   --variable to hold ps_xm structure members
+		   STRUCTURE ps_xm,     init = { lcc => NSC, sID => { PID => { cfid => 0, smt => 0, lcl => 0,
+		   & pvt => 0, sfid => 0, sid => 0, rci => 0, spare => 0 } }, u8PaySize => 5, u8PayLoad => 
+		   & { others => 0 } },      ev = init
+
+		COMMENT INPUT/OUTPUT SECTION
+
+		   --
+		COMMENT OUTPUT SECTION
+
+		   --Temporary variable to hold tx_message structure members
+		   STRUCTURE PTU_tx_message,     init = {StdId => 1,ExtId => 1 ,IDE => 1,RTR => 1,DLC => 1
+		   & ,Data=>{others=>0}}, ev = {StdId => 0,ExtId => 268435456 ,IDE => CAN_ID_EXTENDED,RTR => 
+		   & CAN_RTR_DATA, DLC => 5,Data=>{others=>0}}  
+
+		   --Holds the return value of A825Xmit function
+		   VAR ret_A825Xmit,    init = A825_BAD_PAYLOAD_SIZE,    ev = A825_XM_OK
+
+		--Stub Calls
+		SIMUL
+
+		   --Disables the Can Transmit Interrupt
+		   STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+		   --Enables the Can Transmit Interrupt
+		   STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+
+		   --Transmits a CAN frame message
+		   STUB CanTransmit 1..122=>(CAN1) 0x2
+
+		   --Disables the Can Transmit Interrupt
+		   STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+
+		END SIMUL
+   
+		--Calling Unit Under Test
+		#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+      
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+    COMMENT  Test Description
+    COMMENT  <TD>
+    COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-002]
+    COMMENT  The function locates Queue(NSC transmit queue) and builds the 29 bit ID by calling 
+    COMMENT  BuildPeerToPeerExtId with parameter pointer to the ARINC 825 message(ps_xm) when
+    COMMENT  a) selected channel is not NOC
+    COMMENT  b) selected channel is NSC.
+    COMMENT  Equivalence Class 3,4  
+    COMMENT 
+	COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-001]
+	COMMENT  The function does nothing when number of messages in the Tx queue(TxCntr  of NOC 
+	COMMENT  transmit queue)is equal to DEC_ZERO. while loop covered for 0 time.
+	COMMENT  Equivalence Class 13
+    COMMENT 
+    COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-003]
+    COMMENT  The function loops till number of messages in the Tx queue(TxCntr of NSC transmit 
+    COMMENT  queue)is not equal to DEC_ZERO. while loop covered for one time.
+    COMMENT  Equivalence Class 18
+    COMMENT
+    COMMENT  [hducommfarinc825-BufferCheck-CB-LLR-004]
+    COMMENT  The function returns when there is no mailbox free for transmission i.e the return 
+    COMMENT  value of the function XmitFromBuff with parameter reference to NSC transmit queue 
+    COMMENT  is CAN_TXSTATUS_NOMAILBOX.
+    COMMENT  Equivalence Class 20    
+    COMMENT  </TD>
+    
+    ELEMENT
+    
+		COMMENT INPUT SECTION 
+
+            --variable to hold ps_xm structure members
+            STRUCTURE ps_xm,        init = { lcc => NSC, sID => { PID => { cfid => 0, smt => 0, 
+            & lcl => 0, pvt => 0, sfid => 0, sid => 0, rci => 0,spare => 0 } }, u8PaySize => 5, 
+			& u8PayLoad => { others => 0 } },     ev = init
+        COMMENT INPUT/OUTPUT SECTION
+        
+        	--None            
+        
+        COMMENT OUTPUT SECTION
+            
+            --Temporary variable to hold tx_message structure members
+            STRUCTURE PTU_tx_message,       init = {StdId => 1,ExtId => 1 ,IDE => 1,RTR => 1,
+            & DLC => 1,Data=>{others=>0}}, ev = {StdId => 0,ExtId => 268435456 ,IDE => 
+            & CAN_ID_EXTENDED,RTR => CAN_RTR_DATA,DLC => 5,Data=>{others=>0}}    
+            
+            --Holds the return value of A825Xmit function
+            VAR ret_A825Xmit,       init = A825_BAD_PAYLOAD_SIZE,       ev = A825_XM_OK
+    
+        --Stub Calls
+        SIMUL
+
+            --Disables the Can Transmit Interrupt
+            STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+            --Enables the Can Transmit Interrupt
+            STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+
+            --Transmits a CAN frame message
+            STUB CanTransmit (CAN1) CAN_TXSTATUS_NOMAILBOX
+            
+        END SIMUL
+    
+    --Calling Unit Under Test
+    #ret_A825Xmit = A825Xmit(&ps_xm);
+
+    END ELEMENT 
+
+END TEST -- TEST 9
+    
+--TEST 10
+--FAMILY robustness
+--	
+--	COMMENT  Test Description
+--	COMMENT  <TD>
+--	COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-001]
+--	COMMENT  The function is tested by passing invalid reference to a825 message.
+--	COMMENT  Equivalence Class 88
+--	COMMENT  </TD>
+--
+--	ELEMENT
+--	
+--		COMMENT INPUT SECTION
+--
+--		    --None
+--
+--		COMMENT INPUT/OUTPUT SECTION
+--		
+--			--None
+--
+--		COMMENT OUTPUT SECTION
+--	     
+--			--Holds the return value of A825Xmit function
+--			VAR ret_A825Xmit,    init = A825_XM_OK,      ev = A825_BAD_CHANNEL
+--	
+--		--Stub Calls
+--		SIMUL
+--
+--		   --No Stubs.
+--
+--		END SIMUL
+--
+--	--Calling Unit Under Test
+--	#ret_A825Xmit = A825Xmit(NULL);
+--	
+--	END ELEMENT
+--	       
+--END TEST -- TEST 10
+
+
+TEST 11
+FAMILY nominal
+
+	COMMENT  Test Description
+    COMMENT  <TD>
+    COMMENT  [hducommfarinc825-A825Xmit-CB-LLR-006]
+    COMMENT  The function loops till the local counter is less than u8PaySize of ps_xm and copies 
+	COMMENT  the payload (u8PayLoad of ps_xm) to CAN data(Data of CAN TX message).
+	COMMENT  for loop covered for 0 times.
+    COMMENT  Equivalence Class None. 
+ 	COMMENT  </TD>
+    
+    ELEMENT
+  
+		COMMENT INPUT SECTION 
+
+			--variable to hold ps_xm structure members
+			STRUCTURE ps_xm,     init = { lcc => NSC, sID => { PID => { cfid => 0, smt => 0, lcl => 0,
+			&							pvt => 0, sfid => 0, sid => 0, rci => 0,spare => 0 } },
+			&        					u8PaySize => 0, u8PayLoad => { others => 0 } },      ev = init
+
+		COMMENT INPUT/OUTPUT SECTION
+		   
+			--None
+	   
+		COMMENT OUTPUT SECTION
+
+			--Holds the return value of A825Xmit function
+			VAR ret_A825Xmit,    init =A825_BAD_PAYLOAD_SIZE,      ev = 0
+			
+			--Temporary variable to hold tx_message structure members
+			STRUCTURE PTU_tx_message,     init = {StdId => 1,ExtId => 1 ,IDE => 1,RTR => 1,DLC => 5,
+			& 	Data=>{others=>10}},  ev = {StdId => 0,ExtId => 268435456 ,IDE => CAN_ID_EXTENDED,
+		    &  RTR => CAN_RTR_DATA, DLC => 5,Data=>{others => 0}} 
+
+		--Stub Calls
+		SIMUL
+
+            --Disables the Can Transmit Interrupt
+            STUB CanItConfig (CAN1, CAN_IT_TME, DISABLE)
+
+            --Enables the Can Transmit Interrupt
+            STUB CanItConfig (CAN1, CAN_IT_TME, ENABLE)
+            
+            --Transmits a CAN frame message
+            STUB CanTransmit (CAN1) CAN_TXSTATUS_NOMAILBOX            
+
+		END SIMUL
+  
+	--Calling Unit Under Test
+	#ret_A825Xmit = A825Xmit(&ps_xm);
+
+	END ELEMENT
+
+END TEST -- TEST 11
+    
+END SERVICE -- A825Xmit

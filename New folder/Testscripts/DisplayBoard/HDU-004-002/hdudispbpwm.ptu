@@ -1,0 +1,1059 @@
+HEADER hdudispbpwm.c,Source Code Ver :1.2,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Kavya M 
+--
+-- File Name           : hdudispbpwm.ptu
+--
+-- Test Creation Date  : 31.10.2017
+--
+-- Tested Functions    : PwmLcdBackLightPcnt
+--                       PwmInit
+--                       ErrorHandler
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE               TESTER NAME        MODIFICATIONS
+-- ------------        ---------               -----------        -------------
+--     1.1             31.10.2017              Kavya M            created the ptu file.
+--     1.2             11.11.2017              Kavya M            updated as per PR100171.
+--     1.3             14.11.2017              Kavya M            updated as per PR100171.
+-------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdulibstm32f7xxhal.h"    /* Header files for HAL driver*/
+##include "hdulibbasictypes.h"            /* Basic data types.*/
+##include "hdulibstm32f7xxhaltim.h"    /* Header files for TIM driver*/
+##include "hdulibstm32f7xxhalgpio.h"    /* Header files for Gpio driver*/
+##include "hdulibstm32f7xxhalrccex.h"   /* Header files for RCC EX HAL module*/
+##include "hdulibstm32hallegacy.h"  /* Aliases definition for the STM32Cube HAL constants*/
+##include "hdudispbpanel.h"                /* Contains functions prototypes of hdudispbpanel*/
+
+--macros made available here for testing purpose
+##define TIM2_PRESCALER     (T_INT16)(216/5)
+##define TIM5_PERIOD        5000
+##define TIM5_INIT_DC       500
+##define TIM2_PERIOD        10000
+##define TIM2_INIT_DC       0
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+#extern T_INT32 S32_present_pcnt;
+#extern void PwmLcdBackLightPcnt(T_UINT32 u32_pcnt_onx1000);
+#extern void PwmInit(void);
+
+-- Declarations of the temporary variables
+
+--To keep track of number of times the function is called 
+# T_INT32           ptu_count1=0;
+# T_INT32           ptu_count2=0;
+# T_INT32           ptu_count3=0;
+# T_INT32           ptu_count4=0;
+
+-- structure variables are declared to be used in function PwmInit.
+# T_TIM_HANDLE      PTU_Tim2_handle;
+# T_TIM_HANDLE      PTU_Tim3_handle;
+# T_TIM_HANDLE      PTU_Tim5_handle;
+# T_TIM_OC_INIT     PTU_S_pwm_config1;
+# T_TIM_OC_INIT     PTU_S_pwm_config2;
+# T_TIM_OC_INIT     PTU_S_pwm_config3;
+# T_GPIO_INIT       PTU_Gpio_init_struct1;
+# T_GPIO_INIT       PTU_Gpio_init_struct2;
+# T_GPIO_INIT       PTU_Gpio_init_struct3;
+# T_TIM_HANDLE      PTU_htim;
+    
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Kavya M
+    COMMENT
+    COMMENT File Name        : hdudispbpwm.c
+    COMMENT
+    COMMENT Tested Functions :  PwmLcdBackLightPcnt
+    COMMENT                     PwmInit
+    COMMENT                     ErrorHandler
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT 1. In 'hdulibstm32f746xx.h' header file is modified for testing purpose
+    COMMENT The macro 'TIM2' is modified for stubbing hardware address
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define TIM2               ((T_TIM *) TIM2_BASE)*/
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_TIM                       PTU_TIM2;
+    COMMENT #define TIM2                ((T_TIM *) PTU_TIM2)
+    COMMENT
+    COMMENT 2. In 'hdulibstm32f746xx.h' header file is modified for testing purpose
+    COMMENT The macro 'TIM5' is modified for stubbing hardware address
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define TIM5              ((T_TIM *) TIM5_BASE)*/   
+    COMMENT T_TIM                       PTU_TIM5;
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT #define TIM5                ((T_TIM *) PTU_TIM5)
+    COMMENT
+    COMMENT 3. In 'hdulibstm32f746xx.h' header file is modified for testing purpose
+    COMMENT The macro 'TIM3' is modified for stubbing hardware address
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define TIM3              ((T_TIM *) TIM3_BASE)*/
+    COMMENT T_TIM                       PTU_TIM3;
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT #define TIM3                ((T_TIM *) PTU_TIM3)
+    COMMENT
+    COMMENT 4. In header file 'hdulibstm32f746xx.h' header file is modified for testing purpose
+    COMMENT The macro 'RCC' is modified for stubbing hardware address
+    COMMENT /*commented for testing purpose*/
+    COMMENT /*#define RCC               ((T_RCC *) RCC_BASE)*/
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_RCC                       PTU_RCC;
+    COMMENT #define RCC                 ((T_RCC *) &PTU_RCC)
+    COMMENT 
+    COMMENT 5.Source file "hdudispbpwm.c" is modified for testing purpose. The while
+    COMMENT (ONE) is modified for terminating the infinite loop.
+    COMMENT Snippet of code is added in function 'ErrorHandler'
+    COMMENT static void ErrorHandler(void)
+    COMMENT {
+    COMMENT T_UINT32  PTU_count =0;/*local variable declared for testing purpose*/
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT /*hdudispbpwm-ErrorHandler-DB-LLR-001*/
+    COMMENT while (ONE)
+    COMMENT {
+    COMMENT	/*Modified for testing purpose to terminate infinite loop*/
+    COMMENT	PTU_count++;
+    COMMENT	if(PTU_count == 4)
+    COMMENT	{
+    COMMENT	 break;
+    COMMENT	}
+    COMMENT     else
+    COMMENT    {
+    COMMENT     /*nothing*/
+    COMMENT    }
+    COMMENT }
+    COMMENT Hence while loop cannot be covered for 0 and 1 times and coverage 
+    COMMENT cannot be obtained for the FALSE part of while condition .
+    COMMENT 
+    COMMENT
+    COMMENT 6. In header file 'hdulibstm32f746xx.h' header file is modified for testing purpose
+    COMMENT The macro 'PWR' is modified for stubbing hardware address
+    COMMENT /*commented for testing purpose*/
+    COMMENT /*#define PWR                 ((T_PWR *) PWR_BASE)*/
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_PWR                           PTU_PWR;
+    COMMENT #define PWR                     ((T_PWR *) &PTU_PWR)
+    COMMENT
+    COMMENT 7.In the file 'hdudispbpwm.c',the function 'PwmInit' has the
+    COMMENT macro '__HAL_RCC_TIM2_CLK_ENABLE()' cannot be covered for 
+    COMMENT   2 or more times since it contains do-while(0)condition.
+    COMMENT     
+    COMMENT 8.In the file 'hdudispbpwm.c',the function 'PwmInit' has the
+    COMMENT macro '__HAL_RCC_GPIOA_CLK_ENABLE()' cannot be covered for 
+    COMMENT   2 or more times since it contains do-while(0)condition.
+    COMMENT
+    COMMENT 9.In the file 'hdudispbpwm.c',the function 'PwmInit' has
+    COMMENT the macro '__HAL_RCC_TIM5_CLK_ENABLE()' cannot be covered for 
+    COMMENT   2 or more times since it contains do-while(0) condition.
+ 	COMMENT
+ 	COMMENT 10.Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+	COMMENT warning #191-D: type qualifier is meaningless on cast type
+	COMMENT
+ 	
+   	COMMENT </AC>
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1 
+    COMMENT In 'PwmLcdBackLightPcnt' S32_present_pcnt is greater than TIM2_PERIOD.
+    COMMENT 
+    COMMENT Class 2  
+    COMMENT In 'PwmLcdBackLightPcnt' S32_present_pcnt is lesser than or equal to TIM2_PERIOD.
+    COMMENT     
+    COMMENT Class 3 
+    COMMENT In 'PwmInit' calls 'HalTimPwmInit'  is equal to HAL_OK.
+    COMMENT     
+    COMMENT Class 4 
+    COMMENT In 'PwmInit' calls 'HalTimPwmInit'  is Not equal to HAL_OK.
+    COMMENT
+    COMMENT class 5
+    COMMENT In 'PwmInit' calls 'HalTimPwmConfigChannel' and is equal to HAL_OK.
+    COMMENT     
+    COMMENT class 6
+    COMMENT In 'PwmInit' calls 'HalTimPwmConfigChannel' and is not equal to HAL_OK.
+    COMMENT
+    COMMENT class 7
+    COMMENT In 'PwmInit' calls 'ErrorHandler()'. 
+    COMMENT     
+    COMMENT class 8
+    COMMENT In 'PwmInit' calls 'HalTimPwmStart' and is equal to HAL_OK.
+    COMMENT     
+    COMMENT class 9
+    COMMENT In 'PwmInit' calls 'HalTimPwmStart' and is not equal to HAL_OK.
+    COMMENT     
+    COMMENT class 10
+    COMMENT In 'PwmInit' calls 'HalGpioInit'.
+    COMMENT
+    COMMENT class 11 
+    COMMENT In 'PwmInit' calls 'PwmLcdBackLightPcnt'.
+    COMMENT     
+    COMMENT Invalid Class(es)
+    COMMENT None
+    COMMENT
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+
+    DEFINE STUB pwm_c
+    
+    --In stub HalGpioInit, 'GPIOx' and  'GPIO_Init' variables are made as _no because local varible address cannot be expected. 
+    #void HalGpioInit(T_GPIO  _no * GPIOx, T_GPIO_INIT  _no *GPIO_Init) 
+    #{
+    #ptu_count4++;
+    #if(ptu_count4==1)
+    #{
+    #PTU_Gpio_init_struct1  =   *GPIO_Init;
+    #}
+    #else if(ptu_count4==2)
+    #{
+    #PTU_Gpio_init_struct2  =   *GPIO_Init;
+    #}
+    #else if(ptu_count4==3)
+    #{
+    #PTU_Gpio_init_struct3 =    *GPIO_Init;
+    #}
+    #}
+
+    --In stub HalTimPwmStart, 'htim'  variable is made as _no because local varible address cannot be expected. 
+    #T_HAL_STATUS HalTimPwmStart(T_TIM_HANDLE  _no *htim, T_UINT32  _in Channel) 
+    #{
+    #ptu_count3++;
+    #if(ptu_count3==1)
+    #{
+    #PTU_Tim2_handle    =   *htim;
+    #}
+    #else if(ptu_count3==2)
+    #{
+    #PTU_Tim3_handle    =   *htim;
+    #}
+    #else if(ptu_count3==3)
+    #{
+    #PTU_Tim5_handle =      *htim;
+    #}
+    #}
+
+    --In stub HalTimPwmConfigChannel, 'htim' and  'sConfig' variables are made as _no because local varible address cannot be expected. 
+    #T_HAL_STATUS HalTimPwmConfigChannel(T_TIM_HANDLE  _no *htim, T_TIM_OC_INIT  _no *sConfig, T_UINT32  _in Channel)  
+    #{
+    #ptu_count2++;
+    #if(ptu_count2==1)
+    #{
+    #PTU_Tim2_handle    =*htim;
+    #PTU_S_pwm_config1  =*sConfig;  
+    #}
+    #else if(ptu_count2==2)
+    #{
+    #PTU_Tim3_handle =  *htim;
+    #PTU_S_pwm_config2 =    *sConfig;
+    #}
+    #else if(ptu_count2==3)
+    #{
+    #PTU_Tim5_handle    =*htim;
+    #PTU_S_pwm_config3  =*sConfig;
+    #}
+    #}
+
+    --In stub HalGpioInit, 'htim'  variable made as _no because local varible address cannot be expected.   
+    #T_HAL_STATUS HalTimPwmInit(T_TIM_HANDLE  _no *htim)
+    #{
+    #ptu_count1++;
+    #if(ptu_count1==1)
+    #{
+    #PTU_Tim2_handle    =*htim;
+    #}
+    #else if(ptu_count1==2)
+    #{
+    #PTU_Tim3_handle    =*htim;
+    #}
+    #else if(ptu_count1==3)
+    #{
+    #PTU_Tim5_handle    =*htim;
+    #}
+    #}
+
+    END DEFINE
+    
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file pwm.c
+ENVIRONMENT ENV_pwm_c
+
+    -- variable is initialized to 0
+    VAR S32_present_pcnt,           init = 0,           ev = init
+    
+END ENVIRONMENT -- ENV_pwm_c
+
+USE ENV_pwm_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PwmLcdBackLightPcnt
+--------------------------------------------------------------------------------
+SERVICE PwmLcdBackLightPcnt
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT32 u32_pcnt_onx1000;
+
+ TEST 1
+ FAMILY nominal
+    
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-001]
+    COMMENT  sets S32_present_pcnt to u32_pcnt_onx1000
+    COMMENT  Equivalence Class None
+    COMMENT     
+    COMMENT  [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-002]
+    COMMENT  The function does the following when S32_present_pcnt is greater than TIM2_PERIOD (Exercised for TIM2_PERIOD+1).
+    COMMENT  1. Sets timer 12 to TIM2_PERIOD.
+    COMMENT  2. Sets timer 2 to product of TIM5_PERIOD and S32_present_pcnt divided by ONE_LAKH.
+    COMMENT  Equivalence class 1
+    COMMENT     
+    COMMENT  [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-004]
+    COMMENT  In the function 'PwmLcdBackLightPcnt' Sets CCR3 of TIM2 to timer and Set CCR4 of TIM5 to timer 12.
+    COMMENT   Equivalence Class None
+    COMMENT     
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT  INPUT SECTION:
+
+            --assigning variable is initialized.
+            VAR u32_pcnt_onx1000,       init = 10001,       ev = init
+
+        COMMENT  INPUT/OUTPUT SECTION:
+
+            --assigning variable with 0 as initial value.
+            VAR S32_present_pcnt,           init = 0,           ev = u32_pcnt_onx1000
+
+        COMMENT  OUTPUT SECTION:
+            --Holds the value TIM capture/compare register 3.
+            VAR TIM2->CCR3,         init=0,         ev = TIM2_PERIOD
+            --Holds the value TIM capture/compare register 4.
+            VAR TIM5->CCR4,         init=0,         ev=500          
+
+        -- Stub Calls :
+    SIMUL
+
+        --No stubs
+    END SIMUL
+
+        -- Calling the Unit Under Test :
+        #PwmLcdBackLightPcnt(u32_pcnt_onx1000);
+
+    END ELEMENT
+
+ END TEST -- TEST 1
+
+ TEST 2
+ FAMILY nominal
+    
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-003]
+    COMMENT In 'PwmLcdBackLightPcnt' S32_present_pcnt is lesser than or equal to TIM2_PERIOD (Exercised for TIM2_PERIOD-1).
+    COMMENT 1. Sets timer 12 to TIM5_INIT_DC.
+    COMMENT 2. Sets timer 2 to S32_present_pcnt.
+    COMMENT Equivalence Class 2
+    COMMENT    
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT  INPUT SECTION:
+
+            --assigning variables with 10000 as initial value.
+            VAR u32_pcnt_onx1000,           init = 9999,            ev = init
+            
+                    
+        COMMENT  INPUT/OUTPUT SECTION:
+
+            --assigning variables with 0 as initial value.
+            VAR S32_present_pcnt,           init = 0,           ev = u32_pcnt_onx1000
+
+        COMMENT  OUTPUT SECTION:
+                
+            --Holds the value TIM capture/compare register 3.
+            VAR TIM2->CCR3,         init = 0,           ev = 9999
+
+            --Holds the value TIM capture/compare register 4.
+            VAR  TIM5->CCR4,        init = 0,           ev = TIM5_INIT_DC       
+            
+    -- Stub Calls :
+    SIMUL
+        
+    --No stubs
+    END SIMUL
+
+        -- Calling the Unit Under Test :
+        #PwmLcdBackLightPcnt(u32_pcnt_onx1000);
+    END ELEMENT
+
+ END TEST -- TEST 2
+    
+    
+ TEST 3
+ FAMILY nominal
+
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT  [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-003]
+    COMMENT  In 'PwmLcdBackLightPcnt' S32_present_pcnt is equal to TIM2_PERIOD .
+    COMMENT  1. Sets timer 12 to TIM5_INIT_DC.
+    COMMENT  2. Sets timer 2 to S32_present_pcnt.
+    COMMENT  Equivalence Class 2
+    COMMENT 
+    COMMENT  [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-004]
+    COMMENT  The function does the following
+    COMMENT  1.Sets CCR3 of TIM2 to timer 2.
+    COMMENT  2.Sets CCR4 of TIM5 to timer 12.
+    COMMENT  Equivalence Class None
+    COMMENT 
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT  INPUT SECTION:
+
+
+            --assigning variables with 6000 as initial value.
+            VAR u32_pcnt_onx1000,           init = 10000,           ev = init
+            
+        COMMENT  INPUT/OUTPUT SECTION:
+
+            --assigning variables with zero as initial value.
+            VAR S32_present_pcnt,           init = 0,           ev = u32_pcnt_onx1000
+
+
+        COMMENT  OUTPUT SECTION:
+            --Holds the value TIM capture/compare register 3.
+            VAR TIM2->CCR3,     init = 0,   ev = S32_present_pcnt
+            --Holds the value TIM capture/compare register 4
+            VAR  TIM5->CCR4,    init = 0,   ev = 500         
+
+    -- Stub Calls :
+    SIMUL
+        
+        --No stubs
+    END SIMUL
+
+        -- Calling the Unit Under Test :
+        #PwmLcdBackLightPcnt(u32_pcnt_onx1000);
+    END ELEMENT
+
+  END TEST -- TEST 3
+   
+    TEST 4
+    FAMILY nominal
+   
+       COMMENT Test description
+       COMMENT <TD>
+       COMMENT  [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-003]
+       COMMENT  In 'PwmLcdBackLightPcnt' S32_present_pcnt is equal to TIM2_PERIOD .
+       COMMENT  1. Sets timer 12 to TIM5_INIT_DC.
+       COMMENT  2. Sets timer 2 to S32_present_pcnt.
+       COMMENT  Equivalence Class 2
+       COMMENT 
+       COMMENT  [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-004]
+       COMMENT  The function does the following
+       COMMENT  1.Sets CCR3 of TIM2 to timer 2.
+       COMMENT  2.Sets CCR4 of TIM5 to timer 12.
+       COMMENT here the parameter 'u32_pcnt_onx1000' is verified for the minimum value.
+       COMMENT  Equivalence Class None
+       COMMENT  
+       COMMENT </TD>
+   
+       ELEMENT
+   
+           COMMENT  INPUT SECTION:
+   
+   
+               --assigning variables with 6000 as initial value.
+               VAR u32_pcnt_onx1000,           init = 0,           ev = init
+               
+           COMMENT  INPUT/OUTPUT SECTION:
+   
+               --assigning variables with zero as initial value.
+               VAR S32_present_pcnt,           init = 0,           ev = u32_pcnt_onx1000
+   
+   
+           COMMENT  OUTPUT SECTION:
+               --Holds the value TIM capture/compare register 3.
+               VAR TIM2->CCR3,     init =1,   ev = 0
+               --Holds the value TIM capture/compare register 4
+               VAR  TIM5->CCR4,    init = 0,   ev = TIM5_INIT_DC         
+   
+       -- Stub Calls :
+       SIMUL
+           
+           --No stubs
+       END SIMUL
+   
+           -- Calling the Unit Under Test :
+           #PwmLcdBackLightPcnt(u32_pcnt_onx1000);
+       END ELEMENT
+   
+  END TEST -- TEST 4
+
+ TEST 5
+ FAMILY nominal
+    
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-001]
+    COMMENT  sets S32_present_pcnt to u32_pcnt_onx1000
+    COMMENT  Equivalence Class None
+    COMMENT     
+    COMMENT  [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-002]
+    COMMENT  The function does the following when S32_present_pcnt is greater than TIM2_PERIOD (Exercised for TIM2_PERIOD+1).
+    COMMENT  1. Sets timer 12 to TIM2_PERIOD.
+    COMMENT  2. Sets timer 2 to product of TIM5_PERIOD and S32_present_pcnt divided by ONE_LAKH.
+    COMMENT  Here, the variable 'u32_pcnt_onx1000' is exercised for the maximum value
+    COMMENT Equivalence class 1
+    COMMENT     
+    COMMENT  [hdudispbpwm-PwmLcdBackLightPcnt-DB-LLR-004]
+    COMMENT  In the function 'PwmLcdBackLightPcnt' Sets CCR3 of TIM2 to timer and Set CCR4 of TIM5 to timer 12.
+    COMMENT   Equivalence Class None
+    COMMENT     
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT  INPUT SECTION:
+
+            --assigning variable is initialized.
+            VAR u32_pcnt_onx1000,       init = 4294967295,       ev = init
+
+        COMMENT  INPUT/OUTPUT SECTION:
+
+            --assigning variable with 0 as initial value.
+            VAR S32_present_pcnt,           init = 0,           ev = u32_pcnt_onx1000
+
+        COMMENT  OUTPUT SECTION:
+            --Holds the value TIM capture/compare register 3.
+            VAR TIM2->CCR3,         init=0,         ev = S32_present_pcnt
+            --Holds the value TIM capture/compare register 4.
+            VAR TIM5->CCR4,         init=0,         ev=500          
+
+        -- Stub Calls :
+    SIMUL
+
+        --No stubs
+    END SIMUL
+
+        -- Calling the Unit Under Test :
+        #PwmLcdBackLightPcnt(u32_pcnt_onx1000);
+
+    END ELEMENT
+
+ END TEST -- TEST 5
+ 
+END SERVICE -- PwmLcdBackLightPcnt
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PwmInit
+--------------------------------------------------------------------------------
+SERVICE PwmInit
+SERVICE_TYPE extern
+  
+
+
+TEST 1
+FAMILY nominal
+    
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-001]
+    COMMENT The function  '__HAL_RCC_TIM2_CLK_ENABLE' is called to enable Timer 2 Clock.
+    COMMENT Equivalence class None
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-002]
+    COMMENT  In 'PwmInit'  The following is does to configure TIM2:
+    COMMENT 1. Sets Instance of Tim2 Handle to TIM2.
+    COMMENT 2. Sets Prescaler of Init of Tim2 Handle to TIM2_PRESCALER.
+    COMMENT 3. Sets Period of Init of Tim2 Handle to TIM2_PERIOD.
+    COMMENT 4. Sets ClockDivision of Init of Tim2 Handle to ZERO.
+    COMMENT 5. Sets CounterMode of Init of Tim2 Handle to TIM_COUNTERMODE_UP.
+    COMMENT 6. the return value of the function 'HalTimPwmInit' with reference of
+    COMMENT Tim2 Handle is  equal to HAL_OK hence does nothing.
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-003]
+    COMMENT  In 'PwmInit' The following is does to PWM channel1 (BLC PWM):
+    COMMENT 1. Sets OCMode of PWM configuration to TIM_OCMODE_PWM1.
+    COMMENT 2. Sets OCFastMode of PWM configuration to TIM_OCFAST_DISABLE.
+    COMMENT 3. Sets OCPolarity of PWM configuration to TIM_OCPOLARITY_HIGH.
+    COMMENT 4. Sets OCNPolarity of PWM configuration to TIM_OCNPOLARITY_LOW.
+    COMMENT 5. Sets Pulse of PWM configuration to TIM2_INIT_DC.
+    COMMENT 6. the return value of 'HalTimPwmConfigChannel' with reference to Tim2_handle ,
+    COMMENT reference to PWM configuration  and TIM_CHANNEL_3 as parameters is  equal to HAL_OK hence do nothing
+    COMMENT Equivalence class 5
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-004]
+    COMMENT 
+    COMMENT call  'HalTimPwmStart' with parameters to Tim2 Handle and TIM_CHANNEL_3
+    COMMENT as parameters is  equal to HAL_OK hence do nothing.
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-005]
+    COMMENT The function does the following to enable Port A clock. 
+    COMMENT 1. Call the function __HAL_RCC_GPIOA_CLK_ENABLE.
+    COMMENT 2. Sets Mode of GPIO Init Structure to GPIO_MODE_AF_PP.
+    COMMENT 3. Sets Pull of GPIO Init Structure to GPIO_PULLUP.
+    COMMENT 4. Sets Speed of GPIO Init Structure to GPIO_SPEED_HIGH.
+    COMMENT 5. Sets Alternate of GPIO Init Structure to GPIO_AF1_TIM2.
+    COMMENT 6. Sets Pin of GPIO Init Structure to GPIO_PIN_2.
+    COMMENT 7.Call the function 'HalGpioInit' with GPIOA and reference to GPIO Init Structure as its parameters
+    COMMENT Equivalence Class 10
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-006]
+    COMMENT the function '__HAL_RCC_TIM3_CLK_ENABLE' to enable Timer 3 Clock
+    COMMENT Equivalence class none
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-007]
+    COMMENT does the following to configure TIM2:
+    COMMENT 1.Sets Instance of Tim3 Handle to TIM3.
+    COMMENT 2.Sets Prescaler of Init of Tim3 Handle to TIM2_PRESCALER.
+    COMMENT 3.Sets Period of Init of Tim3 Handle to TIM2_PERIOD.
+    COMMENT 4.Sets ClockDivision of Init of Tim3 Handle to ZERO.
+    COMMENT 5.Sets CounterMode of Init of Tim3 Handle to TIM_COUNTERMODE_UP.
+    COMMENT 6.the function  'HalTimPwmInit' with reference to Tim3 Handle 
+    COMMENT as parameter is  equal to HAL_OK hence does nothing.
+    COMMENT Equivalence class 3
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-008]
+    COMMENT the function does the  following to Configure PWM channel1 (BLC PWM):
+    COMMENT 1. Sets OCMode of PWM configuration to TIM_OCMODE_PWM1.
+    COMMENT 2. Sets OCFastMode of PWM configuration to TIM_OCFAST_DISABLE.
+    COMMENT 3. Sets OCPolarity of PWM configuration to TIM_OCPOLARITY_HIGH.
+    COMMENT 4. Sets OCNPolarity of PWM configuration to TIM_OCNPOLARITY_LOW
+    COMMENT 5. Sets Pulse of PWM configuration to TIM2_INIT_DC.
+    COMMENT 6. Call the function  'HalTimPwmConfigChannel' with reference 
+    COMMENT to Tim3 Handle , reference to PWM configuration  and TIM_CHANNEL_1 as parameters is
+    COMMENT  equal to HAL_OK hence do nothing.
+    COMMENT Equivalence class 5
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-009]
+    COMMENT The function  'HalTimPwmStart' with reference to Tim3 Handle 
+    COMMENT and TIM_CHANNEL_1 as parameters is equal to HAL_OK hence do nothing
+    COMMENT  Equivalence class 8
+    COMMENT     
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-010]
+    COMMENT The function  does the following. 
+    COMMENT 1. Sets Mode of GPIO Init Structure to GPIO_MODE_AF_PP.
+    COMMENT 2. Sets Pull of GPIO Init Structure to GPIO_PULLUP.
+    COMMENT 3. Sets Speed of GPIO Init Structure to GPIO_SPEED_HIGH.
+    COMMENT 4. Sets Alternate of GPIO Init Structure to GPIO_AF2_TIM3.
+    COMMENT 5. Sets Pin of GPIO Init Structure to GPIO_PIN_6.
+    COMMENT 6.Call the function 'HalGpioInit' with GPIOA and reference to GPIO Init Structure as its parameters.
+    COMMENT  Equivalence class 10
+    COMMENT 
+    COMMENT  [hdudispbpwm-PwmInit-DB-LLR-011]
+    COMMENT the function '__HAL_RCC_TIM5_CLK_ENABLE' to enable Timer 5 Clock
+    COMMENT Equivalence class none
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-012]
+    COMMENT  function does the following to configure TIM5:
+    COMMENT 1.Sets Instance of Tim5 Handle to TIM5.
+    COMMENT 2.Sets Prescaler of Init of Tim5 Handle to ZERO.
+    COMMENT 3.Sets Period of Init of Tim5 Handle to TIM5_PERIOD.
+    COMMENT 4.Sets ClockDivision of Init of Tim5 Handle to ZERO.
+    COMMENT 5.Sets CounterMode of Init of Tim5 Handle to TIM_COUNTERMODE_UP.
+    COMMENT 6.function 'HalTimPwmInit' with reference to 'Tim5 Handle' as parameter is equal to HAL_OK hence does nothing.
+    COMMENT  Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-013]
+    COMMENT function does the following :
+    COMMENT 1. Sets OCMode of PWM configuration to TIM_OCMODE_PWM1.
+    COMMENT 2. Sets OCFastMode of PWM configuration to TIM_OCFAST_ENABLE.
+    COMMENT 3. Sets OCPolarity of PWM configuration to TIM_OCPOLARITY_LOW.
+    COMMENT 4. Sets Pulse of PWM configuration to TIM5_INIT_DC.
+    COMMENT 5. th function 'HalTimPwmConfigChannel' with  reference to 'Tim5 Handle' ,
+    COMMENT reference to 'PWM configuration'  and 'TIM_CHANNEL_4' as parameters is equal to HAL_OK hence do nothing
+    COMMENT Equivalence class 5
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-014]
+    COMMENT the function 'HalTimPwmStart' with reference to 'Tim5 Handle' and
+    COMMENT 'TIM_CHANNEL_4' as parameters is  equal to HAL_OK hence do nothing.
+    COMMENT Equivalence class 8
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-015]
+    COMMENT function does the following. 
+    COMMENT 1. Sets Mode of GPIO Init Structure to GPIO_MODE_AF_PP.
+    COMMENT 2. Sets Pull of GPIO Init Structure to GPIO_PULLDOWN.
+    COMMENT 3. Sets Speed of GPIO Init Structure to GPIO_SPEED_HIGH.
+    COMMENT 4. Sets Alternate of GPIO Init Structure to GPIO_AF2_TIM5.
+    COMMENT 5. Sets Pin of GPIO Init Structure to GPIO_PIN_3.
+    COMMENT 6.Call the function 'HalGpioInit' with GPIOA and reference to GPIO Init Structure as its parameters
+    COMMENT Equivalence class 10
+    COMMENT 
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-016]
+    COMMENT the function 'PwmLcdBackLightPcnt' called with parameter SIXTY_THOUSAND.
+    COMMENT Equivalence class 11
+    COMMENT 
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT  INPUT SECTION:
+            --None
+            
+         COMMENT  INPUT/OUTPUT SECTION:
+			   
+			 --assigning variables with zero as initial value.
+		     VAR S32_present_pcnt,           init = 0,           ev = 60000
+		     
+            --variable is initialised with offset value 
+            VAR     RCC->APB1ENR,                           init =0,                ev= 11
+            --variable is initialised with offset value 
+            VAR     RCC->AHB1ENR,                           init=0x00100000,        ev=0x00100001
+
+        COMMENT  OUTPUT SECTION:
+            --Holds the values of Structure members of  PTU_Tim2_handle
+            VAR PTU_Tim2_handle.Instance,                   init = NULL,            ev = TIM2
+            VAR PTU_Tim2_handle.Init.Prescaler  ,           init = 0,               ev = TIM2_PRESCALER
+            VAR PTU_Tim2_handle.Init.Period,                init = 0,               ev = TIM2_PERIOD
+            VAR PTU_Tim2_handle.Init.ClockDivision,         init = 1,               ev = ZERO
+            VAR PTU_Tim2_handle.Init.CounterMode,           init = 1,               ev = TIM_COUNTERMODE_UP
+            
+            --Holds the values of Structure members of  PTU_S_pwm_config1 
+            VAR PTU_S_pwm_config1.OCMode,                   init=0,                 ev = TIM_OCMODE_PWM1
+            VAR PTU_S_pwm_config1.OCFastMode,               init=1,                 ev = TIM_OCFAST_DISABLE
+            VAR PTU_S_pwm_config1.OCPolarity,               init=1,                 ev = TIM_OCPOLARITY_HIGH
+            VAR PTU_S_pwm_config1.OCNPolarity,              init=0,                 ev = TIM_OCNPOLARITY_LOW
+            VAR PTU_S_pwm_config1.Pulse,                    init=1,                 ev = TIM2_INIT_DC
+            
+            --Holds the values of Structure members of  PTU_Gpio_init_struct1
+            VAR PTU_Gpio_init_struct1.Mode,                 init=0,                 ev = GPIO_MODE_AF_PP
+            VAR PTU_Gpio_init_struct1.Pull,                 init=0,                 ev = GPIO_PULLUP
+            VAR PTU_Gpio_init_struct1.Speed,                init=0,                 ev = GPIO_SPEED_HIGH
+            VAR PTU_Gpio_init_struct1.Alternate,            init=0,                 ev = GPIO_AF1_TIM2
+            VAR PTU_Gpio_init_struct1.Pin,                  init=0,                 ev = GPIO_PIN_2
+            
+            --Holds the values of Structure members of  PTU_Tim3_handle
+            VAR PTU_Tim3_handle.Instance,                   init = NULL,            ev = TIM3
+            VAR PTU_Tim3_handle.Init.Prescaler  ,           init = 0x0000,          ev = TIM2_PRESCALER
+            VAR PTU_Tim3_handle.Init.Period,                init = 0x0000,          ev = TIM2_PERIOD
+            VAR PTU_Tim3_handle.Init.ClockDivision,         init = 1,               ev = ZERO
+            VAR PTU_Tim3_handle.Init.CounterMode,           init = 1,               ev = TIM_COUNTERMODE_UP
+            
+            --Holds the values of Structure members of  PTU_S_pwm_config2 
+            VAR PTU_S_pwm_config2.OCMode,                   init=0,                 ev = TIM_OCMODE_PWM1
+            VAR PTU_S_pwm_config2.OCFastMode,               init=1,                 ev = TIM_OCFAST_DISABLE
+            VAR PTU_S_pwm_config2.OCPolarity,               init=1,                 ev = TIM_OCPOLARITY_HIGH
+            VAR PTU_S_pwm_config2.OCNPolarity,              init=0,                 ev = TIM_OCNPOLARITY_LOW
+            VAR PTU_S_pwm_config2.Pulse,                    init=1,                 ev = TIM2_INIT_DC
+
+            --Holds the values of Structure members of  PTU_Gpio_init_struct2
+            VAR PTU_Gpio_init_struct2.Mode,                 init=0,                 ev = GPIO_MODE_AF_PP
+            VAR PTU_Gpio_init_struct2.Pull,                 init=0,                 ev = GPIO_PULLUP
+            VAR PTU_Gpio_init_struct2.Speed,                init=0,                 ev = GPIO_SPEED_HIGH
+            VAR PTU_Gpio_init_struct2.Alternate,            init=0,                 ev = GPIO_AF2_TIM3
+            VAR PTU_Gpio_init_struct2.Pin,                  init=0,                 ev = GPIO_PIN_6
+            
+            --Holds the values of Structure members of  PTU_Tim5_handle
+            VAR PTU_Tim5_handle.Instance,                   init = NULL,            ev = TIM5
+            VAR PTU_Tim5_handle.Init.Prescaler  ,           init = 1,               ev = ZERO
+            VAR PTU_Tim5_handle.Init.Period,                init = 0x0000,          ev = TIM5_PERIOD
+            VAR PTU_Tim5_handle.Init.ClockDivision,         init = 1,               ev = ZERO
+            VAR PTU_Tim5_handle.Init.CounterMode,           init = 1,               ev = TIM_COUNTERMODE_UP
+            
+            --Holds the values of Structure members of  PTU_S_pwm_config3
+            VAR PTU_S_pwm_config3.OCMode,                   init=0,                 ev = TIM_OCMODE_PWM1
+            VAR PTU_S_pwm_config3.OCFastMode,               init=1,                 ev = TIM_OCFAST_ENABLE
+            VAR PTU_S_pwm_config3.OCPolarity,               init=1,                 ev = TIM_OCPOLARITY_LOW
+            VAR PTU_S_pwm_config3.Pulse,                    init=1,                 ev = TIM5_INIT_DC
+            
+            --Holds the values of Structure members of PTU_Gpio_init_struct3
+            VAR PTU_Gpio_init_struct3.Mode,                 init=0,                 ev = GPIO_MODE_AF_PP
+            VAR PTU_Gpio_init_struct3.Pull,                 init=0,                 ev = GPIO_PULLDOWN
+            VAR PTU_Gpio_init_struct3.Speed,                init=0,                 ev = GPIO_SPEED_HIGH
+            VAR PTU_Gpio_init_struct3.Alternate,            init=0,                 ev = GPIO_AF2_TIM5
+            VAR PTU_Gpio_init_struct3.Pin,                  init=0,                 ev = GPIO_PIN_3
+            
+            --Variables are used for stub calls looping.
+            VAR ptu_count1,                                 init = 0,               ev = 3      
+            VAR ptu_count2,                                 init = 0,               ev = 3      
+            VAR ptu_count3,                                 init = 0,               ev = 3      
+            VAR ptu_count4,                                 init = 0,               ev = 3      
+        
+        
+        -- Stub Calls :
+    SIMUL
+
+        STUB HalTimPwmInit 1..3=>( )  HAL_OK
+        STUB HalTimPwmConfigChannel(TIM_CHANNEL_3) HAL_OK
+        STUB HalTimPwmConfigChannel(TIM_CHANNEL_1) HAL_OK
+        STUB HalTimPwmConfigChannel(TIM_CHANNEL_4) HAL_OK
+
+        STUB HalTimPwmStart (TIM_CHANNEL_3) HAL_OK
+        STUB HalTimPwmStart (TIM_CHANNEL_1) HAL_OK
+        STUB HalTimPwmStart (TIM_CHANNEL_4) HAL_OK
+        STUB HalGpioInit 1..3=> () 0
+    END SIMUL
+
+
+
+        --Calling the Unit Under Test :
+        #PwmInit();
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+ 
+
+TEST 2
+FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-002]
+    COMMENT  In 'PwmInit'  does the following to configure TIM2:
+    COMMENT 1. Sets Instance of Tim2 Handle to TIM2.
+    COMMENT 2. Sets Prescaler of Init of Tim2 Handle to TIM2_PRESCALER.
+    COMMENT 3. Sets Period of Init of Tim2 Handle to TIM2_PERIOD.
+    COMMENT 4. Sets ClockDivision of Init of Tim2 Handle to ZERO.
+    COMMENT 5. Sets CounterMode of Init of Tim2 Handle to TIM_COUNTERMODE_UP.
+    COMMENT 6. The function 'HalTimPwmInit' with reference of Tim2
+    COMMENT Handle is not equal to HAL_OK and Call the function ErrorHandler.
+    COMMENT Equivalence Class 4,7
+    COMMENT 
+    COMMENT [hdudispbpwm-ErrorHandler-DB-LLR-001]
+    COMMENT The function loops for 4 times as it is handled in modified source code.
+    COMMENT Equivalence Class None
+    COMMENT     
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-003]
+    COMMENT In 'PwmInit'  does the following to configure PWM channel1 (BLC PWM):
+    COMMENT 1. Sets OCMode of PWM configuration to TIM_OCMODE_PWM1.
+    COMMENT 2. Sets OCFastMode of PWM configuration to TIM_OCFAST_DISABLE.
+    COMMENT 3. Sets OCPolarity of PWM configuration to TIM_OCPOLARITY_HIGH.
+    COMMENT 4. Sets OCNPolarity of PWM configuration to TIM_OCNPOLARITY_LOW.
+    COMMENT 5. Sets Pulse of PWM configuration to TIM2_INIT_DC.
+    COMMENT 6. the function 'HalTimPwmConfigChannel' is called with 
+    COMMENT reference to Tim2_handle , reference to PWM configuration  and TIM_CHANNEL_3 as  
+    COMMENT parameters is not equal to HAL_OK and Call the function ErrorHandler
+    COMMENT Equivalence class 6,7
+    COMMENT     
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-004]
+    COMMENT 
+    COMMENT The function 'HalTimPwmStart' with reference to Tim2 Handle and TIM_CHANNEL_3 
+    COMMENT as parameters is not equal to HAL_OK  and call ErrorHandler
+    COMMENT Equivalence Class 9
+    COMMENT     
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-007]
+    COMMENT does the following to configure TIM2:
+    COMMENT 1.Sets Instance of Tim3 Handle to TIM3.
+    COMMENT 2.Sets Prescaler of Init of Tim3 Handle to TIM2_PRESCALER.
+    COMMENT 3.Sets Period of Init of Tim3 Handle to TIM2_PERIOD.
+    COMMENT 4.Sets ClockDivision of Init of Tim3 Handle to ZERO.
+    COMMENT 5.Sets CounterMode of Init of Tim3 Handle to TIM_COUNTERMODE_UP.
+    COMMENT 6.the function 'HalTimPwmInit' with reference to Tim3 Handle 
+    COMMENT as parameter is not equal to HAL_OK  and call  function ErrorHandler.
+    COMMENT Equivalence Class 4,7
+    COMMENT     
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-008]
+    COMMENT the function does the  following to Configure PWM channel1 (BLC PWM):
+    COMMENT 1.Sets OCMode of PWM configuration to TIM_OCMODE_PWM1.
+    COMMENT 2.Sets OCFastMode of PWM configuration to TIM_OCFAST_DISABLE.
+    COMMENT 3.Sets OCPolarity of PWM configuration to TIM_OCPOLARITY_HIGH.
+    COMMENT 4.Sets OCNPolarity of PWM configuration to TIM_OCNPOLARITY_LOW
+    COMMENT 5.Sets Pulse of PWM configuration to TIM2_INIT_DC.
+    COMMENT 6.'HalTimPwmConfigChannel' with reference to Tim3 Handle , 
+    COMMENT reference to PWM configuration  and TIM_CHANNEL_1 as parameters is not equal to HAL_OK and Call the function ErrorHandler 
+    COMMENT Equivalence class 6,7
+    COMMENT     
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-009]
+    COMMENT the function 'HalTimPwmStart' with reference to Tim3 Handle and 
+    COMMENT TIM_CHANNEL_1 as parameters is not equal to HAL_OK  and call 'ErrorHandler'.
+    COMMENT  Equivalence class 9,7
+    COMMENT     
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-012]
+    COMMENT     function  does the following to configure TIM5:
+    COMMENT 1.  Sets Instance of Tim5 Handle to TIM5.
+    COMMENT 2.  Sets Prescaler of Init of Tim5 Handle to ZERO.
+    COMMENT 3.  Sets Period of Init of Tim5 Handle to TIM5_PERIOD.
+    COMMENT 4.  Sets ClockDivision of Init of Tim5 Handle to ZERO.
+    COMMENT 5.  Sets CounterMode of Init of Tim5 Handle to TIM_COUNTERMODE_UP.
+    COMMENT 6. The function 'HalTimPwmInit' with reference to Tim5 Handle as 
+    COMMENT parameter is not equal to HAL_OK and Call the function 'ErrorHandler' .
+    COMMENT  Equivalence Class 4,7
+    COMMENT     
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-013]
+    COMMENT function  does the following :
+    COMMENT 1. Sets OCMode of PWM configuration to TIM_OCMODE_PWM1.
+    COMMENT 2. Sets OCFastMode of PWM configuration to TIM_OCFAST_ENABLE.
+    COMMENT 3. Sets OCPolarity of PWM configuration to TIM_OCPOLARITY_LOW.
+    COMMENT 4. Sets Pulse of PWM configuration to TIM5_INIT_DC.
+    COMMENT 5.  'HalTimPwmConfigChannel' with  reference to Tim5 Handle , 
+    COMMENT reference to PWM configuration  and TIM_CHANNEL_4 as parameters is not equal to HAL_OK and Call the function 'ErrorHandler'.
+    COMMENT Equivalence class 6,7
+    COMMENT     
+    COMMENT [hdudispbpwm-PwmInit-DB-LLR-014]
+    COMMENT the function 'HalTimPwmStart' with reference to Tim5 Handle and TIM_CHANNEL_4 
+    COMMENT as parameters is not equal to HAL_OK and Call the function 'ErrorHandler'.
+    COMMENT Equivalence class 9,7
+    COMMENT     
+    COMMENT </TD>
+    ELEMENT
+
+        COMMENT  INPUT SECTION:
+        
+            --none
+        
+        COMMENT  INPUT/OUTPUT SECTION:
+	   
+		    --assigning variables with zero as initial value.
+		     VAR S32_present_pcnt,           init = 0,           ev = 60000
+  
+            --variable is initialised with offset value 
+            VAR     RCC->APB1ENR,                       init =0,                ev= 11
+            --variable is initialised with offset value 
+            VAR     RCC->AHB1ENR,                       init=0x00100000,        ev=0x00100001
+
+        COMMENT  OUTPUT SECTION:
+             --Holds the values of Structure members of  PTU_Tim2_handle
+            VAR PTU_Tim2_handle.Instance,               init = NULL,            ev = TIM2
+            VAR PTU_Tim2_handle.Init.Prescaler  ,       init = 0,               ev = TIM2_PRESCALER
+            VAR PTU_Tim2_handle.Init.Period,            init = 0,               ev = TIM2_PERIOD
+            VAR PTU_Tim2_handle.Init.ClockDivision,     init = 1,               ev = ZERO
+            VAR PTU_Tim2_handle.Init.CounterMode,       init = 1,               ev = TIM_COUNTERMODE_UP
+            
+           --Holds the values of Structure members of  PTU_S_pwm_config1 
+            VAR PTU_S_pwm_config1.OCMode,               init = 0,               ev = TIM_OCMODE_PWM1
+            VAR PTU_S_pwm_config1.OCFastMode,           init = 1,               ev = TIM_OCFAST_DISABLE
+            VAR PTU_S_pwm_config1.OCPolarity,           init = 1,               ev = TIM_OCPOLARITY_HIGH
+            VAR PTU_S_pwm_config1.OCNPolarity,          init = 0,               ev = TIM_OCNPOLARITY_LOW
+            VAR PTU_S_pwm_config1.Pulse,                init = 1,               ev = TIM2_INIT_DC
+            
+            --Holds the values of Structure members of  PTU_Gpio_init_struct1
+            VAR PTU_Gpio_init_struct1.Mode,             init = 0,               ev = GPIO_MODE_AF_PP
+            VAR PTU_Gpio_init_struct1.Pull,             init = 0,               ev = GPIO_PULLUP
+            VAR PTU_Gpio_init_struct1.Speed,            init = 0,               ev = GPIO_SPEED_HIGH
+            VAR PTU_Gpio_init_struct1.Alternate,        init = 0,               ev = GPIO_AF1_TIM2
+            VAR PTU_Gpio_init_struct1.Pin,              init = 0,               ev = GPIO_PIN_2
+            
+            --Holds the values of Structure members of  PTU_Tim3_handle
+            VAR PTU_Tim3_handle.Instance,               init = NULL,            ev = TIM3
+            VAR PTU_Tim3_handle.Init.Prescaler  ,       init = 0x0000,          ev = TIM2_PRESCALER
+            VAR PTU_Tim3_handle.Init.Period,            init = 0x0000,          ev = TIM2_PERIOD
+            VAR PTU_Tim3_handle.Init.ClockDivision,     init = 1,               ev = ZERO
+            VAR PTU_Tim3_handle.Init.CounterMode,       init = 1,               ev = TIM_COUNTERMODE_UP
+            
+           --Holds the values of Structure members of  PTU_S_pwm_config2 
+            VAR PTU_S_pwm_config2.OCMode,               init = 0,               ev = TIM_OCMODE_PWM1
+            VAR PTU_S_pwm_config2.OCFastMode,           init = 1,               ev = TIM_OCFAST_DISABLE
+            VAR PTU_S_pwm_config2.OCPolarity,           init = 1,               ev = TIM_OCPOLARITY_HIGH
+            VAR PTU_S_pwm_config2.OCNPolarity,          init = 0,               ev = TIM_OCNPOLARITY_LOW
+            VAR PTU_S_pwm_config2.Pulse,                init = 1,               ev = TIM2_INIT_DC
+
+             --Holds the values of Structure members of  PTU_Gpio_init_struct2
+            VAR PTU_Gpio_init_struct2.Mode,             init=0,                 ev = GPIO_MODE_AF_PP
+            VAR PTU_Gpio_init_struct2.Pull,             init=0,                 ev = GPIO_PULLUP
+            VAR PTU_Gpio_init_struct2.Speed,            init=0,                 ev = GPIO_SPEED_HIGH
+            VAR PTU_Gpio_init_struct2.Alternate,        init=0,                 ev = GPIO_AF2_TIM3
+            VAR PTU_Gpio_init_struct2.Pin,              init=0,                 ev = GPIO_PIN_6
+            
+            --Holds the values of Structure members of  PTU_Tim5_handle
+            VAR PTU_Tim5_handle.Instance,               init = NULL,            ev = TIM5
+            VAR PTU_Tim5_handle.Init.Prescaler  ,       init = 1,               ev = ZERO
+            VAR PTU_Tim5_handle.Init.Period,            init = 0x0000,          ev = TIM5_PERIOD
+            VAR PTU_Tim5_handle.Init.ClockDivision,     init = 1,               ev = ZERO
+            VAR PTU_Tim5_handle.Init.CounterMode,       init = 1,               ev = TIM_COUNTERMODE_UP
+            
+            --Holds the values of Structure members of  PTU_S_pwm_config3
+            VAR PTU_S_pwm_config3.OCMode,               init=0,                 ev = TIM_OCMODE_PWM1
+            VAR PTU_S_pwm_config3.OCFastMode,           init=1,                 ev = TIM_OCFAST_ENABLE
+            VAR PTU_S_pwm_config3.OCPolarity,           init=1,                 ev = TIM_OCPOLARITY_LOW
+            VAR PTU_S_pwm_config3.Pulse,                init=1,                 ev = TIM5_INIT_DC
+           
+            --Holds the values of Structure members of PTU_Gpio_init_struct3
+            VAR PTU_Gpio_init_struct3.Mode,             init=0,                 ev = GPIO_MODE_AF_PP
+            VAR PTU_Gpio_init_struct3.Pull,             init=0,                 ev = GPIO_PULLDOWN
+            VAR PTU_Gpio_init_struct3.Speed,            init=0,                 ev = GPIO_SPEED_HIGH
+            VAR PTU_Gpio_init_struct3.Alternate,        init=0,                 ev = GPIO_AF2_TIM5
+            VAR PTU_Gpio_init_struct3.Pin,              init=0,                 ev = GPIO_PIN_3
+            
+            --Variables are used for stub calls looping.
+            VAR ptu_count1,                             init = 0,               ev = 3      
+            VAR ptu_count2,                             init = 0,               ev = 3      
+            VAR ptu_count3,                             init = 0,               ev = 3      
+            VAR ptu_count4,                             init = 0,               ev = 3   
+        -- Stub Calls :
+    SIMUL
+
+        STUB HalTimPwmInit 1..3=>( )  HAL_ERROR
+        STUB HalTimPwmConfigChannel(TIM_CHANNEL_3) HAL_ERROR
+        STUB HalTimPwmConfigChannel(TIM_CHANNEL_1) HAL_ERROR
+        STUB HalTimPwmConfigChannel(TIM_CHANNEL_4) HAL_ERROR
+
+        STUB HalTimPwmStart (TIM_CHANNEL_3) HAL_ERROR
+        STUB HalTimPwmStart (TIM_CHANNEL_1) HAL_ERROR
+        STUB HalTimPwmStart (TIM_CHANNEL_4) HAL_ERROR
+        STUB HalGpioInit 1..3=> () 0
+    END SIMUL
+
+
+
+        -- Calling the Unit Under Test :
+        #PwmInit();
+        END ELEMENT
+
+END TEST -- TEST 2
+
+END SERVICE -- PwmInit

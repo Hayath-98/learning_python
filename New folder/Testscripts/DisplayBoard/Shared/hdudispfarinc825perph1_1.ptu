@@ -1,0 +1,2954 @@
+HEADER hdudispfarinc825perph1,Source Code Ver : 1.8,TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name         : Soumya Patil
+--
+-- File Name           : hdudispfarinc825perph1_1.ptu
+--
+-- Test Creation Date  : 12.10.2017
+--
+-- Tested Functions    : CANITConfig
+--                       U8MailBoxAvail
+--                       RxQueueRemove
+--                       A8251GetMessage
+--                       RxQueueInsert
+--                       CAN1Rx0IrqHandler
+--                       TxQueueInsert
+--                       BuildBroadcastExtId
+--                       BuildPeerToPeerExtId
+--                       A8251Xmit
+--                       XmitFromBuff
+--                       CAN1TxIrqHandler
+--                       HalCanMspInit
+--                       CAN1Config
+--                       A8251Init
+--                       
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE        TESTER NAME        MODIFICATIONS
+-- ------------        ---------        -----------        -------------
+--    1.1              12.10.2017       Soumya Patil       Created the ptu file.
+--    1.2              10.11.2017       Soumya Patil       Updated as per #PR100171
+--    1.3              14.11.2017       Soumya Patil       Updated as per #PR100171
+--	  1.4			   10.04.2018		BhanuPrakash E	   Updated as per #PR100201
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfresource.h"   
+##include "hdulibstm32f746xx.h"  
+##include "hdulibstm32f7xxhalcan.h"   
+##include "hdulibstm32f7xxhalgpio.h"  
+##include "hdudispfarinc825.h"   
+##include "hdudispfa825def.h" 
+##include "hdulibstm32f7xx.h"   
+##include "hdulibbasictypes.h"  
+##include "hdulibstm32f7xxhalcortex.h"
+##include "hdulibstmcorecomm.h"  
+##include "hdudispfucos.h"        
+##include "hdulibstm32hallegacy.h"  
+
+##define  GPIO_SPEED_FREQ_VERY_HIGH   ((T_UINT32)0x00000003U)
+##define  GPIO_SPEED_HIGH                          GPIO_SPEED_FREQ_VERY_HIGH
+##define  GPIO_SPEED_LOW                           GPIO_SPEED_FREQ_LOW
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    ##define PRESCLR_FOUR 4U
+    ##define BANK_NO_14    14U
+    # volatile  T_INT32 Itm_rx_buffer;
+-- Declarations of the temporary variables
+    --Temporary variables to hold GPIO_Init structure
+    #T_GPIO_INIT PTU_GPIO_Init_TX, PTU_GPIO_Init_RX;
+
+    --Temporary variables to hold CAN handle structure
+    #T_CAN_HANDLE PTU_HalCanInit, PTU_HalCanTransmit;
+    --Temporary variable to hold filter_config structure
+    #T_CAN_FILTER_CONF_TYPE PTU_filter_config;
+
+    --Temporary variables for stub call count and loop
+    #T_UINT8 PTU_count;
+    #T_UINT16 PTU_i, PTU_lcc_val, PTU_u8PaySize;
+
+    --Temporary variable to hold Sem_a8251_commtask value
+    #T_OS_EVENT PTU_Sem_a8251_commtask;
+--------------------------------------------------------------------------------
+
+BEGIN
+    
+    COMMENT Author Name      : Soumya Patil
+    COMMENT
+    COMMENT File Name        : hdudispfarinc825perph1_1.ptu
+    COMMENT
+    COMMENT Tested Functions : CANITConfig
+    COMMENT                    U8MailBoxAvail
+    COMMENT                    RxQueueRemove
+    COMMENT                    A8251GetMessage
+    COMMENT                    RxQueueInsert
+    COMMENT                    CAN1Rx0IrqHandler
+    COMMENT                    TxQueueInsert
+    COMMENT                    BuildBroadcastExtId
+    COMMENT                    BuildPeerToPeerExtId
+    COMMENT                    A8251Xmit
+    COMMENT                    XmitFromBuff
+    COMMENT                    CAN1TxIrqHandler
+    COMMENT                    HalCanMspInit
+    COMMENT                    CAN1Config
+    COMMENT                    A8251Init
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1.Header file 'hdulibstm32f746xx.h' is modified for testing purpose.
+    COMMENT   /*Commented for testing purpose*/
+    COMMENT   /*#define CAN1                ((T_CAN *) CAN1_BASE)*/
+    COMMENT   /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT   T_CAN PTU_CAN1;
+    COMMENT   #define CAN1                ((T_CAN *) &PTU_CAN1)
+    COMMENT
+    COMMENT   /*Commented for testing purpose*/
+    COMMENT   /*#define CAN2                ((T_CAN *) CAN2_BASE)*/
+    COMMENT   /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT   T_CAN PTU_CAN2;
+    COMMENT   #define CAN2                ((T_CAN *) &PTU_CAN2)
+    COMMENT
+    COMMENT   /*Commented for testing purpose*/
+    COMMENT   /*#define RCC                 ((T_RCC *) RCC_BASE)*/
+    COMMENT   /* Modified for stubbing hardware address */
+    COMMENT   T_RCC PTU_RCC;
+    COMMENT   #define RCC                 ((T_RCC *) &PTU_RCC)
+    COMMENT    
+	COMMENT 2. Source file "hdudispfarinc825perph1.c" is modified for testing LLR "hdudispfarinc825perph2-CAN1Config-DB-LLR-002"
+	COMMENT	The "while(TRUE)" is modified for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'CAN1Config':
+    COMMENT 
+    COMMENT T_UINT16 PTU1_count=0; /*local variable declared for testing purpose*/
+	COMMENT
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU1_count++;
+    COMMENT if(PTU1_count == 4)
+    COMMENT {
+    COMMENT     break;
+    COMMENT }
+    COMMENT else
+    COMMENT {
+    COMMENT     /*nothing*/
+    COMMENT }  
+    COMMENT }    
+    COMMENT  Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition     
+    COMMENT
+    COMMENT 3. PTU is split into hdudispfarinc825perph1_1.ptu and hdudispfarinc825perph1_2.ptu,hdudispfarinc825perph1_3.ptu
+    COMMENT    since static variable dependency in the source code.
+    COMMENT 
+    COMMENT 4. Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+    COMMENT    warning #191-D: type qualifier is meaningless on cast type
+    COMMENT 
+	COMMENT 5. Source file "hdudispfarinc825perph1.c" is modified for testing LLR "hdudispfarinc825perph2-CAN1Config-DB-LLR-004"
+	COMMENT	The "while(TRUE)" is modified for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'CAN1Config':
+    COMMENT 
+    COMMENT T_UINT16 PTU2_count=0; /*local variable declared for testing purpose*/
+    COMMENT 
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU2_count++;
+    COMMENT if(PTU2_count == 4)
+    COMMENT {
+    COMMENT     break;
+    COMMENT }
+    COMMENT else
+    COMMENT {
+    COMMENT     /*nothing*/
+    COMMENT }  
+    COMMENT }    
+    COMMENT  Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition 
+    COMMENT
+	COMMENT 6. Source file "hdudispfarinc825perph1.c" is modified for testing LLR "hdudispfarinc825perph2-CAN1DemoConfig-DB-LLR-004"
+	COMMENT	The "while(TRUE)" is modified for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'CAN1DemoConfig':
+    COMMENT 
+    COMMENT T_UINT16 PTU_count=0; /*local variable declared for testing purpose*/
+    COMMENT 
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU_count++;
+    COMMENT if(PTU_count == 4)
+    COMMENT {
+    COMMENT     break;
+    COMMENT }
+    COMMENT else
+    COMMENT {
+    COMMENT     /*nothing*/
+    COMMENT }  
+    COMMENT }    
+    COMMENT  Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition 
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In function 'CANITConfig', the new state of CAN interrupt 'new_state' is equal to ENABLE
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function 'CANITConfig', the new state of CAN interrupt 'new_state' is equal to DISABLE
+    COMMENT
+    COMMENT Class 3
+    COMMENT The function 'U8MailBoxAvail', result of TSR of Instance of h_can bitwise AND with CAN_TSR_TME0 is CAN_TSR_TME0
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'A8251GetMessage', the channel(e_channel) is Normal Operating Channel.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'A8251GetMessage', the channel(e_channel) is Node Service Channel.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'A8251GetMessage', the channel(e_channel) is other than NOC and NSC.
+    COMMENT
+    COMMENT Class 7
+    COMMENT The function 'A8251GetMessage', calls the function 'RxQueueRemove'
+    COMMENT
+    COMMENT Class 8
+    COMMENT The function 'TxQueueInsert', calls the function 'CANITConfig'
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'TxQueueInsert', number of messages in the Tx queue (TxCntr of ps_which_q) is equal to CAN_X_Q_SIZE
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'TxQueueInsert', number of messages in the Tx queue (TxCntr of ps_which_q) is not equal to CAN_X_Q_SIZE
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'TxQueueInsert', the next message to insert is in the Transmit message Queue Size 
+    COMMENT range(TxBuf [CAN_X_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'TxQueueInsert', the next message to insert is not in the Transmit message Queue Size 
+    COMMENT range(TxBuf [CAN_X_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 13
+    COMMENT The function 'TxQueueInsert', calls the function 'CAN1TxIrqHandler'
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'BuildBroadcastExtId', Build the 29 bit CAN identifier for an ARINC 825 broadcast type message.
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'BuildPeerToPeerExtId', Builds the 29 bit CAN identifier for an ARINC 825 peer to peer type message.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'A8251Xmit', selected channel is NOC.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'A8251Xmit', selected channel is NSC.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'A8251Xmit', selected channel is other than NOC and NSC.
+    COMMENT
+    COMMENT Class 19
+    COMMENT The function 'A8251Xmit', calls the function 'BuildPeerToPeerExtId'.
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'A8251Xmit', number of bytes of payload(u8PaySize of ps_xm) is greater than PAYLOAD_SIZE
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'A8251Xmit', number of bytes of payload(u8PaySize of ps_xm) is less than or equal to PAYLOAD_SIZE
+    COMMENT
+    COMMENT Class 22
+    COMMENT The function 'A8251Xmit', calls the function 'TxQueueInsert'.
+    COMMENT
+    COMMENT Class 23    
+    COMMENT The function 'XmitFromBuff', calls the function 'U8MailBoxAvail'.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'XmitFromBuff',  return value of U8MailBoxAvail is other than ZERO.
+    COMMENT
+    COMMENT Class 25    
+    COMMENT In function 'XmitFromBuff',  return value of U8MailBoxAvail is equal to ZERO.
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'XmitFromBuff',  The next message to transmit is in the Transmit message Queue Size 
+    COMMENT range (TxBuf [CAN_X_Q_SIZE] of ps_which_q)
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'XmitFromBuff',  The next message to transmit is not in the Transmit message Queue Size 
+    COMMENT range (TxBuf [CAN_X_Q_SIZE] of ps_which_q)
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'CAN1TxIrqHandler', number of messages in the Tx queue(TxCntr of NOC transmit queue)is not equal to ZERO.
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'CAN1TxIrqHandler', number of messages in the Tx queue(TxCntr of NOC transmit queue)is equal to ZERO.
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'CAN1TxIrqHandler', there is no mailbox free for  transmission of NOC i.e the return value of the 
+    COMMENT function XmitFromBuff is ZERO.
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'CAN1TxIrqHandler', there is mailbox free for  transmission of NOC i.e the return value of the 
+    COMMENT function XmitFromBuff is not equal to ZERO.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'CAN1TxIrqHandler', calls the function 'XmitFromBuff'.
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'CAN1TxIrqHandler', number of messages in the Tx queue(TxCntr of NSC transmit queue)is not equal to ZERO
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'CAN1TxIrqHandler', number of messages in the Tx queue(TxCntr of NSC transmit queue)is equal to ZERO
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'CAN1TxIrqHandler', there is no mailbox free for transmission of NSC i.e the return value of the 
+    COMMENT function XmitFromBuff is ZERO.
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'CAN1TxIrqHandler', there is mailbox free for transmission of NSC i.e the return value of the 
+    COMMENT function XmitFromBuff is not equal to ZERO.
+    COMMENT
+    COMMENT Class 37
+    COMMENT The function 'CAN1TxIrqHandler', calls the function 'CANITConfig'.
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'HalCanMspInit', Instance of h_can is CAN1.
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'HalCanMspInit', Instance of h_can is CAN2.
+    COMMENT
+    COMMENT Class 40    
+    COMMENT The function 'XmitFromBuff', calls the function 'HalCanTransmit'.
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'HalCanMspInit', Instance of h_can is neither CAN1 nor CAN2.
+    COMMENT
+    COMMENT Class 42
+    COMMENT The function 'HalCanMspInit', calls the macro 'CAN1_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 43
+    COMMENT The function 'HalCanMspInit', calls the macro 'CAN1_GPIO_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 44
+    COMMENT The function 'HalCanMspInit', calls the function 'HalGpioInit'
+    COMMENT
+    COMMENT Class 45
+    COMMENT The function 'HalCanMspInit', calls the function 'HalNvicSetPriority'
+    COMMENT
+    COMMENT Class 46
+    COMMENT The function 'HalCanMspInit', calls the function 'HalNvicEnableIrq'
+    COMMENT
+    COMMENT Class 47
+    COMMENT The function 'HalCanMspInit', calls the macro 'CAN2_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function 'HalCanMspInit', calls the macro 'CAN2_GPIO_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function 'CAN1Config', the return value of the function HalCanInit is not equal to HAL_OK.
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function 'CAN1Config', the return value of the function HalCanInit is equal to HAL_OK.
+    COMMENT
+    COMMENT Class 51
+    COMMENT The function 'CAN1Config', calls the function 'HalCanInit'
+    COMMENT
+    COMMENT Class 52
+    COMMENT The function 'CAN1Config', calls the function 'HalCanConfigFilter'
+    COMMENT
+    COMMENT Class 53
+    COMMENT In function 'CAN1Config', return value of the function HalCanConfigFilter is not equal to HAL_OK.
+    COMMENT
+    COMMENT Class 54
+    COMMENT In function 'CAN1Config', return value of the function HalCanConfigFilter is equal to HAL_OK.
+    COMMENT
+    COMMENT Class 55
+    COMMENT The function 'CAN1Config', calls the function 'CANITConfig'
+    COMMENT
+    COMMENT Class 56
+    COMMENT The function 'A8251Init', calls the function 'OsSemCreate'
+    COMMENT
+    COMMENT Class 57
+    COMMENT The function 'A8251Init', calls the function 'CAN1Config'
+    COMMENT
+    COMMENT Class 58
+    COMMENT In function 'RxQueueRemove', the number of messages in the Rx queue is ZERO (RxCntr of ps_which_q is ZERO).
+    COMMENT
+    COMMENT Class 59
+    COMMENT In function 'RxQueueRemove', the number of messages in the Rx queue is not equal to ZERO (RxCntr of ps_which_q is ZERO).
+    COMMENT
+    COMMENT Class 60
+    COMMENT The function 'CAN1Rx0IrqHandler', calls the function 'OsIntEnter'
+    COMMENT
+    COMMENT Class 61
+    COMMENT The function 'CAN1Rx0IrqHandler', calls the function 'HalCanReceive'
+    COMMENT
+    COMMENT Class 62
+    COMMENT In function 'CAN1Rx0IrqHandler', channel is neither NOC nor NSC.
+    COMMENT
+    COMMENT Class 63
+    COMMENT The function 'CAN1Rx0IrqHandler', calls the function 'OsIntExit'
+    COMMENT
+    COMMENT Class 64
+    COMMENT In function 'CAN1Rx0IrqHandler', calls the function 'RxQueueInsert'
+    COMMENT
+    COMMENT Class 65
+    COMMENT The function 'RxQueueRemove', calls the function 'CANITConfig'
+    COMMENT
+    COMMENT Class 66
+    COMMENT In function 'RxQueueRemove', the next message to receive is in the message queue size range
+    COMMENT (RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 67
+    COMMENT In function 'RxQueueRemove', the next message to receive is not in the message queue size range
+    COMMENT (RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 68
+    COMMENT In function 'RxQueueRemove', the message is a broadcast message i.e. lcc of ARINC 825 message is NOC
+    COMMENT
+    COMMENT Class 69
+    COMMENT In function 'RxQueueRemove', the message is a peer to peer message i.e. lcc of ARINC 825 message is NSC
+    COMMENT
+    COMMENT Class 70
+    COMMENT In function 'RxQueueRemove', number of bytes of payload (u8_paysize) of ARINC 825 message is 
+    COMMENT greater than PAYLOAD_SIZE.
+    COMMENT
+    COMMENT Class 71
+    COMMENT In function 'RxQueueRemove', number of bytes of payload (u8_paysize) of ARINC 825 message 
+    COMMENT is lesser than or equal to PAYLOAD_SIZE.
+    COMMENT
+    COMMENT Class 72
+    COMMENT In function 'RxQueueInsert', number of messages in the Rx queue (RxCntr of ps_which_q) is CAN_R_Q_SIZE
+    COMMENT
+    COMMENT Class 73
+    COMMENT In function 'RxQueueInsert', number of messages in the Rx queue (RxCntr of ps_which_q) is not CAN_R_Q_SIZE
+    COMMENT
+    COMMENT Class 74
+    COMMENT In function 'RxQueueInsert', the next message to insert is in the message queue size 
+    COMMENT range(RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 75
+    COMMENT In function 'RxQueueInsert', the next message to insert is not in the message queue size 
+    COMMENT range(RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 76
+    COMMENT In function 'CAN1Rx0IrqHandler', channel is NOC
+    COMMENT
+    COMMENT Class 77
+    COMMENT In function 'CAN1Rx0IrqHandler', channel is NSC
+    COMMENT
+    COMMENT Class 78
+    COMMENT The function 'CAN1Rx0IrqHandler', calls the function 'OsSemPost'
+    COMMENT
+    COMMENT Class 79
+    COMMENT In function 'CAN1Rx0IrqHandler', return value of RxQueueInsert is equal to A825_RX_OK.
+    COMMENT
+    COMMENT Class 80
+    COMMENT In function 'CAN1Rx0IrqHandler', return value of RxQueueInsert is not equal to A825_RX_OK.
+    COMMENT
+    COMMENT Class 81
+    COMMENT The function 'A8251Xmit', calls the function 'BuildBroadcastExtId'.
+    COMMENT
+    COMMENT Class 85
+    COMMENT The function 'A8251GetMessage', returns the updated state.
+    COMMENT
+    COMMENT Class 86
+    COMMENT The function 'U8MailBoxAvail', TSR of Instance of h_can bitwise AND with CAN_TSR_TME1 is CAN_TSR_TME1
+    COMMENT
+    COMMENT Class 87
+    COMMENT The function 'U8MailBoxAvail', TSR of Instance of h_can bitwise AND with CAN_TSR_TME2 is CAN_TSR_TME2
+    COMMENT
+    COMMENT Class 88
+    COMMENT The function 'U8MailBoxAvail', TSR of Instance of h_can bitwise AND with CAN_TSR_TME2 is not equal to CAN_TSR_TME2
+    COMMENT
+    COMMENT Class 89
+    COMMENT The function 'U8MailBoxAvail', TSR of Instance of h_can bitwise AND with CAN_TSR_TME1 is not equal to CAN_TSR_TME1
+    COMMENT
+    COMMENT Class 90
+    COMMENT The function 'U8MailBoxAvail', result of TSR of Instance of h_can bitwise AND with CAN_TSR_TME0 is not equal to CAN_TSR_TME0
+    COMMENT
+    COMMENT Class 91
+    COMMENT In function 'CAN1DemoConfig',  return value of the function HalCanInit is not equal to HAL_OK. 
+    COMMENT
+    COMMENT Class 92
+    COMMENT In function 'CAN1DemoConfig',  return value of the function HalCanInit is equal to HAL_OK.
+    COMMENT
+    COMMENT Class 93
+    COMMENT In function 'CAN1DemoConfig',  return value of the function HalCanConfigFilter is not equal to HAL_OK. 
+    COMMENT
+    COMMENT Class 94
+    COMMENT In function 'CAN1DemoConfig',  return value of the function HalCanConfigFilter is equal to HAL_OK.  
+    COMMENT
+    COMMENT Class 95
+    COMMENT The function 'CAN1DemoConfig', calls the function 'CANITConfig'
+    COMMENT 
+    COMMENT Invalid Class(es)
+    COMMENT Class 82
+    COMMENT The function "A8251GetMessage", with invalid Parameter.
+    COMMENT
+    COMMENT Class 83
+    COMMENT The function "A8251Xmit", with invalid Parameter.
+    COMMENT
+    COMMENT Class 84
+    COMMENT The function "HalCanMspInit", with invalid Parameter.
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hdudispfarinc825perph1_c
+    
+    #T_OS_EVENT* OsSemCreate(T_UWORD _in count);
+    
+    --In stub HalCanConfigFilter, 'h_can' and 'filter_config' parameters made as _no because local varible address cannot be expected. 
+    #T_HAL_STATUS HalCanConfigFilter(T_CAN_HANDLE _no *h_can, T_CAN_FILTER_CONF_TYPE _no *filter_config)
+    #{
+    #   PTU_filter_config = *filter_config;
+    #}
+    
+    --In stub HalCanInit, 'h_can' parameter made as _no because local varible address cannot be expected.
+    #T_HAL_STATUS HalCanInit(T_CAN_HANDLE _no *h_can)
+    #{
+    #   PTU_HalCanInit = *h_can;
+    #}
+    
+    #void HalNvicEnableIrq(T_IRQN_TYPE _in IRQn);
+    #void HalNvicSetPriority(T_IRQN_TYPE _in IRQn, T_UINT32 _in PreemptPriority, T_UINT32 _in SubPriority);
+    
+    --In stub HalGpioInit, 'GPIO_Init' parameter made as _no because local varible address cannot be expected.
+    #void HalGpioInit(T_GPIO _in *GPIOx, T_GPIO_INIT _no *GPIO_Init)
+    #{
+    # PTU_count++;
+    # if(PTU_count==1)
+    # {
+    #  PTU_GPIO_Init_TX = *GPIO_Init;
+    # }
+    # else
+    # {
+    #  PTU_GPIO_Init_RX = *GPIO_Init;
+    # }
+    #}
+    
+    --In stub HalCanTransmit, 'h_can' parameter made as _no because local varible address cannot be expected.
+    #T_HAL_STATUS HalCanTransmit(T_CAN_HANDLE _no *h_can, T_UINT32 _in time_out)
+    #{
+    #   PTU_HalCanTransmit = *h_can;
+    #}
+    
+    #void OsIntExit(void);
+    #T_UBYTE OsSemPost(T_OS_EVENT _in *param_event);
+    
+    --In stub HalCanReceive, 'h_can' parameter made as _no because local varible address cannot be expected.
+    #T_HAL_STATUS HalCanReceive(T_CAN_HANDLE _no *h_can, T_UINT8 _in fifo_number, T_UINT32 _in time_out)
+    #{  
+    #  if(PTU_lcc_val == 2)
+    #  {
+    #   (*h_can).pRxMsg->ExtId=0x08A0FFFF;
+    #  }
+    #  else if(PTU_lcc_val == 4)
+    #  {
+    #   (*h_can).pRxMsg->ExtId=0x10000000;
+    #  }
+    #  else
+    #  {
+    #   (*h_can).pRxMsg->ExtId=0x00000000;
+    #  }
+    #  if(PTU_u8PaySize == 1)
+    #  {
+    #  (*h_can).pRxMsg->DLC = 1;
+    #  }
+    #  else if(PTU_u8PaySize == 7)
+    #  {
+    #  (*h_can).pRxMsg->DLC = 7;
+    #  }
+    #  else if(PTU_u8PaySize == 8)
+    #  {
+    #  (*h_can).pRxMsg->DLC = 8;
+    #  }
+    #  else if(PTU_u8PaySize == 9)
+    #  {
+    #  (*h_can).pRxMsg->DLC = 9;
+    #  }
+    #  else
+    #  {
+    #   /*nothing*/
+    #  }    
+    #}    
+    
+    #void OsIntEnter(void); 
+    
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfarinc825perph1.c
+
+ENVIRONMENT ENV_hdudispfarinc825perph1_c
+
+  VAR Sem_a8251_commtask,       init = NIL,     ev = init
+  
+END ENVIRONMENT -- ENV_hdudispfarinc825perph1_c
+
+USE ENV_hdudispfarinc825perph1_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service A8251GetMessage
+--------------------------------------------------------------------------------
+SERVICE A8251GetMessage
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_LCC_TYPE e_channel;
+    #T_A825_MESSAGE ps_destination;
+    
+    -- By function returned type declaration
+    #T_A825_RECRESULT ret_A8251GetMessage;
+
+    ENVIRONMENT ENV_A8251GetMessage
+    
+    VAR e_channel,                  init = EEC,             ev = init
+    
+    STRUCTURE ps_destination,       init = { lcc => EEC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, 
+    &                                        doc => 0, rci => 0 } }, u8PaySize => 0, u8PayLoad => { others => 0 } },    
+    &                                                       ev = init
+    
+    VAR ret_A8251GetMessage,        init = A825_RX_OK,      ev = init
+    
+    END ENVIRONMENT -- ENV_A8251GetMessage
+    
+    USE ENV_A8251GetMessage
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-A8251GetMessage-DB-LLR-003]
+        COMMENT  The function sets the return value to A825_RX_BAD_CHANNEL when the channel(e_channel)  is other than  NOC and NSC.
+        COMMENT  Equivalence Class 6
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-A8251GetMessage-DB-LLR-004]
+        COMMENT  The function returns the updated result value(A825_RX_BAD_CHANNEL).
+        COMMENT  Equivalence Class 85
+        COMMENT
+        COMMENT  </TD>        
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the channel type
+                VAR e_channel,                  init = EEC,             ev = init
+    
+                --Initializes the destination message
+                STRUCTURE ps_destination,       init = { lcc => EEC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, 
+                &                                        doc => 0, rci => 0 } }, u8PaySize => 0, u8PayLoad => { others => 0 } },    
+                &                                                       ev = init
+        
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :    
+                
+                --Returns the state
+                VAR ret_A8251GetMessage,        init = A825_RX_OK,      ev = A825_RX_BAD_CHANNEL 
+            
+            SIMUL
+                
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test    
+        #ret_A8251GetMessage = A8251GetMessage(e_channel, &ps_destination);
+        
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-A8251GetMessage-DB-LLR-002]
+        COMMENT  The function retrieves a message from the specified receive queue by calling RxQueueRemove function 
+        COMMENT  with parameters ps_destination and reference to NSC receive queue 
+        COMMENT  when the channel(e_channel)  is Node Service Channel.
+        COMMENT  Equivalence Class 5
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-001]
+        COMMENT  The function returns A825_RX_QUEUE_EMPTY when the number of messages in the Rx queue 
+        COMMENT  is ZERO (RxCntr of ps_which_q is ZERO).
+        COMMENT  Equivalence Class 58
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-A8251GetMessage-DB-LLR-004]
+        COMMENT  The function returns the updated result value(A825_RX_QUEUE_EMPTY).
+        COMMENT  Equivalence Class 85
+        COMMENT
+        COMMENT  </TD> 
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the channel type
+                VAR e_channel,                  init = NSC,             ev = init
+    
+                --Initializes the destination message 
+                STRUCTURE ps_destination,       init = { lcc => EEC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, 
+                &                                        doc => 0, rci => 0 } }, u8PaySize => 0, u8PayLoad => { others => 0 } },    
+                &                                                       ev = init
+        
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :    
+                
+                --Returns the state          
+                VAR ret_A8251GetMessage,        init = A825_RX_OK,      ev = A825_RX_QUEUE_EMPTY   
+            
+            SIMUL
+                
+                --none
+            
+            END SIMUL  
+        
+        --Calling Unit Under Test    
+        #ret_A8251GetMessage = A8251GetMessage(e_channel, &ps_destination);
+        
+        END ELEMENT
+
+    END TEST -- TEST 2
+    
+--    TEST 3
+--    FAMILY robustness
+--
+--        COMMENT  Test Description
+--        COMMENT  <TD>
+--        COMMENT  [hdudispfarinc825perph1-A8251GetMessage-DB-LLR-002]
+--        COMMENT  The function A8251GetMessage parameter destination message is checked for NULL.
+--        COMMENT  Equivalence Class 82
+--        COMMENT  
+--        COMMENT  </TD> 
+--
+--        ELEMENT
+--        
+--            COMMENT INPUT SECTION :
+--                
+--                --Initializes the channel type
+--                VAR e_channel,                      init = NOC,             ev = init
+--                
+--            COMMENT INPUT/OUTPUT SECTION :
+--                --none
+--            
+--            COMMENT OUTPUT SECTION : 
+--                --none     
+--            
+--            SIMUL
+--
+--                --none     
+--            
+--            END SIMUL  
+--                   
+--        --Calling Unit Under Test  
+--        #ret_A8251GetMessage = A8251GetMessage(e_channel, NULL);
+--                   
+--        
+--        END ELEMENT
+--
+--    END TEST -- TEST 3
+    
+    TEST 4
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-A8251GetMessage-DB-LLR-001]
+        COMMENT  The function retrieves a message from the specified receive queue by calling  
+        COMMENT  RxQueueRemove function with parameters ps_destination and reference to NOC receive queue
+        COMMENT  when the channel(e_channel) is Normal Operating Channel.
+        COMMENT  Equivalence Class 4, 7
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-001]
+        COMMENT  The function does nothing when the number of messages in the Rx queue is not ZERO (RxCntr of ps_which_q is not ZERO).
+        COMMENT  Equivalence Class 59
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-002]
+        COMMENT  The function disables the Can Receiver Transmit Interrupt by calling CANITConfig function 
+        COMMENT  with parameters CAN1, CAN_IT_FMP0 and DISABLE.
+        COMMENT  Equivalence Class 65
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-003]
+        COMMENT  The function retrieves the CAN message from the receive queue.
+        COMMENT  Equivalence Class None
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-004]
+        COMMENT  The function adjusts the head and check for a wrap by decrementing number of messages in the 
+        COMMENT  Rx queue (RxCntr of ps_which_q) by ONE and incrementing the next message to receive(RxHead of ps_which_q) 
+        COMMENT  by ONE.
+        COMMENT  Equivalence Class None
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-005]
+        COMMENT  The function does nothing when the next message to receive is not in 
+        COMMENT  the message queue size range(RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+        COMMENT  Equivalence Class 67
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-006]
+        COMMENT  The function enables the Can Receiver Interrupt by calling CANITConfig 
+        COMMENT  function with parameters CAN1, CAN_IT_FMP0 and ENABLE.
+        COMMENT  Equivalence Class 65
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-007]
+        COMMENT  The function identifies the Logical communication channel (NOC or NSC) of ARINC 825  from the 
+        COMMENT  received CAN message (Refer the Arinc 825 design document for extracting the data from CAN message) 
+        COMMENT  - LCC[bit 26 .. 28].
+        COMMENT  Equivalence Class None
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-008]
+        COMMENT  The function translates CAN MESSAGE to ARINC 825 Broadcast MESSAGE when the message is a broadcast message
+        COMMENT  i.e. lcc of ARINC 825 message is NOC.
+        COMMENT  (Refer the Arinc 825 design document for extracting the data from CAN message)
+        COMMENT  - rci[bit 0..1],
+        COMMENT  - doc[bit 2 .. 15],
+        COMMENT  - pvt[bit 16] ,
+        COMMENT  - lcl[bit 17],
+        COMMENT  - rsd[bit 18],
+        COMMENT  - sfid[bit 19 .. 25].
+        COMMENT  Equivalence Class 68
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-010]
+        COMMENT  The function sets u8PaySize of a825 message to DLC of CAN message.
+        COMMENT  Equivalence Class None
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-012]
+        COMMENT  The function loop for zero times when the local counter is not less than u8PaySize of arinc 825.
+        COMMENT  Equivalence Class None
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-013]
+        COMMENT  The function copies A825 message to the destination and return A825_RX_OK.
+        COMMENT  Equivalence Class None
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-A8251GetMessage-DB-LLR-004]
+        COMMENT  The function returns the updated result value(A825_RX_OK).
+        COMMENT  Equivalence Class 85
+        COMMENT
+        COMMENT  </TD> 
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the channel type
+                VAR e_channel,                      init = NOC,             ev = init
+                
+                --Initializes the destination message 
+                STRUCTURE ps_destination,           init = { lcc => NOC, sID => { BID => { sfid => 0, rsd => 1, lcl => 1, pvt => 1, 
+                &                                        doc => 0, rci => 0 } }, u8PaySize => 9, u8PayLoad => { others => 2 } },    
+                &                                                           ev = { lcc => NOC, sID => { BID => { sfid => 20, rsd => 0, 
+                &                                                                 lcl => 0, pvt => 0, 
+                &                                                                 doc => 16383, rci => 3 } }, u8PaySize => 0, u8PayLoad => 
+                &                                                                { others => 0 }},
+                
+                --To set to NOC value in stub HalCanReceive
+                VAR PTU_lcc_val,                    init = 2,               ev = init
+                
+                --Initializes the value for PTU_Sem_a8251_commtask 
+                VAR PTU_Sem_a8251_commtask,         init = 0,               ev = init
+                
+                --To set u8PaySize of a825 message to zero
+                VAR PTU_u8PaySize,                  init = 0,               ev = init
+                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :    
+                       
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init=NULL,              ev=&PTU_Sem_a8251_commtask     
+                
+                --Returns the state          
+                VAR ret_A8251GetMessage,            init = A825_RX_QUEUE_EMPTY,      
+                &                                                           ev = A825_RX_OK   
+            
+            SIMUL
+                
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+                         
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+                             
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+                
+                --Tell uCOS that we are entering the ISR 
+                STUB OsIntEnter()
+            
+                --Retrieve the CAN message.
+                STUB HalCanReceive(CAN_FIFO0, ZERO_TIMEOUT)HAL_OK
+            
+                --Tell uCOS that we are leaving the ISR 
+                STUB OsIntExit()
+                
+                --Signal the Semaphore of the task 
+                STUB OsSemPost(&PTU_Sem_a8251_commtask)0
+            
+            END SIMUL  
+                        
+        --Called to configure the CAN
+        #A8251Init(); 
+                
+        --Called to increment number of messages in the Rx queue (RxCntr of ps_which_q)                
+        #CAN1Rx0IrqHandler();
+                   
+        --Calling Unit Under Test  
+        #ret_A8251GetMessage = A8251GetMessage(e_channel, &ps_destination);
+        
+        END ELEMENT
+
+    END TEST -- TEST 4 
+        
+    TEST 5
+    FAMILY nominal
+    
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-005]
+        COMMENT  The function sets next message to receive(RxHead of ps_which_q) to the Rx buffer (RxBuf of ps_which_q) 
+        COMMENT  when the next message to receive is in the message queue size range(RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+        COMMENT  Equivalence Class 66
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-009]
+        COMMENT  The function translates CAN MESSAGE to ARINC 825 Peer to Peer MESSAGE when the message is a 
+        COMMENT  peer to peer message i.e. lcc of ARINC 825 message other than NOC(Excercised for NSC).
+        COMMENT  (Refer the Arinc 825 design document for extracting the data from CAN message)
+        COMMENT  - rci[bit 0..1],
+        COMMENT  - sid[bit 2 .. 8],
+        COMMENT  - sfid[bit 9 .. 15]
+        COMMENT  - pvt[bit 16] ,
+        COMMENT  - lcl[bit 17],
+        COMMENT  - smt[bit 18],
+        COMMENT  - cfid[bit 19 .. 25].
+        COMMENT  Equivalence Class 69
+        COMMENT  
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-012]
+        COMMENT  The function loops till the local counter is less than u8PaySize of arinc 825 and copy the data from CAN message 
+        COMMENT  to u8PayLoad of arinc 825 message
+        COMMENT  Loops for one time in 1st Element block.
+        COMMENT  Loops for two or more times in 2nd Element block.
+        COMMENT  Equivalence Class None
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-011]
+        COMMENT  The function does nothing when number of bytes of payload (u8_paysize) of ARINC 825 message 
+        COMMENT  is less than PAYLOAD_SIZE.
+        COMMENT  Equivalence Class 71
+        COMMENT
+        COMMENT  </TD> 
+    
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the channel type
+                VAR e_channel,                  init = NSC,                         ev = init
+                
+                --Initializes the destination message 
+                STRUCTURE ps_destination,       init = { lcc => NSC, sID => { BID => { sfid => 1, rsd => 1, lcl => 1, pvt => 1, 
+                &                                        doc => 1, rci => 1 } }, u8PaySize => 8, u8PayLoad => { others => 1 } },    
+                &                               ev = { lcc => NSC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, 
+                &                                        doc => 0, rci => 0 } }, u8PaySize => 1, u8PayLoad => { others =>0 } },
+                
+                --To set to NOC value in stub HalCanReceive           
+                VAR PTU_lcc_val,                init = 4,                           ev = init
+                
+                --Initializes the value for PTU_Sem_a8251_commtask 
+                VAR PTU_Sem_a8251_commtask,     init = 0,                           ev = init
+                
+                --To set u8PaySize of a825 message to one
+                VAR PTU_u8PaySize,              init = 1,                           ev = init                
+                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :    
+                       
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,        init=NULL,                          ev=&PTU_Sem_a8251_commtask
+                
+                --Returns the state          
+                VAR ret_A8251GetMessage,        init = A825_RX_QUEUE_EMPTY,         ev =    A825_RX_OK
+            
+            SIMUL
+                
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+                         
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+                             
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK                 
+            
+                --Tell uCOS that we are entering the ISR 
+                STUB OsIntEnter()
+            
+                --Retrieve the CAN message.
+                STUB HalCanReceive(CAN_FIFO0, ZERO_TIMEOUT)HAL_OK
+            
+                --Tell uCOS that we are leaving the ISR 
+                STUB OsIntExit()
+                
+                --Signal the Semaphore of the task 
+                STUB OsSemPost(&PTU_Sem_a8251_commtask)0
+            
+            END SIMUL  
+                        
+            --Called to configure the CAN
+            #A8251Init(); 
+            
+            --Called to increment number of messages in the Rx queue (RxCntr of ps_which_q)
+            #CAN1Rx0IrqHandler();
+               
+            --Calling Unit Under Test 
+            #ret_A8251GetMessage = A8251GetMessage(e_channel, &ps_destination);
+        
+        END ELEMENT
+        
+        --To make the next message to receive is in the message queue size range(RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+        #for(PTU_i=0;PTU_i<158;PTU_i++)
+        #{
+        #   CAN1Rx0IrqHandler();
+        #   ret_A8251GetMessage = A8251GetMessage(e_channel, &ps_destination);
+        #}
+    
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the channel type
+                VAR e_channel,              init = NSC,                 ev = init
+                
+                --Initializes the destination message 
+                STRUCTURE ps_destination,   init = { lcc => NSC, sID => { BID => { sfid => 3, rsd => 1, lcl => 1, pvt => 1, 
+                &                                        doc => 3, rci => 3 } }, u8PaySize => 9, u8PayLoad => { others => 3 } },    
+                &                           ev = { lcc => NSC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, 
+                &                                        doc => 0, rci => 0 } }, u8PaySize => 7, u8PayLoad => { others =>0 } },
+                
+                --To set to NOC value in stub HalCanReceive           
+                VAR PTU_lcc_val,            init = 4,                   ev = init
+                
+                --To set u8PaySize of a825 message to less than PAYLOAD_SIZE
+                VAR PTU_u8PaySize,          init = 7,                   ev = init 
+                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :   
+                       
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,    init = NULL,                ev = &PTU_Sem_a8251_commtask  
+                
+                --Returns the state          
+                VAR ret_A8251GetMessage,    init = A825_RX_QUEUE_EMPTY, ev = A825_RX_OK 
+            
+            SIMUL
+                
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+                         
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+                             
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+                
+                --Tell uCOS that we are entering the ISR 
+                STUB OsIntEnter()
+            
+                --Retrieve the CAN message.
+                STUB HalCanReceive(CAN_FIFO0, ZERO_TIMEOUT)HAL_OK
+            
+                --Tell uCOS that we are leaving the ISR 
+                STUB OsIntExit()
+                
+                --Signal the Semaphore of the task 
+                STUB OsSemPost(&PTU_Sem_a8251_commtask)0
+                
+            END SIMUL  
+                        
+            --Called to configure the CAN
+            #A8251Init(); 
+            
+            --Called to increment number of messages in the Rx queue (RxCntr of ps_which_q)
+            #CAN1Rx0IrqHandler();
+               
+            --Calling Unit Under Test 
+            #ret_A8251GetMessage = A8251GetMessage(e_channel, &ps_destination);
+        
+        END ELEMENT
+        
+    END TEST -- TEST 5
+    
+    TEST 6
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-011]
+        COMMENT  The function does nothing when number of bytes of payload (u8_paysize) of ARINC 825 message 
+        COMMENT  is equal to PAYLOAD_SIZE.
+        COMMENT  Equivalence Class 71
+        COMMENT
+        COMMENT  </TD> 
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the channel type
+                VAR e_channel,                      init = NOC,             ev = init
+                
+                --Initializes the destination message 
+                STRUCTURE ps_destination,           init = { lcc => NOC, sID => { BID => { sfid => 4, rsd => 1, lcl => 1, pvt => 1, 
+                &                                        doc => 4, rci => 1 } }, u8PaySize => 4, u8PayLoad => { others => 4 } },    
+                &                                                           ev = { lcc => NOC, sID => { BID => { sfid => 20, rsd => 0, 
+                &                                                                lcl => 0, pvt => 0, doc => 16383, rci => 3 } }, 
+                &                                                                 u8PaySize => 8, u8PayLoad => { others => 0 }},
+                
+                --To set to NOC value in stub HalCanReceive
+                VAR PTU_lcc_val,                    init = 2,               ev = init
+                
+                --Initializes the value for PTU_Sem_a8251_commtask 
+                VAR PTU_Sem_a8251_commtask,         init = 0,               ev = init
+                
+                --To set u8PaySize of a825 message to PAYLOAD_SIZE
+                VAR PTU_u8PaySize,                  init = 8,               ev = init
+                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :    
+                       
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init = NULL,            ev = &PTU_Sem_a8251_commtask     
+                
+                --Returns the state          
+                VAR ret_A8251GetMessage,            init = A825_RX_QUEUE_EMPTY,      
+                &                                                           ev = A825_RX_OK   
+            
+            SIMUL
+                
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+                         
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+                             
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+                
+                --Tell uCOS that we are entering the ISR 
+                STUB OsIntEnter()
+            
+                --Retrieve the CAN message.
+                STUB HalCanReceive(CAN_FIFO0, ZERO_TIMEOUT)HAL_OK
+            
+                --Tell uCOS that we are leaving the ISR 
+                STUB OsIntExit()
+                
+                --Signal the Semaphore of the task 
+                STUB OsSemPost(&PTU_Sem_a8251_commtask)0
+            
+            END SIMUL  
+                        
+        --Called to configure the CAN
+        #A8251Init(); 
+                
+        --Called to increment number of messages in the Rx queue (RxCntr of ps_which_q)                
+        #CAN1Rx0IrqHandler();
+                   
+        --Calling Unit Under Test  
+        #ret_A8251GetMessage = A8251GetMessage(e_channel, &ps_destination);
+        
+        END ELEMENT
+
+    END TEST -- TEST 6 
+    
+    TEST 7
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-RxQueueRemove-DB-LLR-011]
+        COMMENT  The function sets number of bytes of payload (u8_paysize) of ARINC 825 message to PAYLOAD_SIZE 
+        COMMENT  when number of bytes of payload (u8_paysize) of ARINC 825 message is greater than PAYLOAD_SIZE.
+        COMMENT  Equivalence Class 70
+        COMMENT
+        COMMENT  </TD> 
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the channel type
+                VAR e_channel,                      init = NOC,             ev = init
+                
+                --Initializes the destination message 
+                STRUCTURE ps_destination,           init = { lcc => NOC, sID => { BID => { sfid => 4, rsd => 0, lcl => 0, pvt => 0, 
+                &                                        doc => 4, rci => 2 } }, u8PaySize => 4, u8PayLoad => { others => 4 } },    
+                &                                                           ev = { lcc => NOC, sID => { BID => { sfid => 20, rsd => 0, 
+                &                                                              lcl => 0, pvt => 0, 
+                &                                                              doc => 16383, rci => 3 } }, u8PaySize => 8, u8PayLoad => 
+                &                                                              { others => 0 }},
+                
+                --To set to NOC value in stub HalCanReceive
+                VAR PTU_lcc_val,                    init = 2,               ev = init
+                
+                --Initializes the value for PTU_Sem_a8251_commtask 
+                VAR PTU_Sem_a8251_commtask,         init = 0,               ev = init
+                
+                --To set u8PaySize of a825 message to greater than PAYLOAD_SIZE
+                VAR PTU_u8PaySize,                  init = 9,               ev = init
+                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :    
+                       
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init = NULL,            ev = &PTU_Sem_a8251_commtask     
+                
+                --Returns the state          
+                VAR ret_A8251GetMessage,            init = A825_RX_QUEUE_EMPTY,      
+                &                                                           ev = A825_RX_OK   
+            
+            SIMUL
+                
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+                         
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+                             
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+                
+                --Tell uCOS that we are entering the ISR 
+                STUB OsIntEnter()
+            
+                --Retrieve the CAN message.
+                STUB HalCanReceive(CAN_FIFO0, ZERO_TIMEOUT)HAL_OK
+            
+                --Tell uCOS that we are leaving the ISR 
+                STUB OsIntExit()
+                
+                --Signal the Semaphore of the task 
+                STUB OsSemPost(&PTU_Sem_a8251_commtask)0
+            
+            END SIMUL  
+                        
+        --Called to configure the CAN
+        #A8251Init(); 
+                
+        --Called to increment number of messages in the Rx queue (RxCntr of ps_which_q)                
+        #CAN1Rx0IrqHandler();
+                   
+        --Calling Unit Under Test  
+        #ret_A8251GetMessage = A8251GetMessage(e_channel, &ps_destination);
+        
+        END ELEMENT
+
+    END TEST -- TEST 7 
+    
+END SERVICE -- A8251GetMessage
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CAN1Rx0IrqHandler
+--------------------------------------------------------------------------------
+SERVICE CAN1Rx0IrqHandler
+SERVICE_TYPE extern
+    
+    TEST 1
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-CAN1Rx0IrqHandler-DB-LLR-001]
+        COMMENT  The function calls OsIntEnter to inform uCOS that it is entering the ISR.
+        COMMENT  Equivalence Class 60
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-CAN1Rx0IrqHandler-DB-LLR-002]
+        COMMENT  The function retrieves the CAN message by calling HalCanReceive function with 
+        COMMENT  parameters reference to CAN handle, CAN_FIFO0 and ZERO_TIMEOUT.
+        COMMENT  Equivalence Class 61
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-CAN1Rx0IrqHandler-DB-LLR-003]
+        COMMENT  The function determines the logical communication channel from the received CAN message 
+        COMMENT  (Refer the Arinc 825 design document for extracting the data from CAN message) and store 
+        COMMENT  it in a lcc channel variable. - LCC[bit 26 .. 28]
+        COMMENT  Equivalence Class None
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-CAN1Rx0IrqHandler-DB-LLR-004]
+        COMMENT  The function does nothing when the channel is neither NOC nor NSC
+        COMMENT  Equivalence Class 62
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-CAN1Rx0IrqHandler-DB-LLR-007]
+        COMMENT  The function calls OsIntExit to inform uC/OS that it is leaving the ISR.
+        COMMENT  Equivalence Class 63
+        COMMENT
+        COMMENT  </TD>
+
+        ELEMENT
+        
+                
+            COMMENT INPUT SECTION :
+                --Holds the value of PTU_Sem_a8251_commtask                               
+                VAR PTU_Sem_a8251_commtask,         init = 0,               ev = init
+            
+                --To set to neither NOC nor NSC in stub HalCanReceive            
+                VAR PTU_lcc_val,                    init = 1,               ev = init                
+                    
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                                  
+             COMMENT OUTPUT SECTION : 
+                       
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init = NULL,            ev = &PTU_Sem_a8251_commtask   
+               
+            SIMUL
+               
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+             
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+             
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+                --Tell uCOS that we are entering the ISR 
+                STUB OsIntEnter()
+            
+                --Retrieve the CAN message.
+                STUB HalCanReceive(CAN_FIFO0, ZERO_TIMEOUT)HAL_OK
+            
+                --Tell uCOS that we are leaving the ISR 
+                STUB OsIntExit()             
+        
+            END SIMUL
+     
+        --Called to configure the CAN
+        #A8251Init();
+   
+        --Calling Unit Under Test        
+        #CAN1Rx0IrqHandler();
+        
+        END ELEMENT
+
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-CAN1Rx0IrqHandler-DB-LLR-004]
+        COMMENT  The function does the following when channel is NOC
+    COMMENT  a) Insert a CAN message into the selected queue by calling RxQueueInsert with parameters 
+    COMMENT     reference to local CAN Rx message, reference to NOC receive queue
+    COMMENT  In 1st Element block
+    COMMENT  b) Signal the Semaphore of the task by calling OsSemPost with Semaphore of the corresponding task 
+    COMMENT     as parameter i.e, Sem_a8251_commtask when return value of RxQueueInsert is equal to A825_RX_OK.
+    COMMENT  In 2nd Element block
+    COMMENT  b) does nothing when return value of RxQueueInsert is not equal to A825_RX_OK.
+        COMMENT  Equivalence Class 76, 64, 79, 78, 80
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueInsert-DB-LLR-001]
+        COMMENT  In 1st Element block
+        COMMENT  The function does nothing when number of messages in the Rx queue (RxCntr of ps_which_q) is not CAN_R_Q_SIZE
+        COMMENT  In 2nd Elelemnt block
+        COMMENT  The function returns A825_RX_OVERFLOW when number of messages in the Rx queue (RxCntr of ps_which_q) is CAN_R_Q_SIZE
+        COMMENT  Equivalence Class 73, 72
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueInsert-DB-LLR-002]
+        COMMENT  The function inserts the new message(ps_new_mess) into the next message in the queue (RxTail of ps_which_q).
+        COMMENT  Equivalence Class None 
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueInsert-DB-LLR-003]
+        COMMENT  The function adjusts the tail and check for a wrap by incrementing number of messages in the 
+        COMMENT  Rx queue(RxCntr of ps_which_q) by ONE and incrementing the next message to insert(RxTail of ps_which_q) by ONE.
+        COMMENT  Equivalence Class None
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueInsert-DB-LLR-004]
+        COMMENT  In 1st Element block
+        COMMENT  The function does nothing when the next message to insert is not in the message queue size 
+        COMMENT  range(RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+        COMMENT  In 2nd Elelemnt block
+        COMMENT  The function sets next message to insert(RxTail of ps_which_q) to the Rx buffer(RxBuf of ps_which_q) 
+        COMMENT  when the next message to insert is in the message queue size range(RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+        COMMENT  Equivalence Class 75, 74
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-RxQueueInsert-DB-LLR-005]
+        COMMENT  The function returns A825_RX_OK when the received message is successfully placed in the queue.
+        COMMENT  Equivalence Class None
+        COMMENT
+        COMMENT  </TD>
+
+        ELEMENT
+        
+                
+             COMMENT INPUT SECTION : 
+                --Holds the value of PTU_Sem_a8251_commtask                               
+                VAR PTU_Sem_a8251_commtask,         init = 0,           ev = init
+                        
+                --To set to NOC value in stub HalCanReceive
+                VAR PTU_lcc_val,                    init = 2,           ev = init
+                        
+            COMMENT INPUT/OUTPUT SECTION :
+               --none
+                                  
+            COMMENT OUTPUT SECTION :   
+                       
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init = NULL,        ev = &PTU_Sem_a8251_commtask    
+             
+                --Holds the value of Instance of CAN handle structure
+                VAR PTU_HalCanInit.Instance,        init = CAN2,        ev = CAN1
+             
+                --Holds the value of can_x interrupt               
+                VAR CAN1->IER,                      init = 0,           ev = 0x00000002                        
+                                
+            SIMUL
+               
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+             
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+             
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+                --Tell uCOS that we are entering the ISR 
+                STUB OsIntEnter()
+            
+                --Retrieve the CAN message.
+                STUB HalCanReceive(CAN_FIFO0, ZERO_TIMEOUT)HAL_OK
+            
+                --Tell uCOS that we are leaving the ISR 
+                STUB OsIntExit()
+                
+                --Signal the Semaphore of the task 
+                STUB OsSemPost(&PTU_Sem_a8251_commtask)0
+        
+        END SIMUL
+        
+        --Called to configure the CAN
+        #A8251Init();
+           
+        --Calling Unit Under Test        
+        #CAN1Rx0IrqHandler();
+        
+        END ELEMENT
+        
+        --To increment number of messages in the Rx queue (RxCntr of ps_which_q) to 160
+        #for(PTU_i=0;PTU_i<159;PTU_i++)        
+        #CAN1Rx0IrqHandler();
+
+        ELEMENT
+        
+                
+            COMMENT INPUT SECTION :     
+                --Holds the value of PTU_Sem_a8251_commtask                               
+                VAR PTU_Sem_a8251_commtask,         init = 0,             ev = init
+                
+                --To set to NOC value in stub HalCanReceive
+                VAR PTU_lcc_val,                    init = 2,             ev = init
+                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                          
+            COMMENT OUTPUT SECTION :   
+               
+               --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init = NULL,          ev = &PTU_Sem_a8251_commtask    
+                
+                --Holds the value of Instance of CAN handle structure
+                VAR PTU_HalCanInit.Instance,        init = CAN2,          ev = CAN1
+                
+                --Holds the value of can_x interrupt               
+                VAR CAN1->IER,                      init = 0,             ev = 0x00000002
+                        
+                                
+            SIMUL
+        
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+                --Tell uCOS that we are entering the ISR 
+                STUB OsIntEnter()
+            
+                --Retrieve the CAN message.
+                STUB HalCanReceive(CAN_FIFO0, ZERO_TIMEOUT)HAL_OK
+            
+                --Tell uCOS that we are leaving the ISR 
+                STUB OsIntExit()
+        
+            END SIMUL
+        
+            --Called to configure the CAN
+            #A8251Init();
+           
+            --Calling Unit Under Test        
+            #CAN1Rx0IrqHandler();
+        
+        END ELEMENT
+        
+    END TEST -- TEST 2
+    
+    TEST 3
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-CAN1Rx0IrqHandler-DB-LLR-005]
+        COMMENT  The function does the following when channel is NSC
+    COMMENT  a) Insert a CAN message into the selected queue by calling RxQueueInsert with parameters 
+    COMMENT    reference to local CAN Rx message, reference to NSC receive queue
+    COMMENT  In 1st Element block
+    COMMENT  b) Signal the Semaphore of the task by calling OsSemPost with Semaphore of the corresponding task 
+    COMMENT    as parameter i.e, Sem_a8251_commtask when return value of RxQueueInsert is equal to A825_RX_OK.
+    COMMENT  In 2nd Element block
+    COMMENT  b) does nothing when return value of RxQueueInsert is not equal to A825_RX_OK.
+        COMMENT  Equivalence Class 77, 64, 79, 78, 80
+        COMMENT  </TD>
+
+        ELEMENT
+        
+                
+            COMMENT INPUT SECTION :       
+                --Holds the value of PTU_Sem_a8251_commtask    
+                VAR PTU_Sem_a8251_commtask,         init = 0,             ev = init
+            
+                --To set to NSC value in stub HalCanReceive
+                VAR PTU_lcc_val,                    init = 4,             ev = init
+            
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                      
+            COMMENT OUTPUT SECTION :   
+           
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init = NULL,          ev = &PTU_Sem_a8251_commtask    
+            
+                --Holds the value of Instance of CAN handle structure
+                VAR PTU_HalCanInit.Instance,        init = CAN2,          ev = CAN1
+            
+                --Holds the value of can_x interrupt               
+                VAR CAN1->IER,                      init = 0,             ev = 0x00000002               
+                    
+            SIMUL
+        
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+                
+                --Tell uCOS that we are entering the ISR 
+                STUB OsIntEnter()
+            
+                --Retrieve the CAN message.
+                STUB HalCanReceive(CAN_FIFO0, ZERO_TIMEOUT)HAL_OK
+            
+                --Tell uCOS that we are leaving the ISR 
+                STUB OsIntExit()
+                
+                --Signal the Semaphore of the task 
+                STUB OsSemPost(&PTU_Sem_a8251_commtask)0
+        
+            END SIMUL
+        
+            --Called to configure the CAN
+            #A8251Init();
+           
+            --Calling Unit Under Test        
+            #CAN1Rx0IrqHandler();
+        
+        END ELEMENT
+        
+        --To increment number of messages in the Rx queue (RxCntr of ps_which_q) to 160
+        #for(PTU_i=0;PTU_i<159;PTU_i++)        
+        #CAN1Rx0IrqHandler();
+
+        ELEMENT          
+        
+            COMMENT INPUT SECTION :        
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,         init = 0,             ev = init
+            
+                --To set to NSC value in stub HalCanReceive
+                VAR PTU_lcc_val,                    init = 4,             ev = init
+            
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                      
+            COMMENT OUTPUT SECTION :   
+           
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init = NULL,          ev = &PTU_Sem_a8251_commtask    
+            
+                --Holds the value of Instance of CAN handle structure
+                VAR PTU_HalCanInit.Instance,        init = CAN2,          ev = CAN1
+            
+                --Holds the value of can_x interrupt               
+                VAR CAN1->IER,                      init =  0,            ev = 0x00000002             
+                    
+            SIMUL
+        
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+        
+                --Tell uCOS that we are entering the ISR 
+                STUB OsIntEnter()
+            
+                --Retrieve the CAN message.
+                STUB HalCanReceive(CAN_FIFO0, ZERO_TIMEOUT)HAL_OK
+            
+                --Tell uCOS that we are leaving the ISR 
+                STUB OsIntExit()
+        
+            END SIMUL
+        
+            --Called to configure the CAN
+            #A8251Init();
+           
+            --Calling Unit Under Test        
+            #CAN1Rx0IrqHandler();
+        
+        END ELEMENT
+        
+    END TEST -- TEST 3
+END SERVICE -- CAN1Rx0IrqHandler
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service A8251Xmit
+--------------------------------------------------------------------------------
+SERVICE A8251Xmit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_A825_MESSAGE ps_xm;
+    
+    -- By function returned type declaration
+    #T_A825_XMITRESULT ret_A8251Xmit;
+    
+  
+    ENVIRONMENT ENV_A8251Xmit
+    
+    STRUCTURE ps_xm,        init = { lcc => EEC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, 
+    &                                doc => 0, rci => 0 } }, u8PaySize => 0, u8PayLoad => { others => 0 } },     
+    &                                               ev = init
+    
+    VAR ret_A8251Xmit,      init = A825_XM_OK,      ev = init
+    
+    END ENVIRONMENT -- ENV_A8251Xmit
+    
+    USE ENV_A8251Xmit    
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-TxQueueInsert-DB-LLR-005]
+        COMMENT  The function does nothing when the next message to insert is not in the Transmit message
+        COMMENT  Queue Size range(TxBuf [CAN_X_Q_SIZE] of ps_which_q).
+        COMMENT  Equivalence Class 12
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-XmitFromBuff-DB-LLR-003]
+        COMMENT  The does nothing when
+        COMMENT  a) The next message to transmit is not in the Transmit message Queue Size range (TxBuf [CAN_X_Q_SIZE] of ps_which_q)
+        COMMENT  b) return value of U8MailBoxAvail with parameter reference to CAN handle is other than ZERO.
+        COMMENT  Equivalence Class 23, 24, 27
+        COMMENT 
+        COMMENT  In the Second Element Block:
+        COMMENT  [hdudispfarinc825perph1-TxQueueInsert-DB-LLR-005]
+        COMMENT  The function sets next message to insert(TxTail of ps_which_q) to the Tx buffer(TxBuf of ps_which_q) 
+        COMMENT  when the next message to insert is in the Transmit message Queue Size range(TxBuf [CAN_X_Q_SIZE] of ps_which_q).
+        COMMENT  Equivalence Class 11
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-XmitFromBuff-DB-LLR-003]
+        COMMENT  The function sets next message to transmit (TxHead of ps_which_q) to the Tx buffer(TxBuf of ps_which_q) when
+        COMMENT  a) The next message to transmit is in the Transmit message Queue Size range (TxBuf [CAN_X_Q_SIZE] of ps_which_q)
+        COMMENT  b) return value of U8MailBoxAvail with parameter reference to CAN handle is other than ZERO.
+        COMMENT  Equivalence Class 23, 24, 26 
+        COMMENT 
+        COMMENT  </TD>
+
+  
+        ELEMENT
+        
+            COMMENT INPUT SECTION :  
+             
+                --Holds the value of ps_xm structure 
+                STRUCTURE ps_xm,        init = { lcc => NOC, sID => { BID => { sfid => 1, rsd => 1, lcl => 1, pvt => 1, doc =>1, 
+                &                                rci => 1 } }, u8PaySize => 2, u8PayLoad => { others => 0 } },     
+                &                                                                   ev = init
+         
+                --Holds the value of Instance of CAN handle structure           
+                VAR PTU_HalCanInit.Instance,        init = CAN1,                    ev = init
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,         init = 0,                       ev = init   
+                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                          
+            COMMENT OUTPUT SECTION :  
+            
+                 --Holds the value of Sem_a8251_commtask
+                 VAR  Sem_a8251_commtask,           init = NULL,                    ev = &PTU_Sem_a8251_commtask
+                 
+                 --Holds the transmit status
+                 VAR ret_A8251Xmit,                 init = A825_BAD_CHANNEL,        ev = A825_XM_OK
+        
+            SIMUL        
+                
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+                     
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+                    
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK     
+                
+                --initiates and transmits a CAN frame message.
+                STUB HalCanTransmit (ZERO_TIMEOUT)HAL_OK
+             
+            END SIMUL
+       
+            --Holds the value of TSR of Instance of CAN handle structure 
+            #PTU_HalCanInit.Instance->TSR = CAN_TSR_TME0;
+        
+            --Called to configure the CAN
+            #A8251Init();
+        
+            --Calling Unit Under Test
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+       
+        END ELEMENT        
+         
+            -- To make next message to insert is in the Transmit message Queue Size range(TxBuf [CAN_X_Q_SIZE] of ps_which_q).  
+            #for(PTU_i=0;PTU_i<118;PTU_i++)
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+    
+        ELEMENT
+        
+            COMMENT INPUT SECTION :  
+                
+                --Holds the value of ps_xm structure   
+                STRUCTURE ps_xm,        init = { lcc => NOC, sID => { BID => { sfid => 2, rsd => 0, lcl => 0, pvt => 0, doc =>2,  
+                &                                rci => 2 } }, u8PaySize => 2, u8PayLoad => { others => 0 } },     
+                &                       ev = init
+                
+                --Holds the value of Instance of CAN handle structure
+                VAR PTU_HalCanInit.Instance,            init = CAN1,                ev = init
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,             init = 0,                   ev = init   
+                                                                                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                          
+            COMMENT OUTPUT SECTION : 
+            
+               --Holds the value of Sem_a8251_commtask
+               VAR  Sem_a8251_commtask,                 init = NULL,                ev = &PTU_Sem_a8251_commtask
+               
+               --Holds the CAN message data
+               VAR PTU_HalCanTransmit.pTxMsg->RTR,      init = 1,                   ev = CAN_RTR_DATA           
+               VAR PTU_HalCanTransmit.pTxMsg->IDE,      init = 1,                   ev = CAN_ID_EXT             
+               VAR PTU_HalCanTransmit.pTxMsg->ExtId,    init = 0x00000000,          ev = 0x0810000A             
+               VAR PTU_HalCanTransmit.pTxMsg->DLC,      init = 1,                   ev = 2          
+               VAR PTU_HalCanTransmit.pTxMsg->Data[0],  init = 1,                   ev = 0          
+               VAR PTU_HalCanTransmit.pTxMsg->Data[1],  init = 1,                   ev = 0     
+
+               --Holds the transmit status
+               VAR ret_A8251Xmit,                       init = A825_XM_OVERFLOW,    ev = A825_XM_OK
+               
+            SIMUL
+       
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+                        
+                --initiates and transmits a CAN frame message.
+                STUB HalCanTransmit(ZERO_TIMEOUT)HAL_OK
+                
+            END SIMUL
+                
+            --Called to configure the CAN
+            #A8251Init();
+        
+            --Calling Unit Under Test
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+        
+        END ELEMENT        
+                
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-002]
+        COMMENT  The function locates Queue(NSC transmit queue) and builds the 29 bit ID by calling 
+        COMMENT  BuildPeerToPeerExtId with parameter pointer to the ARINC 825 message(ps_xm) when
+        COMMENT  a) selected channel is not NOC
+        COMMENT  b) selected channel is NSC.
+        COMMENT  Equivalence Class 17, 19
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-BuildPeerToPeerExtId-DB-LLR-001]
+        COMMENT  The function builds the 29 bit CAN identifier for an ARINC 825 peer to peer type message
+        COMMENT  - RCI[bit 0..1],
+        COMMENT  - SID[bit 2 .. 8],
+        COMMENT  - Server FID[bit 9 .. 15]
+        COMMENT  - PVT[bit 16] ,
+        COMMENT  - LCL[bit 17],
+        COMMENT  - SMT[bit 18],
+        COMMENT  - Client FID[bit 19 .. 25]
+        COMMENT  - LCC[bit 26 .. 28].
+        COMMENT  Equivalence Class None
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-BuildPeerToPeerExtId-DB-LLR-002]
+        COMMENT  The function returns 29 bit CAN identifier.
+        COMMENT  Equivalence Class 15
+        COMMENT 
+        COMMENT  </TD>
+ 
+        ELEMENT
+        
+            COMMENT INPUT SECTION : 
+                --Holds the value of ps_xm structure
+                STRUCTURE ps_xm,        init = { lcc => NSC, sID => { PID => { cfid => 0, smt => 0, lcl => 0, pvt => 0, sfid => 0,  
+                &                                sid => 0,rci => 0 } }, u8PaySize => 0, u8PayLoad => { others => 0 } },     
+                &                                                                   ev = init
+              
+                --Holds the value of Instance of CAN handle structure   
+                VAR PTU_HalCanInit.Instance,       init = CAN1,                     ev= init
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,         init = 0,                       ev = init   
+                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                          
+            COMMENT OUTPUT SECTION : 
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init = NULL,                    ev = &PTU_Sem_a8251_commtask
+        
+                --Holds the transmit status
+                VAR ret_A8251Xmit,                  init = A825_BAD_CHANNEL,        ev = A825_XM_OK
+       
+            SIMUL
+        
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+                
+                --initiates and transmits a CAN frame message.
+            STUB HalCanTransmit(ZERO_TIMEOUT)HAL_OK
+                
+            END SIMUL
+        
+            --Holds the value of TSR of Instance of CAN handle structure     
+            #PTU_HalCanInit.Instance->TSR = CAN_TSR_TME0;
+        
+            --Called to configure the CAN
+            #A8251Init();
+        
+            --Calling Unit Under Test
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+        
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+
+    TEST 3
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-003]
+        COMMENT  The function returns A825_BAD_CHANNEL when selected channel is other than NOC and NSC.
+        COMMENT  Equivalence Class 18
+        COMMENT  </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Holds the value of ps_xm structure
+                STRUCTURE ps_xm,        init = { lcc => EEC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, doc => 0,  
+                &                                rci => 0 } }, u8PaySize => 0, u8PayLoad => { others => 0 } },     
+                &                                               ev = init
+        
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :  
+            
+                --Holds the transmit status
+                VAR ret_A8251Xmit,      init = A825_XM_OK,      ev = A825_BAD_CHANNEL
+        
+            SIMUL
+        
+                --None
+        
+            END SIMUL
+        
+        --Calling Unit Under Test  
+        #ret_A8251Xmit = A8251Xmit(&ps_xm);
+        
+        END ELEMENT
+
+    END TEST -- TEST 3
+
+    TEST 4
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-001]
+        COMMENT  The function locates Queue(NOC transmit queue) and builds the 29 bit ID 
+        COMMENT  by calling BuildBroadcastExtId with parameter pointer to the ARINC 825 message(ps_xm) 
+        COMMENT  when the selected channel is NOC
+        COMMENT  Equivalence Class 16, 81
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-BuildBroadcastExtId-DB-LLR-001]
+        COMMENT  The function builds the 29 bit CAN identifier for an ARINC 825 broadcast type message 
+        COMMENT  - RCI[bit 0..1],
+        COMMENT  - DOC[bit 2 .. 15],
+        COMMENT  - PVT[bit 16] ,
+        COMMENT  - LCL[bit 17],
+        COMMENT  - RSD[bit 18],
+        COMMENT  - Source FID[bit 19 .. 25]
+        COMMENT  - LCC[bit 26 .. 28].
+        COMMENT  Equivalence Class None
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-BuildBroadcastExtId-DB-LLR-002]
+        COMMENT  The function returns 29 bit CAN identifier.
+        COMMENT  Equivalence Class 14
+        COMMENT         
+        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-004]
+        COMMENT  The function does nothing when number of bytes of payload(u8PaySize of ps_xm) is less than PAYLOAD_SIZE
+        COMMENT  Equivalence Class 21
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-005]
+        COMMENT  The function fills in the CAN TX message Data i.e extended identifier is set to local extended ID(the 29 bit ID),
+        COMMENT  type of identifier to CAN_ID_EXT, type of frame for the received message to CAN_RTR_DATA and length of the frame 
+        COMMENT  that will be received to the payload size(u8PaySize of ps_xm).
+        COMMENT  Equivalence Class None
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-006]
+        COMMENT  The function does not loop when the local counter is not less than arinc 825 Paysize(u8PaySize of ps_xm) 
+        COMMENT  Equivalence Class None
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-007]
+        COMMENT  The function inserts a CAN message into the selected queue by calling TxQueueInsert function with parameters 
+        COMMENT  reference to Message to be transmitted and pointer to message queue and returns the result of the function TxQueueInsert.
+        COMMENT  Equivalence Class 22
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-TxQueueInsert-DB-LLR-001]
+        COMMENT  The function disables the Can Transmit Interrupt by calling CANITConfig function with parameters CAN1, 
+        COMMENT  CAN_IT_TME and DISABLE.
+        COMMENT  Equivalence Class 8
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-CANITConfig-DB-LLR-002]
+        COMMENT  The function configures interrupt enable register(IER) of can_x to disable the selected can_x interrupt 
+        COMMENT  'can_it' when the new state of CAN interrupt 'new_state' is equal to DISABLE.
+        COMMENT  Equivalence Class 2
+        COMMENT         
+        COMMENT  [hdudispfarinc825perph1-TxQueueInsert-DB-LLR-002]
+        COMMENT  The function does nothing when number of messages in the Tx queue (TxCntr of ps_which_q) is not equal to CAN_X_Q_SIZE.
+        COMMENT  Equivalence Class 10
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-TxQueueInsert-DB-LLR-003]
+        COMMENT  The function inserts the new message(ps_new_mess) into the next message in the queue (TxTail of ps_which_q).
+        COMMENT  Equivalence Class None
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-TxQueueInsert-DB-LLR-004]
+        COMMENT  The function adjusts the tail and check for a wrap by incrementing number of messages in the Tx queue(TxCntr of ps_which_q)
+        COMMENT  by ONE and Next message to insert(TxTail of ps_which_q) by ONE
+        COMMENT  Equivalence Class None
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-TxQueueInsert-DB-LLR-005]
+        COMMENT  The function does nothing when the next message to insert is not in the Transmit message Queue.
+        COMMENT  Size range(TxBuf [CAN_X_Q_SIZE] of ps_which_q).
+        COMMENT  Equivalence Class 12
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-TxQueueInsert-DB-LLR-006]
+        COMMENT  The function enables the Can Transmit Interrupt by calling CANITConfig function with parameters CAN1, CAN_IT_TME and ENABLE
+        COMMENT  Size range(TxBuf [CAN_X_Q_SIZE] of ps_which_q).
+        COMMENT  Equivalence Class 8
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-CANITConfig-DB-LLR-001]
+        COMMENT  The function configures interrupt enable register(IER) of can_x to enable the selected can_x interrupt can_it 
+        COMMENT  when the new state of CAN interrupt 'new_state' is equal to ENABLE.
+        COMMENT  Equivalence Class 1
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-TxQueueInsert-DB-LLR-007]
+        COMMENT  The function checks for immediate transmit by calling CAN1TxIrqHandler and returns A825_XM_OK.
+        COMMENT  Equivalence Class 13
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-XmitFromBuff-DB-LLR-001]
+        COMMENT  The function sets pTxMsg of CAN handle to TxHead of ps_which_q and transmit a CAN frame message by 
+        COMMENT  calling HalCanTransmit with parameters reference to CAN handler and ZERO_TIMEOUT when return value 
+        COMMENT  of U8MailBoxAvail with parameter reference to CAN handle is other than ZERO.
+        COMMENT  Equivalence Class 23, 24, 40
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-U8MailBoxAvail-DB-LLR-001]
+        COMMENT  The function returns the status of mail box i.e,.
+        COMMENT  i)  result of TSR of Instance of h_can bitwise AND with CAN_TSR_TME0 is CAN_TSR_TME0 OR
+        COMMENT  ii) TSR of Instance of h_can bitwise AND with CAN_TSR_TME1 is not equal to CAN_TSR_TME1 OR
+        COMMENT  iii) TSR of Instance of h_can bitwise AND with CAN_TSR_TME2 is is not equal to CAN_TSR_TME2
+        COMMENT  Equivalence Class 3, 88, 89
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-XmitFromBuff-DB-LLR-002]
+        COMMENT  The function adjusts the head and check for a wrap by decrementing number of messages in the 
+        COMMENT  Tx queue(TxCntr of ps_which_q) by ONE and incrementing next message to transmit(TxHead of ps_which_q) 
+        COMMENT  by ONE when return value of U8MailBoxAvail with parameter reference to CAN handle is other than ZERO.
+        COMMENT  Equivalence Class 23, 24
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-XmitFromBuff-DB-LLR-003]
+        COMMENT  The function does nothing when
+        COMMENT  a) The next message to transmit is not in the Transmit message Queue Size range (TxBuf [CAN_X_Q_SIZE] of ps_which_q)
+        COMMENT  b) return value of U8MailBoxAvail with parameter reference to CAN handle is other than ZERO.
+        COMMENT  Equivalence Class 23, 24, 27
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-XmitFromBuff-DB-LLR-004]
+        COMMENT  The function returns ONE when return value of U8MailBoxAvail with parameter reference to CAN handle is other than ZERO
+        COMMENT  Equivalence Class 23, 24
+        COMMENT
+        COMMENT  </TD>
+ 
+        ELEMENT
+        
+            COMMENT INPUT SECTION :  
+                --Holds the value of ps_xm structure
+                STRUCTURE ps_xm,        init = { lcc => NOC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, doc => 0,  
+                &                                rci => 0 } }, u8PaySize => 0, u8PayLoad => { others => 0 } },     
+                &                                                                 ev = init
+                              
+                --Holds the value of Instance of CAN handle structure
+                VAR PTU_HalCanInit.Instance,        init = CAN1,                  ev = init
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,         init = 0,                     ev = init
+                                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                          
+            COMMENT OUTPUT SECTION :   
+               
+               --Holds the value of Sem_a8251_commtask
+                VAR Sem_a8251_commtask,            init = NULL,                  ev = &PTU_Sem_a8251_commtask
+                
+                --Holds the value of can_x interrupt               
+                VAR CAN1->IER,                     init = 0,                     ev = 0x00000002
+        
+                --Holds the transmit status
+                VAR ret_A8251Xmit,                 init = A825_BAD_CHANNEL,      ev = A825_XM_OK
+       
+            SIMUL
+       
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+            
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+           
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+                --initiates and transmits a CAN frame message.
+                STUB HalCanTransmit(ZERO_TIMEOUT)HAL_OK
+            
+            END SIMUL
+        
+            --Holds the value of TSR of Instance of CAN handle structure
+            #PTU_HalCanInit.Instance->TSR = CAN_TSR_TME0;
+        
+            --Called to configure the CAN
+            #A8251Init();
+        
+            --Calling Unit Under Test
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+        
+        END ELEMENT
+
+    END TEST -- TEST 4
+
+    TEST 5
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-006]
+        COMMENT  The function loops till the local counter is less than arinc 825 Paysize(u8PaySize of ps_xm) 
+        COMMENT  and copies the payload (u8PayLoad of ps_xm) to CAN data(data of CAN TX message).
+        COMMENT  Loops for one time.
+        COMMENT  Equivalence Class None
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-U8MailBoxAvail-DB-LLR-001]
+        COMMENT  The function returns the status of mail box i.e,.
+        COMMENT  i) result of TSR of Instance of h_can bitwise AND with CAN_TSR_TME0 is not equal to CAN_TSR_TME0 OR
+        COMMENT  ii) TSR of Instance of h_can bitwise AND with CAN_TSR_TME1 is CAN_TSR_TME1 OR
+        COMMENT  iii) TSR of Instance of h_can bitwise AND with CAN_TSR_TME2 is not equal to CAN_TSR_TME2
+        COMMENT  Equivalence Class 90, 86, 88
+        COMMENT 
+        COMMENT  </TD>
+
+        ELEMENT 
+        
+            COMMENT INPUT SECTION :
+            
+                --Holds the value of ps_xm structure
+                STRUCTURE ps_xm,                   init = { lcc => NOC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, 
+                &                                  doc => 0, rci => 0 } }, u8PaySize => 1, u8PayLoad => { others => 0 } },     
+                &                                                               ev = init
+                
+                --Holds the value of Instance of CAN handle structure
+                VAR PTU_HalCanInit.Instance,       init=CAN1,                   ev = init
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,         init = 0,                   ev = init
+                
+        
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                                  
+            COMMENT OUTPUT SECTION :
+            
+                --Holds the value of Sem_a8251_commtask
+                VAR Sem_a8251_commtask,            init = NULL,                 ev = &PTU_Sem_a8251_commtask
+                
+                --Holds the transmit status
+                VAR ret_A8251Xmit,                 init = A825_BAD_CHANNEL,     ev = A825_XM_OK
+       
+            SIMUL
+       
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+            
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+           
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+                --initiates and transmits a CAN frame message.
+                STUB HalCanTransmit(ZERO_TIMEOUT)HAL_OK
+            
+            END SIMUL
+        
+            --Holds the value of TSR of Instance of CAN handle structure
+            #PTU_HalCanInit.Instance->TSR = CAN_TSR_TME1;
+        
+            --Called to configure the CAN
+            #A8251Init();
+        
+            --Calling Unit Under Test
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+        
+        END ELEMENT
+
+    END TEST -- TEST 5
+
+    TEST 6
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-006]
+        COMMENT  The function loops till the local counter is less than arinc 825 Paysize(u8PaySize of ps_xm) 
+        COMMENT  and copies the payload (u8PayLoad of ps_xm) to CAN data(data of CAN TX message).
+        COMMENT  Loop for more than two times(8 times).
+        COMMENT  Equivalence Class None
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-U8MailBoxAvail-DB-LLR-001]
+        COMMENT  The function returns the status of mail box i.e,.
+        COMMENT  i)  result of TSR of Instance of h_can bitwise AND with CAN_TSR_TME0 is not equal to CAN_TSR_TME0 OR
+        COMMENT  ii) TSR of Instance of h_can bitwise AND with CAN_TSR_TME1 is not equal to CAN_TSR_TME1 OR
+        COMMENT  iii) TSR of Instance of h_can bitwise AND with CAN_TSR_TME2 is CAN_TSR_TME2
+        COMMENT  Equivalence Class 90, 87, 89
+        COMMENT 
+        COMMENT  </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :  
+                
+                --Holds the value of ps_xm structure
+                STRUCTURE ps_xm,                  init = { lcc => NOC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, 
+                &                                       doc => 0, rci => 0 } }, u8PaySize => 8, u8PayLoad => { others => 1 } },     
+                &                                                                ev = init
+        
+                --Holds the value of Instance of CAN handle structure
+                VAR PTU_HalCanInit.Instance,       init=CAN1,                     ev = init
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,         init = 0,                     ev = init
+                                
+                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                          
+            COMMENT OUTPUT SECTION : 
+        
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init=NULL,                    ev = &PTU_Sem_a8251_commtask
+             
+                --Holds the transmit status
+                VAR ret_A8251Xmit,                  init = A825_BAD_CHANNEL,      ev = A825_XM_OK
+            
+            SIMUL
+       
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+            
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+           
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+                --initiates and transmits a CAN frame message.
+                STUB HalCanTransmit(ZERO_TIMEOUT)HAL_OK
+            
+            END SIMUL
+        
+            --Holds the value of TSR of Instance of CAN handle structure
+            #PTU_HalCanInit.Instance->TSR = CAN_TSR_TME2;
+        
+            --Called to configure the CAN
+            #A8251Init();
+        
+            --Calling Unit Under Test
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+        
+        END ELEMENT        
+        
+    END TEST -- TEST 6
+
+    TEST 7
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-004]
+        COMMENT  The function returns A825_BAD_PAYLOAD_SIZE when number of bytes of payload(u8PaySize of ps_xm)
+        COMMENT  is greater than PAYLOAD_SIZE
+        COMMENT  Equivalence Class 20
+        COMMENT 
+        COMMENT  </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+            
+                --Holds the value of ps_xm structure
+                STRUCTURE ps_xm,                 init = { lcc => NOC, sID => { BID => { sfid => 0, rsd => 0, lcl => 0, pvt => 0, doc => 0,  
+                &                                       rci => 0 } }, u8PaySize => 9, u8PayLoad => { others => 255 } },     
+                &                                                       ev = init
+        
+                --Holds the value of Instance of CAN handle structure
+                VAR PTU_HalCanInit.Instance,     init=CAN1,             ev = init
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,         init = 0,           ev = init                                
+
+        
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                                  
+            COMMENT OUTPUT SECTION : 
+            
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,        init=NULL,              ev = &PTU_Sem_a8251_commtask
+                
+                --Holds the transmit status                
+                VAR ret_A8251Xmit,              init = A825_XM_OK,      ev = A825_BAD_PAYLOAD_SIZE
+       
+            SIMUL
+       
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+            
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+           
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+                        
+            END SIMUL
+        
+            --Called to configure the CAN
+            #A8251Init();
+        
+            --Calling Unit Under Test
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+        
+        END ELEMENT        
+        
+    END TEST -- TEST 7
+    
+    TEST 8
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-U8MailBoxAvail-DB-LLR-001]
+        COMMENT  The function returns the status of mail box i.e,.
+        COMMENT  i)  result of TSR of Instance of h_can bitwise AND with CAN_TSR_TME0 is not equal to CAN_TSR_TME0 OR
+        COMMENT  ii) TSR of Instance of h_can bitwise AND with CAN_TSR_TME1 is not equal to CAN_TSR_TME1 OR
+        COMMENT  iii) TSR of Instance of h_can bitwise AND with CAN_TSR_TME2 is not equal to CAN_TSR_TME2
+        COMMENT  Equivalence Class 90, 88, 89
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-XmitFromBuff-DB-LLR-005]
+        COMMENT  The function returns ZERO when return value of U8MailBoxAvail with parameter reference to CAN handle is ZERO.
+        COMMENT  Equivalence Class 25
+        COMMENT
+        COMMENT  </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+            
+                --Holds the value of ps_xm structure
+                STRUCTURE ps_xm,        init = { lcc => NOC, sID => { BID => { sfid => 1, rsd => 1, lcl => 1, pvt => 1, doc =>1,  
+                &                                rci => 1 } }, u8PaySize => 2, u8PayLoad => { others => 0 } },     
+                &                                                              ev = init
+                
+                --Holds the value of Instance of CAN handle structure        
+                VAR PTU_HalCanInit.Instance,    init = CAN1,                   ev = init
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,     init = 0,                      ev = init   
+
+        
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                                  
+            COMMENT OUTPUT SECTION :
+            
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,        init = NULL,                    ev = &PTU_Sem_a8251_commtask
+                
+                --Holds the transmit status
+                VAR ret_A8251Xmit,              init = A825_BAD_CHANNEL,        ev = A825_XM_OK
+       
+            SIMUL
+       
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+            
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+           
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+            END SIMUL
+        
+            --Holds the value of TSR of Instance of CAN handle structure
+            #PTU_HalCanInit.Instance->TSR = 1;
+
+            --Called to configure the CAN
+            #A8251Init();
+        
+            --Calling Unit Under Test
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+        
+        END ELEMENT        
+        
+    END TEST -- TEST 8
+    
+    TEST 9
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-TxQueueInsert-DB-LLR-002]
+        COMMENT  The function enables the Can Transmit Interrupt by calling CANITConfig function with parameters 
+        COMMENT  CAN1, CAN_IT_TME and ENABLE and returns A825_XM_OVERFLOW  
+        COMMENT  when number of messages in the Tx queue (TxCntr of ps_which_q) is equal to CAN_X_Q_SIZE.
+        COMMENT  Equivalence Class 8, 9
+        COMMENT  </TD>
+
+     
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+                --Holds the value of ps_xm structure
+                STRUCTURE ps_xm,        init = { lcc => NOC, sID => { BID => { sfid => 1, rsd => 1, lcl => 1, pvt => 1, doc =>1, 
+                &                                rci => 1 } }, u8PaySize => 2, u8PayLoad => { others => 0 } },     
+                &                                                                   ev = init
+                    
+                --Holds the value of Instance of CAN handle structure
+                VAR PTU_HalCanInit.Instance,       init = CAN1,                     ev= init
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,         init = 0,                       ev = init   
+        
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                                  
+            COMMENT OUTPUT SECTION : 
+            
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init = NULL,                    ev = &PTU_Sem_a8251_commtask
+                        
+                --Holds the transmit status
+                VAR ret_A8251Xmit,                 init = A825_BAD_CHANNEL,         ev = A825_XM_OK
+               
+            SIMUL
+       
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+                    
+            END SIMUL
+         
+            --Holds the value of TSR of Instance of CAN handle structure    
+            #PTU_HalCanInit.Instance->TSR = 1;
+         
+            --Called to configure the CAN
+            #A8251Init();
+        
+            --Calling Unit Under Test
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+           
+        END ELEMENT   
+         
+         -- To make number of messages in the Tx queue (TxCntr of ps_which_q) is equal to CAN_X_Q_SIZE.
+         #for(PTU_i=0;PTU_i<120;PTU_i++)
+         #ret_A8251Xmit = A8251Xmit(&ps_xm);
+        
+        ELEMENT
+        
+            COMMENT INPUT SECTION :  
+             
+                --Holds the value of ps_xm structure                             
+                STRUCTURE ps_xm,        init = { lcc => NOC, sID => { BID => { sfid => 2, rsd => 1, lcl => 1, pvt => 1, doc =>2,
+                &                                 rci => 2 } }, u8PaySize => 2, u8PayLoad => { others => 0 } },      
+                &                       ev = init
+                    
+                --Holds the value of Instance of CAN handle structure    
+                VAR PTU_HalCanInit.Instance,        init = CAN1,                ev = init
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,         init = 0,                   ev = init   
+                
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                          
+            COMMENT OUTPUT SECTION :
+                --Holds the value of Sem_a8251_commtask
+                VAR  Sem_a8251_commtask,            init = NULL,                ev = &PTU_Sem_a8251_commtask
+                 
+                --Holds the transmit status
+                VAR ret_A8251Xmit,                  init = A825_XM_OK,          ev = A825_XM_OVERFLOW
+                   
+            SIMUL    
+                
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+                     
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+                    
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK                            
+                        
+            END SIMUL
+        
+            --Called to configure the CAN
+            #A8251Init();
+        
+            --Calling Unit Under Test
+            #ret_A8251Xmit = A8251Xmit(&ps_xm);
+        
+        END ELEMENT        
+                    
+    END TEST -- TEST 9
+    
+--    TEST 10
+--    FAMILY robustness
+--    
+--        COMMENT  Test Description
+--        COMMENT  <TD>
+--        COMMENT  [hdudispfarinc825perph1-A8251Xmit-DB-LLR-001]
+--        COMMENT  The function A8251Xmit parameter ps_xm is checked for NULL.
+--        COMMENT  Equivalence Class 83
+--        COMMENT 
+--        COMMENT  </TD>
+--     
+--        ELEMENT
+--        
+--            COMMENT INPUT SECTION :  
+--                --none
+--               
+--            COMMENT INPUT/OUTPUT SECTION :
+--                --none
+--                           
+--            COMMENT OUTPUT SECTION : 
+--                --none
+--        
+--            SIMUL
+--       
+--              --none
+--             
+--            END SIMUL
+--        
+--            --Calling Unit Under Test
+--            #ret_A8251Xmit = A8251Xmit(NULL);
+--        
+--        END ELEMENT
+--    
+--    END TEST -- TEST 10
+    
+END SERVICE -- A8251Xmit
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service A8251Init
+--------------------------------------------------------------------------------
+SERVICE A8251Init
+SERVICE_TYPE extern
+    
+    TEST 2
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-CAN1Config-DB-LLR-002]
+        COMMENT  The function loops infinitely and does nothing when the return value of the function HalCanInit 
+        COMMENT  with parameter reference to can handle structure is not equal to HAL_OK
+        COMMENT  Equivalence Class 51, 49
+        COMMENT  
+        COMMENT  [hdudispfarinc825perph1-CAN1Config-DB-LLR-004]
+        COMMENT  The function loops infinitely ans does nothing when the return value of the function HalCanConfigFilter
+        COMMENT  with parameter (reference to can handle structure and reference to CAN filter config) is not equal to HAL_OK.
+        COMMENT  Equivalence Class 52, 53
+        COMMENT  
+        COMMENT  </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION : 
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,         init = 0,           ev = init   
+               
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+                           
+            COMMENT OUTPUT SECTION :    
+                --Holds the value of Sem_a8251_commtask
+                VAR Sem_a8251_commtask,         init = NULL,    ev = &PTU_Sem_a8251_commtask
+        
+
+            SIMUL
+                
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_ERROR
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_ERROR
+            
+            END SIMUL
+            
+            --Calling Unit Under Test         
+            #A8251Init();
+            
+        END ELEMENT
+
+    END TEST -- TEST 2
+    
+END SERVICE -- A8251Init
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalCanMspInit
+--------------------------------------------------------------------------------
+SERVICE HalCanMspInit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CAN_HANDLE h_can;
+
+    ENVIRONMENT ENV_HalCanMspInit
+    
+    STRUCTURE h_can,        init = { Instance => NIL, Init => { Prescaler => 0, Mode => 0, SJW => 0, BS1 => 0, 
+    &                                BS2 => 0, TTCM => 0, ABOM => 0, AWUM => 0, NART => 0, RFLM => 0, TXFP => 0 }, 
+    &                                pTxMsg => NIL, pRxMsg => NIL, State => HAL_CAN_STATE_RESET, Lock => HAL_UNLOCKED, 
+    &                                ErrorCode=> 0 },        ev = init
+    
+    END ENVIRONMENT -- ENV_HalCanMspInit
+    
+    USE ENV_HalCanMspInit
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-HalCanMspInit-DB-LLR-001]
+        COMMENT  The function does nothing when Instance of h_can is neither CAN1 nor CAN2.
+        COMMENT  Equivalence Class 41
+        COMMENT  </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Holds the value of CAN handler
+                STRUCTURE h_can,    init = { Instance => NIL, Init => { Prescaler => 0, Mode => 0, SJW => 0, BS1 => 0, 
+                &                        BS2 => 0, TTCM => 0, ABOM => 0, AWUM => 0, NART => 0, RFLM => 0, TXFP => 0 }, 
+                &                        pTxMsg => NIL, pRxMsg => NIL, State => HAL_CAN_STATE_RESET, Lock => HAL_UNLOCKED, 
+                &                        ErrorCode=> 0 },       ev = init
+        
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :
+                --none
+            
+            SIMUL
+            
+                --None
+            
+            END SIMUL
+                
+        --Calling Unit Under Test
+        #HalCanMspInit(&h_can);
+        
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-HalCanMspInit-DB-LLR-001]
+        COMMENT  The function does the following when Instance of h_can is CAN1
+        COMMENT  a)  Enables CAN1 Periph clock by calling macro CAN1_CLK_ENABLE.
+        COMMENT  b)  Enables GPIO clock by calling macro CAN1_GPIO_CLK_ENABLE
+        COMMENT  Equivalence Class 38, 42, 43
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-HalCanMspInit-DB-LLR-002]
+        COMMENT  The function configures CAN1 transmission GPIO pin as follows:
+        COMMENT  a)  Sets Pin of GPIO init structure to CAN1_TX_PIN
+        COMMENT  b)  Sets Mode of GPIO init structure to GPIO_MODE_AF_PP
+        COMMENT  c)  Sets Speed of GPIO init structure to GPIO_SPEED_HIGH
+        COMMENT  d)  Sets Pull of GPIO init structure to GPIO_PULLUP
+        COMMENT  e)  Sets Alternate of GPIO init structure to CAN1_TX_AF
+        COMMENT      and calls the function HalGpioInit with parameter (CAN1_TX_GPIO_PORT and 
+        COMMENT      reference to GPIO init structure ) to initialize the GPIO peripheral.
+        COMMENT      when Instance of h_can is CAN1
+        COMMENT  Equivalence Class 38, 44
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-HalCanMspInit-DB-LLR-003]
+        COMMENT  The function configures CAN1 reception GPIO pin as follows:
+        COMMENT  a)  Sets Pin of GPIO init structure to CAN1_RX_PIN
+        COMMENT  b)  Sets Mode of GPIO init structure to GPIO_MODE_AF_PP
+        COMMENT  c)  Sets Speed of GPIO init structure to GPIO_SPEED_HIGH
+        COMMENT  d)  Sets Pull of GPIO init structure to GPIO_PULLUP
+        COMMENT  e)  Sets Alternate of GPIO init structure to CAN1_RX_AF
+        COMMENT      and calls the function HalGpioInit with parameter (CAN1_RX_GPIO_PORT 
+        COMMENT      and reference to GPIO init structure ) to initialize the GPIO peripheral.
+        COMMENT      when Instance of h_can is CAN1
+        COMMENT  Equivalence Class 38, 44
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-HalCanMspInit-DB-LLR-004]
+        COMMENT  The function does the following when Instance of h_can is CAN1
+        COMMENT  a)  Calls the function HalNvicSetPriority with parameter (CAN1_RX0_IRQN, 
+        COMMENT      CAN1_RX_PRIORITY and zero) to set priority for CAN1 Reception complete interrupt
+        COMMENT  b)  Calls the function HalNvicSetPriority with parameter (CAN1_TX_IRQN, 
+        COMMENT      CAN1_TX_PRIORITY and zero) to set priority for CAN1 transmission complete interrupt
+        COMMENT  c)  Calls the function HalNvicEnableIrq with parameter CAN1_RX0_IRQN to enable Reception interrupt
+        COMMENT  d)  Calls the function HalNvicEnableIrq with parameter CAN1_TX_IRQN to enable Transmission interrupt
+        COMMENT  Equivalence Class 38, 45, 46
+        COMMENT 
+        COMMENT  </TD>
+
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+            
+                --Holds the value of CAN handler
+                STRUCTURE h_can,        init = { Instance => CAN1, Init => { Prescaler => 0, Mode => 0, SJW => 0, BS1 => 0, 
+                &                       BS2 => 0, TTCM => 0, ABOM => 0, AWUM => 0, NART => 0, RFLM => 0, TXFP => 0 }, pTxMsg => NIL, 
+                &                       pRxMsg => NIL, State => HAL_CAN_STATE_RESET, Lock => HAL_UNLOCKED, ErrorCode=> 0 },     
+                &                                                             ev = init
+            
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :
+            
+                --Holds the value of CAN1 TX GPIO pin configuration 
+                VAR PTU_GPIO_Init_TX.Pin,            init = 0,                 ev = CAN1_TX_PIN
+                VAR PTU_GPIO_Init_TX.Mode,           init = 0,                 ev = GPIO_MODE_AF_PP
+                VAR PTU_GPIO_Init_TX.Speed,          init = GPIO_SPEED_LOW,    ev = GPIO_SPEED_HIGH
+                VAR PTU_GPIO_Init_TX.Pull,           init = GPIO_PULLDOWN,     ev = GPIO_PULLUP
+                VAR PTU_GPIO_Init_TX.Alternate,      init = 0,                 ev = CAN1_TX_AF
+      
+                --Holds the value of CAN1 RX GPIO pin configuration 
+                VAR PTU_GPIO_Init_RX.Pin,             init = 0,                 ev = CAN1_RX_PIN
+                VAR PTU_GPIO_Init_RX.Mode,            init = 0,                 ev = GPIO_MODE_AF_PP
+                VAR PTU_GPIO_Init_RX.Speed,           init = GPIO_SPEED_LOW,    ev = GPIO_SPEED_HIGH
+                VAR PTU_GPIO_Init_RX.Pull,            init = GPIO_PULLDOWN,     ev = GPIO_PULLUP
+                VAR PTU_GPIO_Init_RX.Alternate,       init = 0,                 ev = CAN1_RX_AF
+
+
+            SIMUL
+                --CAN1 TX GPIO pin configuration 
+                STUB HalGpioInit(CAN1_TX_GPIO_PORT)
+
+                --CAN1 RX GPIO pin configuration 
+                STUB HalGpioInit(CAN1_RX_GPIO_PORT)
+
+                --To configure the NVIC
+                STUB HalNvicSetPriority(CAN1_RX0_IRQN, CAN1_RX_PRIORITY, 0)
+                STUB HalNvicSetPriority(CAN1_TX_IRQN, CAN1_TX_PRIORITY, 0)
+                STUB HalNvicEnableIrq(CAN1_RX0_IRQN)
+                STUB HalNvicEnableIrq(CAN1_TX_IRQN)
+
+            END SIMUL
+        
+            --Calling Unit Under Test
+            #HalCanMspInit(&h_can);
+        
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+    TEST 3
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-HalCanMspInit-DB-LLR-005]
+        COMMENT  The function does the following when Instance of h_can is CAN2
+        COMMENT  a)  Enables CAN1 Periph clock by calling macro CAN2_CLK_ENABLE.
+        COMMENT  b)  Enables GPIO clock by calling macro CAN2_GPIO_CLK_ENABLE.
+        COMMENT  Equivalence Class 39, 47, 48
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-HalCanMspInit-DB-LLR-006]
+        COMMENT  The function configures CAN2 transmission GPIO pin as follows:
+        COMMENT  a)  Sets Pin of GPIO init structure to CAN2_TX_PIN
+        COMMENT  b)  Sets Mode of GPIO init structure to GPIO_MODE_AF_PP
+        COMMENT  c)  Sets Speed of GPIO init structure to GPIO_SPEED_HIGH
+        COMMENT  d)  Sets Pull of GPIO init structure to GPIO_PULLUP
+        COMMENT  e)  Sets Alternate of GPIO init structure to CAN2_TX_AF
+        COMMENT      and calls the function HalGpioInit with parameter (CAN2_TX_GPIO_PORT and reference 
+        COMMENT      to GPIO init structure ) to initialize the GPIO peripheral.
+        COMMENT      when Instance of h_can is CAN2
+        COMMENT  Equivalence Class 39, 44 
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-HalCanMspInit-DB-LLR-007]
+        COMMENT  The function configures CAN2 reception GPIO pin as follows:
+        COMMENT  a)  Sets Pin of GPIO init structure to CAN2_RX_PIN
+        COMMENT  b)  Sets Mode of GPIO init structure to GPIO_MODE_AF_PP
+        COMMENT  c)  Sets Speed of GPIO init structure to GPIO_SPEED_HIGH
+        COMMENT  d)  Sets Pull of GPIO init structure to GPIO_PULLUP
+        COMMENT  e)  Sets Alternate of GPIO init structure to CAN2_RX_AF
+        COMMENT      and calls the function HalGpioInit with parameter (CAN2_RX_GPIO_PORT 
+        COMMENT      and reference to GPIO init structure ) to initialize the GPIO peripheral.
+        COMMENT      when Instance of h_can is CAN2
+        COMMENT  Equivalence Class 39, 44
+        COMMENT
+        COMMENT  [hdudispfarinc825perph1-HalCanMspInit-DB-LLR-008]
+        COMMENT  The function does the following when Instance of h_can is CAN2
+        COMMENT  a)  Calls the function HalNvicSetPriority with parameter (CAN2_RX0_IRQN, 
+        COMMENT      CAN2_RX_PRIORITY and zero) to set priority for CAN2 Reception complete interrupt
+        COMMENT  b)  Calls the function HalNvicSetPriority with parameter (CAN2_TX_IRQN, 
+        COMMENT      CAN2_TX_PRIORITY and zero) to set priority for CAN1 transmission complete interrupt
+        COMMENT  c)  Calls the function HalNvicEnableIrq with parameter CAN2_RX0_IRQN to enable Reception interrupt
+        COMMENT  d)  Calls the function HalNvicEnableIrq with parameter CAN2_TX_IRQN to enable Transmission interrupt
+        COMMENT  Equivalence Class 39, 45, 46
+        COMMENT
+        COMMENT  </TD>
+
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION :
+            
+                --Holds the value of CAN handler
+                STRUCTURE h_can,        init = { Instance => CAN2, Init => { Prescaler => 0, Mode => 0, SJW => 0, BS1 => 0, 
+                &                       BS2 => 0, TTCM => 0, ABOM => 0, AWUM => 0, NART => 0, RFLM => 0, TXFP => 0 }, pTxMsg => NIL, 
+                &                       pRxMsg => NIL, State => HAL_CAN_STATE_RESET, Lock => HAL_UNLOCKED, ErrorCode=> 0 },     
+                &                                                          ev = init
+        
+            COMMENT INPUT/OUTPUT SECTION :
+                --none
+            
+            COMMENT OUTPUT SECTION :
+                --none
+        
+            SIMUL
+                --CAN2 TX GPIO pin configuration 
+                STUB HalGpioInit(CAN2_TX_GPIO_PORT)
+
+                --CAN2 RX GPIO pin configuration 
+                STUB HalGpioInit(CAN2_RX_GPIO_PORT)
+
+                --To configure the NVIC
+                STUB HalNvicSetPriority(CAN2_RX0_IRQN, CAN2_RX_PRIORITY, 0)
+                STUB HalNvicSetPriority(CAN2_TX_IRQN, CAN2_TX_PRIORITY, 0)
+                STUB HalNvicEnableIrq(CAN2_RX0_IRQN)
+                STUB HalNvicEnableIrq(CAN2_TX_IRQN)
+
+            END SIMUL
+        
+            --Calling Unit Under Test
+            #HalCanMspInit(&h_can);
+        
+        END ELEMENT
+
+    END TEST -- TEST 3
+
+--    TEST 4
+--    FAMILY robustness
+--
+--        COMMENT  Test Description
+--        COMMENT  <TD>
+--        COMMENT  [hdudispfarinc825perph1-HalCanMspInit-DB-LLR-001]
+--        COMMENT  The function HalCanMspInit parameter h_can checked for NULL.
+--        COMMENT  Equivalence Class 84
+--        COMMENT
+--        COMMENT  </TD>
+--
+--
+--        ELEMENT
+--        
+--            COMMENT INPUT SECTION :
+--                --none
+--                    
+--            COMMENT INPUT/OUTPUT SECTION :
+--                --none
+--            
+--            COMMENT OUTPUT SECTION :
+--                --none
+--        
+--            SIMUL
+--            
+--                --none
+--
+--            END SIMUL
+--        
+--            --Calling Unit Under Test
+--            #HalCanMspInit(NULL);
+--        
+--        END ELEMENT
+--
+--    END TEST -- TEST 4
+    
+END SERVICE -- HalCanMspInit
+

@@ -1,0 +1,1071 @@
+HEADER hdudispfnumbox, Source Code Ver : 1.10 , TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+-- Author Name         : Priyanka N
+--
+-- File Name           : hdudispfnumbox_3.ptu
+--
+-- Test Creation Date  : 25.10.2017 
+--
+-- Tested Functions    : NumboxUpdate
+--                  
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--  1.1                 25.10.2017      Priyanka N         Created the PTU file.
+--  1.2                 11.11.2017      Priyanka N         Updated as per #PR100171
+--  1.3                 14.11.2017      Priyanka N         Updated as per #PR100171
+--  1.4                 27.07.2020      Swaroopa N         Updated as per #PR100267
+--  1.5                 03.10.2020      Vignesh Sunil      Updated as per #PR100281
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfpolygon1.h"
+##include "hdudispfrterror.h"
+##include "hdudispftext.h"
+##include "hdudispfconfig.h"
+##include "hdudispfnumbox.h"
+##include "hdulibbasictypes.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+
+-- Declarations of the global variables of the tested file
+
+    -- None
+    
+-- Declarations of the temporary variables of the tested file
+
+    -- Variable created for loop usage.
+    #T_UINT16 PTU_i;
+    #T_UINT32 index1;
+    
+    -- Created to handle the members of structure "ps_num_box_def" 
+    #T_SNUMBOXDEF PTU_ps_num_box_def;
+
+    -- Variable created to assign as an address to structure member 'psParam' of structure "ps_num_box_def"
+    #T_PARAM_READING PTU_temp;
+
+    --Temporary variable used in "WidgetsRedX" stub native code
+    #T_SDISREGION       PTU_ps_dis_region;
+    #T_SPOLY            *PTU_Pps_poly_red_x;
+    #T_SPOLY        PTU_Pps_poly_red_x1;
+    
+    -- Temporary variables created to verify the stub parameters of stub "WidgetsUpdateRT" explicitly.
+    #T_PARAM_READING PTU_ps_param;
+    #T_SWIDGETPARAM PTU_ps_widget_parm_out;
+    
+    -- Temporary variables created to verify the stub parameters of stub "BinasByteFormatInfoBE" explicitly.
+    #T_INT8 PTU_inforBE;
+        
+    -- Temporary variables created to verify the stub parameters of stub "TextUpdate" explicitly.
+    # T_PTEXT PTU_p_text; 
+      
+    --Temporary variable used in "WidgetsNumUpdate" stub native code
+    #T_PARAM_READING     PTU_NumUpdate;
+    #T_SWIDGETPARAM      PTU_ps_widget_param;
+    #T_CHAR              PTU_ac_dig_text[13];
+    
+    --Temporary variable created to verify the parameters of function "BinasByteFormatInfoBE"
+    #T_INT16 *PTU_InfoBE_src;
+    #T_INT8  *PTU_InfoBE_dest;    
+    
+    --Temporary variable created to verify the parameters of function "TextAllocat"
+    #T_PTEXT  *PTU_pps_handle_add;
+    #T_UINT8  *PTU_pu8_string;    
+ 
+    --Temporary variable created to verify the parameters of function "RterrWidget"
+    #T_CHAR  PTU_rterr_file[100];
+    #T_CHAR  PTU_rterr_message[100];
+--------------------------------------------------------------------------------
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hdudispfnumbox_3.ptu
+    COMMENT
+    COMMENT Tested Functions : NumboxUpdate
+    COMMENT                    
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT 1. Due to static variable "U16_num_box_installed" PTU is split into four PTUs.
+    COMMENT
+    COMMENT 2. Below statement is added in 'hdudispfnumbox.c' file before the include section to fetch the actual path of source file independent
+    COMMENT    to different target machines.
+    COMMENT    Code:
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT
+    COMMENT 3. Following Test script related warning is observed during Target Execution for stub function return value:
+    COMMENT    warning #120-D: 
+    COMMENT    return value type does not match the function type
+    COMMENT    return(Attol_ptr_out->ret);
+    COMMENT </AC>
+       
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT
+    COMMENT Class 1
+    COMMENT Function "NumboxClear", De-allocate all pointers.
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function "NumboxAllocat", calls the function "RterrWidget".
+    COMMENT
+    COMMENT Class 3
+    COMMENT Function "NumboxAllocat", calls the function "BinasGetWidth".
+    COMMENT
+    COMMENT Class 4
+    COMMENT Function "NumboxAllocat", calls the function "BinasByteFormatInfoBE".
+    COMMENT
+    COMMENT Class 5
+    COMMENT Function "NumboxAllocat", calls the function "TextAllocat".
+    COMMENT
+    COMMENT Class 6
+    COMMENT Function "NumboxAllocat", number box installed is equal to MAX_NUMBOX.
+    COMMENT
+    COMMENT Class 7
+    COMMENT Function "NumboxAllocat", number box installed is not equal to MAX_NUMBOX.
+    COMMENT
+    COMMENT Class 8
+    COMMENT Function "NumboxDraw", calls the function "WidgetsRedX".
+    COMMENT 
+    COMMENT Class 9
+    COMMENT Function "NumboxUpdate" , calls the function "WidgetsUpdateRT".
+    COMMENT 
+    COMMENT Class 10
+    COMMENT Function "NumboxUpdate" , calls the function "WidgetsNumUpdate". 
+    COMMENT 
+    COMMENT Class 11
+    COMMENT Function "NumboxUpdate" , calls the function "BinasGetWidth". 
+    COMMENT 
+    COMMENT Class 12
+    COMMENT Function "NumboxUpdate" , calls the function "TextUpdate". 
+    COMMENT
+    COMMENT Class 13
+    COMMENT Function "NumboxDraw" , Stat of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to PARAM_BAD 
+    COMMENT 
+    COMMENT Class 14
+    COMMENT Function "NumboxDraw" , Stat of psParam of psNumBoxDef of pointer to structure number box is lesser than PARAM_BAD
+    COMMENT 
+    COMMENT Class 15
+    COMMENT Function "NumboxDraw" ,psDisRegion of psNumBoxDef of pointer to structure number box is not equal to ZERO.
+    COMMENT 
+    COMMENT Class 16
+    COMMENT Function "NumboxDraw" ,psDisRegion of psNumBoxDef of pointer to structure number box is equal to ZERO.
+    COMMENT
+    COMMENT Class 17
+    COMMENT Function "NumboxUpdate" , Stat of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to PARAM_BAD. 
+    COMMENT
+    COMMENT Class 18
+    COMMENT Function "NumboxUpdate" , Stat of psParam of psNumBoxDef of pointer to structure number box is less than PARAM_BAD.
+    COMMENT
+    COMMENT Class 19
+    COMMENT Function "NumboxUpdate" , pText of sWidgetParm of number box is other than NULL.    
+    COMMENT
+    COMMENT Class 20
+    COMMENT Function "NumboxUpdate" , pText of sWidgetParm of number box is equal to NULL.  
+    COMMENT
+    COMMENT Class 21
+    COMMENT Function "NumboxUpdate" , decimal number is equal to ZERO.  
+    COMMENT
+    COMMENT Class 22
+    COMMENT Function "NumboxUpdate" , decimal number is other than ZERO.    
+    COMMENT
+    COMMENT Class 23
+    COMMENT Function "NumboxDraw", Stat of psParam of psNumBoxDef of pointer to structure number box is not equal to NCD
+    COMMENT
+    COMMENT Class 24
+    COMMENT Function "NumboxDraw", Stat of psParam of psNumBoxDef of pointer to structure number box is equal to NCD
+    COMMENT 
+    COMMENT Class 25
+    COMMENT Function "NumboxUpdate", calls the function "CalculatePower".
+    COMMENT 
+    COMMENT Class 26
+    COMMENT Function "NumboxUpdate", fread of psParam of psNumBoxDef of pointer to structure number box is less than zero.
+    COMMENT 
+    COMMENT Class 27
+    COMMENT Function "NumboxUpdate", fread of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to zero.
+    COMMENT 
+    COMMENT Class 28
+    COMMENT Function "NumboxUpdate", r of psParam of psNumBoxDef of pointer to structure number box is less than zero.
+    COMMENT 
+    COMMENT Class 29
+    COMMENT Function "NumboxUpdate", r of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to zero.
+    COMMENT 
+    COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hdudispfnumbox_c
+
+        -- Parameter 'p_text' is made as _no, since local variable address cannot expect
+        #void WidgetsRedX(T_SDISREGION _no *ps_dis_region, T_SPOLY _no **pps_poly_red_x)
+        # {
+        #    PTU_ps_dis_region  = *ps_dis_region;
+        #    PTU_Pps_poly_red_x = &PTU_Pps_poly_red_x1;
+        #    pps_poly_red_x =     &PTU_Pps_poly_red_x;
+        # }
+        
+        -- Parameter 'p_text' is made as _no, since local variable address cannot expect
+        #void TextUpdate(struct Text _no p_text, T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv)
+        # {
+        # PTU_p_text = p_text;
+        # } 
+
+        -- Parameters 'param', 'ac_dig_text' and 'ps_widget_param' are made as _no, since local variable address cannot expect
+        #void WidgetsNumUpdate(T_PARAM_READING _no *param, T_SWIDGETPARAM _no *ps_widget_param, T_CHAR _no *ac_dig_text, T_UINT16 _in u16_format,T_EPENCOLOR _in e_pen_color)
+        #{
+        #   for(index1 = 0; index1<30;   index1++)
+        #   {
+        #       PTU_ac_dig_text[index1]=*(T_CHAR *)ac_dig_text;
+        #       ac_dig_text++;
+        #   } 
+        #   PTU_NumUpdate             = *param;
+        #   PTU_ps_widget_param   = *ps_widget_param;
+        #}
+
+        -- Parameter 'ps_param' and 'ps_widget_parm' are made as _no, since local variable address cannot expect        
+        #void WidgetsUpdateRT(T_PARAM_READING _no *ps_param, T_SWIDGETPARAM _no *ps_widget_parm)
+        # {
+        # PTU_ps_param = *ps_param;
+        # PTU_ps_widget_parm_out = *ps_widget_parm;
+        # }
+        
+        #T_FLOAT CalculatePower(T_FLOAT _in value, T_INT32 _in mul);
+        
+        -- Parameter 'pps_handle_add' and 'pu8_string' are made as _no, since local variable address cannot expect
+        #void TextAllocat(T_PTEXT _no *pps_handle_add, T_UINT8 _no *pu8_string, T_UINT16 _in u16_x0, T_UINT16 _in u16_y0, T_ETXALIGN _in e_tx_align, T_ETXFONT _in e_tx_font, T_EPENCOLOR _in e_pen_color, T_ETXV _in e_txv, T_ETXFLASH _in e_tx_flash)
+        #{
+        #     PTU_pps_handle_add = pps_handle_add;
+        #     PTU_pu8_string     = pu8_string;
+        #}
+    
+        -- Parameter 'src' and 'dest' are made as _no, since local variable address cannot expect
+        #T_INT8* BinasByteFormatInfoBE(void _no *src, T_UINT16 _in format, T_INT8 _no *dest)
+        # {
+        #    PTU_InfoBE_src  = src;
+        #    PTU_InfoBE_dest = dest;
+        # }
+        
+        #T_UINT16 BinasGetWidth(T_UINT16 _in format);
+
+        -- Parameter 'pc_file' and 'pc_message' are made as _no, since local variable address cannot expect
+        #void RterrWidget(T_CHAR _no *pc_file, T_INT32 _in s32_line_number, T_CHAR _no *pc_message)
+        #{
+        #   for(index1 = 0; index1<50;   index1++)
+        #   {
+        #    PTU_rterr_file[index1]=*(T_CHAR *)pc_file;
+        #    pc_file++;
+        #    PTU_rterr_message[index1]=*(T_CHAR *)pc_message;
+        #    pc_message++;
+        #   }
+        #}
+
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--Environment of the file hdudispfnumbox.c
+
+--ENVIRONMENT ENV_hdudispfnumbox_c
+
+--None
+
+--END ENVIRONMENT -- ENV_hdudispfnumbox_c
+
+--USE ENV_hdudispfnumbox_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service NumboxUpdate
+--------------------------------------------------------------------------------
+SERVICE NumboxUpdate
+SERVICE_TYPE extern
+
+    -- Tested UNIT Parameters declarations
+    # T_SNUMBOXDEF  ps_num_box_def[4];
+    #T_PARAM_READING PTU_param;
+    #T_PTEXT PTU_pText;
+    #T_UINT32 PTU_dummy_var;
+
+    ENVIRONMENT ENV_NumboxUpdate
+
+    -- PTU_dummy_var is used to avoid warnings
+    VAR PTU_dummy_var, init = 10 , ev =init
+
+    END ENVIRONMENT -- ENV_NumboxUpdate
+    
+    USE ENV_NumboxUpdate
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-001]
+    COMMENT The function does nothing when number box installed is zero
+    COMMENT Equivalence class none
+    COMMENT 
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-002]
+    COMMENT does nothing since number box installed is zero
+    COMMENT Equivalence class none
+    COMMENT </TD>     
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --None
+
+        COMMENT OUTPUT SECTION:
+        
+            --None
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None
+        
+    -- Stub Calls :
+    SIMUL
+    
+            --None
+
+    END SIMUL
+    
+    -- Calling the Unit Under Test :
+    #NumboxUpdate( );
+
+    END ELEMENT
+    
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-001]
+    COMMENT The function loops from 0 to number box installed and does the following 
+    COMMENT 1.Sets pointer to structure number box to address of a number box with index number box counter.
+    COMMENT 2.Sets the decimal number to last 3 bits of u16Format of psNumBoxDef of pointer to the  structure number box(T_PSNUMBOX) right shifted by FOUR.
+    COMMENT 6.Sets r of psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) to Incremented value r of psParam of psNumBoxDef of pointer
+    COMMENT   to the structure number box(T_PSNUMBOX) by FIVE and divide the result with TEN when decimal number is equal to zero
+    COMMENT   and r of psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) is greater than or equal to zero.
+    COMMENT 7.Calls function WidgetsUpdateRT with parameters psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) and 
+    COMMENT   address of sWidgetParm of pointer to structure number box.
+    COMMENT Equivalence class 9, 21, 29
+    COMMENT 
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-002]
+    COMMENT The function loops from 0 to number box installed and sets pointer to structure number box to address of a number box
+    COMMENT  with index number box counter.
+    COMMENT Equivalence class none
+    COMMENT 
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-004]
+    COMMENT  does nothing since pText of sWidgetParm of number box is NULL.
+    COMMENT Equivalence class 20
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Structure Member 'stat' initialized before usage
+            VAR PTU_param.stat,                     init = PARAM_BAD ,      ev = init
+
+            -- Structure Member 'fread' initialized before usage
+            VAR PTU_param.fread,                    init = 2.0 ,        ev = init
+            
+            -- Structure Member 'psParam' initialized before usage
+            VAR ps_num_box_def[0].psParam,          init = &PTU_param ,     ev = init
+    
+            -- Structure Member 'u16Format' initialized before usage
+            VAR ps_num_box_def[0].u16Format,        init = (T_UINT16)10 ,   ev = init  
+        
+        COMMENT OUTPUT SECTION:
+    
+            -- Temporary variable to verify stub parameter 'ps_param' of "WidgetsUpdateRT" is updated
+            STRUCTURE PTU_ps_param,                 init = { r=>12,stat=>PARAM_ADVISORY,fread=>1.0} ,       ev = { r=>20,stat=>PARAM_BAD,fread=>2.0}
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32Dig,          init = 1 ,          ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32DisDig,       init = 1 ,          ev = 12
+ 
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.eDIsDigStat,     init = PARAM_ADVISORY ,          ev = 0
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.pText,           init = 1 ,          ev = ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText
+       
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Structure Member 'r' initialized and updated
+            VAR PTU_param.r,                    init = 12 ,         ev = 20
+
+        -- Stub Calls :
+        SIMUL
+
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth (ps_num_box_def[0].u16Format)0
+            
+            --  Calculates the polygon position based on updated input
+            STUB WidgetsUpdateRT ()
+
+		--Calculates the power value
+		STUB CalculatePower (10.0,0)10.0
+
+
+        END SIMUL
+        
+
+       -- Called to increment the value of 'U16_num_box_installed'.    
+       #NumboxAllocat(&ps_num_box_def[0]);
+ 
+       -- Calling the Unit Under Test :
+       #NumboxUpdate( );
+
+    END ELEMENT
+    
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-001]
+    COMMENT The function loops from 0 to number box installed and does the following 
+    COMMENT 1.Sets pointer to structure number box to address of a number box with index number box counter.
+    COMMENT 2.Sets the decimal number to last 3 bits of u16Format of psNumBoxDef of pointer to the  structure number box(T_PSNUMBOX) right shifted by FOUR.
+    COMMENT 3.Sets r of psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) to result of COND1 divided by TEN,
+    COMMENT   where COND1 is difference  of value got from product of fread of psParam of  psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) ,TEN
+    COMMENT   and return value of function CalculatePower with of TEN and decimal value as its parameters and FIVE. 
+    COMMENT   When decimal number is not equal to zero and fread of psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) is lesser than  zero
+    COMMENT 7.Calls function WidgetsUpdateRT with parameters psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) and 
+    COMMENT     address of sWidgetParm of pointer to structure number box.
+    COMMENT Equivalence class 9, 22, 25, 26
+    COMMENT
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-003]
+    COMMENT  Function does nothing when Stat of psParam of psNumBoxDef of pointer to structure number box is less than PARAM_BAD
+    COMMENT  and pText of sWidgetParm of number box is NULL
+    COMMENT Equivalence class 18, 20
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Structure Member 'stat' initialized before usage
+            VAR PTU_param.stat,                     init = PARAM_OK ,           ev = init
+ 
+            -- Structure Member 'psParam' initialized before usage
+            VAR ps_num_box_def[0].psParam,          init = &PTU_param ,         ev = init
+    
+            -- Structure Member 'u16Format' initialized before usage
+            VAR ps_num_box_def[0].u16Format,        init = (T_UINT16)20 ,       ev = init
+        
+        COMMENT OUTPUT SECTION:
+    
+            -- Temporary variable to verify stub parameter 'ps_param' of "WidgetsUpdateRT" is updated
+            STRUCTURE PTU_ps_param,                 init = { r=>12,stat=>PARAM_ADVISORY,fread=>1.0} ,       ev = { r=>-10,stat=>PARAM_OK,fread=>-1.0}
+            
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+           VAR PTU_ps_widget_parm_out.s32Dig,           init = 1 ,              ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32DisDig,       init = 1 ,              ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32Scaler,       init = 1 ,              ev = 12
+    
+        COMMENT INPUT/OUTPUT SECTION:
+    
+            -- Structure Member 'r' initialized and updated
+            VAR PTU_param.r,                    init = 12 ,             ev = -10
+  
+        -- Stub Calls :
+        SIMUL
+            
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth (ps_num_box_def[0].u16Format)0
+            
+            --Calculates the power value
+            STUB CalculatePower 1..2=>(10.0,1)10.0
+            
+            --  Calculates the polygon position based on updated input
+            STUB WidgetsUpdateRT 1..2=> ()
+
+        END SIMUL
+        
+
+       -- Called to increment the value of 'U16_num_box_installed'.  
+       #NumboxAllocat(&ps_num_box_def[0]);
+
+       -- Structure Member 'fread' is initialized 
+       # ps_num_box_def[0].psParam->fread = -1.0;
+   
+       -- Calling the Unit Under Test :    
+       #NumboxUpdate( );
+
+    END ELEMENT
+    
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-001]
+    COMMENT The function loops from 0 to number box installed and does the following 
+    COMMENT 1.Sets pointer to structure number box to address of a number box with index number box counter.
+    COMMENT 2.Sets the decimal number to last 3 bits of u16Format of psNumBoxDef of pointer to the  structure number box(T_PSNUMBOX) right shifted by FOUR.
+    COMMENT 4.Sets r of psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) to result of COND1 divided by TEN,
+    COMMENT   where COND1 is sum of FIVE and product of fread of psParam of  psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) ,TEN 
+    COMMENT  and return value of function CalculatePower with of TEN and decimal value as its parameters. 
+    COMMENT  When decimal number is not equal to zero and fread of psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) 
+    COMMENT  is greater than equal to zero.
+    COMMENT 7.Calls function WidgetsUpdateRT with parameters psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) and 
+    COMMENT     address of sWidgetParm of pointer to structure number box.
+    COMMENT Equivalence class 9, 22, 25, 27
+    COMMENT
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Structure Member 'stat' initialized before usage
+            VAR PTU_param.stat,                         init = PARAM_OK ,           ev = init
+
+            -- Structure Member 'fread' initialized before usage
+            VAR PTU_param.fread,                        init = 2.0 ,            ev = init
+
+            -- Structure Member 'psParam' initialized before usage
+            VAR ps_num_box_def[0].psParam,              init = &PTU_param ,         ev = init
+    
+            -- Structure Member 'u16Format' initialized before usage
+            VAR ps_num_box_def[0].u16Format,                init = (T_UINT16)20 ,       ev = init  
+            
+        COMMENT OUTPUT SECTION:
+
+            -- Temporary variable to verify stub parameter 'ps_param' of "WidgetsUpdateRT" is updated
+            STRUCTURE PTU_ps_param,                 init = { r=>12,stat=>PARAM_ADVISORY,fread=>1.0} ,       ev = { r=>20,stat=>PARAM_OK,fread=>2.0}    
+            
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32Dig,              init = 0 ,      ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32DisDig,           init = 0 ,      ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.eDIsDigStat,             init = PARAM_ADVISORY ,      ev = 0
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32Scaler,           init = 0 ,      ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32ScalerStep,           init = 1 ,      ev = 0
+    
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.pText,               init = 1 ,      ev = ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText
+    
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Structure Member 'r' initialized and updated
+            VAR PTU_param.r,                            init = 12 ,    ev = 20
+              
+            -- Stub Calls :
+        SIMUL
+
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth (ps_num_box_def[0].u16Format)0
+            
+            --Calculates the power value
+            STUB CalculatePower 1..3=>(10.0,1)10.0
+            
+            --  Calculates the polygon position based on updated input
+            STUB WidgetsUpdateRT 1..3=> ()
+
+        END SIMUL
+        
+    -- Called to increment the value of 'U16_num_box_installed'.
+    #NumboxAllocat(&ps_num_box_def[0]);
+   
+    -- Calling the Unit Under Test :    
+    #NumboxUpdate( );
+
+    END ELEMENT
+    
+END TEST  -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-001]
+    COMMENT The function loops from 0 to number box installed and does the following 
+    COMMENT 1.Sets pointer to structure number box to address of a number box with index number box counter.
+    COMMENT 2.Sets the decimal number to last 3 bits of u16Format of psNumBoxDef of pointer to the  structure number box(T_PSNUMBOX) right shifted by FOUR.
+    COMMENT 5.Sets r of psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX)  to decremented value r of psParam of psNumBoxDef of pointer
+    COMMENT   to the structure number box(T_PSNUMBOX) by FIVE and divide the result with TEN when decimal number is equal to zero and 
+    COMMENT   r of psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) is lesser than zero.
+    COMMENT 7.Calls function WidgetsUpdateRT with parameters psParam of psNumBoxDef of pointer to the structure number box(T_PSNUMBOX) and 
+    COMMENT   address of sWidgetParm of pointer to structure number box.
+    COMMENT Equivalence class 9, 21, 28
+    COMMENT 
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-004]
+    COMMENT The function does the following when Stat of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to PARAM_BAD
+    COMMENT   and pText of sWidgetParm of number box is other than NULL.
+    COMMENT 1. Sets field width to return value of function BinasGetWidth with parameter u16Format of psNumBoxDef of pointer to structure number box.
+    COMMENT 2. Sets acDigText with index field width of  pointer to structure number box to ZERO.
+    COMMENT 3. Calls function TextUpdate with parameters pText of sWidgetParm of pointer to structure number box, BLACK, TX_NO_FLASH and V_NORMAL.
+    COMMENT 4. Sets acDigText with index field width minus one of pointer to structure number box to RED_X and decrement the field width till
+    COMMENT field width is not equal to ZERO.
+    COMMENT Note: while loop covered for 1 time
+    COMMENT Equivalence class 12, 19, 17
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Structure Member 'stat' initialized before usage
+            VAR PTU_param.stat,                     init = PARAM_BAD ,          ev = init
+
+            -- Structure Member 'fread' initialized before usage
+            VAR PTU_param.fread,                     init = 1.0 ,          ev = init
+            
+            -- Structure Member 'psParam' initialized before usage
+            VAR ps_num_box_def[0].psParam,          init = &PTU_param ,         ev = init
+    
+            -- Structure Member 'u16Format' initialized before usage
+            VAR ps_num_box_def[0].u16Format,        init = (T_UINT16)10 ,       ev = init  
+        
+        COMMENT OUTPUT SECTION:
+    
+            -- Temporary variable to verify stub parameter 'ps_param' of "WidgetsUpdateRT" is updated
+            STRUCTURE PTU_ps_param,                 init = { r=>12,stat=>PARAM_ADVISORY,fread=>2.0} ,       ev = { r=>10,stat=>PARAM_BAD,fread=>1.0}   
+            
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32Dig,          init = 1 ,              ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32DisDig,       init = 1 ,              ev = 12
+ 
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.eDIsDigStat,     init = PARAM_ADVISORY ,              ev = 0
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.pText,           init = 1 ,              ev = ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText
+       
+            -- Stub parameter 'PTU_p_text' is updated.
+            VAR PTU_p_text  ,               init = 1 ,          ev = PTU_ps_widget_parm_out.pText
+            
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Structure Member 'r' initialized and updated
+            VAR PTU_param.r,                    init = 12 ,             ev = 10
+
+        -- Stub Calls :
+        SIMUL
+
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth(ps_num_box_def[0].u16Format)0
+            
+            --  Calculates the polygon position based on updated input
+            STUB WidgetsUpdateRT 1..4=>()
+
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth(ps_num_box_def[0].u16Format)1
+            
+            -- Function updates the text parameters.
+            STUB TextUpdate(BLACK, TX_NO_FLASH, V_NORMAL)
+
+		--Calculates the power value
+		STUB CalculatePower 1..4=>(10.0,0)10.0
+        
+        END SIMUL
+
+       -- Called to increment the value of 'U16_num_box_installed'.    
+       #NumboxAllocat(&ps_num_box_def[0]);
+
+       -- Structure Member 'r' is initialized
+       # ps_num_box_def[0].psParam->r = -1;
+       
+       -- Structure Member 'pText' is initialized
+       # ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText = PTU_ps_widget_parm_out.pText;
+
+       -- Calling the Unit Under Test :
+       #NumboxUpdate( );
+
+    END ELEMENT
+    
+END TEST  -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-003]
+    COMMENT The function loops from 0 to number box installed and call fucntion WidgetsNumUpdate with parameters psParam of psNumBoxDef of pointer to 
+    COMMENT structure number box, address of sWidgetParm of ps number box, acDigText of pointer to structure number box and u16Format of psNumBoxDef
+    COMMENT     of pointer to structure number box.when all of the below conditions are satisfied
+    COMMENT 1. Stats of psParam of psNumBoxDef of pointer to structure number box is less than PARAM_BAD. 
+    COMMENT 2. pTexts of sWidgetParm of number box is other than NULL.
+    COMMENT Equivalence class 10,18, 19
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Structure Member 'stat' initialized before usage
+            VAR PTU_param.stat,                     init = PARAM_OK ,           ev = init
+
+            -- Structure Member 'fread' initialized before usage
+            VAR PTU_param.fread,                    init = 0.0 ,            ev = init
+            
+            -- Structure Member 'psParam' initialized before usage
+            VAR ps_num_box_def[0].psParam,          init = &PTU_param ,         ev = init
+    
+            -- Structure Member 'u16Format' initialized before usage
+            VAR ps_num_box_def[0].u16Format,        init = (T_UINT16)10 ,       ev = init  
+			
+			VAR ps_num_box_def[0].ePenColor,        init = BLACK ,      		 ev = init
+        
+        COMMENT OUTPUT SECTION:
+    
+            -- Temporary variable to verify stub parameter 'ps_param' of "WidgetsUpdateRT" is initialized
+            STRUCTURE PTU_ps_param,                 init = { r=>12,stat=>PARAM_ADVISORY,fread=>2.0} ,       ev = { r=>0,stat=>PARAM_OK,fread=>0.0}   
+            
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32Dig,          init = 1 ,              ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32DisDig,       init = 1 ,              ev = 12
+ 
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.eDIsDigStat,     init = PARAM_ADVISORY ,              ev = 0
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.pText,           init = 1 ,              ev = ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText
+       
+            -- Temporary variable to verify stub parameter 'PTU_NumUpdate' of "WidgetsNumUpdate" is initialized       
+            VAR PTU_NumUpdate ,                 init = { r=>12,stat=>PARAM_ADVISORY,fread=>2.0} ,       ev = { r=>0,stat=>PARAM_OK,fread=>0.0} 
+            
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsNumUpdate" is updated            
+            VAR PTU_ps_widget_param.s32Dig,         init = 1 ,              ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsNumUpdate" is updated
+            VAR PTU_ps_widget_param.s32DisDig,          init = 1 ,              ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_param.pText,          init = 1 ,              ev = ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText
+            
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsNumUpdate" is updated
+            VAR PTU_ps_widget_param.eDIsDigStat,       init = PARAM_ADVISORY ,               ev = 0
+ 
+             -- Temporary variable to verify stub parameter 'acDigText' of "WidgetsNumUpdate" is updated
+            VAR PTU_ac_dig_text  ,              init = NULL ,           ev = (T_UINT8 *)(((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->acDigText)
+            
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Structure Member 'r' initialized and updated
+            VAR PTU_param.r,                    init = 12 ,             ev = 0
+
+        -- Stub Calls :
+        SIMUL
+
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth (ps_num_box_def[0].u16Format)0
+            
+            --  Calculates the polygon position based on updated input
+            STUB WidgetsUpdateRT ()
+
+            -- Updates number box with the lastest inputs.
+            STUB WidgetsNumUpdate 1..2=>(10,BLACK)
+
+            --  Calculates the polygon position based on updated input
+            STUB WidgetsUpdateRT 1..5=>()
+
+		--Calculates the power value
+		STUB CalculatePower 1..5=>(10.0,0)10.0
+
+        END SIMUL
+
+       -- Called to increment the value of 'U16_num_box_installed'.    
+       #NumboxAllocat(&ps_num_box_def[0]);
+
+       -- Structure Member 'pText' is initialized
+       # ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText = PTU_ps_widget_parm_out.pText;
+       
+       -- Calling the Unit Under Test :
+       #NumboxUpdate( );
+
+    END ELEMENT
+    
+END TEST  -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-004]
+    COMMENT The function does the following when Stat of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to PARAM_BAD
+    COMMENT   and pText of sWidgetParm of number box is other than NULL.
+    COMMENT 1. Sets field width to return value of function BinasGetWidth with parameter u16Format of psNumBoxDef of pointer to structure number box.
+    COMMENT 2. Sets acDigText with index field width of  pointer to structure number box to ZERO.
+    COMMENT 3. Calls function TextUpdate with parameters pText of sWidgetParm of pointer to structure number box, BLACK, TX_NO_FLASH and V_NORMAL.
+    COMMENT 4. does nothing since field width is equal to ZERO.
+    COMMENT while loop covered for 0 times
+    COMMENT Equivalence class 17, 19, 3, 11, 12
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Structure Member 'stat' initialized before usage
+            VAR PTU_param.stat,                     init = PARAM_BAD ,          ev = init
+   
+            -- Structure Member 'psParam' initialized before usage
+            VAR ps_num_box_def[0].psParam,          init = &PTU_param ,         ev = init
+    
+            -- Structure Member 'u16Format' initialized before usage
+            VAR ps_num_box_def[0].u16Format,        init = (T_UINT16)10 ,       ev = init  
+        
+        COMMENT OUTPUT SECTION:
+    
+            -- Temporary variable to verify stub parameter 'ps_param' of "WidgetsUpdateRT" is updated
+            STRUCTURE PTU_ps_param,                 init = { r=>12,stat=>PARAM_ADVISORY,fread=>0.0} ,       ev = { r=>0,stat=>PARAM_BAD,fread=>0.0}   
+            
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32Dig,          init = 1 ,              ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32DisDig,       init = 1 ,              ev = 12
+ 
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.eDIsDigStat,     init = PARAM_ADVISORY ,              ev = 0
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.pText,           init = 1 ,              ev = ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText
+       
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Structure Member 'r' initialized and updated
+            VAR PTU_param.r,                    init = 12 ,             ev = 0
+
+        -- Stub Calls :
+        SIMUL
+        
+            --  Calculates the polygon position based on updated input
+            STUB WidgetsUpdateRT 1..6=>()
+
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth (ps_num_box_def[0].u16Format)0
+
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth (ps_num_box_def[0].u16Format)0
+             
+            -- Function updates the text parameters.
+            STUB TextUpdate(BLACK, TX_NO_FLASH, V_NORMAL)
+            
+             --  Returns the width of the supplied format word.
+            STUB BinasGetWidth (ps_num_box_def[0].u16Format)0
+            
+            -- Function updates the text parameters.
+            STUB TextUpdate(BLACK, TX_NO_FLASH, V_NORMAL)
+            
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth (ps_num_box_def[0].u16Format)0
+            
+            -- Function updates the text parameters.
+            STUB TextUpdate(BLACK, TX_NO_FLASH, V_NORMAL)
+
+		--Calculates the power value
+		STUB CalculatePower 1..6=>(10.0,0)10.0
+          
+        END SIMUL
+
+       -- Called to increment the value of 'U16_num_box_installed'.    
+       #NumboxAllocat(&ps_num_box_def[0]);
+
+       -- Structure Member 'r' is initialized
+       # ps_num_box_def[0].psParam->r = -1;
+       
+       -- Structure Member 'pText' is initialized
+       # ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText = PTU_ps_widget_parm_out.pText;
+
+       -- Calling the Unit Under Test :
+       #NumboxUpdate( );
+
+    END ELEMENT
+    
+END TEST  -- TEST 7
+
+TEST 8
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfnumbox-NumboxUpdate-DB-LLR-004]
+    COMMENT The function does the following when Stat of psParam of psNumBoxDef of pointer to structure number box is greater than or equal to PARAM_BAD
+    COMMENT   and pText of sWidgetParm of number box is other than NULL.
+    COMMENT 1. Sets field width to return value of function BinasGetWidth with parameter u16Format of psNumBoxDef of pointer to structure number box.
+    COMMENT 2. Sets acDigText with index field width of  pointer to structure number box to ZERO.
+    COMMENT 3. Calls function TextUpdate with parameters pText of sWidgetParm of pointer to structure number box, BLACK, TX_NO_FLASH and V_NORMAL.
+    COMMENT 4. Sets acDigText with index field width minus one of pointer to structure number box to RED_X and decrement the field width till field width
+    COMMENT  is not equal to ZERO.
+    COMMENT Note: while loop covered for 2 or more time
+    COMMENT Equivalence class 12, 19, 11
+    COMMENT </TD>
+    
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Structure Member 'stat' initialized before usage
+            VAR PTU_param.stat,                     init = PARAM_BAD ,          ev = init
+   
+            -- Structure Member 'psParam' initialized before usage
+            VAR ps_num_box_def[0].psParam,          init = &PTU_param ,         ev = init
+    
+            -- Structure Member 'u16Format' initialized before usage
+            VAR ps_num_box_def[0].u16Format,        init = (T_UINT16)10 ,       ev = init  
+
+            -- Temporary variable initialized before usage        
+            VAR PTU_inforBE,                init = 0 ,          ev = init
+            
+        COMMENT OUTPUT SECTION:
+    
+            -- Temporary variable to verify stub parameter 'ps_param' of "WidgetsUpdateRT" is updated
+            STRUCTURE PTU_ps_param,                 init = { r=>12,stat=>PARAM_ADVISORY,fread=>0.0} ,       ev = { r=>0,stat=>PARAM_BAD,fread=>0.0}   
+            
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32Dig,          init = 1 ,              ev = 12
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.s32DisDig,       init = 1 ,              ev = 12
+ 
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.eDIsDigStat,     init = PARAM_ADVISORY ,              ev = 0
+
+            -- Temporary variable to verify stub parameter 'ps_widget_parm' of "WidgetsUpdateRT" is updated
+            VAR PTU_ps_widget_parm_out.pText,           init = 1 ,              ev = ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText
+       
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Structure Member 'r' initialized and updated
+            VAR PTU_param.r,                    init = 12 ,             ev = 0
+
+        -- Stub Calls :
+        SIMUL
+
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth(ps_num_box_def[0].u16Format)0
+        
+            --  Calculates the polygon position based on updated input
+            STUB WidgetsUpdateRT 1..7=>()
+            
+             --  Returns the width of the supplied format word.
+            STUB BinasGetWidth(ps_num_box_def[0].u16Format)0
+
+            -- Function updates the text parameters.
+            STUB TextUpdate(BLACK, TX_NO_FLASH, V_NORMAL)
+        
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth(ps_num_box_def[0].u16Format)0
+
+            -- Function updates the text parameters.
+            STUB TextUpdate(BLACK, TX_NO_FLASH, V_NORMAL)
+            
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth(ps_num_box_def[0].u16Format)0
+
+            -- Function updates the text parameters.
+            STUB TextUpdate(BLACK, TX_NO_FLASH, V_NORMAL)
+            
+            --  Returns the width of the supplied format word.
+            STUB BinasGetWidth(ps_num_box_def[0].u16Format)2
+
+            -- Function updates the text parameters.
+            STUB TextUpdate(BLACK, TX_NO_FLASH, V_NORMAL)
+
+		--Calculates the power value
+		STUB CalculatePower 1..7=>(10.0,0)10.0
+            
+        END SIMUL
+
+       -- Called to increment the value of 'U16_num_box_installed'.    
+       #NumboxAllocat(&ps_num_box_def[0]);
+
+       -- Structure Member 'r' value is initialized
+       # ps_num_box_def[0].psParam->r = -1;
+       
+       -- Structure Member 'pText' is initialized
+       # ((T_PSNUMBOX)(ps_num_box_def[0].psNumBox))->sWidgetParm.pText = PTU_ps_widget_parm_out.pText;
+
+       -- Calling the Unit Under Test :
+       #NumboxUpdate( );
+
+    END ELEMENT
+    
+END TEST  -- TEST 8
+
+END SERVICE -- NumboxUpdate
+
+
+
+
+

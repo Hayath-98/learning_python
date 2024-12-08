@@ -1,0 +1,4155 @@
+HEADER hdudispfmenu,Source Code Ver : 1.17,TestScript Ver : 1.7
+--------------------------------------------------------------------------------
+-- Author Name          : Guruprasad K
+--
+-- File Name            : hdudispfmenu_7.ptu
+--
+-- Test Creation Date   : 24.10.2017
+--
+-- Tested Functions     : TopButton13Text
+--                        
+-- Version History      :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------       ---------       -----------        -------------
+--     1.1             24.10.2017      Guruprasad K       Created the ptu file   
+--     1.2             11.11.2017      Guruprasad K       Updated as per #PR100171   
+--     1.3             14.11.2017      Guruprasad K       Updated as per #PR100171 
+--     1.4             05.08.2020      Vignesh Sunil      Updated as per #PR100267 
+--     1.5             01.10.2020      Vignesh Sunil      Updated as per #PR100281   
+--     1.6             28.04.2021      Vignesh Sunil      Updated as per #PR100338 
+--     1.7             14.05.2021      Vignesh Sunil      Updated as per #PR100354
+-------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/ 
+##include "hdudispfglobalsettings.h"  /* Routines to read and write data to NVRAM  */
+##include "hdudispfgrapp.h"           /* routines for all graph */
+##include "hdudispfmenu.h"            /* contains prototype for menu module*/
+##include "hdudispfoffside.h"         /* contains prototype for offside modules*/
+##include "hdudispfpbs.h"             /* Contains functions prototypes of pbs.*/
+##include "hdudispfpdidata.h"         /* contains routines for PDI data */
+##include "hdudispfpwm.h"             /* Contains functions prototypes of pwm.*/
+##include "hdudispfrterror.h"           /* Provides sub routine for run time errors.*/
+##include "hdudispftextbox.h"         /* routines for text box draw and updates */
+##include "hdudispftimer.h"           /* increment a set of user installed timers. */
+##include "hdudispfpanel.h"           /* Contains functions prototypes of panel.*/
+##include "hdudispfconfig.h"          /* contains page and color config information */
+##include "hdudispfpara.h"  /* prototype for builds faults, message and system information */
+##include "hdulibbasictypes.h"      /* Contains basic header definations */
+##include "hdudispfa429.h"          /* provides a429 functionalities */
+##include "hdudispfucos.h"          /* provides ucos functionalities */
+##include "hdudispfoffside.h"  /* Screen, message and timer configuration */
+##include "hdudispfpdicheck.h" /*contains pdi check*/
+##include "hdudispfforeground.h"  /* contains the routines for foreground layer of the display */
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern T_STEXTBOXDATA *Calibration_menu[8];
+    #extern T_CHAR Encoder_cool_down_text[21];
+    #extern T_STEXTBOXDATA *Gain_value_menu[9];
+    #extern T_CHAR Menu_text_10inch[30];
+    #extern T_STEXTBOXDATA *Offset_value_menu[9];
+    #extern T_STEXTBOXDATA *Engine_calibration[8];
+    #extern void CoolTimerInit(void);
+    #extern T_CHAR Encoder_menu_text[34];
+    #extern T_UINT8 Engine_count;
+    #extern T_CHAR Calibration_text_10inch[32];
+    #extern T_UINT8 Gain_digit[4];
+    #extern T_CHAR Gain_value_string[4][5+1];
+    #extern T_CHAR Offsetgain_text[21];
+    #extern T_UINT8 Offset_digit[4];
+    #typedef enum {
+    #	MAN_TIMER_OFF,
+    #	MAN_TIMER_ON
+    #} T_MAN_TIMER_STATE;
+    #extern T_CHAR Offset_value_string[4][3+1];
+    #T_INT16 Manual_brightness; 
+    #T_INT16 Auto_brightness; 
+    #T_PAGE Page_settings; 
+    #T_EIU Active_eiu; 
+    #T_CHAR *Pc_empty_message_list[2]; 
+    #T_CHAR *Message_list[3*16+1]; 
+    #T_BOOL New_message; 
+    #T_UINT8 Page_name_char_cnt; 
+    #T_BOOL Bool_menu_cal; 
+    #T_CHAR *Empty_sys_info_list[2]; 
+    #T_CHAR *Pc_sys_info_list[2*16+1]; 
+    #T_PBS Switches; 
+    #T_COOLDOWN_STATE Cool_down_state; 
+    #T_BRIGHTNESS_MODE Brightness_mode; 
+    #T_DISPLAYSIZE Display_size; 
+    #T_UINT8 Max_num_of_pages; 
+    #T_STEXTBOXDATA Prim_cool_down_pop_up_box; 
+    # volatile T_INT32 Itm_rx_buffer; 
+	#T_STEXTBOXDATA *Top_menu[14];
+    #T_STEXTBOXDATA *Timer_menu[9];
+    #T_STEXTBOXDATA *Menu_menu[5];
+    #T_STEXTBOXDATA *Page_menu[5];
+    #T_STEXTBOXDATA *Msg_menu[6];
+    #T_STEXTBOXDATA *Cool_down_menu[6];
+    #T_STEXTBOXDATA *Sys_info_menu[7];
+    #T_STEXTBOXDATA *All_menu_items[37];
+	#T_STEXTBOXDATA *Page_menu_10inch[7];
+	#T_STEXTBOXDATA *Menu_menu_10inch[7];
+	#T_STEXTBOXDATA *Parameter_calibration[8];
+	#T_STEXTBOXDATA *Sys_info_menu_10inch[8];
+	#T_STEXTBOXDATA *Brightness_menu[6];    
+	#T_BOOL Md_engine_flag;
+    #T_FUEL_FLOW_STATE Fuel_flow_state;	
+	
+	
+
+-- Declarations of the temporary variables
+    -- To check the parameter of stub TimerPreset
+    #T_TIMER PTU_TimerPreset_input;
+    #T_TIMER PTU_TimerPreset_output;
+    -- To check the TimerReset of stub TimerPreset
+    #T_TIMER PTU_TimerReset_input;
+    #T_TIMER PTU_TimerReset_output;
+    --For array index variable
+    #T_UINT8 PTU_index;
+    --To give address to sTextBox
+    #T_STEXTBOX PTU_sTextBox;
+    --To check which dummy function is called
+    #T_UINT8 PTU_dummyvariable;   
+    --To give address to pcTitle
+    #T_CHAR PTU_pcTitle[100];   
+	#T_CHAR PTU_src[100];
+
+--Function 
+--dummy functions to provide address for function pointers 
+    #T_CHAR *dummyfunction1(void)
+    #{
+    #  PTU_dummyvariable = 1;
+    #}
+    #T_CHAR *dummyfunction2(void)
+    #{
+    #  PTU_dummyvariable = 2;
+    #}
+    #T_CHAR *dummyfunction3(void)
+    #{
+    #  PTU_dummyvariable = 3;
+    #}
+    #T_CHAR *dummyfunction4(void)
+    #{
+    #  PTU_dummyvariable = 4;
+    #}
+    #T_CHAR *dummyfunction5(void)
+    #{
+    #  PTU_dummyvariable = 5;
+    #}
+    #T_CHAR *dummyfunction6(void)
+    #{
+    #  PTU_dummyvariable = 6;
+    #}
+    #T_CHAR *dummyfunction7(void)
+    #{
+    #  PTU_dummyvariable = 7;
+    #}
+    #T_CHAR *dummyfunction8(void)
+    #{
+    #  PTU_dummyvariable = 8;
+    #}
+    #T_CHAR *dummyfunction9(void)
+    #{
+    #  PTU_dummyvariable = 9;
+    #}
+    #T_CHAR *dummyfunction10(void)
+    #{
+    #  PTU_dummyvariable = 10;
+    #}
+    #T_CHAR *dummyfunction11(void)
+    #{
+    #  PTU_dummyvariable = 11;
+    #}
+    #T_CHAR *dummyfunction12(void)
+    #{
+    #  PTU_dummyvariable = 12;
+    #}
+    #T_CHAR *dummyfunction13(void)
+    #{
+    #  PTU_dummyvariable = 13;
+    #}
+    #T_CHAR *dummyfunction14(void)
+    #{
+    #  PTU_dummyvariable = 14;
+    #}
+    #T_CHAR *dummyfunction15(void)
+    #{
+    #  PTU_dummyvariable = 15;
+    #}
+    #T_CHAR *dummyfunction16(void)
+    #{
+    #  PTU_dummyvariable = 16;
+    #}
+    #T_CHAR *dummyfunction17(void)
+    #{
+    #  PTU_dummyvariable = 17;
+    #}
+    #T_CHAR *dummyfunction18(void)
+    #{
+    #  PTU_dummyvariable = 18;
+    #}
+    #T_CHAR *dummyfunction19(void)
+    #{
+    #  PTU_dummyvariable = 19;
+    #}
+    #T_CHAR *dummyfunction20(void)
+    #{
+    #  PTU_dummyvariable = 20;
+    #}
+    #T_CHAR *dummyfunction21(void)
+    #{
+    #  PTU_dummyvariable = 21;
+    #}
+    #T_CHAR *dummyfunction22(void)
+    #{
+    #  PTU_dummyvariable = 22;
+    #}
+    #T_CHAR *dummyfunction23(void)
+    #{
+    #  PTU_dummyvariable = 23;
+    #}
+    #T_CHAR *dummyfunction24(void)
+    #{
+    #  PTU_dummyvariable = 24;
+    #}
+    #T_CHAR *dummyfunction25(void)
+    #{
+    #  PTU_dummyvariable = 25;
+    #}
+    #T_CHAR *dummyfunction26(void)
+    #{
+    #  PTU_dummyvariable = 26;
+    #}
+    #T_CHAR *dummyfunction27(void)
+    #{
+    #  PTU_dummyvariable = 27;
+    #}
+    #T_CHAR *dummyfunction28(void)
+    #{
+    #  PTU_dummyvariable = 28;
+    #}
+    #T_CHAR *dummyfunction29(void)
+    #{
+    #  PTU_dummyvariable = 29;
+    #}
+    #T_CHAR *dummyfunction30(void)
+    #{
+    #  PTU_dummyvariable = 30;
+    #}
+    #T_CHAR *dummyfunction31(void)
+    #{
+    #  PTU_dummyvariable = 31;
+    #}
+    #T_CHAR *dummyfunction32(void)
+    #{
+    #  PTU_dummyvariable = 32;
+    #}		
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Guruprasad K
+    COMMENT
+    COMMENT File name        : hdudispfmenu_7.ptu
+    COMMENT
+    COMMENT Tested functions : TopButton13Text
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT 1.To verify the return value of the below listed functions  corresponding
+    COMMENT   HLRs are referred
+    COMMENT   for understanding the specific messages returned by the corresponding functions
+    COMMENT   1.1 LLR          : hdudispfmenu-ExitButtonText-DB-LLR-002    
+    COMMENT       Function     : ExitButtonText   
+    COMMENT       Return value : "EXIT"
+    COMMENT       HLR          : HDU-SRS-DBFNC-34
+    COMMENT   1.2 LLR          : hdudispfmenu-BackButtonText-DB-LLR-002    
+    COMMENT       Function     : BackButtonText     
+    COMMENT       Return value : "BACK"
+    COMMENT       HLR          : HDU-SRS-DBFNC-35
+    COMMENT   1.3 LLR          : hdudispfmenu-TopButton4Text-DB-LLR-002   
+    COMMENT       Function     : TopButton4Text     
+    COMMENT       Return value : "MENU"
+    COMMENT       HLR          : HDU-SRS-DBFNC-48
+    COMMENT   1.4 LLR          : hdudispfmenu-TopButton6Text-DB-LLR-007  
+    COMMENT       Function     : TopButton6Text   
+    COMMENT       Return value : "MSG"
+    COMMENT       HLR          : HDU-SRS-DBDRQ-229
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1.PTU has been split into 20 due to static dependency.
+    COMMENT 2.Warning "enumerated type mixed with another type" is obtained when variable  
+    COMMENT   Brightness_mode of type T_BRIGHTNESS_MODE is exercised with value 
+    COMMENT   "EBRIGHTNESS_AUTO+1" to test LLR "hdudispfmenu-TopButton13Text-DB-LLR-009" 
+    COMMENT   in PTU "hdudispfmenu_7.ptu"
+    COMMENT 3.Source file "hdudispfmenu.c" is modified for testing purpose to verify the file name
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'EncoderCoolDownItemSelectText', the function
+    COMMENT MenuSelectText is called.
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In function 'EncoderCoolDownItemSelectText', the function 'MenuPop' is called.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function 'EncoderCoolDownItemSelectText', the Cool_down_state is ECOOLDOWN_OFF
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In function 'EncoderCoolDownItemSelectText', the Cool_down_state is ECOOLDOWN_ON
+    COMMENT 
+    COMMENT Class 5
+    COMMENT In function 'SysInfoBoxText', the function 'ParaGetSysInfoCount'is called..
+    COMMENT 
+    COMMENT Class 6
+    COMMENT The function 'SysInfoBoxText' sets Sys info index to ZERO if twist of sRE of Switches is 
+    COMMENT not equal to ZERO
+    COMMENT 
+    COMMENT Class 7
+    COMMENT The function 'SysInfoBoxText' returns reference to Pc_sys_info_list with Sys info index
+    COMMENT  as index if Sys info index is greater than or equal to ZERO
+    COMMENT 
+    COMMENT Class 8
+    COMMENT The function 'SysInfoBoxText' returns Empty_sys_info_list if 
+    COMMENT   Sys info index is less than ZERO
+    COMMENT 
+    COMMENT Class 19
+    COMMENT The function 'MessageBoxText', Message index is less than ZERO
+    COMMENT 
+    COMMENT Class 20
+    COMMENT The function 'MessageBoxText', Message index is greater than or equal to ZERO
+    COMMENT 
+    COMMENT Class 21
+    COMMENT The function 'MessageBoxText', the function 'ParaGetMessageCount'is called 
+    COMMENT 
+    COMMENT Class 22
+    COMMENT The function 'MessageBoxText', twist of sRE of Switches is TRUE
+    COMMENT 
+    COMMENT Class 23
+    COMMENT The function 'MessageBoxText', twist of sRE of Switches is not TRUE
+    COMMENT 
+    COMMENT Class 28
+    COMMENT In function 'ExitButtonText', b2 of Switches  is not equal to ZERO
+    COMMENT 
+    COMMENT Class 29
+    COMMENT In function 'ExitButtonText', b2 of Switches  is equal to ZERO
+    COMMENT 
+    COMMENT Class 199
+    COMMENT In function 'MenuReset', the function "PbsClear" is called
+    COMMENT 
+    COMMENT Class 30
+    COMMENT In function 'MenuReset', the function "MenuOff" is called since
+    COMMENT  Menu stack pointer is not equal to MAX_MENU_DEPTH
+    COMMENT 
+    COMMENT Class 31
+    COMMENT In function 'MenuReset', the function "ParaConfigTopMenu" is called 
+    COMMENT 
+    COMMENT Class 32
+    COMMENT In function 'MenuOff', the function "TextBoxOff" is called 
+    COMMENT 
+    COMMENT Class 34
+    COMMENT In function 'BackButtonText', b3 of Switches  is not equal to ZERO
+    COMMENT 
+    COMMENT Class 35
+    COMMENT In function 'BackButtonText', b3 of Switches  is equal to ZERO
+    COMMENT 
+    COMMENT Class 36
+    COMMENT In function 'MenuPop', the function 'PbsClear'is called 
+    COMMENT 
+    COMMENT Class 37
+    COMMENT In function 'MenuPop', Menu stack pointer is equal to MAX_MENU_DEPTH
+    COMMENT 
+    COMMENT Class 38
+    COMMENT In function 'MenuPop', Menu stack pointer is not equal to MAX_MENU_DEPTH
+    COMMENT 
+    COMMENT Class 38
+    COMMENT In function 'MenuPop', stack pointer is greater than or equal to 
+    COMMENT  MAX_MENU_DEPTH subtracted by ONE
+    COMMENT 
+    COMMENT Class 39
+    COMMENT In function 'MenuPop', stack pointer is less than
+    COMMENT  MAX_MENU_DEPTH subtracted by ONE
+    COMMENT 
+    COMMENT Class 40
+    COMMENT In function 'MenuOn', the function 'TextBoxOn'is called 
+    COMMENT 
+    COMMENT Class 41
+    COMMENT In function 'CoolDownOnOffButtonText', Cool_down_state is equal to ECOOLDOWN_ON
+    COMMENT 
+    COMMENT Class 42
+    COMMENT In function 'CoolDownOnOffButtonText', Cool_down_state is equal to ECOOLDOWN_OFF
+    COMMENT 
+    COMMENT Class 43
+    COMMENT In function 'CoolDownOnOffButtonText', b4 of Switches is not ZERO
+    COMMENT 
+    COMMENT Class 44
+    COMMENT In function 'CoolDownOnOffButtonText', b4 of Switches is ZERO
+    COMMENT 
+    COMMENT Class 45
+    COMMENT In function 'ManTimerOnOffText', MAN_TIMER_STATE is equal to MAN_TIMER_OFF
+    COMMENT 
+    COMMENT Class 46
+    COMMENT In function 'ManTimerOnOffText', MAN_TIMER_STATE is equal to MAN_TIMER_ON
+    COMMENT 
+    COMMENT Class 47
+    COMMENT In function 'ManTimerOnOffText', b6 of Switches  is not equal to ZERO
+    COMMENT 
+    COMMENT Class 48
+    COMMENT In function 'ManTimerOnOffText', b6 of  Switches  is equal to ZERO
+    COMMENT 
+    COMMENT Class 49
+    COMMENT In function 'ManualTimerResetButtonText', b7 of Switches is not equal to ZERO
+    COMMENT 
+    COMMENT Class 50
+    COMMENT In function 'ManualTimerResetButtonText', b7 of Switches is equal to ZERO
+    COMMENT 
+    COMMENT Class 51
+    COMMENT In function 'TopButton1Text', Page_number is other than EPAGE0
+    COMMENT 
+    COMMENT Class 52
+    COMMENT In function 'TopButton1Text', Page_number is EPAGE0
+    COMMENT 
+    COMMENT Class 53
+    COMMENT In function 'TopButton1Text', b1 of Switches is not ZERO
+    COMMENT 
+    COMMENT Class 54
+    COMMENT In function 'TopButton1Text', b1 of Switches is ZERO
+    COMMENT 
+    COMMENT Class 55
+    COMMENT In function 'MenuSwitchPage', new_page_num is not equal to Page_number
+    COMMENT 
+    COMMENT Class 57
+    COMMENT In function 'MenuSwitchPage', new_page_num is EPAGE0
+    COMMENT 
+    COMMENT Class 58
+    COMMENT In function 'MenuSwitchPage', new_page_num is not EPAGE0
+    COMMENT 
+    COMMENT Class 59
+    COMMENT In function 'MenuSwitchPage', function GrappSwithcScreens is called
+    COMMENT 
+    COMMENT Class 60
+    COMMENT In function 'TopButton1Text', function OffsideSwitchScreen is called
+    COMMENT 
+    COMMENT Class 71
+    COMMENT In function 'TopButton4Text', b4 of Switches is not equal to ZERO
+    COMMENT 
+    COMMENT Class 72
+    COMMENT In function 'TopButton4Text', b4 of Switches is equal to ZERO
+    COMMENT 
+    COMMENT Class 73
+    COMMENT In function 'MenuPush', the function PbsClear is called
+    COMMENT 
+    COMMENT Class 74
+    COMMENT In function 'MenuPush', the function MenuOn is called
+    COMMENT 
+    COMMENT Class 75
+    COMMENT In function 'MenuPush', the function MenuOff is called
+    COMMENT 
+    COMMENT Class 76
+    COMMENT In function 'MenuPush', Menu stack pointer index of Pps menu stack is 
+    COMMENT not equal to  ZERO
+    COMMENT 
+    COMMENT Class 77
+    COMMENT In function 'MenuPush', Menu stack pointer index of Pps menu stack is 
+    COMMENT equal to  ZERO
+    COMMENT 
+    COMMENT Class 78
+    COMMENT In function 'TopButton7Text', b7 of Switches is not equal to ZERO
+    COMMENT 
+    COMMENT Class 79
+    COMMENT In function 'TopButton7Text', b7 of Switches is equal to ZERO
+    COMMENT 
+    COMMENT Class 80
+    COMMENT In function 'TopButton4Text', the function MenuPush is called
+    COMMENT 
+    COMMENT Class 81
+    COMMENT In function 'TopButton7Text', the function MenuPush is called
+    COMMENT 
+    COMMENT Class 82
+    COMMENT In function 'PageButtonText', b7 of Switches is not equal to ZERO
+    COMMENT 
+    COMMENT Class 83
+    COMMENT In function 'PageButtonText', b7 of Switches is equal to ZERO
+    COMMENT 
+    COMMENT Class 84
+    COMMENT In function 'PageButtonText', the function MenuPush is called
+    COMMENT 
+    COMMENT Class 85
+    COMMENT In function 'TopButton6Text', function ParaGetMessageCount is called
+    COMMENT 
+    COMMENT Class 86
+    COMMENT In function 'TopButton6Text', message count variable is greater than ZERO
+    COMMENT 
+    COMMENT Class 87
+    COMMENT In function 'TopButton6Text', message count variable is less than ZERO
+    COMMENT 
+    COMMENT Class 88
+    COMMENT In function 'TopButton6Text', function TextBoxFlash is called
+    COMMENT 
+    COMMENT Class 89
+    COMMENT In function 'TopButton6Text', function TextBoxNoFlash is called
+    COMMENT 
+    COMMENT Class 90
+    COMMENT In function 'TopButton6Text', New_message is TRUE
+    COMMENT 
+    COMMENT Class 91
+    COMMENT In function 'TopButton6Text', New_message is FALSE
+    COMMENT 
+    COMMENT Class 92
+    COMMENT In function 'TopButton6Text', b6 of Switches is not equal to ZERO
+    COMMENT 
+    COMMENT Class 93
+    COMMENT In function 'TopButton6Text', b6 of Switches is equal to ZERO
+    COMMENT 
+    COMMENT Class 94
+    COMMENT In function 'TopButton5Text', Active_eiu is equal to EIU1
+    COMMENT 
+    COMMENT Class 95
+    COMMENT In function 'TopButton5Text', Active_eiu is equal to EIU2
+    COMMENT 
+    COMMENT Class 96
+    COMMENT In function 'TopButton5Text', b5 of Switches is not ZERO
+    COMMENT 
+    COMMENT Class 97
+    COMMENT In function 'TopButton5Text', b5 of Switches is ZERO
+    COMMENT 
+    COMMENT Class 98
+    COMMENT In function 'TopButton5Text', the function GlobalSettingsSetEIU is called
+    COMMENT
+    COMMENT Class 99
+    COMMENT In function 'TopButton13Text', pressed of sLE of Switches is ZERO
+    COMMENT 
+    COMMENT Class 100
+    COMMENT In function 'TopButton13Text', pressed of sLE of Switches is not ZERO
+    COMMENT 
+    COMMENT Class 101
+    COMMENT In function 'TopButton13Text', timer value is equal to MIN_MAX_ITTR
+    COMMENT 
+    COMMENT Class 102
+    COMMENT In function 'TopButton13Text', timer value is less than MIN_MAX_ITTR
+    COMMENT 
+    COMMENT Class 103
+    COMMENT In function 'TopButton13Text', Manual_brightness is less than MIN_MANUAL_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 104
+    COMMENT In function 'TopButton13Text', Manual_brightness is greater than 
+    COMMENT MIN_MANUAL_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 105
+    COMMENT In function 'TopButton13Text', temporary auto brightness is less than 
+    COMMENT MIN_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 106
+    COMMENT In function 'TopButton13Text', temporary auto brightness is greater than 
+    COMMENT MIN_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 107
+    COMMENT In function 'TopButton13Text', min flag is less than ZERO
+    COMMENT 
+    COMMENT Class 108
+    COMMENT In function 'TopButton13Text', min flag is ZERO
+    COMMENT 
+    COMMENT Class 109
+    COMMENT In function 'TopButton13Text', Brightness_mode is EBRIGHTNESS_MANUAL
+    COMMENT 
+    COMMENT Class 110
+    COMMENT In function 'TopButton13Text', Brightness_mode is EBRIGHTNESS_AUTO
+    COMMENT 
+    COMMENT Class 111
+    COMMENT In function 'TopButton13Text', Delta is ZERO
+    COMMENT 
+    COMMENT Class 112
+    COMMENT In function 'TopButton13Text', Delta is not ZERO
+    COMMENT 
+    COMMENT Class 113
+    COMMENT In function 'TopButton13Text', the function PwmBackLightStepTo is called
+    COMMENT 
+    COMMENT Class 114
+    COMMENT In function 'TopButton13Text', twist of sLE of Switches is greater than ZERO
+    COMMENT 
+    COMMENT Class 115
+    COMMENT In function 'TopButton13Text', twist of sLE of Switches is equal to ZERO
+    COMMENT 
+    COMMENT Class 116
+    COMMENT In function 'TopButton13Text', the function PwmBackLightNewMode is called
+    COMMENT 
+    COMMENT Class 117
+    COMMENT In function 'TopButton13Text', temporary auto brightness is less than  
+    COMMENT MAX_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 118
+    COMMENT In function 'TopButton13Text', temporary auto brightness is greater than 
+    COMMENT MAX_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 119
+    COMMENT In function 'TopButton13Text', max flag is other than ZERO
+    COMMENT 
+    COMMENT Class 120
+    COMMENT In function 'TopButton13Text', max flag is ZERO
+    COMMENT 
+    COMMENT Class 121
+    COMMENT In function 'MenuInit', the function ManualTimerInit is called
+    COMMENT 
+    COMMENT Class 122
+    COMMENT In function 'MenuInit', the function CoolTimerInit is called
+    COMMENT 
+    COMMENT Class 123
+    COMMENT In function 'MenuInit', the function TimerInstall is called
+    COMMENT 
+    COMMENT Class 124
+    COMMENT In function 'MenuInit', the function TextBoxInit is called
+    COMMENT 
+    COMMENT Class 125
+    COMMENT In function 'PageMenu', the function ManualTimerMaint is called
+    COMMENT 
+    COMMENT Class 126
+    COMMENT In function 'PageMenu', pressed of Switches is other than ZERO  
+    COMMENT 
+    COMMENT Class 127
+    COMMENT In function 'PageMenu', pressed of Switches is ZERO 
+    COMMENT 
+    COMMENT Class 128
+    COMMENT In function 'ManualTimerMaint', MAN_TIMER_STATE is equal to MAN_TIMER_ON 
+    COMMENT 
+    COMMENT Class 129
+    COMMENT In function 'ManualTimerMaint', MAN_TIMER_STATE is equal to MAN_TIMER_OFF 
+    COMMENT 
+    COMMENT Class 131
+    COMMENT In function 'PageMenu', function MenuCheckTimeOut is called 
+    COMMENT 
+    COMMENT Class 132
+    COMMENT In function 'PageMenu', function MenuSwitchPage is called 
+    COMMENT 
+    COMMENT Class 133
+    COMMENT In function 'PageMenu', function RterrWidget is called 
+    COMMENT 
+    COMMENT Class 134
+    COMMENT In function 'MenuCheckTimeOut', Menu timer is greater than or equal to MENU_TIME 
+    COMMENT 
+    COMMENT Class 135
+    COMMENT In function 'MenuCheckTimeOut', Menu timer is less than MENU_TIME 
+    COMMENT 
+    COMMENT Class 136
+    COMMENT In function 'PageMenu', Result of bitwise AND of raw of Switches and 
+    COMMENT  PBS9_M is other than ZERO
+    COMMENT 
+    COMMENT Class 137
+    COMMENT In function 'PageMenu', Result of bitwise AND of raw of Switches and 
+    COMMENT  PBS10_M is other than ZERO
+    COMMENT 
+    COMMENT Class 138
+    COMMENT In function 'PageMenu', Result of bitwise AND of raw of Switches and 
+    COMMENT  PBS11_M is other than ZERO
+    COMMENT 
+    COMMENT Class 139
+    COMMENT In function 'PageMenu', Result of bitwise AND of raw of Switches and 
+    COMMENT  PBS9_M is  ZERO
+    COMMENT 
+    COMMENT Class 140
+    COMMENT In function 'PageMenu', Result of bitwise AND of raw of Switches and 
+    COMMENT  PBS10_M is ZERO
+    COMMENT 
+    COMMENT Class 141
+    COMMENT In function 'PageMenu', Result of bitwise AND of raw of Switches and 
+    COMMENT  PBS11_M is ZERO
+    COMMENT 
+    COMMENT Class 142
+    COMMENT In function 'PageMenu', Page_number is greater than or equal to Max_num_of_pages
+    COMMENT 
+    COMMENT Class 143
+    COMMENT In function 'PageMenu', Page_number is less than Max_num_of_pages
+    COMMENT 
+    COMMENT Class 144
+    COMMENT In function 'MenuCheckTimeOut', the function TimerPreset is called 
+    COMMENT 
+    COMMENT Class 145
+    COMMENT In function 'MenuCheckTimeOut', Menu stack pointer is not equal to 
+    COMMENT MAX_MENU_DEPTH subtracted by ONE
+    COMMENT 
+    COMMENT Class 146
+    COMMENT In function 'MenuCheckTimeOut', Menu stack pointer is equal to 
+    COMMENT  MAX_MENU_DEPTH subtracted by ONE 
+    COMMENT 
+    COMMENT Class 147
+    COMMENT In function 'MenuCheckTimeOut', the function MenuReset is called 
+    COMMENT
+    COMMENT Class 148
+    COMMENT In function 'MenuSelectText', s8_step is less than ZERO
+    COMMENT 
+    COMMENT Class 149
+    COMMENT In function 'MenuSelectText', s8_step is greater than ZERO
+    COMMENT 
+    COMMENT Class 150
+    COMMENT In function 'MenuSelectText', s8_step is ZERO
+    COMMENT 
+    COMMENT Class 151
+    COMMENT In function 'MenuSelectText', s8_present_selection is less than ZERO 
+    COMMENT 
+    COMMENT Class 152
+    COMMENT In function 'MenuSelectText', s8_present_selection is greater than or
+    COMMENT equal to ZERO 
+    COMMENT 
+    COMMENT Class 153
+    COMMENT In function 'MenuSelectText', the function ScanOne is called
+    COMMENT 
+    COMMENT Class 154
+    COMMENT In function 'EncoderMenuItemSelectText', pressed of sRE of Switches is equal to ZERO
+    COMMENT 
+    COMMENT Class 155
+    COMMENT In function 'EncoderMenuItemSelectText', pressed of sRE of Switches is 
+    COMMENT not equal to ZERO
+    COMMENT 
+    COMMENT Class 156
+    COMMENT In function 'EncoderMenuItemSelectText', Selected menu item is ZERO
+    COMMENT 
+    COMMENT Class 157
+    COMMENT In function 'EncoderMenuItemSelectText', Selected menu item is not ZERO
+    COMMENT 
+    COMMENT Class 158
+    COMMENT In function 'EncoderMenuItemSelectText', function MenuPush is called
+    COMMENT 
+    COMMENT Class 159
+    COMMENT In function 'EncoderMenuItemSelectText', function GlobalSettingsSetSysInfo is called
+    COMMENT 
+    COMMENT Class 160
+    COMMENT In function 'EncoderMenuItemSelectText', function ProcessSysInfoWords is called
+    COMMENT 
+    COMMENT Class 161
+    COMMENT In function 'EncoderPageItemSelectText', pressed of sRE of Switches is equal to ZERO
+    COMMENT 
+    COMMENT Class 162
+    COMMENT In function 'EncoderPageItemSelectText', pressed of sRE of Switches is 
+    COMMENT not equal to ZERO
+    COMMENT 
+    COMMENT Class 165
+    COMMENT In function 'OffsideManualTimerReset', the function TimerReset is called
+    COMMENT 
+    COMMENT Class 167
+    COMMENT In function 'CoolTimerStart', the function TimerPreset is called
+    COMMENT 
+    COMMENT Class 168
+    COMMENT In function 'CoolTimerReset', the function TimerReset is called
+    COMMENT 
+    COMMENT Class 169
+    COMMENT In function 'OffsideManualTimerStart', the function TimerPreset is called
+    COMMENT 
+    COMMENT Class 170
+    COMMENT In function 'ManualTimerInit', the function TimerInstall is called
+    COMMENT
+    COMMENT Class 171
+    COMMENT In function 'SysInfoBoxText', twist of sRE of Switches is not equal to ZERO.
+    COMMENT 
+    COMMENT Class 172
+    COMMENT In function 'SysInfoBoxText', twist of sRE of Switches is equal to ZERO.
+    COMMENT 
+    COMMENT Class 173
+    COMMENT In function 'SysInfoBoxText', Sys info index is less than zero.
+    COMMENT 
+    COMMENT Class 174
+    COMMENT In function 'SysInfoBoxText', Sys info index is greater than or equal to zero.
+    COMMENT 
+    COMMENT Class 175
+    COMMENT In function 'SysInfoBoxText', the function BuildSysInfoList is called.
+    COMMENT 
+    COMMENT Class 176
+    COMMENT In function 'SysInfoBoxText', system info count is greater than SIXTEEN.
+    COMMENT 
+    COMMENT Class 177
+    COMMENT In function 'SysInfoBoxText', system info count is less than or equal to SIXTEEN.
+    COMMENT 
+    COMMENT Class 178
+    COMMENT In function 'SysInfoBoxText', result of subtraction of system info count and 
+    COMMENT system info index is lesser than SIXTEEN.
+    COMMENT 
+    COMMENT Class 179
+    COMMENT In function 'SysInfoBoxText', result of subtraction of system info count and 
+    COMMENT system info index is greater than or equal to SIXTEEN
+    COMMENT 
+    COMMENT Class 180
+    COMMENT In function 'MessageBoxText', the function BuildMessageList is called
+    COMMENT 
+    COMMENT Class 181
+    COMMENT In function 'EncoderPageItemSelectText', the function MenuSelectText is called
+    COMMENT 
+    COMMENT Class 182
+    COMMENT In function 'EncoderPageItemSelectText', Max_num_of_pages is less than or equal to SIX
+    COMMENT 
+    COMMENT Class 183
+    COMMENT In function 'EncoderPageItemSelectText', Max_num_of_pages is greater than SIX
+    COMMENT 
+    COMMENT Class 184
+    COMMENT In function 'EncoderPageItemSelectText', selected page item count is
+    COMMENT greater than or equal to FOUR
+    COMMENT 
+    COMMENT Class 185
+    COMMENT In function 'EncoderPageItemSelectText', selected page item count is
+    COMMENT less than FOUR
+    COMMENT 
+    COMMENT Class 186
+    COMMENT In function 'EncoderMenuItemSelectText', the function OsTimeDly is called
+    COMMENT 
+    COMMENT Class 187
+    COMMENT In function 'CoolTimerInit', the function TimerInstall is called
+    COMMENT 
+    COMMENT Class 188
+    COMMENT In function 'EncoderCoolDownItemSelectText', the function OffsideCoolTimer is called
+    COMMENT 
+    COMMENT Class 189
+    COMMENT In function 'TopButton1Text', Page_number is less than or equal to 
+    COMMENT (Max_num_of_pages subtracted by ONE)
+    COMMENT 
+    COMMENT Class 190
+    COMMENT In function 'TopButton1Text', Page_number is greater than
+    COMMENT (Max_num_of_pages subtracted by ONE)
+    COMMENT 
+    COMMENT Class 191
+    COMMENT In function 'TopButton1Text', toggle screen is greater than
+    COMMENT (Max_num_of_pages subtracted by ONE)
+    COMMENT 
+    COMMENT Class 192
+    COMMENT In function 'TopButton1Text', toggle screen is less than or equal to 
+    COMMENT (Max_num_of_pages subtracted by ONE)
+    COMMENT 
+    COMMENT Class 193
+    COMMENT In function 'MenuSwitchPage', Page_number is less than or equal to 
+    COMMENT (Max_num_of_pages subtracted by ONE)
+    COMMENT 
+    COMMENT Class 194
+    COMMENT In function 'MenuSwitchPage', Page_number is greater than
+    COMMENT (Max_num_of_pages subtracted by ONE)
+    COMMENT 
+    COMMENT Class 195
+    COMMENT In function 'TopButton6Text', the function TextBoxOff is called
+    COMMENT 
+    COMMENT Class 196
+    COMMENT In function 'MenuSwitchPage', toggle screen is greater than
+    COMMENT (Max_num_of_pages subtracted by ONE)
+    COMMENT 
+    COMMENT Class 197
+    COMMENT In function 'MenuSwitchPage', toggle screen is less than or equal to 
+    COMMENT (Max_num_of_pages subtracted by ONE)
+    COMMENT 
+    COMMENT Class 198
+    COMMENT In function 'MenuSwitchPage', new_page_num is equal to Page_number
+    COMMENT 
+    COMMENT Class 200
+    COMMENT In function 'MenuPush', Menu stack pointer is equal to ZERO
+    COMMENT 
+    COMMENT Class 201
+    COMMENT In function 'MenuPush', Menu stack pointer is not equal to ZERO
+    COMMENT 
+    COMMENT Class 202
+    COMMENT In function 'BackButtonText', The function MenuPop is called
+    COMMENT 
+    COMMENT Class 203
+    COMMENT In function 'ManualTimerStart', the function TimerPreset is called
+    COMMENT 
+    COMMENT Class 204
+    COMMENT In function 'ManualTimerReset', the function TimerReset is called
+    COMMENT 
+    COMMENT Class 205
+    COMMENT In function 'ManualTimerResetButtonText', the function OffsideTimerReset is called
+    COMMENT 
+    COMMENT Class 206
+    COMMENT In function 'TopButton13Text', Brightness_mode is other than EBRIGHTNESS_AUTO and
+    COMMENT EBRIGHTNESS_MANUAL
+    COMMENT 
+    COMMENT Class 207
+    COMMENT In function 'TopButton13Text', twist of sLE of Switches is less than ZERO
+    COMMENT 
+    COMMENT Class 208
+    COMMENT In function 'TopButton13Text', Manual_brightness is greater than MAX_MANUAL_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 209
+    COMMENT In function 'TopButton13Text', Manual_brightness is less than or equal to 
+    COMMENT MAX_MANUAL_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 210
+    COMMENT In function 'TopButton13Text', timer value is greater than MIN_MAX_ITTR
+    COMMENT 
+    COMMENT Class 211
+    COMMENT In function 'TopButton6Text', message count variable is equal to ZERO
+    COMMENT 
+    COMMENT Class 212
+    COMMENT In function 'TopButton13Text', Manual_brightness is  equal to MIN_MANUAL_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 213
+    COMMENT In function 'TopButton13Text', temporary auto brightness is equal to 
+    COMMENT MIN_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 214
+    COMMENT In function 'TopButton13Text', temporary auto brightness is  
+    COMMENT equal to MAX_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 215
+    COMMENT The function 'MessageBoxText', message count is less than TEN
+    COMMENT 
+    COMMENT Class 216
+    COMMENT The function 'MessageBoxText', message count is equal to TEN
+    COMMENT 
+    COMMENT Class 217
+    COMMENT The function 'MessageBoxText', message count is greater than TEN
+    COMMENT 
+    COMMENT Class 218
+    COMMENT The function 'MessageBoxText', sum of message index  and TEN is less than 
+    COMMENT message count 
+    COMMENT 
+    COMMENT Class 219
+    COMMENT The function 'MessageBoxText', sum of message index and TEN is equal to
+    COMMENT message count 
+    COMMENT 
+    COMMENT Class 220
+    COMMENT The function 'MessageBoxText', sum of message index and TEN is greater than 
+    COMMENT message count 
+    COMMENT 
+    COMMENT Class 221
+    COMMENT The function 'MessageBoxText', function TextBoxOff is called
+    COMMENT 
+    COMMENT Invalid Class(es)
+    COMMENT     
+    COMMENT Class 9 
+    COMMENT In Function "SysInfoBoxText" Pc_sys_info_list is initialized with NULL
+    COMMENT 
+    COMMENT Class 10 
+    COMMENT In Function "SysInfoBoxText" Empty_sys_info_list is initialized with NULL
+    COMMENT 
+    COMMENT Class 24
+    COMMENT In function 'MessageBoxText',index for Fault_list is out of boundary
+    COMMENT 
+    COMMENT Class 25
+    COMMENT In Function "MessageBoxText" Message_list is initialized with NULL
+    COMMENT 
+    COMMENT Class 26 
+    COMMENT In Function "MessageBoxText" Pc_empty_message_list is initialized with NULL
+    COMMENT     
+    COMMENT Class 222
+    COMMENT In Function "SysInfoBoxText" Display_size is equal to E_7_INCH
+    COMMENT     
+    COMMENT Class 223
+    COMMENT In Function "SysInfoBoxText" Display_size is not equal to E_7_INCH
+    COMMENT
+	COMMENT Class 224
+    COMMENT In Function "SysInfoBoxText" Display_size is equal to E_10_INCH
+    COMMENT
+	COMMENT Class 225
+    COMMENT In Function "SysInfoBoxText" Display_size is not equal to E_10_INCH
+    COMMENT
+	COMMENT Class 226
+    COMMENT In function 'ExitButtonText', Display_size is equal to E_7_INCH
+    COMMENT 
+    COMMENT Class 227
+    COMMENT In function 'ExitButtonText', Display_size is not equal to E_7_INCH
+    COMMENT     
+    COMMENT Class 228
+    COMMENT In function 'SysInfoBoxText', b2 of Switches is equal to ONE
+    COMMENT     
+    COMMENT Class 229
+    COMMENT In function 'SysInfoBoxText', b2 of Switches is lessthan ONE
+	COMMENT
+    COMMENT Class 230
+    COMMENT In function 'SysInfoBoxText', b2 of Switches is greaterthan ONE	
+    COMMENT     
+    COMMENT Class 231
+    COMMENT In function 'SysInfoBoxText', b3 of Switches is equal to ONE
+    COMMENT     
+    COMMENT Class 232
+    COMMENT In function 'SysInfoBoxText', b3 of Switches is lessthan ONE
+	COMMENT
+    COMMENT Class 233
+    COMMENT In function 'SysInfoBoxText', b3 of Switches is greaterthan ONE		
+	COMMENT
+	COMMENT Class 234
+    COMMENT In function 'ExitButtonText', Display_size is equal to E_10_INCH
+    COMMENT 
+    COMMENT Class 235
+    COMMENT In function 'ExitButtonText', Display_size is not equal to E_10_INCH
+    COMMENT     
+    COMMENT Class 236
+    COMMENT In function 'ExitButtonText', b5 of Switches is equal to ZERO
+    COMMENT     
+    COMMENT Class 237
+    COMMENT In function 'ExitButtonText', b5 of Switches is not equal to ZERO
+	COMMENT
+	COMMENT Class 238
+    COMMENT In function 'MenuSwitchPage', Display_size is equal to E_10_INCH
+    COMMENT 
+    COMMENT Class 239
+    COMMENT In function 'MenuSwitchPage', Display_size is not equal to E_10_INCH
+    COMMENT     
+    COMMENT Class 240
+    COMMENT In function 'MenuSwitchPage', Brightness_mode is equal to EBRIGHTNESS_MANUAL
+    COMMENT     
+    COMMENT Class 241
+    COMMENT In function 'MenuSwitchPage', Brightness_mode is not equal to EBRIGHTNESS_MANUAL
+	COMMENT	
+    COMMENT Class 242
+    COMMENT In function 'MenuItemSelectText10Inch', the function
+    COMMENT MenuSelectText10Inch is called.
+	COMMENT
+    COMMENT Class 243
+    COMMENT In function 'MenuItemSelectText10Inch', b4 of Switches is equal to ZERO
+	COMMENT	
+    COMMENT Class 244
+    COMMENT In function 'MenuItemSelectText10Inch', b4 of Switches is not equal to ZERO	
+	COMMENT
+    COMMENT Class 245
+    COMMENT In function 'MenuItemSelectText10Inch', selected menu item for 10 inch is equal to ZERO
+	COMMENT	
+    COMMENT Class 246
+    COMMENT In function 'MenuItemSelectText10Inch', selected menu item for 10 inch is equal to ONE
+	COMMENT		
+    COMMENT Class 247
+    COMMENT In function 'MenuItemSelectText10Inch', Bool_menu_cal is not equal to TRUE
+	COMMENT		
+    COMMENT Class 248
+    COMMENT In function 'MenuItemSelectText10Inch', Bool_menu_cal is equal to TRUE
+	COMMENT	
+    COMMENT Class 249
+    COMMENT In function 'MenuItemSelectText10Inch', The function MenuPush is called
+	COMMENT		
+    COMMENT Class 250
+    COMMENT In function 'MenuItemSelectText10Inch', The function GlobalSettingsSetSysInfo is called
+	COMMENT		
+    COMMENT Class 251
+    COMMENT In function 'MenuItemSelectText10Inch', The function OsTimeDly is called
+	COMMENT		
+    COMMENT Class 252
+    COMMENT In function 'MenuItemSelectText10Inch', The function ProcessSysInfoWords is called
+	COMMENT		
+    COMMENT Class 253
+    COMMENT In function 'MenuSelectText10Inch', s8_step_down is equal to ONE
+	COMMENT	
+    COMMENT Class 254
+    COMMENT In function 'MenuSelectText10Inch', s8_step_down is not equal to ONE
+	COMMENT		
+    COMMENT Class 255
+    COMMENT In function 'MenuSelectText10Inch', s8_present_Selection is equal to s8_max_selection
+	COMMENT	
+    COMMENT Class 256
+    COMMENT In function 'MenuSelectText10Inch', s8_present_Selection is greaterthan s8_max_selection
+	COMMENT	
+    COMMENT Class 257
+    COMMENT In function 'MenuSelectText10Inch', s8_present_Selection is lessthan s8_max_selection
+	COMMENT	
+    COMMENT Class 258
+    COMMENT In function 'MenuSelectText10Inch', temp variable pointer is equal to ZERO
+	COMMENT	
+    COMMENT Class 259
+    COMMENT In function 'MenuSelectText10Inch', temp variable pointer is not equal to ZERO
+	COMMENT	
+    COMMENT Class 260
+    COMMENT In function 'MenuSelectText10Inch', temp variable pointer is equal to '\r'
+	COMMENT	
+    COMMENT Class 261
+    COMMENT In function 'MenuSelectText10Inch', temp variable pointer is not equal to '\r'
+	COMMENT	
+    COMMENT Class 262
+    COMMENT In function 'MenuSelectText10Inch', temp variable pointer is equal to '\n'
+	COMMENT	
+    COMMENT Class 263
+    COMMENT In function 'MenuSelectText10Inch', temp variable pointer is not equal to '\n'
+	COMMENT		
+    COMMENT Class 264
+    COMMENT In function 'MenuSelectText10Inch', pc_menu_text is equal to ZERO
+	COMMENT	
+    COMMENT Class 265
+    COMMENT In function 'MenuSelectText10Inch', pc_menu_text is not equal to ZERO
+	COMMENT	
+    COMMENT Class 266
+    COMMENT In function 'MenuSelectText10Inch', pc_menu_text is equal to '\r'
+	COMMENT	
+    COMMENT Class 267
+    COMMENT In function 'MenuSelectText10Inch', pc_menu_text is not equal to '\r'
+	COMMENT	
+    COMMENT Class 268
+    COMMENT In function 'MenuSelectText10Inch', pc_menu_text is equal to '\n'
+	COMMENT	
+    COMMENT Class 269
+    COMMENT In function 'MenuSelectText10Inch', pc_menu_text is not equal to '\n'
+	COMMENT
+    COMMENT Class 270
+    COMMENT In function 'MenuSelectText10Inch', s8_present_Selection is greaterthan ZERO
+	COMMENT		
+    COMMENT Class 271
+    COMMENT In function 'CalibrationSelectText10Inch', the function
+    COMMENT MenuSelectText10Inch is called.	
+	COMMENT		
+    COMMENT Class 272
+    COMMENT In function 'CalibrationSelectText10Inch', b4 of Switches value is not equal to ZERO 	
+	COMMENT		
+    COMMENT Class 273
+    COMMENT In function 'CalibrationSelectText10Inch', b4 of Switches value is equal to ZERO 
+	COMMENT		
+    COMMENT Class 274
+    COMMENT In function 'CalibrationSelectText10Inch', the function MenuPush is called	
+	COMMENT		
+    COMMENT Class 275
+    COMMENT In function 'CalibrationSelectText10Inch', selected engine item for 10 inch equal to ZERO 
+	COMMENT		
+    COMMENT Class 276
+    COMMENT In function 'CalibrationSelectText10Inch', selected engine item for 10 inch equal to ONE 
+	COMMENT		
+    COMMENT Class 277
+    COMMENT In function 'CalibrationSelectText10Inch', selected engine item for 10 inch equal to TWO 	
+	COMMENT		
+    COMMENT Class 278
+    COMMENT In function 'CalibrationSelectText10Inch', selected engine item for 10 inch equal to THREE 	
+	COMMENT		
+    COMMENT Class 279
+    COMMENT In function 'EngCalibrationSelectTxt10Inch', the function MenuSelectText10Inch is called	
+	COMMENT
+    COMMENT Class 280
+    COMMENT In function 'EngCalibrationSelectTxt10Inch', b4 of Switches value is not equal to ZERO 	
+	COMMENT		
+    COMMENT Class 281
+    COMMENT In function 'EngCalibrationSelectTxt10Inch', b4 of Switches value is equal to ZERO 	
+	COMMENT
+    COMMENT Class 282
+    COMMENT In function 'EngCalibrationSelectTxt10Inch', the function MenuPush is called	
+	COMMENT		
+    COMMENT Class 283
+    COMMENT In function 'EngCalibrationSelectTxt10Inch', selected engine offset gain equal to ZERO 	
+	COMMENT		
+    COMMENT Class 284
+    COMMENT In function 'EngCalibrationSelectTxt10Inch', selected engine offset gain equal to ONE
+	COMMENT		
+    COMMENT Class 285
+    COMMENT In function 'ParamCalibriSlctTxt10Inch', the function MenuSelectText10Inch is called 	
+	COMMENT
+    COMMENT Class 286
+    COMMENT In function 'ParamCalibriSlctTxt10Inch', b4 of Switches value is not equal to ZERO 	
+	COMMENT		
+    COMMENT Class 287
+    COMMENT In function 'ParamCalibriSlctTxt10Inch', b4 of Switches value is equal to ZERO 	
+	COMMENT		
+    COMMENT Class 288
+    COMMENT In function 'ParamCalibriSlctTxt10Inch', selected engine offset gain equal to ZERO 	
+	COMMENT		
+    COMMENT Class 289
+    COMMENT In function 'ParamCalibriSlctTxt10Inch', selected engine offset gain equal to ONE	
+	COMMENT		
+    COMMENT Class 290
+    COMMENT In function 'OffsetValueText', b2 of Switches value is equal to ZERO 	
+	COMMENT		
+    COMMENT Class 291
+    COMMENT In function 'OffsetValueText', b2 of Switches value is not equal to ZERO 	
+	COMMENT		
+    COMMENT Class 292
+    COMMENT In function 'OffsetValueText', Offset_digit with index Engine count is equal to OFFSET_LENGTH	
+	COMMENT		
+    COMMENT Class 293
+    COMMENT In function 'OffsetValueText', Offset_digit with index Engine count is greaterthan OFFSET_LENGTH	
+	COMMENT		
+    COMMENT Class 294
+    COMMENT In function 'OffsetValueText', Offset_digit with index Engine count is lessthan OFFSET_LENGTH
+	COMMENT		
+    COMMENT Class 295
+    COMMENT In function 'OffsetValueText', b3 of Switches value is equal to ZERO 	
+	COMMENT		
+    COMMENT Class 296
+    COMMENT In function 'OffsetValueText', b3 of Switches value is not equal to ZERO 
+	COMMENT		
+    COMMENT Class 297
+    COMMENT In function 'OffsetValueText', Offset_value with indices Engine_count and offset_digit of index Engine_count is equal to NINE	
+	COMMENT		
+    COMMENT Class 298
+    COMMENT In function 'OffsetValueText', Offset_value with indices Engine_count and offset_digit of index Engine_count is greaterthan NINE	
+	COMMENT		
+    COMMENT Class 299
+    COMMENT In function 'OffsetValueText', Offset_value with indices Engine_count and offset_digit of index Engine_count is lessthan NINE	
+	COMMENT		
+    COMMENT Class 300
+    COMMENT In function 'OffsetValueText', the function IntToStringTrim is called		
+	COMMENT		
+    COMMENT Class 301
+    COMMENT In function 'OffsetValueText', b4 of Switches value is equal to ZERO 	
+	COMMENT		
+    COMMENT Class 302
+    COMMENT In function 'OffsetValueText', b4 of Switches value is not equal to ZERO 	
+	COMMENT		
+    COMMENT Class 303
+    COMMENT In function 'OffsetValueText', the function OffsideCalibrationA825 is called		
+	COMMENT
+    COMMENT Class 304
+    COMMENT In function 'GainValueText', b2 of Switches value is equal to ZERO 	
+	COMMENT		
+    COMMENT Class 305
+    COMMENT In function 'GainValueText', b2 of Switches value is not equal to ZERO 	
+	COMMENT		
+    COMMENT Class 306
+    COMMENT In function 'GainValueText', Gain_digit with index Engine count is equal to GAIN_LENGTH	
+	COMMENT		
+    COMMENT Class 307
+    COMMENT In function 'GainValueText', Gain_digit with index Engine count is greaterthan GAIN_LENGTH	
+	COMMENT		
+    COMMENT Class 308
+    COMMENT In function 'GainValueText', Gain_digit with index Engine count is lessthan GAIN_LENGTH
+	COMMENT		
+    COMMENT Class 309
+    COMMENT In function 'GainValueText', b3 of Switches value is equal to ZERO 	
+	COMMENT		
+    COMMENT Class 310
+    COMMENT In function 'GainValueText', b3 of Switches value is not equal to ZERO 
+	COMMENT		
+    COMMENT Class 311
+    COMMENT In function 'GainValueText', Gain_value with indices Engine_count and Gain_digit of index Engine_count is equal to NINE	
+	COMMENT		
+    COMMENT Class 312
+    COMMENT In function 'GainValueText', Gain_value with indices Engine_count and Gain_digit of index Engine_count is greaterthan NINE	
+	COMMENT		
+    COMMENT Class 313
+    COMMENT In function 'GainValueText', Gain_value with indices Engine_count and Gain_digit of index Engine_count is lessthan NINE	
+	COMMENT		
+    COMMENT Class 314
+    COMMENT In function 'GainValueText', the function IntToStringTrim is called		
+	COMMENT		
+    COMMENT Class 315
+    COMMENT In function 'GainValueText', b4 of Switches value is equal to ZERO 	
+	COMMENT		
+    COMMENT Class 316
+    COMMENT In function 'GainValueText', b4 of Switches value is not equal to ZERO 	
+	COMMENT		
+    COMMENT Class 317
+    COMMENT In function 'GainValueText', the function OffsideCalibrationA825 is called		
+	COMMENT		
+    COMMENT Class 318
+    COMMENT In function 'OffsetInttoIntArray', the function CalculatePower is called	
+	COMMENT		
+    COMMENT Class 319
+    COMMENT In function 'GainInttoIntArray', the function CalculatePower is called	
+	COMMENT		
+    COMMENT Class 320
+    COMMENT In function 'SetButtonText', b2 of Switches value is not equal to ZERO	
+	COMMENT		
+    COMMENT Class 321
+    COMMENT In function 'SetButtonText', b2 of Switches value is equal to ZERO	
+	COMMENT		
+    COMMENT Class 322
+    COMMENT In function 'TopButton2Text10Inch', b2 of Switches value is equal to ZERO
+	COMMENT		
+    COMMENT Class 323
+    COMMENT In function 'TopButton2Text10Inch', b2 of Switches value is not equal to ZERO	
+	COMMENT		
+    COMMENT Class 324
+    COMMENT In function 'TopButton3Text10Inch', b3 of Switches value is equal to ZERO
+	COMMENT		
+    COMMENT Class 325
+    COMMENT In function 'TopButton3Text10Inch', b3 of Switches value is not equal to ZERO	
+	COMMENT		
+    COMMENT Class 326
+    COMMENT In function 'TopButton4Text10Inch', b4 of Switches value is equal to ZERO
+	COMMENT		
+    COMMENT Class 327
+    COMMENT In function 'TopButton4Text10Inch', b4 of Switches value is not equal to ZERO	
+	COMMENT		
+    COMMENT Class 328
+    COMMENT In function 'TopButton4Text10Inch', the function MenuPush is called	
+	COMMENT		
+    COMMENT Class 329
+    COMMENT In function 'TopButton10Text', b10 of Switches value is equal to ZERO
+	COMMENT		
+    COMMENT Class 330
+    COMMENT In function 'TopButton10Text', b10 of Switches value is not equal to ZERO	
+	COMMENT		
+    COMMENT Class 331
+    COMMENT In function 'TopButton10Text', the function MenuPush is called	
+	COMMENT		
+    COMMENT Class 332
+    COMMENT In function 'TopButton6Text10Inch', b6 of Switches value is equal to ZERO
+	COMMENT		
+    COMMENT Class 333
+    COMMENT In function 'TopButton6Text10Inch', b6 of Switches value is not equal to ZERO	
+	COMMENT		
+    COMMENT Class 334
+    COMMENT In function 'TopButton7Text10Inch', b6 of Switches value is equal to ZERO
+	COMMENT		
+    COMMENT Class 335
+    COMMENT In function 'TopButton7Text10Inch', b6 of Switches value is not equal to ZERO	
+	COMMENT		
+    COMMENT Class 336
+    COMMENT In function 'TopButton7Text', Display_size is equal to E_7_INCH
+	COMMENT		
+    COMMENT Class 337
+    COMMENT In function 'TopButton7Text', Display_size is not equal to E_7_INCH	
+	COMMENT		
+    COMMENT Class 338
+    COMMENT In function 'TopButton7Text', Display_size is equal to E_10_INCH
+	COMMENT		
+    COMMENT Class 339
+    COMMENT In function 'TopButton7Text', Display_size is not equal to E_10_INCH	
+	COMMENT		
+    COMMENT Class 340
+    COMMENT In function 'TopButton8Text10Inch', timer value is greater than MIN_MAX_ITTR	
+	COMMENT		
+    COMMENT Class 341
+    COMMENT In function 'TopButton8Text10Inch', timer value is less than MIN_MAX_ITTR
+	COMMENT		
+    COMMENT Class 342
+    COMMENT In function 'TopButton8Text10Inch', timer value is equal to MIN_MAX_ITTR	
+	COMMENT		
+    COMMENT Class 343
+    COMMENT In function 'TopButton8Text10Inch', b8 of Switches is equal to ZERO
+	COMMENT		
+    COMMENT Class 344
+    COMMENT In function 'TopButton8Text10Inch', b8 of Switches is not equal to ZERO	
+	COMMENT		
+    COMMENT Class 345
+    COMMENT In function 'TopButton8Text10Inch', s8_had_max is equal to ZERO
+	COMMENT		
+    COMMENT Class 346
+    COMMENT In function 'TopButton8Text10Inch', s8_had_max is other than ZERO	
+	COMMENT		
+    COMMENT Class 347
+    COMMENT In function 'TopButton8Text10Inch', b6 of Switches is equal to ZERO
+	COMMENT		
+    COMMENT Class 348
+    COMMENT In function 'TopButton8Text10Inch', b6 of Switches is not equal to ZERO		
+	COMMENT		
+    COMMENT Class 349
+    COMMENT In function 'TopButton8Text10Inch', Brightness_mode is equal to EBRIGHTNESS_MANUAL
+	COMMENT		
+    COMMENT Class 350
+    COMMENT In function 'TopButton8Text10Inch', Brightness_mode is not equal to EBRIGHTNESS_MANUAL		
+	COMMENT		
+    COMMENT Class 351
+    COMMENT In function 'TopButton8Text10Inch', s8_had_min is equal to ZERO
+	COMMENT		
+    COMMENT Class 352
+    COMMENT In function 'TopButton8Text10Inch', s8_had_min is other than ZERO		
+	COMMENT		
+    COMMENT Class 353
+    COMMENT In function 'TopButton8Text10Inch', b7 of Switches is equal to ZERO
+	COMMENT		
+    COMMENT Class 354
+    COMMENT In function 'TopButton8Text10Inch', b7 of Switches is not equal to ZERO		
+	COMMENT		
+    COMMENT Class 355
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is less than MAX_MANUAL_BRIGHTNESS		
+	COMMENT		
+    COMMENT Class 356
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is greater than MAX_MANUAL_BRIGHTNESS
+	COMMENT		
+    COMMENT Class 357
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is equal to MAX_MANUAL_BRIGHTNESS		
+	COMMENT		
+    COMMENT Class 358
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is less than MIN_MANUAL_BRIGHTNESS		
+	COMMENT		
+    COMMENT Class 359
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is greater than MIN_MANUAL_BRIGHTNESS
+	COMMENT		
+    COMMENT Class 360
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is equal to MIN_MANUAL_BRIGHTNESS		
+	COMMENT		
+    COMMENT Class 361
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is less than MAX_AUTO_BRIGHTNESS		
+	COMMENT		
+    COMMENT Class 362
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is greater than MAX_AUTO_BRIGHTNESS
+	COMMENT		
+    COMMENT Class 363
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is equal to MAX_AUTO_BRIGHTNESS	
+	COMMENT		
+    COMMENT Class 364
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is less than MIN_AUTO_BRIGHTNESS		
+	COMMENT		
+    COMMENT Class 365
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is greater than MIN_AUTO_BRIGHTNESS
+	COMMENT		
+    COMMENT Class 366
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is equal to MIN_AUTO_BRIGHTNESS
+	COMMENT
+	COMMENT Class 367
+    COMMENT In function 'MenuSwitchPage', Display_size is equal to E_7_INCH
+    COMMENT 
+    COMMENT Class 368
+    COMMENT In function 'MenuSwitchPage', Display_size is not equal to E_7_INCH	
+	COMMENT
+	COMMENT Class 369
+    COMMENT In function 'BackButtonText', Display_size is equal to E_10_INCH
+    COMMENT 
+    COMMENT Class 370
+    COMMENT In function 'BackButtonText', Display_size is not equal to E_10_INCH	
+	COMMENT
+	COMMENT Class 371
+    COMMENT In function 'BackButtonText', Display_size is equal to E_7_INCH
+    COMMENT 
+    COMMENT Class 372
+    COMMENT In function 'BackButtonText', Display_size is not equal to E_7_INCH		
+    COMMENT 
+    COMMENT Class 373
+    COMMENT In function 'ButtonPageItemSelectText', the function MenuSelectText is called
+    COMMENT 
+    COMMENT Class 374
+    COMMENT In function 'ButtonPageItemSelectText', Max_num_of_pages is less than or equal to SIX
+    COMMENT 
+    COMMENT Class 375
+    COMMENT In function 'ButtonPageItemSelectText', Max_num_of_pages is greater than SIX	
+    COMMENT 
+    COMMENT Class 376
+    COMMENT In function 'ButtonPageItemSelectText', b4 of Switches is equal to ZERO	
+    COMMENT 
+    COMMENT Class 377
+    COMMENT In function 'ButtonPageItemSelectText', b4 of Switches is not equal to ZERO	
+    COMMENT 
+    COMMENT Class 378
+    COMMENT In function 'ButtonPageItemSelectText', function MenuPush is called
+    COMMENT 
+    COMMENT Class 379
+    COMMENT In function 'ButtonPageItemSelectText', function GlobalSettingsSetSysInfo is called
+    COMMENT 
+    COMMENT Class 380
+    COMMENT In function 'ButtonPageItemSelectText', function ProcessSysInfoWords is called	
+    COMMENT 
+    COMMENT Class 381
+    COMMENT In function 'ButtonPageItemSelectText', selected page item count is
+    COMMENT greater than or equal to FOUR
+    COMMENT 
+    COMMENT Class 382
+    COMMENT In function 'ButtonPageItemSelectText', selected page item count is
+    COMMENT less than FOUR	
+    COMMENT 
+    COMMENT Class 383
+    COMMENT In function 'ButtonPageItemSelectText', function CrcPages is called	
+    COMMENT 
+    COMMENT Class 384
+    COMMENT In function 'ButtonPageItemSelectText', Bitmap_crc_check_bit with index Selected page item plus one is equal to FALSE	
+    COMMENT 
+    COMMENT Class 385
+    COMMENT In function 'ButtonPageItemSelectText', Bitmap_crc_check_bit with index Selected page item plus one is equal to TRUE
+    COMMENT 
+    COMMENT Class 386
+    COMMENT In function 'ButtonPageItemSelectText', Selected page item plus one  is less than EPAGE19
+    COMMENT 
+    COMMENT Class 387
+    COMMENT In function 'ButtonPageItemSelectText', Selected page item plus one  is greater than EPAGE19	
+    COMMENT 
+    COMMENT Class 388
+    COMMENT In function 'ButtonPageItemSelectText', Selected page item plus one  is equal to EPAGE19	
+	COMMENT
+    COMMENT Class 389
+    COMMENT In function 'TopButton8Text10Inch', b8 of Switches is ZERO
+    COMMENT 
+    COMMENT Class 390
+    COMMENT In function 'TopButton8Text10Inch', b8 of Switches is not ZERO
+    COMMENT 
+    COMMENT Class 391
+    COMMENT In function 'TopButton8Text10Inch', timer value is equal to MIN_MAX_ITTR
+    COMMENT 
+    COMMENT Class 392
+    COMMENT In function 'TopButton8Text10Inch', timer value is less than MIN_MAX_ITTR
+    COMMENT 
+    COMMENT Class 393
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is less than MIN_MANUAL_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 394
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is greater than 
+    COMMENT MIN_MANUAL_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 395
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is less than 
+    COMMENT MIN_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 396
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is greater than 
+    COMMENT MIN_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 397
+    COMMENT In function 'TopButton8Text10Inch', min flag is less than ZERO
+    COMMENT 
+    COMMENT Class 398
+    COMMENT In function 'TopButton8Text10Inch', min flag is ZERO
+    COMMENT 
+    COMMENT Class 399
+    COMMENT In function 'TopButton8Text10Inch', Brightness_mode is EBRIGHTNESS_MANUAL
+    COMMENT 
+    COMMENT Class 400
+    COMMENT In function 'TopButton8Text10Inch', Brightness_mode is EBRIGHTNESS_AUTO
+    COMMENT 
+    COMMENT Class 401
+    COMMENT In function 'TopButton8Text10Inch', Delta is ZERO
+    COMMENT 
+    COMMENT Class 402
+    COMMENT In function 'TopButton8Text10Inch', Delta is not ZERO
+    COMMENT 
+    COMMENT Class 403
+    COMMENT In function 'TopButton8Text10Inch', the function PwmBackLightStepTo is called
+    COMMENT 
+    COMMENT Class 404
+    COMMENT In function 'TopButton8Text10Inch', b7 of Switches is greater than ZERO
+    COMMENT 
+    COMMENT Class 405
+    COMMENT In function 'TopButton8Text10Inch', b7 of Switches is equal to ZERO
+    COMMENT 
+    COMMENT Class 406
+    COMMENT In function 'TopButton8Text10Inch', the function PwmBackLightNewMode is called
+    COMMENT 
+    COMMENT Class 407
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is less than  
+    COMMENT MAX_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 408
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is greater than 
+    COMMENT MAX_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 409
+    COMMENT In function 'TopButton8Text10Inch', max flag is other than ZERO
+    COMMENT 
+    COMMENT Class 410
+    COMMENT In function 'TopButton8Text10Inch', max flag is ZERO
+    COMMENT 
+    COMMENT Class 411
+    COMMENT In function 'TopButton8Text10Inch', Brightness_mode is other than EBRIGHTNESS_AUTO and
+    COMMENT EBRIGHTNESS_MANUAL
+    COMMENT 
+    COMMENT Class 412
+    COMMENT In function 'TopButton8Text10Inch', b7 of Switches is less than ZERO
+    COMMENT 
+    COMMENT Class 413
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is greater than MAX_MANUAL_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 414
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is less than or equal to 
+    COMMENT MAX_MANUAL_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 415
+    COMMENT In function 'TopButton8Text10Inch', timer value is greater than MIN_MAX_ITTR
+	COMMENT
+    COMMENT Class 416
+    COMMENT In function 'TopButton8Text10Inch', Manual_brightness is  equal to MIN_MANUAL_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 417
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is equal to 
+    COMMENT MIN_AUTO_BRIGHTNESS
+    COMMENT 
+    COMMENT Class 418
+    COMMENT In function 'TopButton8Text10Inch', temporary auto brightness is  
+    COMMENT equal to MAX_AUTO_BRIGHTNESS	
+    COMMENT 
+    COMMENT Class 419
+    COMMENT In function 'NextBoxText', b2 of Switches is less than ZERO
+    COMMENT 
+    COMMENT Class 420
+    COMMENT In function 'NextBoxText', b2 of Switches is greater than ZERO
+    COMMENT 
+    COMMENT Class 421
+    COMMENT In function 'NextBoxText', b2 of Switches is equal to ZERO	
+    COMMENT 
+    COMMENT Class 422
+    COMMENT In function 'TopButton8Text10Inch', b6 of Switches is less than ZERO	
+    COMMENT 
+    COMMENT Class 423
+    COMMENT In function 'TopButton8Text10Inch', b6 of Switches is greater than ZERO
+    COMMENT 
+    COMMENT Class 424
+    COMMENT In function 'TopButton8Text10Inch', b6 of Switches is equal to ZERO	
+    COMMENT 
+    COMMENT Class 425
+    COMMENT In function 'EncoderPageItemSelectText', Selected page item plus one  is less than EPAGE19
+    COMMENT 
+    COMMENT Class 426
+    COMMENT In function 'EncoderPageItemSelectText', Selected page item plus one  is equal to and greater than EPAGE19	
+    COMMENT 
+    COMMENT Class 427
+    COMMENT In function 'EncoderPageItemSelectText', Bitmap_crc_check_bit with index Selected page item plus one  is equal to FALSE.
+    COMMENT 
+    COMMENT Class 428
+    COMMENT In function 'EncoderPageItemSelectText', Bitmap_crc_check_bit with index Selected page item plus one  is equal to TRUE.	
+    COMMENT 
+    COMMENT Class 429
+    COMMENT In function 'EncoderPageItemSelectText', the function CrcPages is called	
+    COMMENT 
+    COMMENT Class 430
+    COMMENT In function 'FloatToString', negative values of parameter value is greater than M_FP_COMPARE.	
+    COMMENT 
+    COMMENT Class 431
+    COMMENT In function 'FloatToString', negative values of parameter value is lessthan M_FP_COMPARE.
+    COMMENT 
+    COMMENT Class 432
+    COMMENT In function 'FloatToString', negative values of parameter value is equal to M_FP_COMPARE.	
+    COMMENT 
+    COMMENT Class 433
+    COMMENT In function 'FloatToString', positive values of parameter value is greater than M_FP_COMPARE.	
+    COMMENT 
+    COMMENT Class 434
+    COMMENT In function 'FloatToString', positive values of parameter value is lessthan M_FP_COMPARE.
+    COMMENT 
+    COMMENT Class 435
+    COMMENT In function 'FloatToString', positive values of parameter value is equal to M_FP_COMPARE.	
+    COMMENT 
+    COMMENT Class 436
+    COMMENT In function 'FloatToString', value in integer is less than 0.499999f.
+    COMMENT 
+    COMMENT Class 437
+    COMMENT In function 'FloatToString', value in integer is greater than 0.499999f.	
+    COMMENT 
+    COMMENT Class 438
+    COMMENT In function 'FloatToString', value in integer is equal to 0.499999f.	
+    COMMENT 
+    COMMENT Class 439
+    COMMENT In function 'FuelFlowOnOffButtonText', pressed of sRE of Switches is equal to ZERO
+    COMMENT 
+    COMMENT Class 440
+    COMMENT In function 'FuelFlowOnOffButtonText', pressed of sRE of Switches is not equal to ZERO	
+    COMMENT 
+    COMMENT Class 441
+    COMMENT In function 'FuelFlowOnOffButtonText', Fuel_flow_state is FUEL_FLOW_OFF
+    COMMENT 
+    COMMENT Class 442
+    COMMENT In function 'FuelFlowOnOffButtonText', Fuel_flow_state is FUEL_FLOW_ON	
+    COMMENT 
+    COMMENT Class 443
+    COMMENT In function 'EncoderMenuItemSelectText', Md_engine_flag is TRUE	
+    COMMENT 
+    COMMENT Class 444
+    COMMENT In function 'EncoderMenuItemSelectText', Md_engine_flag is FALSE
+    COMMENT 
+    COMMENT Class 445
+    COMMENT In function 'EncoderMenuItemSelectText', Cmu_fuel_flow is equal to ONE		
+    COMMENT 
+    COMMENT Class 446
+    COMMENT In function 'EncoderMenuItemSelectText', Cmu_fuel_flow is not equal to ONE
+    COMMENT 
+    COMMENT Class 447
+    COMMENT In function 'EncoderMenuItemSelectText', pressed of sRE of Switches is equal to ZERO	
+    COMMENT 
+    COMMENT Class 448
+    COMMENT In function 'EncoderMenuItemSelectText', pressed ofs RE of Switches is not equal to ZERO
+    COMMENT 
+    COMMENT Class 449
+    COMMENT In function 'EncoderMenuItemSelectText', Selected menu item is ZERO		
+    COMMENT 
+    COMMENT Class 450
+    COMMENT In function 'EncoderMenuItemSelectText', Selected menu item is ONE	
+    COMMENT 
+    COMMENT Class 451
+    COMMENT In function 'EncoderMenuItemSelectText', Selected menu item is TWO 
+    COMMENT   
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--                                                                              
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hdudispfmenu_c
+    #void RterrWidget(char _no *pc_file[200], T_INT32 _in s32_line_number, char _no *pc_message[200]);
+    #void TextBoxInit(T_STEXTBOXDATA _no *ps_text_box_data);
+    #void PwmBackLightStepTo(T_INT16 _in new_auto_brightness);
+    #void PwmBackLightNewMode(T_INT16 _in new_auto_brightness);
+    #void TextBoxNoFlash(T_STEXTBOXDATA _in *ps_this_box);
+    #void TextBoxFlash(T_STEXTBOXDATA _in *ps_this_box);
+    #void GlobalSettingsSetEIU(T_EIU _in eiu); 
+    #void OffsideTimerReset(void); 
+    #void OffsideTimerStop(T_UINT32 _in u32_stop_value);
+    #void OffsideTimerStart(T_UINT32 _in U32_initial_value);
+    #T_INT16 BuildMessageList(void);
+    #T_INT16 ParaGetMessageCount(T_INT16 _in s16MessageNumber);
+    #void OffsideSwitchScreen(T_UINT8 _in u8_page_num);
+    #void ProcessSysInfoWords(void); 
+    #void OsTimeDly(T_UWORD _in ticks); 
+    #void GlobalSettingsSetSysInfo(void);
+    #T_INT16 BuildSysInfoList(void); 
+    #T_INT16 ParaGetSysInfoCount(T_INT16 _in s16_sys_info_index); 
+    #void OffsideCoolTimer(T_UINT8 cool_timer_state);
+    #void GrappSwithcScreens(T_EPAGE_NUM _in eNewPageNum);
+    #void ParaConfigTopMenu(T_STEXTBOXDATA _in *pps_items, T_EPAGE_NUM _in page_num);
+    #void PbsClear(void);
+    #void TextBoxOn(T_STEXTBOXDATA _in * ps_this_box);
+    #void TextBoxOff(T_STEXTBOXDATA  _in * ps_this_box);
+    -- The parameter timer is made _no and it is verified explicitly
+    #void TimerPreset(T_TIMER _no * timer, T_INT32 _in s32_set_val)
+    #{
+    #  PTU_TimerPreset_input = *timer;
+    #  *timer = PTU_TimerPreset_output; 
+    #}
+    -- The parameter timer is made _no and it is verified explicitly
+    #void TimerReset(T_TIMER _no *timer)
+    #{
+    #  PTU_TimerReset_input = *timer;
+    #  *timer = PTU_TimerReset_output;
+    #}
+    #void TimerInstall(T_TIMER _no *timer);
+    #T_STEXTBOXDATA Prim_cool_down_pop_up_box;
+	#void IntToStringTrim(T_UINT8  _in label, T_UINT8  _in label_size, char  _no *str[200])
+	#{ 
+	#str = &PTU_src[PTU_index];
+	#PTU_index++;
+	#}
+	#T_FLOAT CalculatePower(T_FLOAT  _in value, T_INT32  _in mul);
+    #void OffsideCalibrationA825(T_UINT8  _in engine_count, T_UINT8  _in parameter_label);
+	#void CrcPages(T_EPAGE_NUM  _in page_count);
+    #void OffsideFuelFlow(T_UINT8  _in Fuel_flow_state);	
+	
+	
+	
+	
+	
+	
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfmenu.c
+
+ENVIRONMENT ENV_hdudispfmenu_c
+
+  VAR Timer_button.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Timer_button.s16ULX,		                	init = 5,       			ev = init
+  VAR Timer_button.s16ULY,		                	init = 5,       			ev = init
+  VAR Timer_button.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Timer_button.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Timer_button.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Timer_button.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Timer_button.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Timer_button.s16Margin,		            	init = 5,       			ev = init
+  VAR Timer_button.fill,		                	init = &dummyfunction1,     ev = init
+  VAR Timer_button.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Timer_button.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Timer_button.pcTitle,		            	init = &PTU_pcTitle[0],   	ev ==
+  VAR Timer_button.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+   VAR Menu_select_10inch.eTBoxType,				init = TEXT_BOX,			ev = init
+  VAR Menu_select_10inch.s16ULX,		            init = 5,       			ev = init
+  VAR Menu_select_10inch.s16ULY,		            init = 5,       			ev = init
+  VAR Menu_select_10inch.s16PixWidth,		        init = 5,       			ev = init
+  VAR Menu_select_10inch.s16PixHeight,		        init = 5,       			ev = init
+  VAR Menu_select_10inch.eTXFont,		            init = E_TINY_FONT,       	ev = init
+  VAR Menu_select_10inch.eFontColor,		        init = BLACK,   			ev = init
+  VAR Menu_select_10inch.eBackGroundColor,		    init = BLACK,   			ev = init
+  VAR Menu_select_10inch.s16Margin,		            init = 5,       			ev = init
+  VAR Menu_select_10inch.fill,		                init = &dummyfunction2,     ev = init
+  VAR Menu_select_10inch.s16FrameWidth,		        init = 5,       			ev = init
+  VAR Menu_select_10inch.eFrameColor,		        init = BLACK,   			ev = init
+  --VAR Menu_select_10inch.pcTitle,		            init = &PTU_pcTitle[0],   	ev ==
+  VAR Menu_select_10inch.psTextBox,		            init = &PTU_sTextBox ,  	ev = init
+  VAR Message_text_box.eTBoxType,					init = TEXT_BOX,			ev = init
+  VAR Message_text_box.s16ULX,		                init = 5,       			ev = init
+  VAR Message_text_box.s16ULY,		                init = 5,       			ev = init
+  VAR Message_text_box.s16PixWidth,		            init = 5,       			ev = init
+  VAR Message_text_box.s16PixHeight,		        init = 5,       			ev = init
+  VAR Message_text_box.eTXFont,		                init = E_TINY_FONT,       	ev = init
+  VAR Message_text_box.eFontColor,		            init = BLACK,   			ev = init
+  VAR Message_text_box.eBackGroundColor,		    init = BLACK,   			ev = init
+  VAR Message_text_box.s16Margin,		            init = 5,       			ev = init
+  VAR Message_text_box.fill,		                init = &dummyfunction3,     ev = init
+  VAR Message_text_box.s16FrameWidth,		        init = 5,       			ev = init
+  VAR Message_text_box.eFrameColor,		            init = BLACK,   			ev = init
+  --VAR Message_text_box.pcTitle,		            init = &PTU_pcTitle[0],   	ev ==
+  VAR Message_text_box.psTextBox,		            init = &PTU_sTextBox ,   	ev = init
+  VAR Top_button_minus.eTBoxType,					init = TEXT_BOX,			ev = init
+  VAR Top_button_minus.s16ULX,		                init = 5,       			ev = init
+  VAR Top_button_minus.s16ULY,		                init = 5,       			ev = init
+  VAR Top_button_minus.s16PixWidth,		            init = 5,       			ev = init
+  VAR Top_button_minus.s16PixHeight,		        init = 5,       			ev = init
+  VAR Top_button_minus.eTXFont,		                init = E_TINY_FONT,      		ev = init
+  VAR Top_button_minus.eFontColor,		            init = BLACK,   			ev = init
+  VAR Top_button_minus.eBackGroundColor,		    init = BLACK,   			ev = init
+  VAR Top_button_minus.s16Margin,		            init = 5,       			ev = init
+  VAR Top_button_minus.fill,		                init = &dummyfunction4,     ev = init
+  VAR Top_button_minus.s16FrameWidth,		        init = 5,       			ev = init
+  VAR Top_button_minus.eFrameColor,		            init = BLACK,   			ev = init
+  --VAR Top_button_minus.pcTitle,		            init = &PTU_pcTitle[0],   	ev ==
+  VAR Top_button_minus.psTextBox,		            init = &PTU_sTextBox ,   	ev = init
+   VAR Encoder_menu_select.eTBoxType,				init = TEXT_BOX,			ev = init
+  VAR Encoder_menu_select.s16ULX,		            init = 5,       			ev = init
+  VAR Encoder_menu_select.s16ULY,		            init = 5,       			ev = init
+  VAR Encoder_menu_select.s16PixWidth,		        init = 5,       			ev = init
+  VAR Encoder_menu_select.s16PixHeight,		        init = 5,       			ev = init
+  VAR Encoder_menu_select.eTXFont,		            init = E_TINY_FONT,       	ev = init
+  VAR Encoder_menu_select.eFontColor,		        init = BLACK,   			ev = init
+  VAR Encoder_menu_select.eBackGroundColor,		    init = BLACK,   			ev = init
+  VAR Encoder_menu_select.s16Margin,		        init = 5,       			ev = init
+  VAR Encoder_menu_select.fill,		                init = &dummyfunction5,     ev = init
+  VAR Encoder_menu_select.s16FrameWidth,		    init = 5,       			ev = init
+  VAR Encoder_menu_select.eFrameColor,		        init = BLACK,   			ev = init
+  --VAR Encoder_menu_select.pcTitle,		        init = &PTU_pcTitle[0],   	ev ==
+  VAR Encoder_menu_select.psTextBox,		        init = &PTU_sTextBox ,   	ev = init
+  VAR Sys_info_message_box.eTBoxType,				init = TEXT_BOX,			ev = init
+  VAR Sys_info_message_box.s16ULX,		            init = 5,       			ev = init
+  VAR Sys_info_message_box.s16ULY,		            init = 5,       			ev = init
+  VAR Sys_info_message_box.s16PixWidth,		        init = 5,       			ev = init
+  VAR Sys_info_message_box.s16PixHeight,		    init = 5,       			ev = init
+  VAR Sys_info_message_box.eTXFont,		            init = E_TINY_FONT,       	ev = init
+  VAR Sys_info_message_box.eFontColor,		        init = BLACK,   			ev = init
+  VAR Sys_info_message_box.eBackGroundColor,		init = BLACK,   			ev = init
+  VAR Sys_info_message_box.s16Margin,		        init = 5,       			ev = init
+  VAR Sys_info_message_box.fill,		            init = &dummyfunction6,     ev = init
+  VAR Sys_info_message_box.s16FrameWidth,		    init = 5,       			ev = init
+  VAR Sys_info_message_box.eFrameColor,		        init = BLACK,   			ev = init
+  --VAR Sys_info_message_box.pcTitle,		        init = &PTU_pcTitle[0],   	ev ==
+  VAR Sys_info_message_box.psTextBox,		        init = &PTU_sTextBox ,   	ev = init
+  VAR Back_button.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Back_button.s16ULX,		                	init = 5,       			ev = init
+  VAR Back_button.s16ULY,		                	init = 5,       			ev = init
+  VAR Back_button.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Back_button.s16PixHeight,		        		init = 5,       			ev = init
+  VAR Back_button.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Back_button.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Back_button.eBackGroundColor,		    		init = BLACK,   			ev = init
+  VAR Back_button.s16Margin,		            	init = 5,       			ev = init
+  VAR Back_button.fill,		                		init = &dummyfunction7,     ev = init
+  VAR Back_button.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Back_button.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Back_button.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Back_button.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Calibration_box.eTBoxType,					init = TEXT_BOX,			ev = init
+  VAR Calibration_box.s16ULX,		                init = 5,       			ev = init
+  VAR Calibration_box.s16ULY,		                init = 5,       			ev = init
+  VAR Calibration_box.s16PixWidth,		            init = 5,       			ev = init
+  VAR Calibration_box.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Calibration_box.eTXFont,		                init = E_TINY_FONT,       	ev = init
+  VAR Calibration_box.eFontColor,		            init = BLACK,   			ev = init
+  VAR Calibration_box.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Calibration_box.s16Margin,		            init = 5,       			ev = init
+  VAR Calibration_box.fill,		                	init = &dummyfunction8,     ev = init
+  VAR Calibration_box.s16FrameWidth,		        init = 5,       			ev = init
+  VAR Calibration_box.eFrameColor,		            init = BLACK,   			ev = init
+  --VAR Calibration_box.pcTitle,		            init = &PTU_pcTitle[0],   	ev ==
+  VAR Calibration_box.psTextBox,		            init = &PTU_sTextBox ,   	ev = init
+  VAR Set_button.eTBoxType,							init = TEXT_BOX,			ev = init
+  VAR Set_button.s16ULX,		                	init = 5,       			ev = init
+  VAR Set_button.s16ULY,		                	init = 5,       			ev = init
+  VAR Set_button.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Set_button.s16PixHeight,		        		init = 5,       			ev = init
+  VAR Set_button.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Set_button.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Set_button.eBackGroundColor,		    		init = BLACK,   			ev = init
+  VAR Set_button.s16Margin,		            		init = 5,       			ev = init
+  VAR Set_button.fill,		                		init = &dummyfunction9,     ev = init
+  VAR Set_button.s16FrameWidth,		        		init = 5,       			ev = init
+  VAR Set_button.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Set_button.pcTitle,		                	init = &PTU_pcTitle[0],   	ev ==
+  VAR Set_button.psTextBox,		            		init = &PTU_sTextBox ,   	ev = init
+  VAR Exit_button.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Exit_button.s16ULX,		                	init = 5,       			ev = init
+  VAR Exit_button.s16ULY,		                	init = 5,       			ev = init
+  VAR Exit_button.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Exit_button.s16PixHeight,		        		init = 5,       			ev = init
+  VAR Exit_button.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Exit_button.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Exit_button.eBackGroundColor,		    		init = BLACK,   			ev = init
+  VAR Exit_button.s16Margin,		            	init = 5,       			ev = init
+  VAR Exit_button.fill,		                		init = &dummyfunction10,    ev = init
+  VAR Exit_button.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Exit_button.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Exit_button.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Exit_button.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Top_button_1.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Top_button_1.s16ULX,		                	init = 5,       			ev = init
+  VAR Top_button_1.s16ULY,		                	init = 5,       			ev = init
+  VAR Top_button_1.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Top_button_1.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Top_button_1.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Top_button_1.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Top_button_1.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Top_button_1.s16Margin,		            	init = 5,       			ev = init
+  VAR Top_button_1.fill,		                	init = &dummyfunction11,    ev = init
+  VAR Top_button_1.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Top_button_1.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Top_button_1.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Top_button_1.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Button_page_select.eTBoxType,				init = TEXT_BOX,			ev = init
+  VAR Button_page_select.s16ULX,		            init = 5,       			ev = init
+  VAR Button_page_select.s16ULY,		            init = 5,       			ev = init
+  VAR Button_page_select.s16PixWidth,		        init = 5,       			ev = init
+  VAR Button_page_select.s16PixHeight,		        init = 5,       			ev = init
+  VAR Button_page_select.eTXFont,		            init = E_TINY_FONT,       	ev = init
+  VAR Button_page_select.eFontColor,		        init = BLACK,   			ev = init
+  VAR Button_page_select.eBackGroundColor,		    init = BLACK,   			ev = init
+  VAR Button_page_select.s16Margin,		        init = 5,       			ev = init
+  VAR Button_page_select.fill,		                init = &dummyfunction12,    ev = init
+  VAR Button_page_select.s16FrameWidth,		    init = 5,       			ev = init
+  VAR Button_page_select.eFrameColor,		        init = BLACK,   			ev = init
+  --VAR Button_page_select.pcTitle,		        init = &PTU_pcTitle[0],   	ev ==
+  VAR Button_page_select.psTextBox,		        init = &PTU_sTextBox ,   	ev = init
+  VAR Top_button_2.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Top_button_2.s16ULX,		                	init = 5,       			ev = init
+  VAR Top_button_2.s16ULY,		                	init = 5,       			ev = init
+  VAR Top_button_2.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Top_button_2.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Top_button_2.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Top_button_2.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Top_button_2.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Top_button_2.s16Margin,		            	init = 5,       			ev = init
+  VAR Top_button_2.fill,		                	init = &dummyfunction13,    ev = init
+  VAR Top_button_2.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Top_button_2.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Top_button_2.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Top_button_2.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Brightness_button.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Brightness_button.s16ULX,		                	init = 5,       			ev = init
+  VAR Brightness_button.s16ULY,		                	init = 5,       			ev = init
+  VAR Brightness_button.s16PixWidth,		            init = 5,       			ev = init
+  VAR Brightness_button.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Brightness_button.eTXFont,		                init = E_TINY_FONT,       	ev = init
+  VAR Brightness_button.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Brightness_button.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Brightness_button.s16Margin,		            	init = 5,       			ev = init
+  VAR Brightness_button.fill,		                	init = &dummyfunction14,    ev = init
+  VAR Brightness_button.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Brightness_button.eFrameColor,		            init = BLACK,   			ev = init
+  --VAR Brightness_button.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Brightness_button.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Top_button_3.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Top_button_3.s16ULX,		                	init = 5,       			ev = init
+  VAR Top_button_3.s16ULY,		                	init = 5,       			ev = init
+  VAR Top_button_3.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Top_button_3.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Top_button_3.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Top_button_3.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Top_button_3.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Top_button_3.s16Margin,		            	init = 5,       			ev = init
+  VAR Top_button_3.fill,		                	init = &dummyfunction15,    ev = init
+  VAR Top_button_3.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Top_button_3.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Top_button_3.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Top_button_3.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Scroll_button.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Scroll_button.s16ULX,		               	 	init = 5,       			ev = init
+  VAR Scroll_button.s16ULY,		                	init = 5,       			ev = init
+  VAR Scroll_button.s16PixWidth,		            init = 5,       			ev = init
+  VAR Scroll_button.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Scroll_button.eTXFont,		                init = E_TINY_FONT,       	ev = init
+  VAR Scroll_button.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Scroll_button.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Scroll_button.s16Margin,		            	init = 5,       			ev = init
+  VAR Scroll_button.fill,		                	init = &dummyfunction16,    ev = init
+  VAR Scroll_button.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Scroll_button.eFrameColor,		            init = BLACK,   			ev = init
+  --VAR Scroll_button.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Scroll_button.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Cool_down_on_off_btn.eTBoxType,				init = TEXT_BOX,			ev = init
+  VAR Cool_down_on_off_btn.s16ULX,		            init = 5,       			ev = init
+  VAR Cool_down_on_off_btn.s16ULY,		            init = 5,       			ev = init
+  VAR Cool_down_on_off_btn.s16PixWidth,		        init = 5,       			ev = init
+  VAR Cool_down_on_off_btn.s16PixHeight,		    init = 5,       			ev = init
+  VAR Cool_down_on_off_btn.eTXFont,		            init = E_TINY_FONT,       	ev = init
+  VAR Cool_down_on_off_btn.eFontColor,		        init = BLACK,   			ev = init
+  VAR Cool_down_on_off_btn.eBackGroundColor,		init = BLACK,   			ev = init
+  VAR Cool_down_on_off_btn.s16Margin,		        init = 5,       			ev = init
+  VAR Cool_down_on_off_btn.fill,		            init = &dummyfunction17,    ev = init
+  VAR Cool_down_on_off_btn.s16FrameWidth,		    init = 5,       			ev = init
+  VAR Cool_down_on_off_btn.eFrameColor,		        init = BLACK,   			ev = init
+  --VAR Cool_down_on_off_btn.pcTitle,		        init = &PTU_pcTitle[0],   	ev ==
+  VAR Cool_down_on_off_btn.psTextBox,		        init = &PTU_sTextBox ,   	ev = init
+  VAR Page_button.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Page_button.s16ULX,		                	init = 5,       			ev = init
+  VAR Page_button.s16ULY,		                	init = 5,       			ev = init
+  VAR Page_button.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Page_button.s16PixHeight,		        		init = 5,       			ev = init
+  VAR Page_button.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Page_button.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Page_button.eBackGroundColor,		    		init = BLACK,   			ev = init
+  VAR Page_button.s16Margin,		            	init = 5,       			ev = init
+  VAR Page_button.fill,		                		init = &dummyfunction18,    ev = init
+  VAR Page_button.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Page_button.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Page_button.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Page_button.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Manual_timer_reset_btn.eTBoxType,				init = TEXT_BOX,			ev = init
+  VAR Manual_timer_reset_btn.s16ULX,		        init = 5,       			ev = init
+  VAR Manual_timer_reset_btn.s16ULY,		        init = 5,       			ev = init
+  VAR Manual_timer_reset_btn.s16PixWidth,		    init = 5,       			ev = init
+  VAR Manual_timer_reset_btn.s16PixHeight,		    init = 5,       			ev = init
+  VAR Manual_timer_reset_btn.eTXFont,		        init = E_TINY_FONT,       	ev = init
+  VAR Manual_timer_reset_btn.eFontColor,		    init = BLACK,   			ev = init
+  VAR Manual_timer_reset_btn.eBackGroundColor,		init = BLACK,   			ev = init
+  VAR Manual_timer_reset_btn.s16Margin,		        init = 5,       			ev = init
+  VAR Manual_timer_reset_btn.fill,		            init = &dummyfunction19,    ev = init
+  VAR Manual_timer_reset_btn.s16FrameWidth,		    init = 5,       			ev = init
+  VAR Manual_timer_reset_btn.eFrameColor,		    init = BLACK,   			ev = init
+  --VAR Manual_timer_reset_btn.pcTitle,		        init = &PTU_pcTitle[0],   	ev ==
+  VAR Manual_timer_reset_btn.psTextBox,		        init = &PTU_sTextBox ,   	ev = init
+  VAR Dummy_button.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Dummy_button.s16ULX,		                	init = 5,       			ev = init
+  VAR Dummy_button.s16ULY,		                	init = 5,       			ev = init
+  VAR Dummy_button.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Dummy_button.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Dummy_button.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Dummy_button.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Dummy_button.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Dummy_button.s16Margin,		            	init = 5,       			ev = init
+  VAR Dummy_button.fill,		                	init = &dummyfunction20,    ev = init
+  VAR Dummy_button.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Dummy_button.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Dummy_button.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Dummy_button.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Top_button_4.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Top_button_4.s16ULX,		                	init = 5,       			ev = init
+  VAR Top_button_4.s16ULY,		                	init = 5,       			ev = init
+  VAR Top_button_4.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Top_button_4.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Top_button_4.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Top_button_4.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Top_button_4.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Top_button_4.s16Margin,		            	init = 5,       			ev = init
+  VAR Top_button_4.fill,		                	init = &dummyfunction21,    ev = init
+  VAR Top_button_4.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Top_button_4.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Top_button_4.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Top_button_4.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Engine_calibration_box.eTBoxType,				init = TEXT_BOX,			ev = init
+  VAR Engine_calibration_box.s16ULX,		        init = 5,       			ev = init
+  VAR Engine_calibration_box.s16ULY,		        init = 5,       			ev = init
+  VAR Engine_calibration_box.s16PixWidth,		    init = 5,       			ev = init
+  VAR Engine_calibration_box.s16PixHeight,		    init = 5,       			ev = init
+  VAR Engine_calibration_box.eTXFont,		        init = E_TINY_FONT,       	ev = init
+  VAR Engine_calibration_box.eFontColor,		    init = BLACK,   			ev = init
+  VAR Engine_calibration_box.eBackGroundColor,		init = BLACK,   			ev = init
+  VAR Engine_calibration_box.s16Margin,		        init = 5,       			ev = init
+  VAR Engine_calibration_box.fill,		            init = &dummyfunction22,    ev = init
+  VAR Engine_calibration_box.s16FrameWidth,		    init = 5,       			ev = init
+  VAR Engine_calibration_box.eFrameColor,		    init = BLACK,   			ev = init
+  --VAR Engine_calibration_box.pcTitle,		        init = &PTU_pcTitle[0],   	ev ==
+  VAR Engine_calibration_box.psTextBox,		        init = &PTU_sTextBox ,   	ev = init
+  VAR Top_button_plus.eTBoxType,					init = TEXT_BOX,			ev = init
+  VAR Top_button_plus.s16ULX,		                init = 5,       			ev = init
+  VAR Top_button_plus.s16ULY,		                init = 5,       			ev = init
+  VAR Top_button_plus.s16PixWidth,		            init = 5,       			ev = init
+  VAR Top_button_plus.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Top_button_plus.eTXFont,		                init = E_TINY_FONT,       	ev = init
+  VAR Top_button_plus.eFontColor,		            init = BLACK,   			ev = init
+  VAR Top_button_plus.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Top_button_plus.s16Margin,		            init = 5,       			ev = init
+  VAR Top_button_plus.fill,		                	init = &dummyfunction23,    ev = init
+  VAR Top_button_plus.s16FrameWidth,		        init = 5,       			ev = init
+  VAR Top_button_plus.eFrameColor,		            init = BLACK,   			ev = init
+  --VAR Top_button_plus.pcTitle,		            init = &PTU_pcTitle[0],   	ev ==
+  VAR Top_button_plus.psTextBox,		            init = &PTU_sTextBox ,   	ev = init
+  VAR Gain_box.eTBoxType,							init = TEXT_BOX,			ev = init
+  VAR Gain_box.s16ULX,		                		init = 5,       			ev = init
+  VAR Gain_box.s16ULY,		                		init = 5,       			ev = init
+  VAR Gain_box.s16PixWidth,		            		init = 5,       			ev = init
+  VAR Gain_box.s16PixHeight,		        		init = 5,       			ev = init
+  VAR Gain_box.eTXFont,		                		init = E_TINY_FONT,       	ev = init
+  VAR Gain_box.eFontColor,		            		init = BLACK,   			ev = init
+  VAR Gain_box.eBackGroundColor,		    		init = BLACK,   			ev = init
+  VAR Gain_box.s16Margin,		            		init = 5,       			ev = init
+  VAR Gain_box.fill,		                		init = &dummyfunction24,    ev = init
+  VAR Gain_box.s16FrameWidth,		        		init = 5,       			ev = init
+  VAR Gain_box.eFrameColor,		            		init = BLACK,   			ev = init
+  --VAR Gain_box.pcTitle,		                	init = &PTU_pcTitle[0],   	ev ==
+  VAR Gain_box.psTextBox,		            		init = &PTU_sTextBox ,   	ev = init
+  VAR Encoder_page_select.eTBoxType,				init = TEXT_BOX,			ev = init
+  VAR Encoder_page_select.s16ULX,		            init = 5,       			ev = init
+  VAR Encoder_page_select.s16ULY,		            init = 5,       			ev = init
+  VAR Encoder_page_select.s16PixWidth,		        init = 5,       			ev = init
+  VAR Encoder_page_select.s16PixHeight,		        init = 5,       			ev = init
+  VAR Encoder_page_select.eTXFont,		            init = E_TINY_FONT,       	ev = init
+  VAR Encoder_page_select.eFontColor,		        init = BLACK,   			ev = init
+  VAR Encoder_page_select.eBackGroundColor,		    init = BLACK,   			ev = init
+  VAR Encoder_page_select.s16Margin,		        init = 5,       			ev = init
+  VAR Encoder_page_select.fill,		                init = &dummyfunction25,    ev = init
+  VAR Encoder_page_select.s16FrameWidth,		    init = 5,       			ev = init
+  VAR Encoder_page_select.eFrameColor,		        init = BLACK,   			ev = init
+  --VAR Encoder_page_select.pcTitle,		        init = &PTU_pcTitle[0],   	ev ==
+  VAR Encoder_page_select.psTextBox,		        init = &PTU_sTextBox ,   	ev = init
+  VAR Top_button_5.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Top_button_5.s16ULX,		                	init = 5,       			ev = init
+  VAR Top_button_5.s16ULY,		                	init = 5,       			ev = init
+  VAR Top_button_5.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Top_button_5.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Top_button_5.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Top_button_5.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Top_button_5.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Top_button_5.s16Margin,		            	init = 5,       			ev = init
+  VAR Top_button_5.fill,		                	init = &dummyfunction26,    ev = init
+  VAR Top_button_5.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Top_button_5.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Top_button_5.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Top_button_5.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Encoder_cool_down_select.eTBoxType,			init = TEXT_BOX,			ev = init
+  VAR Encoder_cool_down_select.s16ULX,		        init = 5,       			ev = init
+  VAR Encoder_cool_down_select.s16ULY,		        init = 5,       			ev = init
+  VAR Encoder_cool_down_select.s16PixWidth,		    init = 5,       			ev = init
+  VAR Encoder_cool_down_select.s16PixHeight,		init = 5,       			ev = init
+  VAR Encoder_cool_down_select.eTXFont,		        init = E_TINY_FONT,       	ev = init
+  VAR Encoder_cool_down_select.eFontColor,		    init = BLACK,   			ev = init
+  VAR Encoder_cool_down_select.eBackGroundColor,	init = BLACK,   			ev = init
+  VAR Encoder_cool_down_select.s16Margin,		    init = 5,       			ev = init
+  VAR Encoder_cool_down_select.fill,		        init = &dummyfunction27,    ev = init
+  VAR Encoder_cool_down_select.s16FrameWidth,		init = 5,       			ev = init
+  VAR Encoder_cool_down_select.eFrameColor,		    init = BLACK,   			ev = init
+  --VAR Encoder_cool_down_select.pcTitle,		    init = &PTU_pcTitle[0],   	ev ==
+  VAR Encoder_cool_down_select.psTextBox,		    init = &PTU_sTextBox ,   	ev = init
+  VAR Parameter_calibration_box.eTBoxType,			init = TEXT_BOX,			ev = init
+  VAR Parameter_calibration_box.s16ULX,		        init = 5,       			ev = init
+  VAR Parameter_calibration_box.s16ULY,		        init = 5,       			ev = init
+  VAR Parameter_calibration_box.s16PixWidth,		init = 5,       			ev = init
+  VAR Parameter_calibration_box.s16PixHeight,		init = 5,       			ev = init
+  VAR Parameter_calibration_box.eTXFont,		    init = E_TINY_FONT,       	ev = init
+  VAR Parameter_calibration_box.eFontColor,		    init = BLACK,   			ev = init
+  VAR Parameter_calibration_box.eBackGroundColor,	init = BLACK,   			ev = init
+  VAR Parameter_calibration_box.s16Margin,		    init = 5,       			ev = init
+  VAR Parameter_calibration_box.fill,		        init = &dummyfunction28,    ev = init
+  VAR Parameter_calibration_box.s16FrameWidth,		init = 5,       			ev = init
+  VAR Parameter_calibration_box.eFrameColor,		init = BLACK,   			ev = init
+  --VAR Parameter_calibration_box.pcTitle,		    init = &PTU_pcTitle[0],   	ev ==
+  VAR Parameter_calibration_box.psTextBox,		    init = &PTU_sTextBox ,   	ev = init
+  VAR Man_timer_on_off_btn.eTBoxType,				init = TEXT_BOX,			ev = init
+  VAR Man_timer_on_off_btn.s16ULX,		        	init = 5,       			ev = init
+  VAR Man_timer_on_off_btn.s16ULY,		        	init = 5,       			ev = init
+  VAR Man_timer_on_off_btn.s16PixWidth,		    	init = 5,       			ev = init
+  VAR Man_timer_on_off_btn.s16PixHeight,			init = 5,       			ev = init
+  VAR Man_timer_on_off_btn.eTXFont,		        	init = E_TINY_FONT,       	ev = init
+  VAR Man_timer_on_off_btn.eFontColor,		    	init = BLACK,   			ev = init
+  VAR Man_timer_on_off_btn.eBackGroundColor,		init = BLACK,   			ev = init
+  VAR Man_timer_on_off_btn.s16Margin,		    	init = 5,       			ev = init
+  VAR Man_timer_on_off_btn.fill,		        	init = &dummyfunction29,    ev = init
+  VAR Man_timer_on_off_btn.s16FrameWidth,			init = 5,       			ev = init
+  VAR Man_timer_on_off_btn.eFrameColor,		    	init = BLACK,   			ev = init
+  --VAR Man_timer_on_off_btn.pcTitle,		        init = &PTU_pcTitle[0],   	ev ==
+  VAR Man_timer_on_off_btn.psTextBox,		        init = &PTU_sTextBox ,   	ev = init
+  VAR Offset_box.eTBoxType,							init = TEXT_BOX,			ev = init
+  VAR Offset_box.s16ULX,		                	init = 5,       			ev = init
+  VAR Offset_box.s16ULY,		                	init = 5,       			ev = init
+  VAR Offset_box.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Offset_box.s16PixHeight,		        		init = 5,       			ev = init
+  VAR Offset_box.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Offset_box.eFontColor,		           		init = BLACK,   			ev = init
+  VAR Offset_box.eBackGroundColor,		    		init = BLACK,   			ev = init
+  VAR Offset_box.s16Margin,		            		init = 5,       			ev = init
+  VAR Offset_box.fill,		                		init = &dummyfunction30,    ev = init
+  VAR Offset_box.s16FrameWidth,		        		init = 5,       			ev = init
+  VAR Offset_box.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Offset_box.pcTitle,		                	init = &PTU_pcTitle[0],   	ev ==
+  VAR Offset_box.psTextBox,		            		init = &PTU_sTextBox ,   	ev = init
+  VAR Top_button_6.eTBoxType,						init = TEXT_BOX,			ev = init
+  VAR Top_button_6.s16ULX,		                	init = 5,       			ev = init
+  VAR Top_button_6.s16ULY,		                	init = 5,       			ev = init
+  VAR Top_button_6.s16PixWidth,		            	init = 5,       			ev = init
+  VAR Top_button_6.s16PixHeight,		        	init = 5,       			ev = init
+  VAR Top_button_6.eTXFont,		                	init = E_TINY_FONT,       	ev = init
+  VAR Top_button_6.eFontColor,		            	init = BLACK,   			ev = init
+  VAR Top_button_6.eBackGroundColor,		    	init = BLACK,   			ev = init
+  VAR Top_button_6.s16Margin,		            	init = 5,       			ev = init
+  VAR Top_button_6.fill,		                	init = &dummyfunction31,    ev = init
+  VAR Top_button_6.s16FrameWidth,		        	init = 5,       			ev = init
+  VAR Top_button_6.eFrameColor,		            	init = BLACK,   			ev = init
+  --VAR Top_button_6.pcTitle,		                init = &PTU_pcTitle[0],   	ev ==
+  VAR Top_button_6.psTextBox,		            	init = &PTU_sTextBox ,   	ev = init
+  VAR Next_box.eTBoxType,							init = TEXT_BOX,			ev = init
+  VAR Next_box.s16ULX,		                		init = 5,       			ev = init
+  VAR Next_box.s16ULY,		                		init = 5,       			ev = init
+  VAR Next_box.s16PixWidth,		            		init = 5,       			ev = init
+  VAR Next_box.s16PixHeight,		        		init = 5,       			ev = init
+  VAR Next_box.eTXFont,		                		init = E_TINY_FONT,       	ev = init
+  VAR Next_box.eFontColor,		            		init = BLACK,   			ev = init
+  VAR Next_box.eBackGroundColor,		    		init = BLACK,   			ev = init
+  VAR Next_box.s16Margin,		            		init = 5,       			ev = init
+  VAR Next_box.fill,		                		init = &dummyfunction32,    ev = init
+  VAR Next_box.s16FrameWidth,		        		init = 5,       			ev = init
+  VAR Next_box.eFrameColor,		            		init = BLACK,   			ev = init
+  --VAR Next_box.pcTitle,		                	init = &PTU_pcTitle[0],   	ev ==
+  VAR Next_box.psTextBox,		            		init = &PTU_sTextBox ,   	ev = init
+
+  ARRAY Offset_value_cal,							init = { others => 0 },		ev = init
+  ARRAY Calibration_menu,							init = { others => NIL },	ev = init
+  ARRAY Bitmap_crc_check_bit,						init = { others => FALSE },	ev = init
+  ARRAY Offset_value,								init = { others => { others => 0 } },		ev = init
+  ARRAY Brightness_menu,							init = { others => NIL },		ev = init
+  ARRAY Gain_value_menu,							init = { others => NIL },		ev = init
+  ARRAY Page_menu_10inch,							init = { others => NIL },		ev = init
+  ARRAY Offset_value_menu,							init = { others => NIL },		ev = init
+  ARRAY Engine_calibration,							init = { others => NIL },		ev = init
+  ARRAY Page_menu,									init = { others => NIL },		ev = init
+  ARRAY Sys_info_menu_10inch,						init = { others => NIL },		ev = init  
+  ARRAY Sys_info_menu,								init = { others => NIL },		ev = init
+  ARRAY Cool_down_menu,								init = { others => NIL },		ev = init
+  ARRAY All_menu_items,								init = { others => NIL },		ev = init
+  ARRAY Timer_menu,									init = { others => NIL },		ev = init
+  VAR Page_number,									init = 0,						ev = init
+  VAR Toggle_screen,								init = EPAGE0,					ev = init
+  VAR Manual_timer,									init = 0,						ev = init
+  VAR Engine_count,									init = 0,						ev = init
+  VAR Cool_timer,									init = 0,						ev = init
+  ARRAY Gain_digit,									init = { others => 0 },			ev = init
+  ARRAY Menu_menu_10inch,							init = { others => NIL },		ev = init
+  VAR Cool_down_select,								init = FALSE,					ev = init
+  ARRAY Gain_value_string,							init = { others => "" },		ev = init
+  ARRAY Msg_menu,									init = { others => NIL },		ev = init
+  ARRAY Menu_menu,									init = { others => NIL },		ev = init
+  ARRAY Gain_value,									init = { others => { others => 0 } },		ev = init
+  ARRAY Offset_digit,								init = { others => 0 },						ev = init
+  ARRAY Top_menu,									init = { others => NIL },					ev = init
+  ARRAY Offset_value_string,						init = { others => "" },					ev = init  
+END ENVIRONMENT -- ENV_hdudispfmenu_c
+USE ENV_hdudispfmenu_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TopButton13Text
+--------------------------------------------------------------------------------
+SERVICE TopButton13Text
+SERVICE_TYPE extern
+
+    -- By function returned type declaration
+    #T_CHAR* ret_TopButton13Text;
+    #T_CHAR PTU_ret_TopButton13Text[100];
+
+    TEST 1
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-002]
+        COMMENT 1 Does nothing since
+        COMMENT timer value is equal to MIN_MAX_ITTR and pressed of sLE of Switches is ZERO
+        COMMENT Equivalence Class 99,101   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-014]
+        COMMENT 1.sets Manual_brightness to MIN_MANUAL_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since Manual_brightness is less than MIN_MANUAL_BRIGHTNESS
+        COMMENT Equivalence Class 103   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR(i.e ZERO)
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 5,        ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_MANUAL,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ZERO,     ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            --none
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-004]
+        COMMENT 1 Doesn't sets timer to MIN_MAX_ITTR 
+        COMMENT since minimum flag is other than ZERO AND twist of sLE of Switches 
+        COMMENT  is equal to ZERO(i.e 1)
+        COMMENT Equivalence Class 115,101   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-014]
+        COMMENT 1.sets Manual_brightness to MIN_MANUAL_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since Manual_brightness is less than MIN_MANUAL_BRIGHTNESS
+        COMMENT Equivalence Class 103   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105    
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_MANUAL,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ZERO,      ev = ZERO
+        
+            VAR Manual_brightness,                      init = 0,        ev = 5
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            --none
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 2
+
+    TEST 3    
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-005]
+        COMMENT 1 sets delta to result of Manual_brightness devide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_MANUAL
+        COMMENT Equivalence Class 114,109   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-006]
+        COMMENT 1 sets delta to ONE   
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_MANUAL and
+        COMMENT  Delta is ZERO
+        COMMENT Equivalence Class 114,109,111   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-007]
+        COMMENT 1 negate the delta 
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_MANUAL
+        COMMENT  Delta is less than ZERO
+        COMMENT Equivalence Class  114,109,112  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-008]
+        COMMENT 1 adds the value of delta to Manual_brightness 
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_MANUAL
+        COMMENT Equivalence Class  114,109
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 5,        ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_MANUAL,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = -1,       ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 3
+
+    TEST 4    
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-002]
+        COMMENT 1.sets minimum and maximum flags to ZERO 
+        COMMENT 2.timer to MIN_MAX_ITTR 
+        COMMENT 3.increment the timer value by one
+        COMMENT since timer value is gretaer than MIN_MAX_ITTR and
+        COMMENT       pressed of sLE of Switches is other than ZERO
+        COMMENT Equivalence Class 100,210   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-017]
+        COMMENT 1.set Brightness_mode to EBRIGHTNESS_AUTO 
+        COMMENT since Brightness_mode is EBRIGHTNESS_MANUAL and
+        COMMENT       Pressed of sLE of Switches is not equal to ZERO
+        COMMENT Equivalence Class 109,100    
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-019]
+        COMMENT 1.calls PwmBackLightNewMode with parameter as value of temporary auto brightness
+        COMMENT since pressed of sLE of Switches is not ZERO
+        COMMENT Equivalence Class 100,116   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 5,        ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_MANUAL,
+            &                                                            ev = EBRIGHTNESS_AUTO
+                    
+            VAR Switches.sLE.pressed,                   init = 1,        ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ZERO,     ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightNewMode(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 4
+
+    TEST 5    
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-002]
+        COMMENT 1.sets minimum and maximum flags to ZERO 
+        COMMENT 2.timer to MIN_MAX_ITTR 
+        COMMENT 3.increment the timer value by one
+        COMMENT since timer value is greater than MIN_MAX_ITTR and
+        COMMENT       pressed of sLE of Switches is other than ZERO
+        COMMENT Equivalence Class 100,210   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-017]
+        COMMENT 1.sets Brightness_mode to EBRIGHTNESS_AUTO 
+        COMMENT since Brightness_mode is EBRIGHTNESS_MANUAL and
+        COMMENT       Pressed of sLE of Switches is not equal to ZERO
+        COMMENT Equivalence Class 109,100    
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-019]
+        COMMENT 1.calls PwmBackLightNewMode with parameter as value of temporary auto brightness
+        COMMENT since pressed of sLE of Switches is not ZERO
+        COMMENT Equivalence Class 100,116   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 5,        ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_MANUAL,
+            &                                                            ev = EBRIGHTNESS_AUTO
+                    
+            VAR Switches.sLE.pressed,                   init = -1,       ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ZERO,     ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightNewMode(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 5
+
+    TEST 6
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-004]
+        COMMENT 1 sets timer to MIN_MAX_ITTR 
+        COMMENT since minimum flag is ZERO AND twist of sLE of Switches 
+        COMMENT  is greater than ZERO(i.e 1)
+        COMMENT Equivalence Class 108,114   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-010]
+        COMMENT 1 add the value of delta to ONE  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT  Delta is ZERO
+        COMMENT Equivalence Class 114,110,111  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-012]
+        COMMENT 1 adds delta to temporary auto brightness   
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 5,        ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 6
+
+    TEST 7    
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-010]
+        COMMENT 1 adds the value of delta to ONE  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT  Delta is ZERO
+        COMMENT Equivalence Class 114,110,111  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-011]
+        COMMENT 1 negates the value of delta  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT  Delta is less than ZERO
+        COMMENT Equivalence Class 114,110,112 
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-012]
+        COMMENT 1 adds delta to temporary auto brightness   
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 5,        ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = -1,       ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 7
+
+    TEST 8    
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-002]
+        COMMENT 1.sets minimum and maximum flags to ZERO 
+        COMMENT 2.timer to MIN_MAX_ITTR 
+        COMMENT 3.increment the timer value by one
+        COMMENT since timer value is greater than MIN_MAX_ITTR and
+        COMMENT       pressed of sLE of Switches is other than ZERO
+        COMMENT Equivalence Class 100,210   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-018]
+        COMMENT 1.set Brightness_mode to EBRIGHTNESS_MANUAL 
+        COMMENT since Brightness_mode is EBRIGHTNESS_AUTO and
+        COMMENT       Pressed of sLE of Switches is not equal to ZERO
+        COMMENT Equivalence Class 110,100    
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-019]
+        COMMENT 1.calls PwmBackLightNewMode with parameter as value of temporary auto brightness
+        COMMENT since pressed of sLE of Switches is not ZERO
+        COMMENT Equivalence Class 100,116 ,115  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 5,        ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = EBRIGHTNESS_MANUAL
+                    
+            VAR Switches.sLE.pressed,                   init = 1,        ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ZERO,     ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightNewMode(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 8
+
+    TEST 9
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-004]
+        COMMENT 1 sets timer to MIN_MAX_ITTR 
+        COMMENT since minimum flag is other than ZERO AND twist of sLE of Switches 
+        COMMENT  is greater than ZERO(i.e 1)
+        COMMENT Equivalence Class 114,101   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-005]
+        COMMENT 1 sets delta to result of Manual_brightness devide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_MANUAL
+        COMMENT Equivalence Class 114,109    
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-008]
+        COMMENT 1 adds the value of delta to Manual_brightness 
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_MANUAL
+        COMMENT Equivalence Class  114,109
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_MANUAL,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+        
+            VAR Manual_brightness,                      init = 10,       ev = 11
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 9   
+
+    TEST 10
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-004]
+        COMMENT 1 sets timer to MIN_MAX_ITTR 
+        COMMENT since minimum flag is ZERO AND twist of sLE of Switches 
+        COMMENT  is greater than ZERO(i.e 1)
+        COMMENT Equivalence Class 108,101   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-012]
+        COMMENT 1 adds delta to temporary auto brightness   
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-014]
+        COMMENT 1.sets Manual_brightness to MIN_MANUAL_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since Manual_brightness is less than MIN_MANUAL_BRIGHTNESS
+        COMMENT Equivalence Class 103   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 10,       ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+        
+            VAR Manual_brightness,                      init = 0,        ev = 5
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 10
+
+    TEST 11
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-004]
+        COMMENT 1 sets timer to MIN_MAX_ITTR 
+        COMMENT since minimum flag is ZERO AND twist of sLE of Switches 
+        COMMENT  is other than ZERO(i.e 1)
+        COMMENT Equivalence Class 108,101   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-010]
+        COMMENT 1 adds the value of delta to ONE  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT  Delta is ZERO
+        COMMENT Equivalence Class 114,110,111  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-012]
+        COMMENT 1 adds delta to temporary auto brightness   
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-013]
+        COMMENT 1.Manual_brightness to MAX_MANUAL_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since Manual_brightness is greater than MAX_MANUAL_BRIGHTNESS(i.e 10001)
+        COMMENT Equivalence Class 208   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 10001,    ev = MAX_MANUAL_BRIGHTNESS
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 11
+
+    TEST 12
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-004]
+        COMMENT 1 sets timer to MIN_MAX_ITTR 
+        COMMENT since minimum flag is ZERO AND twist of sLE of Switches 
+        COMMENT  is other than ZERO(i.e 1)
+        COMMENT Equivalence Class 108,101   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-012]
+        COMMENT 1 adds delta to temporary auto brightness   
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-013]
+        COMMENT 1.Does nothing
+        COMMENT since Manual_brightness is equal to MAX_MANUAL_BRIGHTNESS(i.e 10000)
+        COMMENT Equivalence Class 209    
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 10000,    ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 12
+    
+    TEST 13
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-004]
+        COMMENT 1 sets timer to MIN_MAX_ITTR 
+        COMMENT since minimum flag is ZERO AND twist of sLE of Switches 
+        COMMENT  is other than ZERO(i.e 1)
+        COMMENT Equivalence Class 108,101   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-010]
+        COMMENT 1 adds the value of delta to ONE  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT  Delta is ZERO
+        COMMENT Equivalence Class 114,110,111 
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-012]
+        COMMENT 1 adds delta to temporary auto brightness   
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-013]
+        COMMENT 1.Does nothing
+        COMMENT since Manual_brightness is less than MAX_MANUAL_BRIGHTNESS(i.e 9999)
+        COMMENT Equivalence Class 209 
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.sets temporary auto brightness to MIN_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is less than MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 105   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 9999,     ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 13
+
+    TEST 14
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-004]
+        COMMENT 1 sets timer to MIN_MAX_ITTR 
+        COMMENT since minimum flag is ZERO AND twist of sLE of Switches 
+        COMMENT  is other than ZERO(i.e 1)
+        COMMENT Equivalence Class 108,101   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-012]
+        COMMENT 1 adds delta to temporary auto brightness   
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-014]
+        COMMENT 1.sets Manual_brightness to MIN_MANUAL_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since Manual_brightness is less than MIN_MANUAL_BRIGHTNESS
+        COMMENT Equivalence Class 103   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-015]
+        COMMENT 1.sets temporary auto brightness to MAX_AUTO_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since temporary auto brightness is greater than MAX_AUTO_BRIGHTNESS(i.e 401)
+        COMMENT Equivalence Class 118 
+        COMMENT 
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 365,      ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+        
+            VAR Manual_brightness,                      init = 0,        ev = 5
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(400)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 14
+
+    TEST 15
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-004]
+        COMMENT 1 sets timer to MIN_MAX_ITTR 
+        COMMENT since minimum flag is ZERO AND twist of sLE of Switches 
+        COMMENT  is other than ZERO(i.e 1)
+        COMMENT Equivalence Class 108,101   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-012]
+        COMMENT 1 adds delta to temporary auto brightness   
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-014]
+        COMMENT 1.sets Manual_brightness to MIN_MANUAL_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since Manual_brightness is less than MIN_MANUAL_BRIGHTNESS
+        COMMENT Equivalence Class 103   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-015]
+        COMMENT 1.Does nothing
+        COMMENT since temporary auto brightness is equal to MAX_AUTO_BRIGHTNESS(i.e 400)
+        COMMENT Equivalence Class 214,106    
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-016]
+        COMMENT 1.Does nothing
+        COMMENT since temporary auto brightness is  MIN_AUTO_BRIGHTNESS
+        COMMENT Equivalence Class 213  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 364,      ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+        
+            VAR Manual_brightness,                      init = 0,        ev = 5
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(400)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 15 
+
+    TEST 16
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-003]
+        COMMENT 1 sets timer to MIN_MAX_ITTR 
+        COMMENT since maximum flag is other than ZERO AND twist of sLE of Switches is
+        COMMENT  less than ZERO
+        COMMENT Equivalence Class 120,100   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is less than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 207,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-012]
+        COMMENT 1 adds delta to temporary auto brightness   
+        COMMENT since Twist of sLE of Switches is less than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 207,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-014]
+        COMMENT 1.sets Manual_brightness to MIN_MANUAL_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since Manual_brightness is less than MIN_MANUAL_BRIGHTNESS
+        COMMENT Equivalence Class 103   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-015]
+        COMMENT 1.Does nothing
+        COMMENT since temporary auto brightness is equal to than MAX_AUTO_BRIGHTNESS(i.e 400)
+        COMMENT Equivalence Class 117,106  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is less than ZERO
+        COMMENT Equivalence Class 207,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 443,      ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = -1,       ev = ZERO
+        
+            VAR Manual_brightness,                      init = 0,        ev = 5
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(399)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 16    
+
+    TEST 17
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-012]
+        COMMENT 1 adds delta to temporary auto brightness   
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 114,110  
+        COMMENT
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-018]
+        COMMENT 1.sets Brightness_mode to EBRIGHTNESS_MANUAL 
+        COMMENT since Brightness_mode is EBRIGHTNESS_AUTO and
+        COMMENT       Pressed of sLE of Switches is not equal to ZERO
+        COMMENT Equivalence Class 110,100   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-019]
+        COMMENT 1.calls PwmBackLightNewMode with parameter as value of temporary auto brightness
+        COMMENT since pressed of sLE of Switches is not ZERO
+        COMMENT Equivalence Class 100,116 
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-025]
+        COMMENT 1.returns the message to be displayed(BRT:MAN) 
+        COMMENT since Brightness_mode is EBRIGHTNESS_MANUAL
+        COMMENT Equivalence Class 109
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 364,      ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_AUTO,
+            &                                                            ev = EBRIGHTNESS_MANUAL
+                    
+            VAR Switches.sLE.pressed,                   init = 1,        ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+        
+            VAR Manual_brightness,                      init = 10000,    ev = init
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "BRT:MAN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(400)
+            STUB PwmBackLightNewMode(400)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 17 
+
+    TEST 18
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-005]
+        COMMENT 1 sets delta to result of Manual_brightness devide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_MANUAL
+        COMMENT Equivalence Class 114,109     
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-008]
+        COMMENT 1 adds the value of delta to Manual_brightness 
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_MANUAL
+        COMMENT Equivalence Class  114,109
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-013]
+        COMMENT 1.Manual_brightness to MAX_MANUAL_BRIGHTNESS
+        COMMENT 2.Resets the timer to ZERO
+        COMMENT 3.Sets the minimum flag to ONE
+        COMMENT since Manual_brightness is greater than MAX_MANUAL_BRIGHTNESS(i.e 10001)
+        COMMENT Equivalence Class 208   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-017]
+        COMMENT 1.set Brightness_mode to EBRIGHTNESS_AUTO 
+        COMMENT since Brightness_mode is EBRIGHTNESS_MANUAL and
+        COMMENT       Pressed of sLE of Switches is not equal to ZERO
+        COMMENT Equivalence Class 109,100   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-019]
+        COMMENT 1.calls PwmBackLightNewMode with parameter as value of temporary auto brightness
+        COMMENT since pressed of sLE of Switches is not ZERO
+        COMMENT Equivalence Class 100,116 
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-023]
+        COMMENT 1.returns the message to be displayed(MAX) 
+        COMMENT since max flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 119,102
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 364,      ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_MANUAL,
+            &                                                            ev = EBRIGHTNESS_AUTO
+                    
+            VAR Switches.sLE.pressed,                   init = 1,        ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+        
+            VAR Manual_brightness,                      init = 10000,    ev = init
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MAX" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(364)
+            STUB PwmBackLightNewMode(364)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 18
+
+    TEST 19
+    FAMILY nominal
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-014]
+        COMMENT 1.Does nothing
+        COMMENT since Manual_brightness is equal to MIN_MANUAL_BRIGHTNESS
+        COMMENT Equivalence Class 212   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-017]
+        COMMENT 1.set Brightness_mode to EBRIGHTNESS_AUTO 
+        COMMENT since Brightness_mode is EBRIGHTNESS_MANUAL and
+        COMMENT       Pressed of sLE of Switches is not equal to ZERO
+        COMMENT Equivalence Class 109,100   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-019]
+        COMMENT 1.calls PwmBackLightNewMode with parameter as value of temporary auto brightness
+        COMMENT since pressed of sLE of Switches is not ZERO
+        COMMENT Equivalence Class 100,116 
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.Does nothing
+        COMMENT since twist of sLE of Switches is  ZERO
+        COMMENT Equivalence Class 115,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-024]
+        COMMENT 1.returns the message to be displayed(BRT:AUT) 
+        COMMENT since Brightness_mode is EBRIGHTNESS_AUTO
+        COMMENT Equivalence Class 110
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 364,      ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                        init = EBRIGHTNESS_MANUAL,
+            &                                                            ev = EBRIGHTNESS_AUTO
+                    
+            VAR Switches.sLE.pressed,                   init = 1,        ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ZERO,     ev = ZERO
+        
+            VAR Manual_brightness,                      init = 10000,    ev = init
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "BRT:AUT" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightNewMode(364)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 19
+
+    TEST 20
+    FAMILY robustness
+
+        ELEMENT
+
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-001]
+        COMMENT 1.The function TopButton13Text stores the Auto_brightness in temporary 
+        COMMENT  auto brightness
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-004]
+        COMMENT 1 sets timer to MIN_MAX_ITTR 
+        COMMENT since minimum flag is ZERO AND twist of sLE of Switches 
+        COMMENT  is other than ZERO(i.e 1)
+        COMMENT Equivalence Class 108,114   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-009]
+        COMMENT 1 Doesn't sets the delta to result of temporary auto brightness divide by TEN  
+        COMMENT since Twist of sLE of Switches is greater than ZERO and  
+        COMMENT  Brightness_mode is EBRIGHTNESS_AUTO+1
+        COMMENT Equivalence Class 114,206  
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-014]
+        COMMENT 1.Does nothing
+        COMMENT since Manual_brightness is greater than MIN_MANUAL_BRIGHTNESS
+        COMMENT Equivalence Class 104   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-020]
+        COMMENT 1.calls PwmBackLightStepTo with parameter as value of temporary auto brightness
+        COMMENT since twist of sLE of Switches is greater than ZERO
+        COMMENT Equivalence Class 114,113   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-021]
+        COMMENT 1.resets pressed and twist of sLE of Switches to ZERO
+        COMMENT Equivalence Class none   
+        COMMENT 
+        COMMENT [hdudispfmenu-TopButton13Text-DB-LLR-022]
+        COMMENT 1.returns the message to be displayed(MIN) 
+        COMMENT since min flag is other than ZERO and timer is less than MIN_MAX_ITTR
+        COMMENT Equivalence Class 102,107  
+        COMMENT 
+        COMMENT </TD> 
+        
+        COMMENT INPUT SECTION:         
+        
+            VAR Auto_brightness,                        init = 0,        ev = init
+        
+            VAR Manual_brightness,                      init = 5,        ev = init
+                    
+        COMMENT INPUT/OUTPUT SECTION:   
+            
+            VAR Brightness_mode,                      init = (T_BRIGHTNESS_MODE)EBRIGHTNESS_AUTO+1,
+            &                                                            ev = init
+                    
+            VAR Switches.sLE.pressed,                   init = ZERO,     ev = ZERO
+            
+            VAR Switches.sLE.twist,                     init = ONE,      ev = ZERO
+            
+
+        COMMENT OUTPUT SECTION:
+              
+            VAR PTU_ret_TopButton13Text,                init = "Default",ev = "MIN" 
+                        
+                
+        --Stub Calls:
+        SIMUL
+        
+            STUB PwmBackLightStepTo(25)
+            
+        END SIMUL        
+        #ret_TopButton13Text = TopButton13Text();
+        --For copying the characters through the pointer ret_TopButton13Text
+        #PTU_index = 0;
+        #while(ret_TopButton13Text[PTU_index] !=ZERO)
+        #{
+        # PTU_ret_TopButton13Text[PTU_index] = ret_TopButton13Text[PTU_index];
+        # PTU_index = PTU_index + 1;
+        #}
+        #PTU_ret_TopButton13Text[PTU_index] = ZERO;
+        
+        END ELEMENT
+        
+    END TEST -- TEST 20
+END SERVICE -- TopButton13Text    
+

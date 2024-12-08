@@ -1,0 +1,4196 @@
+HEADER hdulibstm32f7xxhalgpio,Source Code Ver : 1.2,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name          : Hemalatha.S 
+--
+-- File Name            : hdulibstm32f7xxhalgpio.ptu 
+--
+-- Test Creation Date   : 30.10.2017
+--
+-- Tested Functions     : HalGpioInit
+--                        HalGpioReadPin
+--                        HALGpioWritePin
+--                        HALGpioTogglePin
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE           TESTER NAME        MODIFICATIONS
+--  ------------        ---------           -----------        -------------
+--     1.1              30.10.2017          Hemalatha S       Created the ptu file.
+--     1.2              11.11.2017          Hemalatha S       Updated as per #PR100171
+--     1.3              14.11.2017          Hemalatha S       Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdulibstm32f7xxhal.h"         
+##include "hdulibbasictypes.h"          
+##include "hdulibstm32f7xxhalgpio.h"    
+##include "hdulibstm32f7xxhalrcc.h"     
+##include "hdulibstm32f746xx.h"       
+
+--------------------------------------------------------------------------------
+-- TESTED FILE DECLARATIONS 
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	# volatile  T_INT32 Itm_rx_buffer;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Hemalatha.S
+    COMMENT
+    COMMENT File Name        : hdulibstm32f7xxhalgpio.ptu 
+    COMMENT
+    COMMENT Tested Functions : HalGpioInit
+    COMMENT                    HalGpioReadPin
+    COMMENT                    HALGpioWritePin
+    COMMENT                    HALGpioTogglePin
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+	COMMENT 1. In the function 'HalGpioInit', 'do..while' loop cannot be covered for 2 or more times for 
+	COMMENT the value "0".
+	COMMENT
+	COMMENT 2. In the function 'HalGpioInit', 'for' loops cannot be covered for 0 or 1 times since 
+	COMMENT the loop is handled by the macro "GPIO_NUMBER"
+    COMMENT
+    COMMENT 3. Header file "hdulibstm32f746xx.h" is modified for testing purpose. The macro 'SYSCFG' is modified for stubbing hardware address.
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define SYSCFG              ((T_SYSCFG *) SYSCFG_BASE)*/
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose */
+    COMMENT T_SYSCFG PTU_SYSCFG_BASE;
+    COMMENT #define SYSCFG              ((T_SYSCFG *) &PTU_SYSCFG_BASE)
+    COMMENT
+    COMMENT 4. Header file "hdulibstm32f746xx.h" is modified for testing purpose. The macro 'EXTI' is modified for stubbing hardware address.
+    COMMENT /*Commented for testing purpose*/
+	COMMENT /*#define EXTI                ((T_EXTI *) EXTI_BASE)*/
+	COMMENT /* Modified macro by stubbing hardware address for testing purpose */
+	COMMENT T_EXTI PTU_EXTI_BASE;
+	COMMENT #define EXTI                ((T_EXTI *) &PTU_EXTI_BASE)
+    COMMENT
+    COMMENT 5. Header file "hdulibstm32f746xx.h" is modified for testing purpose. The macro 'RCC' is modified for stubbing hardware address.
+    COMMENT /*Commented for testing purpose */
+	COMMENT /*#define RCC                 ((T_RCC *) RCC_BASE)*/
+	COMMENT /* Modified macro by stubbing hardware address for testing purpose */
+	COMMENT T_RCC PTU_RCC_BASE;
+	COMMENT #define RCC                 ((T_RCC *) &PTU_RCC_BASE)
+    COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In function "HalGpioInit", current IO position is equal to IO position
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function "HalGpioInit", current IO position is not equal to IO position
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function "HalGpioInit", mode of gpio_init_struct is equal to GPIO_MODE_AF_PP
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function "HalGpioInit", mode of gpio_init_struct is not equal to GPIO_MODE_AF_PP
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function "HalGpioInit", mode of gpio_init_struct is equal to GPIO_MODE_AF_OD
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function "HalGpioInit", mode of gpio_init_struct is not equal to GPIO_MODE_AF_OD
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function "HalGpioInit", received gpio mode is equal to GPIO_MODE_OUTPUT_PP
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function "HalGpioInit", received gpio mode is not equal to GPIO_MODE_OUTPUT_PP
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function "HalGpioInit", received gpio mode is equal to GPIO_MODE_AF_PP
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function "HalGpioInit", received gpio mode is not equal to GPIO_MODE_AF_PP
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function "HalGpioInit", received gpio mode is equal to GPIO_MODE_OUTPUT_OD
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function "HalGpioInit", received gpio mode is not equal to GPIO_MODE_OUTPUT_OD
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function "HalGpioInit", received gpio mode is equal to GPIO_MODE_AF_OD
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function "HalGpioInit", received gpio mode is not equal to GPIO_MODE_AF_OD
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function "HalGpioInit", Result of bitwise AND operation of Mode of gpio_init_struct 
+    COMMENT and EXTI_MODE is equal to EXTI_MODE
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function "HalGpioInit", Result of bitwise AND operation of Mode of gpio_init_struct 
+    COMMENT and EXTI_MODE is not equal to EXTI_MODE
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function "HalGpioInit", result of bitwise AND operation of Mode of gpio_init_struct   
+   	COMMENT	and GPIO_MODE_IT is equal to GPIO_MODE_IT
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function "HalGpioInit", result of bitwise AND operation of Mode of gpio_init_struct   
+   	COMMENT	and GPIO_MODE_IT is not equal to GPIO_MODE_IT
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function "HalGpioInit", result of bitwise AND operation of Mode of gpio_init_struct   
+   	COMMENT	and GPIO_MODE_EVT is equal to GPIO_MODE_EVT
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function "HalGpioInit", result of bitwise AND operation of Mode of gpio_init_struct   
+   	COMMENT	and GPIO_MODE_EVT is not equal to GPIO_MODE_EVT
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function "HalGpioInit", result of bitwise AND operation of Mode of gpio_init_struct   
+   	COMMENT	and RISING_EDGE is equal to RISING_EDGE
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function "HalGpioInit", result of bitwise AND operation of Mode of gpio_init_struct   
+   	COMMENT	and RISING_EDGE is not equal to RISING_EDGE
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function "HalGpioInit", result of bitwise AND operation of Mode of gpio_init_struct   
+   	COMMENT	and FALLING_EDGE is equal to FALLING_EDGE
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function "HalGpioInit", result of bitwise AND operation of Mode of gpio_init_struct   
+   	COMMENT	and FALLING_EDGE is not equal to FALLING_EDGE
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function "HalGpioReadPin", result of bitwise AND operation of IDR register of gpio_x 
+    COMMENT and gpio_pin is not equal to GPIO_PIN_RESET
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function "HalGpioReadPin", result of bitwise AND operation of IDR register of gpio_x 
+    COMMENT and gpio_pin is equal to GPIO_PIN_RESET
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function "HALGpioWritePin", PinState is not equal to GPIO_PIN_RESET.
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function "HALGpioWritePin", PinState is equal to GPIO_PIN_RESET.
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function "HALGpioTogglePin", toggles the specified GPIO pins
+    COMMENT 
+    COMMENT Invalid Class(es) 
+	COMMENT Class 30
+	COMMENT In function 'HalGpioInit',Invalid Reference is passed to gpio_x parameter.
+	COMMENT
+	COMMENT Class 31
+	COMMENT In function 'HalGpioInit' Invalid Reference is passed to gpio_init parameter.
+	COMMENT
+	COMMENT Class 32
+	COMMENT In function 'HalGpioReadPin',Invalid Reference is passed to gpio_x parameter.
+	COMMENT	
+	COMMENT Class 33
+	COMMENT In function 'HALGpioWritePin',Invalid Reference is passed to gpio_x parameter.
+	COMMENT 
+	COMMENT Class 34
+	COMMENT In function 'HALGpioTogglePin',Invalid Reference is passed to gpio_x parameter.
+    COMMENT
+    COMMENT </ECD> 
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+	--None
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdulibstm32f7xxhalgpio.c
+ 
+--ENVIRONMENT ENV_hdulibstm32f7xxhalgpio_c
+
+    -- None
+
+--END ENVIRONMENT -- ENV_hdulibstm32f7xxhalgpio_c
+
+--USE ENV_hdulibstm32f7xxhalgpio_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalGpioInit
+--------------------------------------------------------------------------------
+SERVICE HalGpioInit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_GPIO gpio_x;
+    #T_GPIO_INIT gpio_init;
+    
+-- Default Variables
+ENVIRONMENT ENV_HalGpioInit
+
+	STRUCTURE gpio_x,			init = { MODER => 0, OTYPER => 0, OSPEEDR => 0, PUPDR => 0,
+	&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+	&								 	 AFR => { others => 0 } },				ev = init
+
+	STRUCTURE gpio_init,		init = { Pin => 0, Mode => 0, Pull => 0, Speed => 0,
+	&								 	 Alternate => 0 },						ev = init
+        
+END ENVIRONMENT --ENV_HalGpioInit
+
+USE   ENV_HalGpioInit
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-002]
+	COMMENT The function loops GPIO_NUMBER number of times and does the following.
+	COMMENT 	1.Left shift one by loop counter times and store as IO position.
+	COMMENT 	2.Result of bit wise and operation of pin of gpio_init_struct and IO position
+	COMMENT   	  stored as IO position
+	COMMENT Equivalance Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-003] (TX)
+	COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT When
+	COMMENT 	1.current IO position is equal to IO position and
+	COMMENT 	2.mode of gpio_init_struct is equal to GPIO_MODE_AF_PP 
+	COMMENT 		i) 	Check the Alternate function parameter by calling the macro IS_GPIO_AF with
+	COMMENT		   		 parameter gpio_init_struct of Alternate
+	COMMENT 		ii) a.Clear the GPIOx_AFR register in gpio_x for the current pin position. 
+    COMMENT 			b.Set the GPIOx_AFR register in gpio_x with the received Alternate of 
+    COMMENT				  gpio_init_struct.
+	COMMENT Equivalance Class 1,3
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT		a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT 	b.Set the MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-005]
+	COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT When
+	COMMENT a.current IO position is equal to IO position
+	COMMENT b.received gpio mode is GPIO_MODE_AF_PP (MCDC tested for FTXX)
+	COMMENT		1.	Checks the Speed parameter by calling the macro  IS_GPIO_SPEED with parameter 
+	COMMENT			speed of gpio_init_struct
+	COMMENT		2.	Clears the gpio_x OSPEEDR register in gpio_x for the current pin position
+	COMMENT		3.	Sets the gpio_x OSPEEDR register in gpio_x with the received Speed of 
+	COMMENT			gpio_init_struct
+	COMMENT		4.	Clears the gpio_x OTYPER register in gpio_x for the current pin position.
+	COMMENT		5.	Sets the gpio_x OTYPER register in gpio_x with the received Mode of 
+	COMMENT			gpio_init_struct
+	COMMENT Equivalance Class 1,3,8
+	COMMENT
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_0, Mode => 2, Pull => 0, Speed => 0,
+			&								 	 Alternate => 0 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 1, OTYPER => 0, OSPEEDR => 0, PUPDR => 0,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=>0, 1=>0 } },				
+			&							ev =   { MODER => 2, OTYPER => 0, OSPEEDR => 0, PUPDR => 0,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=>0, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-002]
+	COMMENT The function loops GPIO_NUMBER number of times and does the following.
+	COMMENT 1.Left shift one by loop counter times and store as IO position.
+	COMMENT 2.Result of bit wise and operation of pin of gpio_init_struct and IO position
+	COMMENT   stored as IO position
+	COMMENT Equivalance Class None
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-003] (FT)
+	COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT When
+	COMMENT 1.current IO position is equal to IO position and
+	COMMENT 2.mode of gpio_init_struct is equal to GPIO_MODE_AF_OD 
+	COMMENT 	i) 	Check the Alternate function parameter by calling the macro IS_GPIO_AF with
+	COMMENT		   	 parameter gpio_init_struct of Alternate
+	COMMENT 	ii) a.Clear the GPIOx_AFR register in gpio_x for the current pin position. 
+    COMMENT 		b.Set the GPIOx_AFR register in gpio_x with the received Alternate of 
+    COMMENT			  gpio_init_struct.
+	COMMENT Equivalance Class 1,5,13
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-005]
+	COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT When
+	COMMENT a.current IO position is equal to IO position
+	COMMENT b.received gpio mode is GPIO_MODE_AF_OD ( MCDC tested for FFFT)
+	COMMENT		1.	Checks the Speed parameter by calling the macro IS_GPIO_SPEED with parameter
+	COMMENT			speed of gpio_init_struct
+	COMMENT		2.	Clears the gpio_x OSPEEDR register in gpio_x for the current pin position
+	COMMENT		3.	Sets the gpio_x OSPEEDR register in gpio_x with the received Speed of 
+	COMMENT			gpio_init_struct
+	COMMENT		4.	Clears the gpio_x OTYPER register in gpio_x for the current pin position.
+	COMMENT		5.	Sets the gpio_x OTYPER register in gpio_x with the received Mode of 
+	COMMENT			gpio_init_struct
+	COMMENT Equivalance Class 1,5,9
+	COMMENT
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_0, Mode => 0x12, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 1, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 2, OTYPER => 1, OSPEEDR => 5, PUPDR => 8,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 10, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-002]
+	COMMENT The function loops GPIO_NUMBER number of times and does the following.
+	COMMENT 1.Left shift one by loop counter times and store as IO position.
+	COMMENT 2.Result of bit wise and operation of pin of gpio_init_struct and IO position
+	COMMENT   stored as IO position
+	COMMENT
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-003] (FF)
+	COMMENT The function does nothing  
+	COMMENT When
+	COMMENT 1.current IO position is not equal to IO position and
+	COMMENT 2.mode of gpio_init_struct is not equal to GPIO_MODE_AF_PP 
+	COMMENT 	i) 	Check the Alternate function parameter by calling the macro IS_GPIO_AF with parameter
+	COMMENT		   	parameter gpio_init_struct of Alternate
+	COMMENT 	ii) a.Clear the GPIOx_AFR register in gpio_x for the current pin position. 
+    COMMENT 		b.Set the GPIOx_AFR register in gpio_x with the received Alternate of gpio_init_struct.
+    COMMENT Equivalance Class 2,4,10,14
+    COMMENT
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-005]
+	COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT When
+	COMMENT a.current IO position is equal to IO position
+	COMMENT b.received gpio mode is GPIO_MODE_OUTPUT_PP (MCDC tested for TXXX)
+	COMMENT		1.	Checks the Speed parameter by calling the macro  IS_GPIO_SPEED with parameter speed of
+	COMMENT		 	gpio_init_struct
+	COMMENT		2.	Clears the gpio_x OSPEEDR register in gpio_x for the current pin position
+	COMMENT		3.	Sets the gpio_x OSPEEDR register in gpio_x with the received Speed of gpio_init_struct
+	COMMENT		4.	Clears the gpio_x OTYPER register in gpio_x for the current pin position.
+	COMMENT		5.	Sets the gpio_x OTYPER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1,7
+    COMMENT
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_0, Mode => 0x1, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 1, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 1, OTYPER => 0, OSPEEDR => 5, PUPDR => 8,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-005]
+	COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT When
+	COMMENT 	a.current IO position is equal to IO position
+	COMMENT 	b.received gpio mode is GPIO_MODE_OUTPUT_OD (MCDC tested for FFTX)
+	COMMENT			1.	Checks the Speed parameter by calling the macro  IS_GPIO_SPEED with parameter 
+	COMMENT 			speed of gpio_init_struct
+	COMMENT			2.	Clears the gpio_x OSPEEDR register in gpio_x for the current pin position
+	COMMENT			3.	Sets the gpio_x OSPEEDR register in gpio_x with the received Speed of 
+	COMMENT				gpio_init_struct
+	COMMENT			4.	Clears the gpio_x OTYPER register in gpio_x for the current pin position.
+	COMMENT			5.	Sets the gpio_x OTYPER register in gpio_x with the received Mode of 
+	COMMENT				gpio_init_struct
+	COMMENT Equivalance Class 1,11
+	COMMENT
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_0, Mode => 0x11, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 1, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 1, OTYPER => 1, OSPEEDR => 5, PUPDR => 8,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-005]
+	COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT When
+	COMMENT 	a.current IO position is equal to IO position
+	COMMENT 	b.received gpio mode is not equal to GPIO_MODE_OUTPUT_OD (MCDC tested for FFFF)
+	COMMENT			1.	Checks the Speed parameter by calling the macro  IS_GPIO_SPEED with 
+	COMMENT				parameter speed of gpio_init_struct
+	COMMENT			2.	Clears the gpio_x OSPEEDR register in gpio_x for the current pin position
+	COMMENT			3.	Sets the gpio_x OSPEEDR register in gpio_x with the received Speed of 
+	COMMENT				gpio_init_struct
+	COMMENT			4.	Clears the gpio_x OTYPER register in gpio_x for the current pin position.
+	COMMENT			5.	Sets the gpio_x OTYPER register in gpio_x with the received Mode of 
+	COMMENT				gpio_init_struct
+    COMMENT Equivalance Class 12,6
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_0, Mode => 0x10, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 0, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 0, OTYPER => 1, OSPEEDR => 1, PUPDR => 8,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-007]
+	COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT When
+	COMMENT 	a.current IO position is equal to IO position
+	COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is
+	COMMENT		  equal to EXTI_MODE
+	COMMENT   		1.Calls the macro __HAL_RCC_SYSCFG_CLK_ENABLE to enable the system clock.
+    COMMENT   		2.Configures the External Interrupt as below
+    COMMENT 			a. Clears the EXTICR register in SYSCFG for the current pin position.
+    COMMENT 			b. Sets the EXTICR register in SYSCFG with the received EXTICR of SYSCFG
+    COMMENT Equivalance Class 1,15
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-008]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when
+    COMMENT 	a.current IO position is equal to IO position
+    COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is equal to
+    COMMENT 	  EXTI_MODE
+    COMMENT 		1.Stores the result of bitwise AND operation of IMR of EXTI and negated current
+    COMMENT			  IO position
+    COMMENT 		  value in temporary variable.
+    COMMENT			2.does nothing when result of bitwise AND operation of Mode of 
+    COMMENT			  gpio_init_struct and GPIO_MODE_IT is not GPIO_MODE_IT.
+    COMMENT 		3.Stores the temporary variable value in IMR of EXTI.
+    COMMENT Equivalance Class 1,15,18
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-009]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when
+    COMMENT 	a.current IO position is equal to IO position
+    COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is equal to
+    COMMENT 	  EXTI_MODE
+    COMMENT 		1.Stores the result of bitwise AND operation of EMR of EXTI and negated current 
+    COMMENT 		   IO position value in temporary variable
+    COMMENT			2.does nothing when result of bitwise AND operation of Mode of 
+    COMMENT			  gpio_init_struct and GPIO_MODE_EVT is not GPIO_MODE_EVT.
+    COMMENT 		3.Stores the temporary variable value in EMR of EXTI.
+    COMMENT Equivalance Class 1,15,20
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-010]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when
+    COMMENT 	a.current IO position is equal to IO position
+    COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is equal to
+    COMMENT 	  EXTI_MODE
+    COMMENT 		1.Store the result of bitwise AND operation of RTSR register of EXTI and negated 
+    COMMENT 		  current IO position  value in temporary variable.
+    COMMENT			2.does nothing when result of bitwise AND operation of Mode of 
+    COMMENT			  gpio_init_struct and RISING_EDGE is not RISING_EDGE.
+    COMMENT 		3.Store the temporary variable value in RTSR register of EXTI.
+    COMMENT Equivalance Class 1,15,22
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-011]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when
+    COMMENT 	a.current IO position is equal to IO position
+    COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is equal to 
+    COMMENT 	  EXTI_MODE
+    COMMENT 		1.Store the result of bitwise AND operation of FTSR register of EXTI and negated 
+    COMMENT 		  current IO position value in temporary variable.
+    COMMENT			2.does nothing when result of bitwise AND operation of Mode of 
+    COMMENT			  gpio_init_struct and FALLING_EDGE is not FALLING_EDGE.
+    COMMENT 		3.Store the temporary variable value in FTSR register of EXTI.
+    COMMENT Equivalance Class 1,15,24
+    COMMENT 
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_0, Mode => 0x10000000, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 0, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 0, OTYPER => 1, OSPEEDR => 1, PUPDR => 8,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-007]
+	COMMENT The function does nothing
+	COMMENT When
+	COMMENT 	a.current IO position is equal to IO position
+	COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is
+	COMMENT		  not equal to EXTI_MODE
+    COMMENT Equivalance Class 16
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_1, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 25, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 17, OTYPER => 1, OSPEEDR => 1, PUPDR => 2,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_2, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 20, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 4, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_3, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 25, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 25, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 9
+
+TEST 10
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_4, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 10
+
+TEST 11
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_5, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 11
+
+TEST 12
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_6, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 12
+
+TEST 13
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_7, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 13
+
+TEST 14
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_8, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 14
+
+TEST 15
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_9, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 15
+
+TEST 16
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_10, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 16
+
+TEST 17
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_11, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 17
+
+TEST 18
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_12, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 18
+
+TEST 19
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_13, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 19
+
+TEST 20
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_14, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 20
+
+TEST 21
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_15, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 21
+
+TEST 22
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT when current IO position is equal to IO position
+	COMMENT	 a.Clear the MODER register in gpio_x for the current pin position. 
+	COMMENT  b.Set the  MODER register in gpio_x with the received Mode of gpio_init_struct
+	COMMENT Equivalance Class 1
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-006]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when current
+    COMMENT  IO position is equal to IO position
+    COMMENT 1.Clear the gpio_x PUPDR register in gpio_x for the current pin position
+    COMMENT 2.Set the gpio_x PUPDR register in gpio_x with the received Pull of gpio_init_struct.
+	COMMENT Equivalance Class 1
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_ALL, Mode => 0x0, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 5, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 0, OTYPER => 1, OSPEEDR => 1, PUPDR => 0,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 22
+
+--TEST 23
+--FAMILY robustness
+--
+--	COMMENT Test Description
+--	COMMENT <TD> 
+--  COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-002]
+--  COMMENT The address of the parameter 'gpio_x' is NULL.
+--  COMMENT Equivalence Class 30
+--	COMMENT </TD>
+--		
+--	ELEMENT	
+--	
+--		COMMENT INPUT SECTION:
+--		
+--			--None
+--
+--		COMMENT INPUT/OUTPUT SECTION:
+--
+--			--None
+--
+--		COMMENT OUTPUT SECTION:
+--
+--			--None
+--
+--		-- Stub Calls :
+--		SIMUL
+--
+--			--No Stubs
+--
+--		END SIMUL
+--
+--		--Calling the Unit Under Test:
+--		#HalGpioInit(NULL, &gpio_init);
+--
+--	END ELEMENT
+--
+--END TEST -- TEST 23
+
+--TEST 24
+--FAMILY robustness
+--
+--	COMMENT Test Description
+--	COMMENT <TD> 
+--  COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-004]
+--  COMMENT The address of the parameter 'gpio_init' is NULL.
+--	COMMENT Equivalance Class 31
+--	COMMENT </TD>
+--		
+--	ELEMENT	
+--	
+--		COMMENT INPUT SECTION:
+--				
+--			--None
+--
+--		COMMENT INPUT/OUTPUT SECTION:
+--
+--			--None
+--
+--		COMMENT OUTPUT SECTION:
+--
+--			--None
+--
+--		-- Stub Calls :
+--		SIMUL
+--
+--			--No Stubs
+--
+--		END SIMUL
+--
+--		--Calling the Unit Under Test:
+--		#HalGpioInit(&gpio_x, NULL);
+--
+--	END ELEMENT
+--
+--END TEST -- TEST 24
+
+TEST 25
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-007]
+	COMMENT The function loops GPIO_NUMBER number of times and does the following 
+	COMMENT When
+	COMMENT 	a.current IO position is equal to IO position
+	COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is
+	COMMENT		  equal to EXTI_MODE
+	COMMENT   		1.Calls the macro __HAL_RCC_SYSCFG_CLK_ENABLE to enable the system clock.
+    COMMENT   		2.Configures the External Interrupt as below
+    COMMENT 			a. Clears the EXTICR register in SYSCFG for the current pin position.
+    COMMENT 			b. Sets the EXTICR register in SYSCFG with the received EXTICR of SYSCFG
+    COMMENT Equivalance Class 1,15
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-008]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when
+    COMMENT 	a.current IO position is equal to IO position
+    COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is equal to
+    COMMENT 	  EXTI_MODE
+    COMMENT 		1.Stores the result of bitwise AND operation of IMR of EXTI and negated current
+    COMMENT			  IO position
+    COMMENT			2.Store the result of bitwise OR operation of temporary variable and current IO 
+    COMMENT 		  position value in temporary variable when result of bitwise AND operation of Mode of 
+    COMMENT			  gpio_init_struct and GPIO_MODE_IT  is GPIO_MODE_IT.
+    COMMENT 		  value in temporary variable.
+    COMMENT 		3.Stores the temporary variable value in IMR of EXTI.
+    COMMENT Equivalance Class 1,15,17
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-009]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when
+    COMMENT 	a.current IO position is equal to IO position
+    COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is equal to
+    COMMENT 	  EXTI_MODE
+    COMMENT 		1.Stores the result of bitwise AND operation of EMR of EXTI and negated current 
+    COMMENT 		   IO position value in temporary variable
+    COMMENT			2.Store the result of bitwise OR operation of temporary variable and current IO 
+    COMMENT 		  position value in temporary variable if result of bitwise AND operation of Mode of 
+    COMMENT			  gpio_init_struct and GPIO_MODE_EVT is GPIO_MODE_EVT.
+    COMMENT 		3.Stores the temporary variable value in EMR of EXTI.
+    COMMENT Equivalance Class 1,15,19
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-010]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when
+    COMMENT 	a.current IO position is equal to IO position
+    COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is equal to
+    COMMENT 	  EXTI_MODE
+    COMMENT 		1.Store the result of bitwise AND operation of RTSR register of EXTI and negated 
+    COMMENT 		  current IO position  value in temporary variable.
+    COMMENT			2.Store the result of bitwise OR operation of temporary variable and current IO 
+    COMMENT 		  position value in temporary variable if result of bitwise AND operation of Mode of 
+    COMMENT			  gpio_init_struct and RISING_EDGE is RISING_EDGE.
+    COMMENT 		3.Store the temporary variable value in RTSR register of EXTI.
+    COMMENT Equivalance Class 1,15,21
+    COMMENT 
+    COMMENT [hdulibstm32f7xxhalgpio-HalGpioInit-DB-LLR-011]
+    COMMENT The function loops GPIO_NUMBER number of times and does the following when
+    COMMENT 	a.current IO position is equal to IO position
+    COMMENT 	b.Result of bitwise AND operation of Mode of gpio_init_struct and EXTI_MODE is equal to 
+    COMMENT 	  EXTI_MODE
+    COMMENT 		1.Store the result of bitwise AND operation of FTSR register of EXTI and negated 
+    COMMENT 		  current IO position value in temporary variable.
+    COMMENT			2.Store the result of bitwise OR operation of temporary variable and current IO 
+    COMMENT 		  position value in temporary variable if result of bitwise AND operation of Mode of 
+    COMMENT			  gpio_init_struct and FALLING_EDGE is FALLING_EDGE.
+    COMMENT 		3.Store the temporary variable value in FTSR register of EXTI.
+    COMMENT Equivalance Class 1,15,23
+    COMMENT 
+	COMMENT </TD>
+		
+	ELEMENT	
+	
+		COMMENT INPUT SECTION:
+
+			STRUCTURE gpio_init,		init = { Pin => GPIO_PIN_0, Mode => (T_UINT32)0xFFFFFFFF, Pull => 0, Speed => 5,
+			&								 	 Alternate => 10 },						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x,			init = { MODER => 0, OTYPER => 1, OSPEEDR => 1, PUPDR => 10,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } },				
+			&							ev =   { MODER => 3, OTYPER => 1, OSPEEDR => 1, PUPDR => 8,
+			&								 	 IDR => 0, ODR => 0, BSRR => 0, LCKR => 0,
+			&								 	 AFR => { 0=> 1, 1=>0 } }
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HalGpioInit(&gpio_x, &gpio_init);
+
+	END ELEMENT
+
+END TEST -- TEST 25
+
+END SERVICE -- HalGpioInit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HALGpioWritePin
+--------------------------------------------------------------------------------
+SERVICE HALGpioWritePin
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+
+    #T_GPIO gpio_x;
+    #T_UINT16 gpio_pin;
+    #T_GPIO_PIN_STATE pin_state;
+
+-- Default Variables    
+ENVIRONMENT ENV_HALGpioWritePin
+
+	VAR gpio_x.BSRR,						init = 0,							ev = init
+
+	VAR gpio_pin,							init = 0,							ev = init
+
+	VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+END ENVIRONMENT --ENV_HALGpioWritePin
+
+USE   ENV_HALGpioWritePin
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-002]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value when PinState is not equal 
+	COMMENT to 'GPIO_PIN_RESET'
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_0'
+	COMMENT Equivalance Class 27
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_SET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_0,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 1
+
+		COMMENT OUTPUT SECTION:
+
+			--None	
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_1'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_1,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x20000
+
+		COMMENT OUTPUT SECTION:
+
+			--None	
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_2'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_2,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x40000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_3'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_3,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x80000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_4'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_4,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x100000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_5'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_5,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x200000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_6'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_6,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x400000
+
+		COMMENT OUTPUT SECTION:
+
+			--None	
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_7'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_7,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x800000
+
+		COMMENT OUTPUT SECTION:
+
+			--None	
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_8'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_8,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x1000000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 9
+
+TEST 10
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_9'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_9,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x2000000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 10
+
+TEST 11
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_10'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_10,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x4000000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 11
+
+
+TEST 12
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_11'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_11,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x8000000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 12
+
+TEST 13
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_12'
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_12,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x10000000
+
+		COMMENT OUTPUT SECTION:
+
+			--None	
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 13
+
+TEST 14
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_13'.
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_13,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x20000000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 14
+
+TEST 15
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_14'.
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_14,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x40000000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 15
+
+TEST 16
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_15'.
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_15,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0x80000000
+
+		COMMENT OUTPUT SECTION:
+
+			--None	
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 16
+
+TEST 17
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioWritePin-DB-LLR-003]
+	COMMENT The function "HalGpioWritePin", sets BSRR register of gpio_x to gpio_pin value which is left shifted
+	COMMENT by sixteen when PinState is equal to 'GPIO_PIN_RESET'.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_ALL'.
+	COMMENT Equivalance Class 28
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			VAR pin_state,							init = GPIO_PIN_RESET,				ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,							init = GPIO_PIN_ALL,				ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR gpio_x.BSRR,						init = 0,							ev = 0xFFFF0000
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioWritePin(&gpio_x, gpio_pin, pin_state);
+		
+	END ELEMENT
+
+END TEST -- TEST 17
+
+--TEST 18
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT [hdulibstm32f7xxhalgpio-HALGpioWritePin-DB-LLR-002]
+--    COMMENT The address of the parameter 'gpio_x' is NULL.
+--    COMMENT Equivalence Class 32
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--
+--            --None
+--
+--        COMMENT OUTPUT SECTION:
+--
+--            --None
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--
+--            --None
+--
+--        --Stub Calls :
+--        SIMUL
+--
+--            --No Stubs
+--
+--        END SIMUL
+--
+--        --Calling the Unit Under Test :
+--        #HALGpioWritePin(NULL,gpio_pin);
+--
+--    END ELEMENT
+--   
+--END TEST -- TEST 18
+
+END SERVICE -- HALGpioWritePin
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalGpioReadPin
+--------------------------------------------------------------------------------
+SERVICE HalGpioReadPin
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_GPIO gpio_x;
+    #T_UINT16 gpio_pin;
+    -- By function returned type declaration
+    #T_GPIO_PIN_STATE ret_HalGpioReadPin;
+    
+-- Default Variables 
+ENVIRONMENT ENV_HalGpioReadPin
+
+	VAR gpio_x.IDR,					init = 0,									ev = init
+
+	VAR gpio_pin,					init = 0,									ev = init
+
+	VAR ret_HalGpioReadPin,			init = GPIO_PIN_RESET,						ev = init
+
+END ENVIRONMENT --ENV_HalGpioReadPin
+
+USE   ENV_HalGpioReadPin
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-002]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_SET when result of bitwise AND operation of IDR register 
+	COMMENT of gpio_x and gpio_pin is not equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_0'
+	COMMENT Equivalance Class 25
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_SET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_0,							ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_RESET,						ev = GPIO_PIN_SET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin  is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_1'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_SET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_1,							ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin  is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_2'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_SET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_2,							ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin  is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_3'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_SET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_3,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin  is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_4'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_SET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_4,							ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin  is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_5'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_5,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin  is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_6'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_6,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin  is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_7'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_7,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_8'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_8,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 9
+
+TEST 10
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_9'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_9,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 10
+
+TEST 11
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_10'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_10,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 11
+
+TEST 12
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_11'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_11,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 12
+
+TEST 13
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_12'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_12,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 13
+
+TEST 14
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_13'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_13,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 14
+
+TEST 15
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_14'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_14,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 15
+
+TEST 16
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_15'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_15,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 16
+
+TEST 17
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-003]
+	COMMENT The function "HalGpioReadPin", returns GPIO_PIN_RESET when result of bitwise AND operation of IDR register
+	COMMENT  of gpio_x and gpio_pin is equal to GPIO_PIN_RESET.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_ALL'
+	COMMENT Equivalance Class 26
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			VAR gpio_x.IDR,						init = GPIO_PIN_RESET,						ev = init
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,						init = GPIO_PIN_ALL,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			VAR ret_HalGpioReadPin,				init = GPIO_PIN_SET,						ev = GPIO_PIN_RESET
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#ret_HalGpioReadPin = HalGpioReadPin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 17
+
+--TEST 18
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT [hdulibstm32f7xxhalgpio-HalGpioReadPin-DB-LLR-002]
+--    COMMENT The address of the parameter 'gpio_x' is NULL.
+--    COMMENT Equivalence Class 33
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--
+--            --None
+--
+--        COMMENT OUTPUT SECTION:
+--
+--            --None
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--
+--            --None
+--
+--        --Stub Calls :
+--        SIMUL
+--
+--            --No Stubs
+--
+--        END SIMUL
+--
+--        --Calling the Unit Under Test :
+--        #HalGpioReadPin(NULL,gpio_pin);
+--
+--    END ELEMENT
+--   
+--END TEST -- TEST 18
+
+END SERVICE -- HalGpioReadPin
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HALGpioTogglePin
+--------------------------------------------------------------------------------
+SERVICE HALGpioTogglePin
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+	#T_GPIO gpio_x;
+	#T_UINT16 gpio_pin;
+
+-- Default Variables 
+ENVIRONMENT ENV_HALGpioTogglePin
+
+	STRUCTURE gpio_x.ODR,		init = 0,									ev = init
+
+	VAR gpio_pin,				init = 0,									ev = init
+
+END ENVIRONMENT --ENV_HALGpioTogglePin
+
+USE   ENV_HALGpioTogglePin
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_0'
+	COMMENT - Tested ODR register of gpio_x for minimal value '0x0'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_0,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x0,								ev = 0x1
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test:
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_1'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_1,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x3
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_2'
+	COMMENT - Tested ODR register of gpio_x for nominal value '0xFFFF'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_2,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = (T_UINT32)0xFFFF,							ev = (T_UINT32)0xFFFB
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_3'
+	COMMENT - Tested ODR register of gpio_x for maximum value '0xFFFFFFFF'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_3,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = (T_UINT32)0xFFFFFFFF,			ev = (T_UINT32)0xFFFFFFF7
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_4'
+	COMMENT - Tested ODR register of gpio_x for maximum-1 value '0xFFFFFFFE'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_4,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = (T_UINT32)0xFFFFFFFE,						ev = (T_UINT32)0xFFFFFFEE
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_5'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_5,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x21
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_6'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_6,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x41
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_7'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_7,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x81
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_8'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_8,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x101
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 9
+
+TEST 10
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_9'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_9,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x201
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 10
+
+TEST 11
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_10'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_10,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x401
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 11
+
+TEST 12
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_11'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_11,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x801
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 12
+
+TEST 13
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_12'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_12,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x1001
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 13
+
+TEST 14
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_13'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_13,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x2001
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 14
+
+TEST 15
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_14'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_14,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x4001
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 15
+
+TEST 16
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_15'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_15,						ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0x8001
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 16
+
+TEST 17
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD> 
+	COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+	COMMENT The function "HALGpioTogglePin" sets ODR register of gpio_x with result of Xor
+	COMMENT operation of ODR register of gpio_x and gpio_pin.
+	COMMENT - Tested gpio_pin for the value 'GPIO_PIN_ALL'
+	COMMENT - Tested ODR register of gpio_x for minimum+1 value '0x1'
+	COMMENT Equivalance Class 29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+
+			--Holds the GPIO pin input value(pin number)
+			VAR gpio_pin,					init = GPIO_PIN_ALL,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			STRUCTURE gpio_x.ODR,			init = 0x1,								ev = 0xFFFE
+
+		COMMENT OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+		SIMUL
+
+			--No Stubs
+
+		END SIMUL
+
+		--Calling the Unit Under Test :
+		#HALGpioTogglePin(&gpio_x, gpio_pin);
+		
+	END ELEMENT
+
+END TEST -- TEST 17
+
+--TEST 18
+--FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT [hdulibstm32f7xxhalgpio-HalGpioTogglePin-DB-LLR-002]
+--    COMMENT The address of the parameter 'gpio_x' is NULL.
+--    COMMENT Equivalence Class 34
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--        COMMENT INPUT SECTION:
+--
+--            --None
+--
+--        COMMENT OUTPUT SECTION:
+--
+--            --None
+--
+--        COMMENT INPUT/OUTPUT SECTION:
+--
+--            --None
+--
+--        --Stub Calls :
+--        SIMUL
+--
+--            --No Stubs
+--
+--        END SIMUL
+--
+--        --Calling the Unit Under Test :
+--        #HALGpioTogglePin(NULL,gpio_pin);
+--
+--    END ELEMENT
+--   
+--END TEST -- TEST 18
+
+END SERVICE -- HALGpioTogglePin

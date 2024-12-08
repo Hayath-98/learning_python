@@ -1,0 +1,1910 @@
+HEADER hdudispfbinascii ,Source Code Ver : 1.5 ,TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name      	: Manju Kiran M
+--
+-- File Name        	: hdudispfbinascii.ptu
+--
+-- Test Creation Date  	: 28.10.2017
+--
+-- Tested Functions 	: BinasByte,
+--                        BinasByteFormatInfo,
+--                        BinasByteFormatInfoBE,
+--                        BinasGetWidth
+--
+-- Version History      :
+--
+-- TEST-VERSION      	TEST-DATE   		TESTER NAME			MODIFICATIONS
+--  ------------		---------			-----------			-------------
+--      1.1             28.10.2017          Manju Kiran M       Created the PTU file.
+--	1.2			10.11.2017		Manju Kiran M		Updated as per #PR100171
+--	1.3			14.11.2017		Manju Kiran M		Updated as per #PR100171
+--	1.4			05.08.2020		Harshitha R			Updated as per #100267
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdudispffonts.h" 
+##include "hdulibbasictypes.h"
+##include "hdudispfbinascii.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+	--None
+	
+-- Declarations of the temporary variable
+	
+	--Temporary variable to hold the number to be converted
+	#T_INT32 PTU_src = 0;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Manju Kiran M
+    COMMENT
+    COMMENT File Name        : hdudispfbinascii.ptu
+    COMMENT
+    COMMENT Tested Functions : BinasByte,
+	COMMENT					   BinasByteFormatInfo,
+    COMMENT					   BinasByteFormatInfoBE,
+	COMMENT					   BinasGetWidth
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+	COMMENT	1. In function 'BinasByte' while loop in LLR "hdudispfbinascii-BinasByte-DB-LLR-004" cannot be 
+	COMMENT	   covered for 0 loop as NULL cannot be passed as input for the function.
+	COMMENT
+	COMMENT	2. In function 'BinasByteFormatInfo' while loop in LLR "hdudispfbinascii-BinasByteFormatInfo-DB-LLR-005" 
+	COMMENT	   cannot be covered for 0 loop.
+	COMMENT	   Code Snippet:
+	COMMENT		....
+	COMMENT		size  = (T_INT16)(((format & S_M) >> S_P) + ONE);
+	COMMENT		....
+	COMMENT		Since  the value of 'size' can never be equal to zero.	
+	COMMENT
+	COMMENT	3. In function 'BinasByteFormatInfo' for loop in LLR "hdudispfbinascii-BinasByteFormatInfo-DB-LLR-008" 
+	COMMENT	   cannot be covered for 0 loop.
+	COMMENT	   Code Snippet:
+	COMMENT		....
+	COMMENT		if (decimals != ZERO)
+	COMMENT		{
+    COMMENT		 /*hdudispfbinascii-BinasByteFormatInfo-DB-LLR-008*/
+    COMMENT		  for (counter=decimals, byte_ptr=last_byte - ONE ; counter> (T_INT16)ZERO; counter--)
+    COMMENT		  {
+	COMMENT		....
+	COMMENT		Since the control enters the loop only when 'decimals' is equal to zero.
+	COMMENT
+	COMMENT	4. In function 'BinasByteFormatInfo' while loop in LLR "hdudispfbinascii-BinasByteFormatInfo-DB-LLR-013" 
+	COMMENT	   cannot be covered for 0 loop as the control never enters the condition when fieldwidth is ZERO.
+	COMMENT	   Code Snippet:
+	COMMENT		....
+	COMMENT		if (counter < (T_INT16)ZERO)
+    COMMENT		{
+	COMMENT			/*hdudispfbinascii-BinasByteFormatInfo-DB-LLR-013*/
+    COMMENT			/* Trivial case of 0 field width.*/
+    COMMENT			if (ZERO == field_width)
+    COMMENT			{
+    COMMENT			     *dest = ZERO;
+    COMMENT			     return (dest);
+    COMMENT			}
+	COMMENT			...
+	COMMENT			while (byte_ptr < last_byte)
+    COMMENT			{
+	COMMENT		....
+	COMMENT	
+	COMMENT	5.  In function 'BinasByteFormatInfo' while loop in LLR "hdudispfbinascii-BinasByteFormatInfo-DB-LLR-016" 
+	COMMENT	    cannot be covered for 0 and 1 loop as the control will return from the functon when 'field_width' is ZERO
+	COMMENT		acording to LLR "hdudispfbinascii-BinasByteFormatInfo-DB-LLR-013" . 
+    COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In function 'BinasByteFormatInfo', format is equal to NO_NUMBER.
+	COMMENT
+	COMMENT Class 2
+    COMMENT In function 'BinasByteFormatInfo', format is not equal to NO_NUMBER.
+	COMMENT
+	COMMENT Class 3
+	COMMENT The function 'BinasByteFormatInfo', returns dest.
+	COMMENT
+	COMMENT Class 4
+	COMMENT In function 'BinasByteFormatInfo', result of bitwise AND operation of content of (byte pointer  
+	COMMENT	plus size of the input in bytes minus ONE) and EXTRACT_BIT_8 is TRUE.
+	COMMENT
+	COMMENT Class 5
+	COMMENT In function 'BinasByteFormatInfo', result of bitwise AND operation of content of (byte pointer  
+	COMMENT	plus size of the input in bytes minus ONE) and EXTRACT_BIT_8 is FALSE.
+	COMMENT
+	COMMENT Class 6
+	COMMENT In function 'BinasByteFormatInfo', negation of result of bitwise AND operation of format parameter
+	COMMENT	value and UNSIGNED is TRUE.
+	COMMENT
+	COMMENT Class 7
+	COMMENT In function 'BinasByteFormatInfo', negation of result of bitwise AND operation of format parameter
+	COMMENT	value and UNSIGNED is FALSE.
+	COMMENT
+	COMMENT Class 8
+	COMMENT In function 'BinasByteFormatInfo', negative flag is equal to zero.
+	COMMENT
+	COMMENT Class 9
+	COMMENT In function 'BinasByteFormatInfo', negative flag is not equal to zero.
+	COMMENT
+	COMMENT Class 10
+	COMMENT In function 'BinasByteFormatInfo', decimal value is not equal to ZERO.
+	COMMENT
+	COMMENT Class 11
+	COMMENT In function 'BinasByteFormatInfo', decimal value is equal to ZERO.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In function 'BinasByteFormatInfo', byte pointer is less than temporary first char pointer.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function 'BinasByteFormatInfo', byte pointer is greater than temporary first char pointer.
+	COMMENT
+	COMMENT Class 14
+	COMMENT In function 'BinasByteFormatInfo', result of bitwise AND operation of format value and PUT_PLUS is 
+	COMMENT equal to zero.
+	COMMENT
+	COMMENT Class 15
+	COMMENT In function 'BinasByteFormatInfo', result of bitwise AND operation of format value and PUT_PLUS is 
+	COMMENT not equal to zero.
+	COMMENT
+	COMMENT Class 16
+	COMMENT In function 'BinasByteFormatInfo', counter value is less than zero.
+	COMMENT
+	COMMENT Class 17
+	COMMENT In function 'BinasByteFormatInfo', counter value is equal to zero.
+	COMMENT
+	COMMENT Class 18
+	COMMENT In function 'BinasByteFormatInfo', fieldwidth is equal to zero.
+	COMMENT
+	COMMENT Class 19
+	COMMENT In function 'BinasByteFormatInfo', fieldwidth is not equal to zero.
+	COMMENT
+	COMMENT Class 20
+	COMMENT In function 'BinasByteFormatInfo', sign value is not equal to ZERO.
+	COMMENT
+	COMMENT Class 21
+	COMMENT In function 'BinasByteFormatInfo', sign value is equal to ZERO.
+	COMMENT
+	COMMENT Class 22
+	COMMENT In function 'BinasByteFormatInfo', content of byte pointer is a digit.
+	COMMENT
+	COMMENT Class 23
+	COMMENT In function 'BinasByteFormatInfo', content of byte pointer is not a digit.
+	COMMENT
+	COMMENT Class 24
+	COMMENT In function 'BinasByteFormatInfo', result of bitwise operation of format and NOLZB is equal to ZERO.
+	COMMENT
+	COMMENT Class 25
+	COMMENT In function 'BinasByteFormatInfo', result of bitwise operation of format and NOLZB is not equal to ZERO.
+	COMMENT
+	COMMENT Class 26
+	COMMENT In function 'BinasByteFormatInfo', result of bitwise and operation of 'format' value and FLASHIT is ZERO.
+	COMMENT
+	COMMENT Class 27
+	COMMENT In function 'BinasByteFormatInfo', result of bitwise and operation of 'format' value and FLASHIT is 
+	COMMENT other than ZERO.
+	COMMENT
+	COMMENT Class 28
+	COMMENT In function 'BinasByteFormatInfo', content of temporary first char pointer is a digit.
+	COMMENT
+	COMMENT Class 29
+	COMMENT In function 'BinasByteFormatInfo', content of temporary first char pointer is not a digit.
+	COMMENT
+	COMMENT Class 30
+	COMMENT The function 'BinasByteFormatInfo', returns dest minus ONE.
+	COMMENT
+	COMMENT Class 31
+	COMMENT The function 'BinasByteFormatInfo', calls the function 'BinasByte'.
+	COMMENT
+	COMMENT Class 32
+	COMMENT The function 'BinasByte', returns dest.
+	COMMENT
+	COMMENT Class 33
+	COMMENT In function 'BinasByteFormatInfo', flash value is equal to ZERO.
+	COMMENT
+	COMMENT Class 34
+	COMMENT In function 'BinasByteFormatInfo', flash value is not equal to ZERO.
+	COMMENT
+	COMMENT	Class 35
+	COMMENT The function 'BinasGetWidth' returns the result of bitwise AND of format and W_M.
+	COMMENT
+	COMMENT Class 36
+	COMMENT The function 'BinasByteFormatInfoBE' returns dest.
+	COMMENT
+	COMMENT	Class 39
+	COMMENT	In function 'BinasByteFormatInfoBE', scanner is equal to BINASCII_SPACE.
+	COMMENT
+	COMMENT	Class 40
+	COMMENT	In function 'BinasByteFormatInfoBE', scanner is not equal to BINASCII_SPACE.
+	COMMENT
+	COMMENT Class 41
+	COMMENT In function 'BinasByte', src is not equal to zero.
+	COMMENT
+	COMMENT Class 42
+	COMMENT In function 'BinasByte', src is equal to zero.
+	COMMENT
+	COMMENT Class 43
+	COMMENT In function 'BinasByteFormatInfo', byte pointer is equal to temporary first char pointer.
+	COMMENT
+	COMMENT Class 44
+	COMMENT In function 'BinasByteFormatInfo', counter value is greater than zero.
+	COMMENT
+	COMMENT	Class 47
+	COMMENT	The function 'BinasByteFormatInfoBE', calls the function 'BinasByteFormatInfo'.
+	COMMENT
+	COMMENT	Class 48
+	COMMENT	In function 'BinasByteFormatInfo',size is equal to zero.
+	COMMENT	
+	COMMENT	Class 49
+	COMMENT	In function 'BinasByteFormatInfo',size is not equal to zero.
+	COMMENT	
+    COMMENT Invalid Class(es)
+	COMMENT	
+	COMMENT	Class 37
+	COMMENT	In function 'BinasByteFormatInfo', NULL is passed for parameter 'src'.
+	COMMENT	
+	COMMENT	Class 38
+	COMMENT	In function 'BinasByteFormatInfo', NULL is passed for parameter 'dest'.
+	COMMENT
+	COMMENT	Class 45
+	COMMENT	In function 'BinasByteFormatInfoBE', NULL is passed for parameter 'src'.
+	COMMENT	
+	COMMENT	Class 46
+	COMMENT	In function 'BinasByteFormatInfoBE', NULL is passed for parameter 'dest'.
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+     DEFINE STUB hdudispfbinascii_c
+
+           -- No stubs
+
+     END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+-- Environment of the file hdudispfbinascii.c
+--
+--ENVIRONMENT ENV_hdudispfbinascii_c
+--
+--	None
+--
+--END ENVIRONMENT  ENV_hdudispfbinascii_c
+--
+--USE ENV_hdudispfbinascii_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BinasByteFormatInfo
+--------------------------------------------------------------------------------
+SERVICE BinasByteFormatInfo
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#void *src;
+
+#T_UINT16 format;
+
+#T_INT8  dest[200];
+
+-- By function returned type declaration
+#T_INT8* ret_BinasByteFormatInfo = (T_INT8 *)&PTU_src;
+
+ENVIRONMENT ENV_BinasByteFormatInfo
+
+	VAR src,						init = (void *)&PTU_src,			ev = init
+    
+	VAR format,						init = NO_NUMBER,					ev = init
+	
+	VAR ret_BinasByteFormatInfo,	init = (T_INT8 *)&PTU_src,			ev = init
+    
+END ENVIRONMENT -- ENV_BinasByteFormatInfo
+
+USE ENV_BinasByteFormatInfo
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-001]
+	COMMENT	The function 'BinasByteFormatInfo' returns dest when format is equal to NO_NUMBER.
+	COMMENT Equivalance Class 1,3
+	COMMENT 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = NO_NUMBER,				ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 10,						ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+			
+			VAR dest[0],						init = 0,						ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+
+        COMMENT OUTPUT SECTION:
+			
+			--holds the return address 
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*)dest
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)&dest[0]);
+        END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-001]
+	COMMENT	The function 'BinasByteFormatInfo' does nothing when format is not equal to NO_NUMBER.
+	COMMENT Equivalance Class 2
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-002]
+	COMMENT The function 'BinasByteFormatInfo' sets  byte pointer to src and set size to Result of bitwise 
+	COMMENT	AND of format and S_M right shifted by S_P plus ONE.
+	COMMENT Equivalance Class None
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-003]
+	COMMENT The function 'BinasByteFormatInfo' sets  Temporary number to MINUS_ONE and negative number to 
+	COMMENT	TRUE if Result of bitwise AND of EXTRACT_BIT_8 and content of byte pointer plus size minus one
+	COMMENT	AND inverse of result of bitwise And of format and UNSIGNED is equal to TRUE.
+	COMMENT	(tested for MCDC condition TF)
+	COMMENT Equivalance Class 4,7
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-005]
+	COMMENT The function 'BinasByteFormatInfo' initializes temporary byte pointer to address of temporary 
+	COMMENT	number and does following till size is not equal to ZERO.
+	COMMENT	1.	Sets content of temporary byte pointer to byte pointer.
+	COMMENT	2.	Increments the temporary byte pointer by one
+	COMMENT	3.	Increments byte pointer by one.
+	COMMENT	4.	Decrements the size by one.
+	COMMENT Equivalance Class 49
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-006]
+	COMMENT	The function 'BinasByteFormatInfo' sets temporary number to minus temporary number if negative 
+	COMMENT	number not equal to ZERO
+	COMMENT Equivalance Class 9
+	COMMENT 
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-007]
+	COMMENT The function 'BinasByteFormatInfo' sets first byte pointer to temporary buffer plus FIFTEEN and
+	COMMENT	last byte pointer to return value of function BinasByte with parameter temporary number and first 
+	COMMENT	byte pointer.Sets number of decimals to result of bitwise AND of format and D_M right shifted by D_P.
+	COMMENT	Equivalance Class 31 
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByte-DB-LLR-001]
+	COMMENT	The function 'BinasByte' set temporary buffer with index DELIMITER_POS to DELIMITER and next byte
+	COMMENT	to temporary address plus LAST_DIGIT_POS.
+	COMMENT	Equivalance Class None
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByte-DB-LLR-002]
+	COMMENT	The function 'BinasByte' sets the following when src is not equal to zero
+	COMMENT	1.	Content of next byte to src MOD BASE.
+	COMMENT	2.	Content of next byte to content of next byte plus AZERO.
+	COMMENT	3.	Decrement next byte by one
+	COMMENT	4.	Set src to src divide by BASE.
+	COMMENT	And does nothig when src is equal to zero.
+	COMMENT	Equivalance Class 41,42
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByte-DB-LLR-003]
+	COMMENT	The function 'BinasByte' increment next byte by one.
+	COMMENT	Equivalance Class None
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByte-DB-LLR-004]
+	COMMENT	The function 'BinasByte' loops till the delimiter in the next byte not reached and Transfer character
+	COMMENT	in the next byte to dest and increment both dest and next byte by one.
+	COMMENT	Equivalance Class None
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByte-DB-LLR-005]
+	COMMENT	The function 'BinasByte' adds DELIMITER to dest buffer and returns the address of the delimiter.
+	COMMENT	Equivalance Class 32
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-008]
+	COMMENT The function 'BinasByteFormatInfo' does nothing when number of decimals equal to ZERO.
+	COMMENT	Equivalance Class 11
+	COMMENT	
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfoBE-DB-LLR-011]
+	COMMENT	The function 'BinasByteFormatInfo' does the following when number of decimals equal to ZERO. 	
+	COMMENT	1.	Decrement first byte pointer by one and set sign to ‘-‘ when negative number not equal to zero.
+	COMMENT	2.	Does nothing when negative number not equal to zero and result of bitwise AND of format PUT_PLUS is 
+	COMMENT		equal to ZERO.
+	COMMENT	Equivalance Class 11,9,14
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-012]
+	COMMENT	The function 'BinasByteFormatInfo' sets field width to Result of bitwise And of format and W_M right
+	COMMENT	shifted by W_P and counter to field width minus ( last byte pointer minus first byte pointer).
+	COMMENT	Equivalance Class None
+	COMMENT	
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-013]
+	COMMENT The function 'BinasByteFormatInfo' does nothing when counter is equal to ZERO.
+	COMMENT Equivalance Class 17
+	COMMENT 
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-014]
+	COMMENT	 The function 'BinasByteFormatInfo' does the following when counter is equal ZERO.
+	COMMENT	1.	Set sign pointer to first byte pointer.
+	COMMENT	2.	Set fill byte to BINASCII_SPACE
+	COMMENT	3.	Set first byte ponter to first byte pointer minus counter.
+	COMMENT	4.	Does nothing when result of bitwise AND of format and NOLZB is equal to ZERO.
+	COMMENT	5.	Set byte pointer to first byte pointer.
+	COMMENT	6.	Increment the counter by one when sign not equal to ZERO.
+	COMMENT	7.	loop till counter is gretaer than ZERO and set byte pointer content to fill byte and 
+	COMMENT		increment the byte pointer and counter by one.
+	COMMENT	8.	Set sign pointer content to sign when sign not equal to ZERO.
+	COMMENT	Equivalance Class 43,20,24
+	COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfo-DB-LLR-015]
+	COMMENT	The function 'BinasByteFormatInfo' does nothing when result of bitwise AND of format and FLASHIT
+	COMMENT	equal to ZERO.
+	COMMENT	Equivalance Class 26
+	COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfo-DB-LLR-016]
+	COMMENT	The function 'BinasByteFormatInfo' loop till the field width is greater than or equal to ZERO and 
+	COMMENT	does following:
+	COMMENT	1.	Does nothing when flash value equal to ZERO.
+	COMMENT	2.	Transfer the byte to dest from first byte pointer and increment dest and first byte pointer.
+	COMMENT	3.	Decrement the field width by one
+	COMMENT	Equivalance Class 33
+	COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfo-DB-LLR-017]
+	COMMENT	The function 'BinasByteFormatInfo' return dest minus one.
+	COMMENT	Equivalance Class 30
+	COMMENT 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x304,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = -123,					ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 45
+			VAR dest[1],						init = 0,        				ev = 49
+			VAR dest[2],						init = 0,        				ev = 50
+			VAR dest[3],						init = 0,        				ev = 51
+			VAR dest[4],						init = 1,        				ev = 0
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[4]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-003]
+	COMMENT The function 'BinasByteFormatInfo' does nothing when Result of bitwise AND of EXTRACT_BIT_8
+	COMMENT	and content of byte pointer plus size minus one AND inverse of result
+	COMMENT	of bitwise And of format and UNSIGNED is equal to FALSE.
+	COMMENT	Teast case tested for MCDC condition TT
+	COMMENT Equivalance Class 4,6
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-004]
+	COMMENT The function 'BinasByteFormatInfo' sets Temporary number to Zero and negative number to FALSE when
+	COMMENT	Result of bitwise AND of EXTRACT_BIT_8 and content of byte pointer plus size minus one AND inverse 
+	COMMENT	of result of bitwise And of format and UNSIGNED is not equal to TRUE.
+	COMMENT	Equivalance Class 4,6
+	COMMENT	
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-005]
+	COMMENT The function 'BinasByteFormatInfo' initializes temporary byte pointer to address of temporary 
+	COMMENT	number and does nothing when size is equal to ZERO.
+	COMMENT Equivalance Class 48
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-006]
+	COMMENT	The function 'BinasByteFormatInfo' does nothing when negative number equal to ZERO
+	COMMENT Equivalance Class 8
+	COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfoBE-DB-LLR-011]
+	COMMENT	The function 'BinasByteFormatInfo' does the following Set sign to ZERO when negative number equal 
+	COMMENT	to zero and result of bitwise AND of format PUT_PLUS is equal to ZERO.
+	COMMENT	Equivalance Class 8,14
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-013]
+	COMMENT The function 'BinasByteFormatInfo' does folowing when counter is less than ZERO.
+	COMMENT	Sets dest content to ZERO and return dest when field width is equal to ZERO. 
+	COMMENT Equivalance Class 16,3,18
+	COMMENT 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x80,					ev = init
+        
+			VAR PTU_src,						init = -1,						ev = init
+			
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        
+			--None
+
+        COMMENT OUTPUT SECTION:
+        
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*)dest
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfo-DB-LLR-013]
+	COMMENT	The function 'BinasByteFormatInfo' loops for 2 times does folowing when counter is less than ZERO.
+	COMMENT	1.	does nothing when  field width is not equal to ZERO. 
+	COMMENT	2.	Set first byte pointer to last byte pointer minus field width.
+	COMMENT	3.	Set first byte content to sign when sign not equal to ZERO.
+	COMMENT	4.	Set byte pointer to first byte pointer.
+	COMMENT	5.	Loops till byte pointer less than last byte pointer and Set byte pointer minus one content
+	COMMENT		to ‘?’ and increment byte pointer when byte pointer contains digit, and does nothing when
+	COMMENT		byte pointer contains other than digit
+	COMMENT Equivalance Class 16,19,22,23
+	COMMENT 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x102,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = -12,						ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 45
+			VAR dest[1],						init = 0,        				ev = 50
+			VAR dest[2],						init = 0,        				ev = 63
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[2]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfo-DB-LLR-013]
+	COMMENT	The function 'BinasByteFormatInfo' loops for 1 time and does folowing when counter is less than ZERO.
+	COMMENT	1.	does nothing when  field width is not equal to ZERO. 
+	COMMENT	2.	Set first byte pointer to last byte pointer minus field width.
+	COMMENT	3.	Set first byte content to sign when sign not equal to ZERO.
+	COMMENT	4.	Set byte pointer to first byte pointer.
+	COMMENT	5.	Loops till byte pointer less than last byte pointer and does nothing when
+	COMMENT		byte pointer contains other than digit
+	COMMENT Equivalance Class 16,19,23
+	COMMENT 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x01,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = -1,						ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 45
+			VAR dest[1],						init = 1,        				ev = 0
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[1]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT	
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-003]
+	COMMENT The function 'BinasByteFormatInfo' does nothing when Result of bitwise AND of EXTRACT_BIT_8
+	COMMENT	and content of byte pointer plus size minus one AND inverse of result
+	COMMENT	of bitwise And of format and UNSIGNED is equal to FALSE.
+	COMMENT	Test case tested for MCDC condition FF
+	COMMENT Equivalance Class 5,7
+	COMMENT	
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfo-DB-LLR-011]
+	COMMENT	The function 'BinasByteFormatInfo' does the following . 	
+	COMMENT	1.	Does nothing when negative number not equal to zero.
+	COMMENT	2.	Decrement first byte pointer by one and set sign to ‘+‘ when negative number equal to zero 
+	COMMENT     and result of bitwise AND of format PUT_PLUS is not equal to ZERO.
+	COMMENT	Equivalance Class 8,15
+	COMMENT	 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0xB09,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 12345678,				ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 43
+			VAR dest[1],						init = 0,        				ev = 49
+			VAR dest[2],						init = 0,        				ev = 50
+			VAR dest[3],						init = 0,        				ev = 51
+			VAR dest[4],						init = 0,        				ev = 52
+			VAR dest[5],						init = 0,        				ev = 53
+			VAR dest[6],						init = 0,        				ev = 54
+			VAR dest[7],						init = 0,        				ev = 55
+			VAR dest[8],						init = 0,        				ev = 56
+			VAR dest[9],						init = 1,        				ev = 0
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[9]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT 
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-014]
+	COMMENT	 The function 'BinasByteFormatInfo' does the following when counter is  equal to ZERO.
+	COMMENT	1.Sets sign pointer to first byte pointer.
+	COMMENT	2.Sets fill byte to BINASCII_SPACE
+	COMMENT	3.Sets first byte ponter to first byte pointer minus counter.
+	COMMENT	4.Sets fill byte to '0' and set sign pointer to first byte pointer if result of bitwise AND of 
+	COMMENT	  format and NOLZB is not equal to ZERO. 
+	COMMENT	5.Sets byte pointer to first byte pointer.
+	COMMENT	6.Does nothing when sign equal to ZERO.
+	COMMENT	7.loop till counter is gretaer than ZERO and set byte pointer content to fill byte and 
+	COMMENT	  increment the byte pointer and counter by one.
+	COMMENT	8.Does nothing when sign equal to ZERO.
+	COMMENT	Equivalance Class 43,21,25
+	COMMENT 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x481,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 01,						ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 49
+			VAR dest[1],						init = 1,        				ev = 0
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[1]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 7
+
+TEST 8
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfo-DB-LLR-013]
+	COMMENT	The function 'BinasByteFormatInfo' does folowing when counter is less than ZERO.
+	COMMENT	1.	does nothing when  field width is not equal to ZERO. 
+	COMMENT	2.	Set first byte pointer to last byte pointer minus field width.
+	COMMENT	3.	does nothing when sign is equal to ZERO.
+	COMMENT	4.	Set byte pointer to first byte pointer.
+	COMMENT	5.	Loops till byte pointer less than last byte pointer and does nothing when
+	COMMENT		byte pointer contains other than digit
+	COMMENT Equivalance Class 16,19,21,23
+	COMMENT 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x481,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 12,						ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 50
+			VAR dest[1],						init = 0,						ev = 63
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[1]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-008]
+	COMMENT	The function 'BinasByteFormatInfo' initialize counter to number of decimals and byte pointer
+	COMMENT	to last byte pointer minus one and loop till the counter is greater than ZERO and does the 
+	COMMENT	following when number of decimals not equal to ZERO.
+	COMMENT	1.Shift a digit right by initializing content of byte pointer plus one to content of byte pointer.
+	COMMENT	2.Decrement the byte pointer by one.
+	COMMENT	3.does nothing when byte pointer greater than first byte pointer.
+	COMMENT	Equivalance Class 10,13,43
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-009]
+	COMMENT	The function 'BinasByteFormatInfo' does nothing when byte pointer greater than or equal to first 
+	COMMENT	byte pointer.
+	COMMENT	Equivalance Class 13,43
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-010]
+	COMMENT	The function 'BinasByteFormatInfo' does the following when number of decimals not equal to ZERO.
+	COMMENT	1.	Byte pointer plus one content to ‘.’
+	COMMENT	2.	Increment the last byte pointer by one.
+	COMMENT	3.	Set last byte pointer content to DELIMITER
+	COMMENT	Equivalance Class 10
+	COMMENT 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x313,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 88,						ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 56
+			VAR dest[1],						init = 0,        				ev = 46
+			VAR dest[2],						init = 0,        				ev = 56
+			VAR dest[3],						init = 1,        				ev = 0
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[3]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 9
+
+TEST 10
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-008]
+	COMMENT	The function 'BinasByteFormatInfo' initialize counter to number of decimals and byte pointer
+	COMMENT	to last byte pointer minus one and loop till the counter is greater than ZERO and does the 
+	COMMENT	following when number of decimals not equal to ZERO.
+	COMMENT	1.Shift a digit right by initializing content of byte pointer plus one to content of byte pointer.
+	COMMENT	2.Decrement the byte pointer by one.
+	COMMENT	3.does nothing when byte pointer greater than or equal to first byte pointer.
+	COMMENT	Equivalance Class 10,13,43
+	COMMENT 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x779,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 88888888,				ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 56
+			VAR dest[1],						init = 0,        				ev = 46
+			VAR dest[2],						init = 0,        				ev = 56
+			VAR dest[3],						init = 0,        				ev = 56
+			VAR dest[4],						init = 0,        				ev = 56
+			VAR dest[5],						init = 0,        				ev = 56
+			VAR dest[6],						init = 0,        				ev = 56
+			VAR dest[7],						init = 0,        				ev = 56
+			VAR dest[8],						init = 0,        				ev = 56
+			VAR dest[9],						init = 1,        				ev = 0
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[9]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 10
+
+TEST 11
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-008]
+	COMMENT	The function 'BinasByteFormatInfo' initialize counter to number of decimals and byte pointer
+	COMMENT	to last byte pointer minus one and loop till the counter is greater than ZERO and does the 
+	COMMENT	following when number of decimals not equal to ZERO.
+	COMMENT	1.Shift a digit right by initializing content of byte pointer plus one to content of byte pointer.
+	COMMENT	2.Decrement the byte pointer by one.
+	COMMENT	3.Does nothing when byte pointer is greater than or equal to first byte pointer
+	COMMENT	Equivalance Class 10,13,43
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x313,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 888888888,				ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 56
+			VAR dest[1],						init = 0,        				ev = 63
+			VAR dest[2],						init = 0,        				ev = 56
+			VAR dest[3],						init = 0,        				ev = 63
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[3]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 11
+
+TEST 12  
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfo-DB-LLR-015]
+	COMMENT	The function 'BinasByteFormatInfo' sets flash to SET_TPH when result of bitwise AND of format and 
+	COMMENT	FLASHIT is not equal to ZERO.
+	COMMENT	Equivalance Class 27
+	COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfo-DB-LLR-016]
+	COMMENT	The function 'BinasByteFormatInfo' loop till the field width is greater than or equal to ZERO and 
+	COMMENT	does following:
+	COMMENT	1.	Sets first byte pointer to result of bitwise OR of first byte pointer and flash value when flash
+	COMMENT		value not equal to ZERO and digit in the first byte pointer is not equal to ZERO.
+	COMMENT	2.	Transfer the byte to dest from first byte pointer and increment dest and first byte pointer.
+	COMMENT	3.	Decrement the field width by one
+	COMMENT	Equivalance Class 19,34,28,29
+	COMMENT	
+	COMMENT 
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x3382,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 12,						ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = '\261'
+			VAR dest[1],						init = 0,        				ev = '\262'
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[2]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 12
+
+TEST 13
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-008]
+	COMMENT	The function 'BinasByteFormatInfo' initialize counter to number of decimals and byte pointer
+	COMMENT	to last byte pointer minus one and loop till the counter is greater than ZERO and does the 
+	COMMENT	following when number of decimals not equal to ZERO.
+	COMMENT	1.Shift a digit right by initializing content of byte pointer plus one to content of byte pointer.
+	COMMENT	2.Decrement the byte pointer by one.
+	COMMENT	3.Set byte pointer content to ‘0’ when byte pointer is less than first byte pointer
+	COMMENT	Equivalance Class 10,12
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-009]
+	COMMENT	The function 'BinasByteFormatInfo' sets first byte pointer to byte pointer when number of decimals  
+	COMMENT	not equal to ZERO and byte pointer less than first byte pointer.
+	COMMENT	Equivalance Class 10,12
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x350,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 8888,					ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) dest
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 13
+
+--TEST 14
+--FAMILY robustness
+--
+--	COMMENT Test Description
+--	COMMENT <TD>
+--	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-001]
+--	COMMENT The function 'BinasByteFormatInfo' does nothing as Null is passed for parameter 'src'
+--	COMMENT Equivalance Class 37
+--	COMMENT	
+--	COMMENT </TD>
+--
+--	ELEMENT
+--
+--		  COMMENT INPUT SECTION:
+--        
+--			None
+--        
+--        COMMENT INPUT/OUTPUT SECTION:
+--        
+--			None
+--
+--        COMMENT OUTPUT SECTION:
+--        
+--        	None
+--        
+--        Stub Calls :
+--        SIMUL
+--
+--              No Stubs
+--
+--        END SIMUL
+--
+--        Calling the Unit Under Test :
+--        #ret_BinasByteFormatInfo = BinasByteFormatInfo(NULL, format, (T_INT8*)dest);
+--        END ELEMENT
+--
+--END TEST  --TEST 14
+
+--TEST 15
+--FAMILY robustness
+--
+--	COMMENT Test Description
+--	COMMENT <TD>
+--	COMMENT
+--	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-001]
+--	COMMENT The function 'BinasByteFormatInfo' does nothing as Null is passed for parameter 'src'
+--	COMMENT Equivalance Class 38
+--	COMMENT	
+--	COMMENT </TD>
+--
+--	ELEMENT
+--
+--		COMMENT INPUT SECTION:
+--        
+--			None
+--			
+--      COMMENT INPUT/OUTPUT SECTION:
+--        
+--			None
+--
+--      COMMENT OUTPUT SECTION:
+--        
+--        	None
+--        
+--        Stub Calls :
+--        SIMUL
+--
+--              No Stubs
+--
+--        END SIMUL
+--
+--        Calling the Unit Under Test :
+--        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, NULL);
+--        END ELEMENT
+--
+--END TEST  --TEST 15
+
+TEST 16
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-013]
+	COMMENT The function 'BinasByteFormatInfo' does nothing when counter is greater than ZERO.
+	COMMENT Equivalance Class 44
+	COMMENT 
+	COMMENT 
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-014]
+	COMMENT	 The function 'BinasByteFormatInfo' does the following when counter is greater than ZERO.
+	COMMENT	1.	Set sign pointer to first byte pointer.
+	COMMENT	2.	Set fill byte to BINASCII_SPACE
+	COMMENT	3.	Set first byte ponter to first byte pointer minus counter.
+	COMMENT	4.	Does nothing when result of bitwise AND of format and NOLZB is equal to ZERO.
+	COMMENT	5.	Set byte pointer to first byte pointer.
+	COMMENT	6.	Increment the counter by one when sign not equal to ZERO.
+	COMMENT	7.	loop till counter is gretaer than ZERO and set byte pointer content to fill byte and 
+	COMMENT		increment the byte pointer and counter by one.
+	COMMENT	8.	Set sign pointer content to sign when sign not equal to ZERO.
+	COMMENT	Equivalance Class 44,20,24
+	COMMENT
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x302,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 1,						ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 21
+			VAR dest[1],						init = 0,        				ev = 49
+			VAR dest[2],						init = 1,        				ev = 0
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[2]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 16
+
+TEST 17
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfo-DB-LLR-016]
+	COMMENT	The function 'BinasByteFormatInfo' loop till the field width is greater than or equal to ZERO and 
+	COMMENT	does following:
+	COMMENT	1.	Sets first byte pointer to result of bitwise OR of first byte pointer and flash value when flash
+	COMMENT		value not equal to ZERO and digit in the first byte pointer is not equal to ZERO.
+	COMMENT	2.	Transfer the byte to dest from first byte pointer and increment dest and first byte pointer.
+	COMMENT	3.	Decrement the field width by one
+	COMMENT	Equivalance Class 19,34,28,29
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:
+        
+			--holds the format used for conversion
+        	VAR format,							init = 0x1B13,					ev = init
+        
+			--holds the value need to be converted
+			VAR PTU_src,						init = 88,						ev = init
+			
+			--holds the address of  'PTU_src'
+			VAR src,							init = (void *)&PTU_src,		ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+			
+        COMMENT OUTPUT SECTION:
+        
+			--holds the ASCII equvalent of input from 'src'
+			VAR dest[0],						init = 0,        				ev = 43
+			VAR dest[1],						init = 0,        				ev = 46
+			VAR dest[2],						init = 0,        				ev = '\270'
+			VAR dest[3],						init = 1,        				ev = 63
+			
+			--holds the return address  
+        	VAR ret_BinasByteFormatInfo,		init = (T_INT8*)&PTU_src,		ev =(T_INT8*) &dest[3]
+        
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfo = BinasByteFormatInfo(src, format, (T_INT8*)dest);
+        END ELEMENT
+
+END TEST -- TEST 17
+
+END SERVICE -- BinasByteFormatInfo
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BinasGetWidth
+--------------------------------------------------------------------------------
+SERVICE BinasGetWidth
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+#T_UINT16 format;
+
+-- By function returned type declaration
+#T_UINT16 ret_BinasGetWidth;
+
+ENVIRONMENT ENV_BinasGetWidth
+
+    VAR format,					init = NO_NUMBER,		ev = init
+
+    VAR ret_BinasGetWidth,		init = 0,				ev = init
+
+END ENVIRONMENT -- ENV_BinasGetWidth
+
+USE ENV_BinasGetWidth
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfbinascii-BinasGetWidth-DB-LLR-001]
+	COMMENT The function 'BinasGetWidth' returns the result of bitwise AND of format and the macro W_M.
+	COMMENT Equivalence Class 35 
+	COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--holds the value of 'format'(minimum value)
+			VAR format,					init = 0x0000,			ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        
+        	--None
+
+        COMMENT OUTPUT SECTION:
+        
+			--holds the value to be returned
+			VAR ret_BinasGetWidth,		init = 0x3,				ev = 0x0
+		
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasGetWidth = BinasGetWidth(format);
+        
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfbinascii-BinasGetWidth-DB-LLR-001]
+	COMMENT The function 'BinasGetWidth' returns the result of bitwise AND of format and the macro W_M.
+	COMMENT Equivalence Class 35
+	COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--holds the value of 'format'(nominal value)
+			VAR format,					init = 0x0008,			ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        
+        	--None
+
+        COMMENT OUTPUT SECTION:
+			
+			--holds the value to be returned
+			VAR ret_BinasGetWidth,		init = 0x3,				ev = 0x8
+		
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasGetWidth = BinasGetWidth(format);
+        
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+	COMMENT Test Description
+	COMMENT <TD>
+	COMMENT [hdudispfbinascii-BinasGetWidth-DB-LLR-001]
+	COMMENT The function 'BinasGetWidth' returns the result of bitwise AND of format and the macro W_M.
+	COMMENT Equivalence Class 35
+	COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--holds the value of 'format'(maximum value)
+			VAR format,					init = 0x000F,			ev = init
+        
+        COMMENT INPUT/OUTPUT SECTION:
+        
+        	--None
+
+        COMMENT OUTPUT SECTION:
+        
+			--holds the value to be returned
+			VAR ret_BinasGetWidth,		init = 0x3,				ev = 0xF
+		
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasGetWidth = BinasGetWidth(format);
+        
+	END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- BinasGetWidth
+
+--------------------------------------------------------------------------------
+-- Declaration of the service BinasByteFormatInfoBE
+--------------------------------------------------------------------------------
+SERVICE BinasByteFormatInfoBE
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+
+#void *src;
+
+#T_UINT16 format;
+
+#T_INT8  dest[200];
+
+-- By function returned type declaration
+
+#T_INT8* ret_BinasByteFormatInfoBE = (T_INT8*)&PTU_src;
+
+ENVIRONMENT ENV_BinasByteFormatInfoBE
+
+    VAR src,							init = (void *)&PTU_src,			ev = init
+
+    VAR format,							init = 0,							ev = init
+
+    VAR ret_BinasByteFormatInfoBE,		init = (T_INT8*)&PTU_src,			ev = init
+
+END ENVIRONMENT -- ENV_BinasByteFormatInfoBE
+
+USE ENV_BinasByteFormatInfoBE
+
+TEST 1
+FAMILY nominal
+	
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfoBE-DB-LLR-001]
+	COMMENT The function 'BinasByteFormatInfoBE' does the following
+	COMMENT	1.	Initializes Scanner to dest plus one address.
+	COMMENT	2.	Prepends the left book end by setting dest to LEFT_BE.
+	COMMENT	3.	Increments dest by one
+	COMMENT	4.	Sets dest to return value of function BinasByteFormatInfo with parameter src, format and dest.
+	COMMENT	5.	Appends the right book end by setting dest to RIGHT_BE.
+	COMMENT	6.	Increments the dest by one
+	COMMENT	7.	Sets content of dest to ZERO.
+	COMMENT Equivalance 47
+	COMMENT
+	COMMENT [hdudispfbinascii-BinasByteFormatInfoBE-DB-LLR-003]
+	COMMENT The function 'BinasByteFormatInfoBE' returns dest.
+	COMMENT	Equivalance 36
+	COMMENT 
+    COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--holds the format used in conversion(zero fieldwidth)
+        	VAR format,							init = 0x300,						ev = init
+			
+			--holds the value to be converted to ascii
+			VAR PTU_src,						init = 10,							ev = init
+			
+			--holds the address of value to be converted to ascii
+			VAR src,							init = (void *)&PTU_src,			ev = init
+			
+        COMMENT INPUT/OUTPUT SECTION:
+        
+        	--None
+
+        COMMENT OUTPUT SECTION:
+			
+			--holds the corresponding ascii value of source
+			VAR dest[0],						init = 0,							ev = LEFT_BE
+			VAR dest[1],						init = 0,							ev = RIGHT_BE
+			VAR dest[2],						init = 0,							ev = '\0'
+			
+			--holds the return address of dest
+			VAR ret_BinasByteFormatInfoBE,		init = (T_INT8*)&PTU_src,			ev = (T_INT8*)&dest[2]
+			
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfoBE = (T_INT8 *)BinasByteFormatInfoBE(src, format, (T_INT8 *)dest);
+    
+	END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+	
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfoBE-DB-LLR-002]
+	COMMENT	For the first iteration the function 'BinasByteFormatInfoBE' does the following
+	COMMENT	when the scanner is equal to BINASCII_SPACE 
+	COMMENT	1.	Set Scanner to LEFT_BE.
+	COMMENT	2.	Set scanner minus one to BINASCII_SPACE.
+	COMMENT	3.	Increment the scanner by one.
+	COMMENT	For the second iteration the function 'BinasByteFormatInfoBE' does nothing
+	COMMENT	when the scanner is  not equal to BINASCII_SPACE 
+	COMMENT	Equivalance Class 39,40
+	COMMENT
+    COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--holds the format used in conversion
+        	VAR format,							init = 0x305,						ev = init
+        
+			--holds the value to be converted to ascii
+			VAR PTU_src,						init = 1024,						ev = init
+			
+			--holds the address of value to be converted to ascii
+			VAR src,							init = (void *)&PTU_src,			ev = init
+			
+        COMMENT INPUT/OUTPUT SECTION:
+        
+        	--None
+
+        COMMENT OUTPUT SECTION:
+			
+			--holds the corresponding ascii value of source
+			VAR dest[0],						init = 0,							ev = 21
+			VAR dest[1],						init = 21,							ev = LEFT_BE
+			VAR dest[2],						init = 0,							ev = 49
+			VAR dest[3],						init = 0,							ev = 48
+			VAR dest[4],						init = 0,							ev = 50
+			VAR dest[5],						init = 0,							ev = 52
+			VAR dest[6],						init = 0,							ev = RIGHT_BE
+			VAR dest[7],						init = 0,							ev = '\0'
+			
+			--holds the return address of dest
+			VAR ret_BinasByteFormatInfoBE,		init = (T_INT8*)&PTU_src,			ev = (T_INT8*)&dest[7]
+			
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfoBE = (T_INT8 *)BinasByteFormatInfoBE(src, format, (T_INT8 *)dest);
+    
+	END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+	
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+	COMMENT	[hdudispfbinascii-BinasByteFormatInfoBE-DB-LLR-002]
+	COMMENT	From the 0th to 6th iteration the function 'BinasByteFormatInfoBE' does the following
+	COMMENT	when the scanner is equal to BINASCII_SPACE 
+	COMMENT	1.	Set Scanner to LEFT_BE.
+	COMMENT	2.	Set scanner minus one to BINASCII_SPACE.
+	COMMENT	3.	Increment the scanner by one.
+	COMMENT	For the 7th  iteration the function 'BinasByteFormatInfoBE' does nothing
+	COMMENT	when the scanner is  not equal to BINASCII_SPACE 
+	COMMENT	Equivalance Class 39,40
+	COMMENT 
+    COMMENT </TD>
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			--holds the format used in conversion
+        	VAR format,							init = 0x30F,						ev = init
+        
+			--holds the value to be converted to ascii
+			VAR PTU_src,						init = 12345678,					ev = init
+			
+			--holds the address of value to be converted to ascii
+			VAR src,							init = (void *)&PTU_src,			ev = init
+			
+        COMMENT INPUT/OUTPUT SECTION:
+        
+        	--None
+
+        COMMENT OUTPUT SECTION:
+			
+			--holds the corresponding ascii value of source
+			VAR dest[0],						init = 0,							ev = 21
+			VAR dest[1],						init = 0,							ev = 21
+			VAR dest[2],						init = 0,							ev = 21
+			VAR dest[3],						init = 0,							ev = 21
+			VAR dest[4],						init = 0,							ev = 21
+			VAR dest[5],						init = 0,							ev = 21
+			VAR dest[6],						init = 0,							ev = 21
+			VAR dest[7],						init = 0,							ev = LEFT_BE
+			VAR dest[8],						init = 0,							ev = 49
+			VAR dest[9],						init = 0,							ev = 50
+			VAR dest[10],						init = 0,							ev = 51
+			VAR dest[11],						init = 0,							ev = 52
+			VAR dest[12],						init = 0,							ev = 53
+			VAR dest[13],						init = 0,							ev = 54
+			VAR dest[14],						init = 0,							ev = 55
+			VAR dest[15],						init = 0,							ev = 56
+			VAR dest[16],						init = 0,							ev = RIGHT_BE
+			VAR dest[17],						init = 0,							ev = '\0'
+			
+			--holds the return address of dest 
+			VAR ret_BinasByteFormatInfoBE,		init = (T_INT8*)&PTU_src,			ev = (T_INT8*)&dest[17]
+			
+        -- Stub Calls :
+        SIMUL
+
+              --No Stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #ret_BinasByteFormatInfoBE = (T_INT8 *)BinasByteFormatInfoBE(src, format, (T_INT8 *)dest);
+    
+	END ELEMENT
+
+END TEST -- TEST 3
+	
+--TEST 4
+--FAMILY robustness
+--	
+--    COMMENT Test Description
+--    COMMENT <TD>
+--	  COMMENT [hdudispfbinascii-BinasByteFormatInfoBE-DB-LLR-001]
+--    COMMENT The function 'BinasByteFormatInfoBE' does nothing as NULL is passed as input to parameter 'src' 
+--	  COMMENT Equivalance Class 45
+--	  COMMENT	
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--		COMMENT INPUT SECTION:
+--			
+--			None
+--			
+--        COMMENT INPUT/OUTPUT SECTION:
+--        
+--        	None
+--
+--        COMMENT OUTPUT SECTION:
+--			
+--			
+--			
+--        -- Stub Calls :
+--        SIMUL
+--
+--              No Stubs
+--
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test :
+--        #ret_BinasByteFormatInfoBE = (T_INT8 *)BinasByteFormatInfoBE(NULL, format, (T_INT8 *)dest);
+--    
+--	END ELEMENT
+--
+--END TEST -- TEST 4
+--
+--TEST 5
+--FAMILY robustness
+--	
+--    COMMENT Test Description
+--    COMMENT <TD>
+--	  COMMENT [hdudispfbinascii-BinasByteFormatInfoBE-DB-LLR-001]
+--    COMMENT The function 'BinasByteFormatInfoBE' does nothing as NULL is passed as input to parameter 'dest' 
+--	  COMMENT Equivalance Class 46
+--	  COMMENT	
+--    COMMENT </TD>
+--
+--    ELEMENT
+--
+--		COMMENT INPUT SECTION:
+--			
+--			None
+--			
+--        COMMENT INPUT/OUTPUT SECTION:
+--        
+--        	None
+--
+--        COMMENT OUTPUT SECTION:
+--			
+--			
+--			
+--        -- Stub Calls :
+--        SIMUL
+--
+--              No Stubs
+--
+--        END SIMUL
+--
+--        -- Calling the Unit Under Test :
+--        #ret_BinasByteFormatInfoBE = (T_INT8 *)BinasByteFormatInfoBE(src, format, NULL);
+--    
+--	END ELEMENT
+--
+--END TEST -- TEST 5
+
+END SERVICE -- BinasByteFormatInfoBE

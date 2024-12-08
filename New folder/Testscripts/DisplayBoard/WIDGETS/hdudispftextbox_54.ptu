@@ -1,0 +1,862 @@
+HEADER hdudispftextbox,Source Code Ver :  1.12 ,TestScript Ver : 1.2
+--------------------------------------------------------------------------------
+-- Author Name         : Harshitha R
+--
+-- File Name           : hdudispftextbox_54.ptu
+--
+-- Test Creation Date  : 17.10.2020
+--
+-- Tested Functions    : TextBoxPdiDraw
+-- 
+-- Version History     :
+--
+--  TEST-VERSION         TEST-DATE         TESTER NAME          MODIFICATIONS
+--  ------------         ---------         -----------          -------------
+--    1.1                22.10.2020         Harshitha R                Created the PTU file.
+--    1.2                29.04.2021         Vignesh Sunil          Updated as per #PR100338
+
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+##include "hdudispffonts.h"     /*Contains different font information*/
+##include "hdudispfpolygon1.h"   /*provides routines for "scan line" method polygon fill.*/
+##include "hdudispftext.h"      /* Routines which maintain text display and updates */
+##include "hdudispftextbox.h"   /* routines for text box draw and updates */
+##include "hdudispfconfig.h"    /* contains page and color config information */
+##include "hdulibbasictypes.h" /* Contains different font information */
+##include "hdudispfbfcfont.h"  /* BitFontCreator (Pro & Grayscale) font header */
+##include "hdudispfpdidata.h"  /* contains pdidata information */
+##include "hdudispfgrapp.h"    /* Routines for exceedence,CDT,rounddails,timers,bar graphs */
+##include "hdudispfrterror.h"       /*provides stub routine for run time errors.*/ 
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern T_CHAR Pc_more_below[1];
+    #extern T_ETXFS Flash_state;
+    #extern T_INT8 S8_had_flash;
+    #T_PARAM_TABLE Parameters_reading[256]; 
+    #T_ETXFS Flash_state; 
+    #T_INT8 S8_had_flash; 
+    #T_PAGE Page_settings; 
+    #T_UINT8 Tb_cnt; 
+    #T_STEXTBOXPDIDATA Ap_page_tbs[50]; 
+    
+-- Declarations of the temporary variables of the tested file
+	
+	--To verify 'fill' function
+	#T_CHAR *Dummyfunc();
+	#T_CHAR *PTU_DUMMY_RET[20];
+	
+	--To handle 'p_font' in the function 'TextDrawChar'
+    #T_BFC_FONT PTU_p_font1;
+	
+	--'PTU_FontsGetFont' is created to handle 'psFont' 
+	#T_STEXTBOXDATA PTU_FontsGetFont;	
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      : Harshitha R 
+    COMMENT
+    COMMENT File Name        : hdudispftextbox_54.ptu
+    COMMENT
+    COMMENT Tested Functions : TextBoxPdiDraw					   
+    COMMENT
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT 	None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT  1.Classes 103,108,113,118 cannot be covered since address cannot be expected
+    COMMENT
+    COMMENT  2 .Warning "enumerated type mixed with another type" is obtained when   
+    COMMENT  '(enum T_ETBOXTYPE) type' is exercised with value "SELECT_BOX+2" 
+    COMMENT  warning #188-D: enumerated type mixed with another type  
+    COMMENT </AC>
+
+COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+	COMMENT Valid Class(es)
+	COMMENT
+    COMMENT Class 1
+	COMMENT The function 'StrLen', returns 'count'.
+    COMMENT   
+	COMMENT Class 2
+	COMMENT In the function 'TextBoxInit', 'U16_next_box' is greater than 'MAX_TEXT_BOXES'.
+	COMMENT	
+	COMMENT Class 3
+	COMMENT In the function 'TextBoxInit', 'U16_next_box' is set to 'MAX_TEXT_BOXES'.
+	COMMENT 
+	COMMENT Class 4
+	COMMENT In the function 'TextBoxInit', 'U16_next_box' is less than 'MAX_TEXT_BOXES'.
+	COMMENT
+	COMMENT Class 5
+	COMMENT In the Function 'TextBoxInit','ps_font' is set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 6
+	COMMENT In the Function 'TextBoxInit','ps_font' is not set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 7
+	COMMENT In the Function 'TextBoxInit',the value of 'eTBoxType of ps_text_box_data' is set to 'TEXT_BOX'.
+	COMMENT
+	COMMENT Class 8
+	COMMENT In the Function 'TextBoxInit',the value of 'eTBoxType of ps_text_box_data' is set to 'LIST_BOX'.
+	COMMENT
+	COMMENT Class 9
+	COMMENT In the Function 'TextBoxInit',the value of 'eTBoxType of ps_text_box_data' is set to 'SELECT_BOX'.
+	COMMENT
+	COMMENT Class 10
+	COMMENT In the Function 'TextBoxInit',the value of 'eTBoxType of ps_text_box_data' is set to 'BB_RIGHT'.
+	COMMENT
+	COMMENT Class 11
+	COMMENT In the Function 'TextBoxInit',the value of 'eTBoxType of ps_text_box_data' is set to 'BB_BOTTOM'.
+	COMMENT
+	COMMENT Class 12
+	COMMENT In the Function 'TextBoxInit',the value of 'eTBoxType of ps_text_box_data' is other than 'TEXT_BOX',
+	COMMENT 'LIST_BOX','SELECT_BOX','BB_RIGHT' and 'BB_BOTTOM'.
+	COMMENT
+	COMMENT Class 13
+	COMMENT In the Function 'TBPrint','pc_text' is set to 'CARRIAGE_RTN'.
+	COMMENT	
+	COMMENT Class 14
+	COMMENT In the Function 'TBPrint','pc_text' is set to 'LINE_FEED'.
+	COMMENT	
+	COMMENT Class 15
+	COMMENT In the Function 'TBPrint','sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb' is less than 's16PixHeight of ps_tbd'. 
+	COMMENT
+	COMMENT Class 16
+	COMMENT In the Function 'TBPrint','sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb' is greater than 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 17
+	COMMENT In the Function 'TBPrint','sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb' is set to 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 18
+	COMMENT In the Function 'TBPrint','pc_text' is other than 'CARRIAGE_RTN' and 'LINE_FEED'.
+	COMMENT
+	COMMENT Class 19
+	COMMENT In the Function 'TBPrint',the value of 's16DrawX of ps_tb' is less than 
+	COMMENT 'difference of s16PixWidth of ps_tbd and s16FontWidth of ps_tb'.
+	COMMENT
+	COMMENT Class 20
+	COMMENT In the Function 'TBPrint',the value of 's16DrawX of ps_tb' is greater than 
+	COMMENT 'difference of s16PixWidth of ps_tbd and s16FontWidth of ps_tb'.
+	COMMENT
+	COMMENT Class 21
+	COMMENT In the Function 'TBPrint',the value of 's16DrawX of ps_tb' is set to 
+	COMMENT 'difference of s16PixWidth of ps_tbd and s16FontWidth of ps_tb'.
+	COMMENT
+	COMMENT Class 22
+	COMMENT In the Function 'TBPrint',the value of 's16DrawY of ps_tb' is 
+	COMMENT less than 'difference of s16PixHeight of ps_tbd and s16FontHeight of ps_tb'.
+	COMMENT
+	COMMENT Class 23
+	COMMENT In the Function 'TBPrint',the value of 's16DrawY of ps_tb' is 
+	COMMENT grater than 'difference of s16PixHeight of ps_tbd and s16FontHeight of ps_tb'.
+	COMMENT
+	COMMENT Class 24
+	COMMENT In the Function 'TBPrint',the value of 's16DrawY of ps_tb' is 
+	COMMENT set to 'difference of s16PixHeight of ps_tbd and s16FontHeight of ps_tb'.
+	COMMENT
+	COMMENT Class 25
+	COMMENT In the Function 'TBPrint','s16DrawX of ps_tb ' is set to 'BB_RIGHT'.
+	COMMENT
+	COMMENT Class 26
+	COMMENT In the Function 'TBPrint','s16DrawX of ps_tb ' is not set to 'BB_RIGHT'.
+	COMMENT	
+	COMMENT Class 27
+	COMMENT In the Function 'TBPrint','sum of s16DrawY of ps_tb and s16FontHeight of ps_tb' is lesser than 's16PixHeight of ps_tbd'.
+	COMMENT	
+	COMMENT Class 28
+	COMMENT In the Function 'TBPrint','sum of s16DrawY of ps_tb and s16FontHeight of ps_tb' is greater than 's16PixHeight of ps_tbd'.
+	COMMENT	
+	COMMENT Class 29
+	COMMENT In the Function 'TBPrint','sum of s16DrawY of ps_tb and s16FontHeight of ps_tb' is set to 's16PixHeight of ps_tbd'.
+	COMMENT	
+	COMMENT Class 30
+	COMMENT In the Function 'LBPrintMore',the value of 'pc_scanner' is set to 'LINE_FEED'.
+	COMMENT	
+	COMMENT Class 31
+	COMMENT In the Function 'LBPrintMore',the value of 'pc_scanner' is not set to 'LINE_FEED'.
+	COMMENT	
+	COMMENT Class 32
+	COMMENT In the Function 'LBPrintMore',the value of 'sum of FontHeight of psFont of ps_tb and s16DrawY of ps_tb' is 
+	COMMENT greater than 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 33
+	COMMENT In the Function 'LBPrintMore',the value of 'sum of FontHeight of psFont of ps_tb and s16DrawY of ps_tb' is 
+	COMMENT lesser than 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 34
+	COMMENT In the Function 'LBPrintMore',the value of 'sum of FontHeight of psFont of ps_tb and s16DrawY of ps_tb' is 
+	COMMENT set to 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 35
+	COMMENT In the Function 'LBPrintMore',the value of 'had lf' is set to 'TRUE'.
+	COMMENT
+	COMMENT Class 36
+	COMMENT In the Function 'LBPrintMore',the value of 'had lf' is set to 'FALSE'.
+	COMMENT
+	COMMENT Class 37
+	COMMENT In the Function 'LBPrintMore','pc_text_list' value is set to 'TRUE' after adding one.
+	COMMENT
+	COMMENT Class 38
+	COMMENT In the Function 'LBPrintMore','pc_text_list' value is set to 'FALSE' after adding one.
+	COMMENT
+	COMMENT Class 39
+	COMMENT In the Function 'LBPrintMore','s16DrawX of ps_tb' value is less than ZERO.
+	COMMENT
+	COMMENT Class 40
+	COMMENT In the Function 'LBPrintMore','s16DrawX of ps_tb' value is greater than ZERO.
+	COMMENT
+	COMMENT Class 41
+	COMMENT In the Function 'LBPrintMore','s16DrawX of ps_tb' value is set to ZERO.
+	COMMENT
+	COMMENT Class 42
+	COMMENT The Function 'LBPrintMore' calls 'TBPrint'.
+	COMMENT
+	COMMENT Class 44
+	COMMENT The Function 'LBPrint',calls the function 'LBPrintMore'. 
+	COMMENT
+	COMMENT Class 45
+	COMMENT In the Function 'LBPrint',return value of the function 'LBPrintMore' is 'ZERO'.
+	COMMENT
+	COMMENT Class 46
+	COMMENT In the Function 'LBPrint',return value of the function 'LBPrintMore' is not 'ZERO'.
+	COMMENT
+	COMMENT Class 47
+	COMMENT In the Function 'LBPrint','pc_text' value is set to 'CARRIAGE_RTN'.
+	COMMENT
+	COMMENT Class 48
+	COMMENT In the Function 'LBPrint','pc_text' value is set to 'LINE_FEED'.
+	COMMENT
+	COMMENT Class 49
+	COMMENT In the Function 'LBPrint','pc_text' value is other than 'CARRIAGE_RTN' and 'LINE_FEED'.
+	COMMENT
+	COMMENT Class 50
+	COMMENT In the Function 'LBPrint','sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb' is
+	COMMENT lesser than 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 51
+	COMMENT In the Function 'LBPrint','sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb' is
+	COMMENT grater than 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 52
+	COMMENT In the Function 'LBPrint','sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb' is
+	COMMENT set to 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 53
+	COMMENT In the Function 'LBPrint',the value of 's16DrawX of ps_tb' is less than 
+	COMMENT 'difference of s16PixWidth of ps_tbd and s16FontWidth of ps_tb'.
+	COMMENT
+	COMMENT Class 54
+	COMMENT In the Function 'LBPrint',the value of 's16DrawX of ps_tb' is greater than 
+	COMMENT 'difference of s16PixWidth of ps_tbd and s16FontWidth of ps_tb'.
+	COMMENT
+	COMMENT Class 55
+	COMMENT In the Function 'LBPrint',the value of 's16DrawX of ps_tb' is set to 
+	COMMENT 'difference of s16PixWidth of ps_tbd and s16FontWidth of ps_tb'.
+	COMMENT
+	COMMENT Class 56
+	COMMENT In the Function 'LBPrint',the value of 's16DrawY of ps_tb' is 
+	COMMENT less than 'difference of s16PixHeight of ps_tbd and s16FontHeight of ps_tb'.
+	COMMENT
+	COMMENT Class 57
+	COMMENT In the Function 'LBPrint',the value of 's16DrawY of ps_tb' is 
+	COMMENT grater than 'difference of s16PixHeight of ps_tbd and s16FontHeight of ps_tb'.
+	COMMENT
+	COMMENT Class 58
+	COMMENT In the Function 'LBPrint',the value of 's16DrawY of ps_tb' is 
+	COMMENT set to 'difference of s16PixHeight of ps_tbd and s16FontHeight of ps_tb'.
+	COMMENT
+	COMMENT Class 59
+	COMMENT In the Function 'TBDisplayString',the value of 'eTBoxType of ps tbd' is set to 'LIST_BOX'.
+	COMMENT
+	COMMENT Class 60
+	COMMENT In the Function 'TBDisplayString',the value of 'eTBoxType of ps tbd' is not set to 'LIST_BOX'.
+	COMMENT
+	COMMENT Class 61
+	COMMENT In the Function 'TBDisplayString',the value of 'eTBoxType of ps tbd' is set to 'SELECT_BOX'.
+	COMMENT
+	COMMENT Class 62
+	COMMENT In the Function 'TBDisplayString',the value of 'eTBoxType of ps tbd' is other than 'SELECT_BOX' and 'LIST_BOX'.
+	COMMENT
+	COMMENT Class 63
+	COMMENT In the Function 'TBDisplayString',the value of 'pcTitle of ps tbd' is not set to 'ZERO'.
+	COMMENT
+	COMMENT Class 64
+	COMMENT In the Function 'TBDisplayString',the value of 'pcTitle of ps tbd' is set to 'ZERO'.
+	COMMENT
+	COMMENT Class 65
+	COMMENT In the Function 'TBDisplayString',the value of 's16DrawX of ps_tb' is lesser than 'ZERO'.
+	COMMENT
+	COMMENT Class 66
+	COMMENT In the Function 'TBDisplayString',the value of 's16DrawX of ps_tb' is greater than 'ZERO'.
+	COMMENT
+	COMMENT Class 67
+	COMMENT In the Function 'TBDisplayString',the value of 's16DrawX of ps_tb' is set to 'ZERO'.
+	COMMENT
+	COMMENT Class 68
+	COMMENT In the Function 'TBDisplayString',the value of 'sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb' 
+	COMMENT is lesser than the value of 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 69
+	COMMENT In the Function 'TBDisplayString',the value of 'sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb' 
+	COMMENT is greater than the value of 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 70
+	COMMENT In the Function 'TBDisplayString',the value of 'sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb' 
+	COMMENT is set to the value of 's16PixHeight of ps_tbd'.
+	COMMENT
+	COMMENT Class 71
+	COMMENT In the Function 'TBDisplayString','eTBoxType of ps_tbd' is set to 'BB_RIGHT'.
+	COMMENT
+	COMMENT Class 72
+	COMMENT In the Function 'TBDisplayString','eTBoxType of ps_tbd' is not set to 'BB_RIGHT'.
+	COMMENT
+	COMMENT Class 73
+	COMMENT In the Function 'TBDisplayString','s16DrawY of ps_tb' is lesser than 'ZERO'.
+	COMMENT
+	COMMENT Class 74
+	COMMENT In the Function 'TBDisplayString','s16DrawY of ps_tb' is greater than 'ZERO'.
+	COMMENT
+	COMMENT Class 75
+	COMMENT In the Function 'TBDisplayString','s16DrawY of ps_tb' is to 'ZERO'.
+	COMMENT
+	COMMENT Class 76
+	COMMENT In the Function 'TBDisplayString','eTBoxType of ps_tbd' is set to 'BB_BOTTOM'.
+	COMMENT
+	COMMENT Class 77
+	COMMENT In the Function 'TBDisplayString','eTBoxType of ps_tbd' is not set to 'BB_BOTTOM'.
+	COMMENT
+	COMMENT Class 78
+	COMMENT The Function 'TBDisplayString',calls the function LBPrint.
+	COMMENT
+	COMMENT Class 81
+	COMMENT The Function 'TBDisplayString',calls the function 'TBPrint'.
+	COMMENT
+	COMMENT Class 82
+	COMMENT In the Function 'TextBoxDraw','eState of S_text_boxes with counter as index' is set to 'ON'.	
+	COMMENT	
+	COMMENT Class 83
+	COMMENT In the Function 'TextBoxDraw','eState of S_text_boxes with counter as index' is not set to 'ON'.
+	COMMENT	
+	COMMENT Class 84
+	COMMENT In the Function 'TextBoxDraw','bFlashing of ps_tb' is not set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 85
+	COMMENT In the Function 'TextBoxDraw','bFlashing of ps_tb' is set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 86
+	COMMENT In the Function 'TextBoxDraw','Flash_state' is set to 'FLASH_STATE_ON'.
+	COMMENT	
+	COMMENT Class 87
+	COMMENT In the Function 'TextBoxDraw','Flash_state' is not set to 'FLASH_STATE_ON'.
+	COMMENT
+	COMMENT Class 88
+	COMMENT The Function 'TextBoxDraw',calls the function 'PolygonFillRect'.
+	COMMENT	
+	COMMENT Class 89
+	COMMENT In the Function 'TextBoxDraw','s16FrameWidth of ps_tbd' is not set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 90
+	COMMENT In the Function 'TextBoxDraw','s16FrameWidth of ps_tbd' is set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 91
+	COMMENT In the Function 'TextBoxDraw','eTBoxType of ps_tbd' is set to 'TEXT_BOX'.	
+	COMMENT	
+	COMMENT Class 92
+	COMMENT In the Function 'TextBoxDraw','eTBoxType of ps_tbd' is set to 'LIST_BOX'.	
+	COMMENT	
+	COMMENT Class 93
+	COMMENT In the Function 'TextBoxDraw','eTBoxType of ps_tbd' is set to 'SELECT_BOX'.	
+	COMMENT	
+	COMMENT Class 94
+	COMMENT In the Function 'TextBoxDraw', the value of 'eTBoxType of ps_tbd' is other than 'TEXT_BOX','LIST_BOX' and 'SELECT_BOX'.	
+	COMMENT
+	COMMENT Class 95
+	COMMENT The Function 'TextBoxDraw',calls the function 'PolygonDrawFrame'.
+	COMMENT	
+	COMMENT Class 96
+	COMMENT In the Function 'TextBoxDraw','fill of ps_tbd' is set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 97
+	COMMENT In the Function 'TextBoxDraw','fill of ps_tbd' is not set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 98
+	COMMENT The Function 'TextBoxDraw',calls the function 'fill'.
+	COMMENT
+	COMMENT Class 99
+	COMMENT The Function 'TextBoxDraw',calls the function 'TBDisplayString' with parameters
+	COMMENT fill data, address of S_text_boxes with counter as index and colour
+	COMMENT	
+	COMMENT Class 100
+	COMMENT In the Function 'TextBoxOn','psTextBox of ps_this_box' is set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 101
+	COMMENT In the Function 'TextBoxOn','psTextBox of ps_this_box' is not set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 102
+	COMMENT In the Function 'TextBoxOn','psTextBox of ps_this_box' is greater than 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT	
+	COMMENT Class 103
+	COMMENT In the Function 'TextBoxOn','psTextBox of ps_this_box' is lesser than 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT	
+	COMMENT Class 104
+	COMMENT In the Function 'TextBoxOn','psTextBox of ps_this_box' is set to 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT	
+	COMMENT Class 105
+	COMMENT In the Function 'TextBoxOff','psTextBox of ps_this_box' is set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 106
+	COMMENT In the Function 'TextBoxOff','psTextBox of ps_this_box' is not set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 107
+	COMMENT In the Function 'TextBoxOff','psTextBox of ps_this_box' is greater than 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT	
+	COMMENT Class 108
+	COMMENT In the Function 'TextBoxOff','psTextBox of ps_this_box' is lesser than 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT	
+	COMMENT Class 109
+	COMMENT In the Function 'TextBoxOff','psTextBox of ps_this_box' is set to 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT
+	COMMENT Class 110
+	COMMENT In the Function 'TextBoxFlash','psTextBox of ps_this_box' is set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 111
+	COMMENT In the Function 'TextBoxFlash','psTextBox of ps_this_box' is not set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 112
+	COMMENT In the Function 'TextBoxFlash','psTextBox of ps_this_box' is greater than 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT	
+	COMMENT Class 113
+	COMMENT In the Function 'TextBoxFlash','psTextBox of ps_this_box' is lesser than 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT	
+	COMMENT Class 114
+	COMMENT In the Function 'TextBoxFlash','psTextBox of ps_this_box' is set to 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT
+	COMMENT Class 115
+	COMMENT In the Function 'TextBoxNoFlash','psTextBox of ps_this_box' is set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 116
+	COMMENT In the Function 'TextBoxNoFlash','psTextBox of ps_this_box' is not set to 'ZERO'.
+	COMMENT	
+	COMMENT Class 117
+	COMMENT In the Function 'TextBoxNoFlash','psTextBox of ps_this_box' is greater than 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT	
+	COMMENT Class 118
+	COMMENT In the Function 'TextBoxNoFlash','psTextBox of ps_this_box' is lesser than 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT	
+	COMMENT Class 119
+	COMMENT In the Function 'TextBoxNoFlash','psTextBox of ps_this_box' is set to 'address of S_text_boxes with the index MAX_TEXT_BOXES'.
+	COMMENT 
+	COMMENT Class 124
+	COMMENT In the Function 'TextBoxInit','FontsGetFontHeight' is called.
+	COMMENT
+	COMMENT Class 125
+	COMMENT In the Function 'TextBoxInit','FontsGetCharWidth' is called.	
+	COMMENT
+	COMMENT Class 126
+	COMMENT In the Function 'TextBoxInit','FontsGetFont' is called.
+	COMMENT
+    COMMENT Class 128
+	COMMENT In function 'TextBoxPdiAllocate',Tb_cnt is greater than MAX_TEXT_BOXES
+	COMMENT
+    COMMENT Class 129
+	COMMENT In function 'TextBoxPdiAllocate',Tb_cnt is less than MAX_TEXT_BOXES
+	COMMENT 
+	COMMENT Class 130
+	COMMENT In function 'TextBoxPdiAllocate',ps_tbfont is equal to 0.
+	COMMENT   
+	COMMENT Class 131
+	COMMENT In function 'TextBoxPdiAllocate',ps_tbfont is not equal to 0.
+	COMMENT 
+	COMMENT Class 132
+	COMMENT In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is equal to TEXT_BOX
+	COMMENT 
+	COMMENT Class 133
+	COMMENT In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is not equal to TEXT_BOX
+	COMMENT 
+	COMMENT Class 134
+	COMMENT In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is equal to LIST_BOX
+	COMMENT
+	COMMENT Class 135
+	COMMENT In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is not equal to LIST_BOX
+	COMMENT 
+	COMMENT Class 136
+	COMMENT In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is equal to SELECT_BOX
+	COMMENT
+	COMMENT Class 137
+	COMMENT In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is not equal to SELECT_BOX
+	COMMENT
+	COMMENT Class 138
+	COMMENT In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is equal to BB_RIGHT
+	COMMENT
+	COMMENT Class 139
+	COMMENT In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is not equal to BB_RIGHT
+	COMMENT 
+	COMMENT Class 140
+	COMMENT	In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is equal to BB_BOTTOM
+	COMMENT 
+	COMMENT Class 141
+	COMMENT In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is not equal to BB_BOTTOM
+	COMMENT
+	COMMENT Class 142
+	COMMENT In function 'TextBoxPdiAllocate',eTBoxType of ps_text_box_data is not equal to BB_BOTTOM,BB_RIGHT,TEXT_BOX,LIST_BOX,SELECT_BOX.
+	COMMENT 
+	COMMENT Class 143
+	COMMENT In function 'TextBoxPdiAllocate',tb_state of Tb_settings of Page_settings is equal to TXT_STATE_REVERSE
+	COMMENT
+	COMMENT Class 144
+	COMMENT In function 'TextBoxPdiAllocate',tb_state of Tb_settings of Page_settings is equal to TXT_STATE_NORMAL
+	COMMENT
+	COMMENT Class 145
+	COMMENT In function 'TextBoxPdiAllocate',tb_state of Tb_settings of Page_settings is not equal to TXT_STATE_NORMAL,TXT_STATE_REVERSE
+	COMMENT 
+	COMMENT Class 146
+	COMMENT In function 'TextBoxPdiAllocate',tb_state of Tb_settings of Page_settings is equal to TEXT_FLASH_ON
+	COMMENT
+	COMMENT Class 147
+	COMMENT In function 'TextBoxPdiAllocate',tb_state of Tb_settings of Page_settings is equal to TEXT_FLASH_OFF
+	COMMENT
+	COMMENT Class 148
+	COMMENT In function 'TextBoxPdiAllocate',tb_state of Tb_settings of Page_settings is not equal to TEXT_FLASH_ON,TEXT_FLASH_OFF
+	COMMENT 
+	COMMENT Class 149
+	COMMENT In function 'TextBoxPdiDraw',Tb_cnt is equal to 0
+	COMMENT 
+	COMMENT Class 150
+	COMMENT In function 'TextBoxPdiDraw',Tb_cnt is not equal to 0
+	COMMENT 
+	COMMENT Class 151
+	COMMENT In function 'TextBoxPdiDraw',Parameters_reading of reading of stat is equal to PARAM_OK
+	COMMENT 
+	COMMENT Class 152
+	COMMENT In function 'TextBoxPdiDraw',Parameters_reading of reading of stat is not equal to PARAM_OK
+	COMMENT 
+	COMMENT Class 153
+	COMMENT In function 'TextBoxPdiDraw',Parameters_reading of type is equl to DDW
+	COMMENT 
+	COMMENT Class 154
+	COMMENT In function 'TextBoxPdiDraw',Parameters_reading of type is not equl to DDW
+	COMMENT 
+	COMMENT CLass 155
+	COMMENT In function 'TextBoxPdiDraw',Parameters_reading of type is equl to BNR
+	COMMENT 
+	COMMENT Class 156
+	COMMENT In function 'TextBoxPdiDraw',Parameters_reading of type is not equl to BNR
+	COMMENT 
+	COMMENT Class 157
+	COMMENT In function 'TextBoxPdiDraw',Parameters_reading of type is not equl to BNR and DDW
+	COMMENT
+	COMMENT Class 158
+	COMMENT In function 'TextBoxPdiDraw',comparelimit is equal to 0
+	COMMENT
+	COMMENT Class 159
+	COMMENT In function 'TextBoxPdiDraw',comparelimit is not equal to 0
+	COMMENT 
+	COMMENT Class 160
+	COMMENT In function 'TextBoxPdiDraw',S_pditext_boxes of eState is equal to OFF
+	COMMENT 
+	COMMENT Class 161
+	COMMENT In function 'TextBoxPdiDraw',S_pditext_boxes of eState is not equal to OFF
+	COMMENT 
+	COMMENT Class 162
+	COMMENT In function 'TextBoxPdiDraw',ps_tb of bFlashing is equal to 0
+	COMMENT 
+	COMMENT Class 163
+	COMMENT In function 'TextBoxPdiDraw',ps_tb of bFlashing is not equal to 0
+	COMMENT 
+	COMMENT Class 164
+	COMMENT In function 'TextBoxPdiDraw',Flash_state is equal to FLASH_STATE_ON
+	COMMENT 
+	COMMENT Class 165
+	COMMENT In function 'TextBoxPdiDraw',Flash_state is not equal to FLASH_STATE_ON
+	COMMENT 
+	COMMENT Class 166
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of s16FrameWidth is not equal to 0
+	COMMENT 
+	COMMENT Class 167
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of s16FrameWidth is equal to 0
+	COMMENT 
+	COMMENT Class 168
+	COMMENT In function 'TextBoxPdiDraw',status_flag is equal to REDXTEXTBOX
+	COMMENT 
+	COMMENT Class 169
+	COMMENT In function 'TextBoxPdiDraw',status_flag is not equal to REDXTEXTBOX
+	COMMENT 
+	COMMENT Class 170
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of psDisRegion  is equal to NULL
+	COMMENT 
+	COMMENT Class 171
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of psDisRegion  is not equal to NULL
+	COMMENT 
+	COMMENT Class 172
+	COMMENT In function 'TBPrintPDI',pc_text is equal to CARRIAGE_RTN
+	COMMENT 
+	COMMENT Class 173
+	COMMENT In function 'TBPrintPDI',pc_text is not equal to CARRIAGE_RTN
+	COMMENT 
+	COMMENT Class 174
+	COMMENT In function 'TBPrintPDI',pc_text is equal to LINE_FEED
+	COMMENT 
+	COMMENT Class 175
+	COMMENT In function 'TBPrintPDI',pc_text is not equal to LINE_FEED
+	COMMENT 
+	COMMENT Class 176
+	COMMENT In function 'TBPrintPDI',the sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb is less than s16PixHeight of ps_tbd
+	COMMENT 
+	COMMENT Class 177
+	COMMENT In function 'TBPrintPDI',the sum of s16DrawY of ps_tb and FontHeight of psFont of ps_tb is greater than s16PixHeight of ps_tbd
+	COMMENT 
+	COMMENT Class 178
+	COMMENT In function 'TBPrintPDI',s16DrawX of ps_tb is lesser than difference of s16PixWidth of ps_tbd and s16FontWidth of ps_tb
+	COMMENT 
+	COMMENT Class 179
+	COMMENT In function 'TBPrintPDI',of s16DrawX of ps_tb is greater than difference of s16PixWidth of ps_tbd and s16FontWidth of ps_tb
+	COMMENT 
+	COMMENT Class 180
+	COMMENT In function 'TBPrintPDI',of s16DrawX of ps_tb is equal to difference of s16PixWidth of ps_tbd and s16FontWidth of ps_tb
+	COMMENT 
+	COMMENT Class 181
+	COMMENT In function 'TBPrintPDI',s16DrawY of ps_tb is lesser than difference of s16PixHeight of ps_tbd and s16FontHeight of ps_tb
+	COMMENT 
+	COMMENT Class 182
+	COMMENT In function 'TBPrintPDI',s16DrawY of ps_tb is greater than difference of s16PixHeight of ps_tbd and s16FontHeight of ps_tb
+	COMMENT 
+	COMMENT Class 183
+	COMMENT In function 'TBPrintPDI',s16DrawY of ps_tb is equal to difference of s16PixHeight of ps_tbd and s16FontHeight of ps_tb
+	COMMENT 
+	COMMENT Class 184
+	COMMENT In function 'TBPrintPDI',ps_tbd of eTBoxType is equal to BB_RIGHT
+	COMMENT 
+	COMMENT Class 185
+	COMMENT In function 'TBPrintPDI',ps_tbd of eTBoxType is not equal to BB_RIGHT
+	COMMENT 
+	COMMENT Class 186
+	COMMENT In function 'TBDisplayStringPDI',value of alignment is equal to ALIGN_CENTER
+	COMMENT 
+	COMMENT Class 187
+	COMMENT In function 'TBDisplayStringPDI',value of alignment is not equal to ALIGN_CENTER
+	COMMENT 
+	COMMENT Class 188
+	COMMENT In function 'TBDisplayStringPDI',value of alignment is equal to ALIGN_RIGHT
+	COMMENT 
+	COMMENT Class 189
+	COMMENT In function 'TBDisplayStringPDI',value of alignment is not equal to ALIGN_RIGHT
+	COMMENT 
+	COMMENT Class 190
+	COMMENT In function 'TBDisplayStringPDI',value of alignment is equal to ALIGN_CENTER_LEFT
+	COMMENT 
+	COMMENT Class 191
+	COMMENT In function 'TBDisplayStringPDI',value of alignment is not equal to ALIGN_CENTER_LEFT
+	COMMENT 
+	COMMENT Class 192
+	COMMENT In function 'TBDisplayStringPDI',value of ps_tb of s16DrawY is less sthan 0.
+	COMMENT 
+	COMMENT Class 193
+	COMMENT In function 'TBDisplayStringPDI',value of ps_tb of s16DrawY is greater sthan 0.
+	COMMENT 
+	COMMENT Class 194
+	COMMENT In function 'TBDisplayStringPDI',value of ps_tb of s16DrawX is less sthan 0.
+	COMMENT 
+	COMMENT Class 195
+	COMMENT In function 'TBDisplayStringPDI',value of ps_tb of s16DrawX is greater sthan 0.
+	COMMENT 
+	COMMENT Class 196
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of eTBoxType is equal to TEXT_BOX
+	COMMENT 
+	COMMENT Class 197
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of eTBoxType is not equal to TEXT_BOX
+	COMMENT 
+	COMMENT Class 198
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of eTBoxType is equal to LIST_BOX
+	COMMENT 
+	COMMENT Class 199
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of eTBoxType is not equal to LIST_BOX
+	COMMENT 
+	COMMENT Class 200
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of eTBoxType is equal to SELECT_BOX
+	COMMENT 
+	COMMENT Class 201
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of eTBoxType is not equal to SELECT_BOX
+	COMMENT 
+	COMMENT Class 202
+	COMMENT In function 'TextBoxPdiDraw',status_flag is equal to NORMTEXTBOX
+	COMMENT 
+	COMMENT Class 203
+	COMMENT In function 'TextBoxPdiDraw',status_flag is not equal to NORMTEXTBOX
+	COMMENT 
+	COMMENT Class 204
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of pcTitle is equal to NULL
+	COMMENT 
+	COMMENT Class 205
+	COMMENT In function 'TextBoxPdiDraw',ps_tbd of pcTitle is not equal to NULL
+   COMMENT	
+	COMMENT Class 206
+	COMMENT In the function 'TextBoxInit',RterrWidget is called.
+		COMMENT </ECD>
+
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+	DEFINE STUB hdudispftextbox_c
+
+		#T_CHAR fill();
+		
+		#void PolygonDrawFrame(T_INT16 _in s16_ulx, T_INT16 _in s16_uly, T_INT16 _in width, T_INT16 _in height, T_INT16 _in s16Thickness, T_EPENCOLOR _in e_color); 
+		
+		#void PolygonFillRect(T_INT16 _in s16_ulx, T_INT16 _in s16_uly, T_INT16 _in width, T_INT16 _in height, T_EPENCOLOR _in e_color);    
+		
+		--Parameter *p_font is made _no since local variable address cannot be expected.
+		#T_UINT16 TextDrawChar(T_UINT8 _in u8_char, T_UINT16 _in u16_dis_x, T_UINT16 _in u16_dis_y, T_BFC_FONT _no *p_font, T_EPENCOLOR _in e_color)
+		#{
+		# p_font = &PTU_p_font1;
+		#}
+		
+		#T_INT16 FontsGetCharWidth(T_ETXFONT _in e_tx_font, T_UINT8 _in u8_achar); 
+		
+		#T_INT16 FontsGetFontHeight(T_ETXFONT _in e_tx_font); 
+		
+		#T_BFC_FONT* FontsGetFont(T_ETXFONT _in e_tx_font);
+		
+		--'Dummyfunc' is created to handle fill() function
+		#T_CHAR *Dummyfunc();
+		
+    #void WidgetsRedX(T_SDISREGION  _inout ps_dis_region, T_SPOLY * _inout pps_poly_red_x);		
+	
+    #void RterrWidget(char  _no pc_file[200], T_INT32  _in s32_line_number, char  _no pc_message[200]);		
+    
+	#T_UINT8 CompareLimit(T_FLOAT val, T_FLOAT range, T_UINT8 operator);
+	END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+--Environment of the file
+
+ENVIRONMENT ENV_hdudispftextbox_c
+
+  VAR Pc_more_below,					init = "",							ev = init
+  
+  VAR Flash_state,						init = FLASH_STATE_OFF,				ev = init
+  
+  VAR S8_had_flash,						init = 0,							ev = init
+  
+END ENVIRONMENT -- ENV_hdudispftextbox_c
+
+USE ENV_hdudispftextbox_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+SERVICE TextBoxPdiDraw
+SERVICE_TYPE extern
+#T_STEXTBOXPDIDATA ps_text_box_data,PTU_ps_text_box_data;
+#T_STEXTBOXPDI PTU_psTextBox= {0};
+#T_CHAR PTU_temp1,PTU_temp2,PTU_temp3;
+
+
+
+
+
+TEST 20
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD>
+	COMMENT
+	COMMENT [ hdudispftextbox-TextBoxPdiDraw-DB-LLR-017]
+	COMMENT The function shall loop from counter value ZERO to less than text box count do the following,
+	COMMENT Loop from Zero to less than or equal to 255 and do the following,
+	COMMENT Set status flag to NORMTEXTBOX when the below all conditions are satisfied,
+	COMMENT a.	If label of Tb_settings with index as text box count of Page_settings is equal to label of Parameters_reading with index as second loop counter.
+	COMMENT b.	If stat of reading of Parameters_reading with index as second loop counter is equal to PARAM_OK.
+	COMMENT c.	If type of Parameters_reading with index as second loop counter is not equal to DDW and is equal to BNR.
+	COMMENT d.	If fread  of reading of Parameters_reading with index as second loop counter is less than tb_cross_val of Tb_settings with index as Tb_cnt minus one  of Page_settings 
+	COMMENT Equivalence Class:158
+	COMMENT [hdudispftextbox-TextBoxPdiDraw-DB-LLR-021]
+	COMMENT The function shall loop from counter value ZERO to next box and do the following when status flag is equal to NORMTEXTBOX and eState of pdi text boxes with counter as index is not equal to OFF.
+	COMMENT - set the value of S8_had_flash to TRUE when value of bFlashing of ps_tb is not equal to ZERO.
+	COMMENT - set the value of colour to eBackGroundColor of ps_tbd value of Flash_state when Flash_state is not equal to FLASH_STATE_ON and value of bFlashing of ps_tb is not equal to ZERO
+	COMMENT - set the value of colour to eBackGroundColor of ps_tbd value of Flash_state when Flash_state is equal to FLASH_STATE_OFF and value of bFlashing of ps_tb is not equal to ZERO
+	COMMENT - set the value of colour to eFontColor of ps tbd when value of bFlashing of ps_tb is equal to ZERO.
+	COMMENT  Equivalence Class:162,164
+	COMMENT </TD>
+
+	ELEMENT
+
+		COMMENT INPUT SECTION:				
+		
+			 VAR Tb_cnt,						init = 1,				ev = init
+			 
+			 VAR Parameters_reading[0..255].label,					init = 1,						ev = init
+
+			 VAR Page_settings.Tb_settings[0..1].label,				init = 10,					ev = init
+
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+			
+		COMMENT OUTPUT SECTION:
+	
+			--None
+		-- Stub Calls :
+		SIMUL
+
+		--None
+
+	
+
+		END SIMUL
+		
+		--Calling the Unit Under Test :
+        #TextBoxPdiDraw();
+
+
+		
+	END ELEMENT
+	
+END TEST -- TEST 20
+
+
+END SERVICE -- TextBoxPdiDraw
+
+
+
+
+
+

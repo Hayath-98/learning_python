@@ -1,0 +1,926 @@
+HEADER hdudispbmain, Source Code Ver :1.7, TestScript Ver : 1.1
+-------------------------------------------------------------------------------
+-- Author Name         : Vignesh Sunil
+--
+-- File Name           : hdudispbmain_4.ptu 
+--
+-- Test creation Date  : 27.04.2021
+--
+-- Tested Functions    : MainFunc
+--						 TransferControl
+--                       SDCardInserted				 
+--               		 SystemClockConfig
+--               		 MpuConfig
+--               		 CpuCacheEnable
+--						 SysTickHandler
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE         TESTER NAME        MODIFICATIONS
+--  ------------        ---------         -----------        -------------
+--	1.1				    27.04.2021		   Vignesh Sunil	Updated as per #PR100338
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdulibstm32f7xxhalrccex.h"     
+##include "hdulibstm32f7xxhalrcc.h"       
+##include "hdudispbcrc.h"                 
+##include "hdudispbmain.h"                
+##include "hdudispbpanel.h"               
+##include "hdudispbpwm.h"                 
+##include "hdudispbrterr.h"               
+##include "hdudispbtext.h"                
+##include "hdulibbasictypes.h"            
+##include "hdudispbboot.h"                
+##include "hdulibstm32f7xxhalgpio.h"      
+##include "hdulibstm32f7xxhalflashex.h"   
+##include "hdulibstm32f7xxhalcortex.h"    
+##include "hdulibstm32f7xxhalpwrex.h"     
+##include "hdudispbrevno.h"               
+##include "hdulibstm32hallegacy.h"  		
+##include "hdulibcmsisgcc.h"    
+
+--Macros defined in source and used in test script	
+##define SD_PRESENT               ((T_UINT8)0x01)
+##define SD_NOT_PRESENT           ((T_UINT8)0x00)
+##define SD_DETECT_PIN            GPIO_PIN_13
+##define SD_DETECT_GPIO_PORT      GPIOC
+##define RIGHT_ENC_NOT_PRESSED    ((T_UINT8)0x00)
+##define RIGHT_ENC_PRESSED        ((T_UINT8)0x01)
+##define GPIOC_CLK_ENABLE()       __HAL_RCC_GPIOC_CLK_ENABLE()
+##define TWENTY_FIVE              ((T_UINT8)0x19)
+##define FOURHUNDRED_THIRTY_TWO   ((T_UINT16)0x1B0)
+##define ONEHUNDRED_SIXTY         ((T_UINT8)0xA0)
+	
+----------------------------
+----------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern void TransferControl(T_SBOOTFILE * ps_boot_file);
+    #extern T_INT32 MainFunc(void);
+
+	#T_SBOOTFILE Boot_file_app_code; 
+	#T_SBOOTFILE Boot_file_maint_code;
+	#T_SBOOTFILE Boot_file_boot_code;
+	#T_UINT8 Revno_id[16U]; 
+	#T_CHAR glob_file_name[0];
+	#T_SBOOTFILE Boot_file_swl_code;
+	--#T_APPDATA_PANEL  *Du_config_files[1];
+-- Declarations of the temporary variable
+
+--Variable created to verify function HalRccExPeriphCLKConfig
+#T_RCC_PERIPH_CLK	PTU_PeriphClkInit[10];
+#T_UINT8 PTU1_index=0;
+		
+--Variable created to verify function HalGpioInit
+#T_GPIO_INIT	PTU_gpio_init_structure[4];
+#T_UINT8 PTU2_index;
+		
+--Variable created to verify function HalMpuConfigRegion
+#T_MPU_REGION_INIT	PTU_mpu_initstruct[3] = {0};
+#T_UINT8 PTU3_index=0;
+		
+--Variable created to verify function HalRccOscConfig
+#T_RCC_OSC_INIT PTU_rcc_oscinitstruct = {0};
+		
+--Variable created to verify function HalRccClockConfig
+#T_RCC_CLK_INIT PTU_rcc_clkinitstruct;
+		 
+--Variable created to verify function RterrFunc		 
+#T_CHAR PTU_ptr_message[30];
+#T_CHAR PTU_ptr_file[70];
+#T_UINT8 PTU4_index,PTU5_index;		
+#void PTU_func1(void);	
+#T_UINT32 *PTU_Set_MSP=(T_UINT32 *)&PTU_func1;
+
+#T_APPDATA_APPDATA_BOOT PTU_Appdata_appdata_boot;
+
+#T_APPDATA_PANEL PTU_Duconfigfiles_1;
+
+#T_APPDATA_PANEL *Du_config_files[2]=
+#{
+#		&PTU_Duconfigfiles_1,
+#		(T_APPDATA_PANEL*)0/*Delimiter. */
+#};
+
+--------------------------------------------------------------------------------
+BEGIN
+
+    COMMENT Author Name      : Akshay R K
+    COMMENT
+    COMMENT File Name        : hdudispbmain_1.ptu
+    COMMENT
+    COMMENT Tested Functions : MainFunc
+	COMMENT                    TransferControl
+	COMMENT                    SDCardInserted								   
+	COMMENT                    SystemClockConfig						   
+	COMMENT                    MpuConfig						   
+	COMMENT                    CpuCacheEnable						   
+	COMMENT                    SysTickHandler			   
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+	COMMENT 1. Source file "hdudispbmain.c" is modified for testing LLR hdudispbmain-SystemClockConfig-DB-LLR-002
+	COMMENT	The "while(ONE)" is modified 
+    COMMENT for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'MainFunc':
+    COMMENT 
+    COMMENT T_UINT16 PTU1_count=0; /*local variable declared for testing purpose*/
+    COMMENT 
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU1_count=0;/*local variable initialised to 0 for testing purpose*/
+    COMMENT while(ONE)
+    COMMENT {
+    COMMENT .................
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU1_count++;
+    COMMENT if(PTU1_count == 4)
+    COMMENT {
+    COMMENT     break;
+    COMMENT }
+    COMMENT else
+    COMMENT {
+    COMMENT     /*nothing*/
+    COMMENT }  
+    COMMENT }
+	COMMENT	
+	COMMENT	
+	COMMENT 2. Source file "hdudispbmain.c" is modified for testing LLR hdudispbmain-SystemClockConfig-DB-LLR-003
+	COMMENT	The "while(ONE)" is modified 56
+    COMMENT for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'MainFunc':
+    COMMENT 
+    COMMENT T_UINT16 PTU2_count=0; /*local variable declared for testing purpose*/
+    COMMENT 
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU2_count=0;/*local variable initialised to 0 for testing purpose*/
+    COMMENT while(ONE)
+    COMMENT {
+    COMMENT .................
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU2_count++;
+    COMMENT if(PTU2_count == 4)
+    COMMENT {
+    COMMENT     break;
+    COMMENT }
+    COMMENT else
+    COMMENT {
+    COMMENT     /*nothing*/
+    COMMENT }  
+    COMMENT }
+	COMMENT	
+	COMMENT	
+	COMMENT 3. Source file "hdudispbmain.c" is modified for testing LLR hdudispbmain-SystemClockConfig-DB-LLR-004
+	COMMENT	The "while(ONE)" is modified 
+    COMMENT for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'MainFunc':
+    COMMENT 
+    COMMENT T_UINT16 PTU3_count=0; /*local variable declared for testing purpose*/
+    COMMENT 
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU3_count=0;/*local variable initialised to 0 for testing purpose*/
+    COMMENT while(ONE)
+    COMMENT {
+    COMMENT .................
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU3_count++;
+    COMMENT if(PTU3_count == 4)
+    COMMENT {
+    COMMENT     break;
+    COMMENT }
+    COMMENT else
+    COMMENT {
+    COMMENT     /*nothing*/
+    COMMENT }  
+    COMMENT }
+	COMMENT	
+	COMMENT
+	COMMENT 4. Header file "hdulibstm32f746xx.h" is modified for testing purpose. The macro 'RCC' is modified for 
+    COMMENT stubbing hardware address.
+	COMMENT			/*Commented for testing purpose*/
+	COMMENT			/*#define RCC                 ((T_RCC *) RCC_BASE)*/
+	COMMENT
+	COMMENT			/* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT			T_RCC	PTU_RCC;
+	COMMENT			#define RCC                 ((T_RCC *) &PTU_RCC)
+    COMMENT
+	COMMENT
+	COMMENT 5. Header file "hdulibcorecm7.h" is modified for testing purpose. The macro 'SCB' is modified for 
+    COMMENT stubbing hardware address.
+	COMMENT
+	COMMENT			/*Commented for testing purpose*/
+	COMMENT			/*#define SCB                 ((T_SCB       *)     SCB_BASE      )  /* SCB configuration struct */
+	COMMENT
+	COMMENT			/*Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT			T_SCB	PTU_SCB;
+	COMMENT			#define SCB                 ((T_SCB       *)     &PTU_SCB )
+	COMMENT
+	COMMENT
+	COMMENT 6. Header file "hdudispbboot.h" is modified for testing purpose. The macro 'FB_ADDR' is modified for 
+    COMMENT stubbing hardware address.
+	COMMENT
+	COMMENT			/*Commented for testing purpose*/
+	COMMENT			/*#define  FB_ADDR ((void *)(SDRAM_BASE+SDRAM_SIZE))*/
+	COMMENT
+	COMMENT			/*Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT			T_UINT32	PTU_FB_ADDR[600];
+	COMMENT			#define  FB_ADDR ((T_UINT32 *)PTU_FB_ADDR)
+	COMMENT
+	COMMENT 7.'for' loop cannot be covered for '0' and '1' times since it is controlled by macro in function 'MainFunc'.
+    COMMENT	
+  	COMMENT 9.'while' loop cannot be covered for '0' and '1' times since it is controlled by macro in function 'SystemClockConfig'.
+	COMMENT
+	COMMENT 10.Header file "hdudispbpanel.h" is modified for testing purpose, 
+	COMMENT    as the actual values of macro results in a very huge number
+	COMMENT 
+	COMMENT /*Commented for testing purpose*/
+	COMMENT //#define  PANEL_WIDTH                ((T_UINT16)800)          /* LCD PIXEL WIDTH            */
+	COMMENT //#define  PANEL_HEIGHT               ((T_UINT16)480)          /* LCD PIXEL HEIGHT           */
+	COMMENT 
+	COMMENT /*Modified for testing purpose*/
+	COMMENT #define  PANEL_WIDTH                ((T_UINT16)60)          /* LCD PIXEL WIDTH            */
+	COMMENT #define  PANEL_HEIGHT               ((T_UINT16)40)          /* LCD PIXEL HEIGHT           */
+	COMMENT
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+       COMMENT
+    COMMENT Class 1
+    COMMENT In the function "MainFunc",Revno_id is Alphanumeric.
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In the function "MainFunc",Revno_id is HYPHEN.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In the function "MainFunc",Revno_id is POINT.
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In the function "MainFunc",Revno_id is SPACE.
+    COMMENT 
+    COMMENT Class 5
+    COMMENT In the function "MainFunc",Revno_id is not equal to Alphanumeric.
+    COMMENT 
+    COMMENT Class 6
+    COMMENT In the function "MainFunc",Revno_id is not equal to HYPHEN.
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In the function "MainFunc",Revno_id is not equal to POINT.
+    COMMENT 
+    COMMENT Class 8
+    COMMENT In the function "MainFunc",Revno_id is not equal to SPACE.
+    COMMENT
+	COMMENT Class 10
+	COMMENT In the function "MainFunc", the function CRCROM returns ZERO 
+	COMMENT
+	COMMENT Class 11
+	COMMENT In the function "MainFunc", the function CRCROM returns other the ZERO 
+	COMMENT
+	COMMENT Class 13
+	COMMENT In the function "MainFunc", the function SDCardInserted returns SD_PRESENT
+	COMMENT
+	COMMENT Class 14
+	COMMENT In the function "MainFunc", the function SDCardInserted returns other then SD_PRESENT
+	COMMENT
+	COMMENT Class 16
+	COMMENT In the function "MainFunc", SW_FLAG is equal to ONE
+	COMMENT
+	COMMENT Class 17
+	COMMENT In the function "MainFunc",SW_FLAG is other than ONE
+	COMMENT
+	COMMENT Class 18
+	COMMENT	In the function "MainFunc", calls the function TransferControl.
+	COMMENT
+	COMMENT Class 19
+	COMMENT In the function "MainFunc", calls the function MpuConfig
+	COMMENT
+	COMMENT Class 20
+	COMMENT In the function "MainFunc", calls the function CpuCacheEnable
+	COMMENT
+	COMMENT Class 21
+	COMMENT In the function "MainFunc", calls the function HalInit
+	COMMENT
+	COMMENT Class 22
+	COMMENT In the function "MainFunc", calls the function BspSdramInit
+	COMMENT
+	COMMENT Class 23
+	COMMENT In the function "MainFunc", calls the function SystemClockConfig
+	COMMENT
+	COMMENT Class 24
+	COMMENT In the function "MainFunc", calls the function HalRccExPeriphCLKConfig
+	COMMENT
+	COMMENT Class 25
+	COMMENT In the function "MainFunc", calls the function LcdConfig
+	COMMENT
+	COMMENT Class 26
+	COMMENT In the function "MainFunc", calls the function PwmInit
+	COMMENT
+	COMMENT Class 27
+	COMMENT In the function "MainFunc", calls the function TextInit
+	COMMENT
+	COMMENT Class 28
+	COMMENT In the function "MainFunc", error status is ONE
+	COMMENT
+	COMMENT Class 29
+	COMMENT In the function "MainFunc", error status is TWO
+	COMMENT
+	COMMENT Class 30
+	COMMENT In the function "MainFunc", the error status is other than ONE and TWO
+	COMMENT
+	COMMENT Class 31
+	COMMENT In the function "SDCardInserted", calls the function HalGpioInit
+	COMMENT
+	COMMENT Class 32
+	COMMENT In the function "SDCardInserted", calls the function HalGpioReadPin
+	COMMENT
+	COMMENT Class 33
+	COMMENT In the function "SDCardInserted", the function HalGpioReadPin returns GPIO_PIN_SET
+	COMMENT 
+	COMMENT Class 34
+	COMMENT In the function "SDCardInserted", the function HalGpioReadPin returns other than GPIO_PIN_SET
+	COMMENT
+	COMMENT Class 35
+	COMMENT In the function "ConfigChecks",PanelHeight of PanelStruct of Appdata_appdata_boot is not equal to PanelHeight of display_configs
+	COMMENT
+	COMMENT Class 36
+	COMMENT In the function "ConfigChecks",PanelHSync  of PanelStruct of Appdata_appdata_boot is not equal to PanelHSync  of display_configs 
+	COMMENT
+	COMMENT Class 37
+	COMMENT In the function "ConfigChecks",PanelHBP  of PanelStruct of Appdata_appdata_boot is not equal to PanelHBP  of display_configs 
+	COMMENT
+	COMMENT Class 38
+	COMMENT In the function "ConfigChecks",PanelHFP  of PanelStruct of Appdata_appdata_boot is not equal to PanelHFP  of display_configs
+	COMMENT
+	COMMENT Class 39
+	COMMENT In the function "CpuCacheEnable", calls the function ScbEnableICache
+	COMMENT
+	COMMENT Class 40
+	COMMENT In the function "CpuCacheEnable", calls the function ScbEnableDCache
+	COMMENT
+	COMMENT Class 42
+	COMMENT In the function "SystemClockConfig", the function HalRccOscConfig returns HAL_OK
+	COMMENT
+	COMMENT Class 43
+	COMMENT In the function "SystemClockConfig", the function HalRccOscConfig returns other than HAL_OK
+	COMMENT
+	COMMENT Class 45
+	COMMENT In the function "SystemClockConfig", the function HalPwrExEnableOverDrive returns HAL_OK
+	COMMENT
+	COMMENT Class 46
+	COMMENT In the function "SystemClockConfig", the function HalPwrExEnableOverDrive returns other than HAL_OK
+	COMMENT
+	COMMENT Class 47
+	COMMENT In the function "SystemClockConfig", calls the function HalRccClockConfig
+	COMMENT
+	COMMENT Class 48
+	COMMENT In the function "SystemClockConfig", the function HalRccClockConfig returns HAL_OK
+	COMMENT
+	COMMENT Class 49
+	COMMENT In the function "SystemClockConfig", the function HalRccClockConfig returns other than HAL_OK
+	COMMENT
+	COMMENT Class 50
+	COMMENT In the function "MpuConfig", calls the function HalMpuDisable
+	COMMENT
+	COMMENT Class 51
+	COMMENT In the function "MpuConfig", calls the function HalMpuConfigRegion
+	COMMENT
+	COMMENT Class 52
+	COMMENT In the function "MpuConfig", calls the function HalMpuEnable
+	COMMENT
+	COMMENT Class 53
+	COMMENT The function "MainFunc", returns ZERO .
+	COMMENT
+	COMMENT Class 54
+	COMMENT The function "SDCardInserted", calls the macro GPIOC_CLK_ENABLE
+	COMMENT
+	COMMENT Class 55
+	COMMENT The function "RightEncoderInput", calls the macro GPIOC_CLK_ENABLE
+	COMMENT
+	COMMENT Class 56
+	COMMENT The function "MainFunc", calls the function CRCRom with parameter Boot_file_boot_code
+	COMMENT
+	COMMENT Class 57
+	COMMENT The function "MainFunc", calls the function CRCRom with parameter Boot_file_maint_code
+	COMMENT
+	COMMENT Class 58
+	COMMENT The function "MainFunc", calls the function CRCRom with parameter Boot_file_app_code
+	COMMENT	
+	COMMENT Class 60
+	COMMENT The function "SysTickHandler", calls the function HalIncTick 
+	COMMENT
+	COMMENT Class 61
+	COMMENT The function "MainFunc",ConfigChecks function returns CONFIG_PASS
+	COMMENT
+	COMMENT Class 62
+	COMMENT he function "MainFunc",ConfigChecks function returns other than CONFIG_PASS
+	COMMENT
+	COMMENT Class 63
+	COMMENT In the function "ConfigChecks",PanelVSync   of PanelStruct of Appdata_appdata_boot is not equal to PanelVSync   of display_configs
+	COMMENT
+	COMMENT Class 64
+	COMMENT In the function "ConfigChecks",PanelVbp   of PanelStruct of Appdata_appdata_boot is not equal to PanelVbp   of display_configs
+	COMMENT
+	COMMENT Class 65
+	COMMENT In the function "ConfigChecks",PanelVfp   of PanelStruct of Appdata_appdata_boot is not equal to PanelVfp of display_configs
+	COMMENT
+	COMMENT	Class 66
+	COMMENT In function "ConfigChecks",SoftwareJumpFlag of Flag of Appdata_appdata_boot is equal to ZERO.
+	COMMENT
+	COMMENT	Class 67
+	COMMENT In function "ConfigChecks",SoftwareJumpFlag of Flag of Appdata_appdata_boot is equal to ONE.
+	COMMENT
+	COMMENT	Class 68
+	COMMENT In function "ConfigChecks",SoftwareJumpFlag of Flag of Appdata_appdata_boot isnother than ONE and ZERO.
+	COMMENT
+	COMMENT	Class 69
+	COMMENT In function "ConfigChecks",display configuration is not equal to ZERO.
+	COMMENT
+	COMMENT	Class 70
+	COMMENT In function "ConfigChecks",display configuration is equal to ZERO.
+	COMMENT
+	COMMENT Class 71
+	COMMENT In the function "ConfigChecks",PanelWidth  of PanelStruct of Appdata_appdata_boot is not equal to PanelWidth  of COMMENT display_configs 
+	COMMENT
+	COMMENT Class 72
+	COMMENT In the function "ConfigChecks",PanelWidth  of PanelStruct of Appdata_appdata_boot is  equal to PanelWidth  of COMMENT display_configs 
+	COMMENT
+	COMMENT Class 73
+	COMMENT In the function "ConfigChecks",PanelHeight  of PanelStruct of Appdata_appdata_boot is not equal to PanelHeight  COMMENT of display_configs 
+	COMMENT
+	COMMENT Class 74
+	COMMENT In the function "ConfigChecks",PanelHSync  of PanelStruct of Appdata_appdata_boot is not equal to PanelHSync  of COMMENT display_configs 
+	COMMENT
+	COMMENT Class 75
+	COMMENT In the function "ConfigChecks",PanelHBP  of PanelStruct of Appdata_appdata_boot is not equal to PanelHBP  of COMMENT display_configs 
+	COMMENT
+	COMMENT Class 76
+	COMMENT In the function "ConfigChecks",PanelHFP  of PanelStruct of Appdata_appdata_boot is not equal to PanelHFP  of COMMENT display_configs 
+	COMMENT
+	COMMENT Class 77
+	COMMENT In the function "ConfigChecks",PanelVSync  of PanelStruct of Appdata_appdata_boot is not equal to PanelVSync  of COMMENT display_configs 
+	COMMENT
+	COMMENT Class 78
+	COMMENT In the function "ConfigChecks",PanelVbp  of PanelStruct of Appdata_appdata_boot is not equal to PanelVbp  of COMMENT display_configs 
+	COMMENT Class 79
+	COMMENT In the function "ConfigChecks",PanelVfp  of PanelStruct of Appdata_appdata_boot is not equal to PanelVfp  of COMMENT display_configs 
+	COMMENT
+	COMMENT Class 80
+	COMMENT In the function "MainFunc",ORIENTATION is equal to PORTRAIT
+	COMMENT
+	COMMENT Class 81
+	COMMENT In the function "MainFunc",return value of function RightEncoderInput is equal to RIGHT_ENC_PRESSED
+	COMMENT
+	COMMENT Class 82
+	COMMENT In the function "MainFunc",ORIENTATION is not equal to PORTRAIT
+	COMMENT
+	COMMENT Class 83
+	COMMENT In the function "MainFunc",return value of function RightEncoderInput is not equal to RIGHT_ENC_PRESSED	
+	COMMENT
+	COMMENT Class 84
+	COMMENT In the function "MainFunc",return value of function Button8Input
+	COMMENT is RIGHT_ENC_PRESSED
+	COMMENT
+	COMMENT Class 85
+	COMMENT In the function "MainFunc",return value of function Button8Input
+	COMMENT is not RIGHT_ENC_PRESSED	
+	COMMENT
+	COMMENT Class 86
+	COMMENT In the function "MainFunc",ORIENTATION is equal to LAND_SCAPE
+	COMMENT
+	COMMENT Class 87
+	COMMENT In the function "MainFunc",ORIENTATION is not equal to LAND_SCAPE		
+	COMMENT
+	COMMENT Class 88
+	COMMENT In the function "RightEncoderInput",return 
+	COMMENT value of function HalGpioReadPin with GPIOC and GPIO_PIN_4 parameters is equal to GPIO_PIN_SET		
+	COMMENT
+	COMMENT Class 89
+	COMMENT In the function "RightEncoderInput",return 
+	COMMENT value of function HalGpioReadPin with GPIOC and GPIO_PIN_4 parameters is not equal to GPIO_PIN_SET		
+	COMMENT
+	COMMENT Class 90
+	COMMENT In the function "Button8Input",return value
+	COMMENT   of function HalGpioReadPin with GPIOB and SD_DETECT_PIN as its function
+	COMMENT   parameters is equal to GPIO_PIN_SET	
+	COMMENT
+	COMMENT Class 91
+	COMMENT In the function "Button8Input",return value
+	COMMENT   of function HalGpioReadPin with GPIOB and SD_DETECT_PIN as its function
+	COMMENT   parameters is not equal to GPIO_PIN_SET	
+	COMMENT Invalid class(es)
+	COMMENT Class 59
+	COMMENT In function "TransferControl", Invalid Reference is passed to ps_boot_file parameter.
+    COMMENT </ECD>
+
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+	DEFINE STUB hdudispbmain_c
+			
+	#void HalIncTick(void);
+	
+	#void HalMpuEnable(T_UINT32 _in MPU_Control); 	
+	
+	-- Parameter 'MPU_Init' is made as _no since local variable address is passed as a parameter
+	#void HalMpuConfigRegion(T_MPU_REGION_INIT _no *MPU_Init)
+	#{
+	#	PTU_mpu_initstruct[PTU3_index++]=	*MPU_Init;
+	#}
+	#	
+	
+	#void HalMpuDisable(void); 	
+	
+	-- Parameter 'RCC_ClkInitStruct' is made as _no since local variable address is passed as a parameter
+	#T_HAL_STATUS HalRccClockConfig(T_RCC_CLK_INIT _no *RCC_ClkInitStruct, T_UINT32 _in FLatency)
+	#{
+	#	PTU_rcc_clkinitstruct = *RCC_ClkInitStruct;
+	#}
+	#	
+	
+	#T_HAL_STATUS HalPwrExEnableOverDrive(void); 
+	
+	-- Parameter 'RCC_OscInitStruct' is made as _no since local variable address is passed as a parameter	
+	#T_HAL_STATUS HalRccOscConfig(T_RCC_OSC_INIT _no *RCC_OscInitStruct)
+	#{
+	#	PTU_rcc_oscinitstruct = *RCC_OscInitStruct;
+	#}
+	
+	-- Parameter 'ptr_file' is made as _no since local variable is passed as a parameter	
+	-- Parameter 'ptr_message' is made as _no since static variable is passed as a parameter
+	#void RterrFunc(T_UINT8 _no ptr_file, T_INT32 _in s32_line_number, T_UINT8 _no *ptr_message)
+	#{
+	#	for(PTU5_index = 0; PTU5_index<100;	PTU5_index++)
+	#	{
+	#		PTU_ptr_file[PTU5_index]=*(T_CHAR *)ptr_file;
+	#		ptr_file++;
+	#	}
+	#	for(PTU4_index = 0; PTU4_index<24;	PTU4_index++)
+	#	{
+	#		PTU_ptr_message[PTU4_index]=*(T_CHAR *)ptr_message;
+	#		ptr_message++;
+	#	}
+	#}
+	
+	#void TextInit(void); 
+	
+	#void PwmInit(void); 
+	
+	#void LcdConfig(void); 
+	
+	-- Parameter 'PeriphClkInit' is made as _no since local variable is passed as a parameter	
+	#T_HAL_STATUS HalRccExPeriphCLKConfig(T_RCC_PERIPH_CLK _no *PeriphClkInit)
+	#{
+	#	PTU_PeriphClkInit[PTU1_index++] = *PeriphClkInit;
+	#}
+		
+	#T_UINT8 BspSdramInit(void); 
+	
+	#T_HAL_STATUS HalInit(void); 
+
+	#T_UINT8 CRCRom(T_SBOOTFILE _in ps_boot_file); 
+
+	#void jump_to_application(); 
+	
+	#T_GPIO_PIN_STATE HalGpioReadPin(T_GPIO _in  *GPIOx, T_UINT16 _in GPIO_Pin); 
+	
+	-- Parameter 'GPIO_Init' is made as _no since local variable is passed as a parameter	
+	#void HalGpioInit(T_GPIO _in *GPIOx, T_GPIO_INIT _no *GPIO_Init)
+	#{
+	#
+	#PTU_gpio_init_structure[PTU2_index++] = *GPIO_Init;
+	#
+	#}
+
+	-- Temporary functions to verify function calls in TransferControl Function.	
+	#void ptufunc2(void)
+	#{
+	# ;
+	#}
+	
+	#void PTU_func1(void) 
+	#{
+	# ;
+	#}
+		
+	END DEFINE
+		
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--Environment of the file hdudispbmain.c
+
+--ENVIRONMENT ENV_hdudispbmain_c
+
+	--None
+
+--END ENVIRONMENT --ENV_hdudispbmain_c
+
+--USE ENV_hdudispbmain_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service MainFunc
+--------------------------------------------------------------------------------
+SERVICE MainFunc
+SERVICE_TYPE extern
+
+	-- Tested service parameters declarations
+--	#T_UINT32 PTU_Boot_file_maint_code[2];
+--	#T_UINT32 PTU_Boot_file_app_code[2];
+	#T_UINT32 PTU_Boot_file_boot_code;
+--	#T_UINT32 PTU_Boot_file_swl_code[2];
+    #T_UINT32 PTU_Boot_file_app_code[2]={(T_UINT32)&PTU_Set_MSP,(T_UINT32)&ptufunc2};
+    #T_UINT32 PTU_Boot_file_maint_code[2]={(T_UINT32)&PTU_Set_MSP,(T_UINT32)&ptufunc2};
+    #T_UINT32 PTU_Boot_file_swl_code[2]={(T_UINT32)&PTU_Set_MSP,(T_UINT32)&ptufunc2};
+
+	-- By function returned type declaration
+	#T_INT32 ret_MainFunc;
+
+
+TEST 13
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+	COMMENT [hdudispbmain-MainFunc-DB-LLR-001]
+	COMMENT The function do nothing when 
+	COMMENT . Return value of  function SDCardInserted is SD_PRESENT and ORIENTATION is equal to PORTRAIT And
+	COMMENT return value of function RightEncoderInput is not equal to RIGHT_ENC_PRESSED or ORIENTATION is equal
+	COMMENT to LAND_SCAPE And return value of function Button8Input is RIGHT_ENC_PRESSED and SW_FLAG is equal to ONE 
+	COMMENT Equivalence Class 87,89
+	COMMENT 
+	COMMENT [hdudispbmain-MainFunc-DB-LLR-024]
+	COMMENT The function do nothing when 
+	COMMENT . Return value of  function SDCardInserted is SD_PRESENT and ORIENTATION is equal to PORTRAIT And
+	COMMENT return value of function RightEncoderInput is not equal to RIGHT_ENC_PRESSED or ORIENTATION is equal
+	COMMENT to LAND_SCAPE And return value of function Button8Input is RIGHT_ENC_PRESSED and SW_FLAG is equal to ONE 
+	COMMENT Equivalence Class 87,89
+	COMMENT 
+	COMMENT [hdudispbmain-RightEncoderInput-DB-LLR-003]
+	COMMENT The function set status to RIGHT_ENC_NOT_PRESSED when return 
+	COMMENT value of function HalGpioReadPin with GPIOC and GPIO_PIN_4 as its 
+	COMMENT function parameters is equal to GPIO_PIN_SET otherwise do nothing.
+	COMMENT Equivalence Class 88 
+	COMMENT 
+	COMMENT 
+    COMMENT   </TD> 
+
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			VAR PTU3_index,										init = 0,								   ev = 3		
+		
+            ARRAY Revno_id ,            					init = {0=>'/',1=>'.',2=>'-',3=>'=',4=>'^',
+            &                            					   5=>'{',6=>' ',7=>'a',8=>'A',9=>'7',10=>'-',11=>'0',
+            &													12=>'.',13=>'2',14=>'2',15=>' '},      
+            &                                                   								ev = init
+			ARRAY Du_config_files,								init = {others=>0},						ev = init 
+
+			VAR Appdata_appdata_boot->Flag.SoftwareJumpFlag,			init = 1,		ev = init
+			
+			VAR Appdata_appdata_boot->Orientation,			init = PORTRAIT,		ev = init				
+
+		COMMENT OUTPUT SECTION:
+		
+			-- to verify parameters of RterrFunc
+			ARRAY PTU_ptr_message,								init = NULL,					ev = "Application CRC Error."	
+			VAR PTU4_index,										init=0,							ev=24
+			
+			--Holds the return value 
+			VAR ret_MainFunc,									init = ONE,						ev = ZERO
+			
+			VAR PTU2_index,										init = 0,								   ev = 4			
+			
+			-- structure members for HalGpioInit of RightEncoderInput
+			VAR PTU_gpio_init_structure[1].Pin,					init = 	0x0000,					ev= GPIO_PIN_4
+			VAR PTU_gpio_init_structure[1].Mode,				init = 	0x0001,					ev= GPIO_MODE_INPUT
+			VAR PTU_gpio_init_structure[1].Pull,				init = 	0x0000,					ev= GPIO_PULLUP
+			VAR PTU_gpio_init_structure[1].Speed,				init = 	0x0000,					ev= GPIO_SPEED_HIGH	
+
+			-- structure members for HalGpioInit of RightEncoderInput
+			VAR PTU_gpio_init_structure[3].Pin,					init = 	0x0000,					ev= GPIO_PIN_4
+			VAR PTU_gpio_init_structure[3].Mode,				init = 	0x0001,					ev= GPIO_MODE_INPUT
+			VAR PTU_gpio_init_structure[3].Pull,				init = 	0x0000,					ev= GPIO_PULLUP
+			VAR PTU_gpio_init_structure[3].Speed,				init = 	0x0000,					ev= GPIO_SPEED_HIGH				
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+        SIMUL
+        
+			-- STUB calls to verify MainFunc
+			STUB	CRCRom(Boot_file_boot_code)ONE		
+			STUB	CRCRom(Boot_file_app_code)ZERO
+			STUB	HalInit()HAL_OK
+			STUB	BspSdramInit()0
+			STUB	HalRccExPeriphCLKConfig 1..2=>()HAL_OK
+			STUB	LcdConfig()
+			STUB	PwmInit()
+			STUB	TextInit()
+			STUB	RterrFunc(435)
+			
+			-- STUB calls to verify SDCardInserted and RightEncoderInput
+			STUB	HalGpioInit (SD_DETECT_GPIO_PORT)
+			STUB	HalGpioReadPin (SD_DETECT_GPIO_PORT, SD_DETECT_PIN) GPIO_PIN_RESET
+			
+			STUB	HalGpioInit (GPIOC)			
+			STUB	HalGpioReadPin(GPIOC, GPIO_PIN_4)GPIO_PIN_SET	
+
+			STUB	HalGpioInit (SD_DETECT_GPIO_PORT)
+			STUB	HalGpioReadPin (SD_DETECT_GPIO_PORT, SD_DETECT_PIN) GPIO_PIN_RESET		
+
+			STUB	HalGpioInit (GPIOC)			
+			STUB	HalGpioReadPin(GPIOC, GPIO_PIN_4)GPIO_PIN_SET			
+
+			-- STUB calls to verify MpuConfig
+			STUB	HalMpuDisable()
+			STUB	HalMpuConfigRegion 1..3=>()
+			STUB	HalMpuEnable(MPU_PRIVILEGED_DEFAULT)
+		
+			-- STUB calls to verify SystemClockConfig(void)
+			STUB	HalRccOscConfig()HAL_OK
+			STUB	HalPwrExEnableOverDrive()HAL_OK
+			STUB	HalRccClockConfig(FLASH_LATENCY_7)HAL_OK
+					
+			
+					
+        END SIMUL
+		 
+		-- Calling the Unit Under Test :
+			#ret_MainFunc = MainFunc();
+			
+	END ELEMENT
+
+END TEST -- TEST 13
+
+TEST 14
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+	COMMENT [hdudispbmain-MainFunc-DB-LLR-001]
+	COMMENT The function do nothing when 
+	COMMENT . Return value of  function SDCardInserted is SD_PRESENT and ORIENTATION is not equal to PORTRAIT And
+	COMMENT return value of function RightEncoderInput is equal to RIGHT_ENC_PRESSED or ORIENTATION is equal
+	COMMENT to LAND_SCAPE And return value of function Button8Input is not RIGHT_ENC_PRESSED and SW_FLAG is equal to ONE 
+	COMMENT Equivalence Class 82,85
+	COMMENT 
+	COMMENT [hdudispbmain-MainFunc-DB-LLR-024]
+	COMMENT The function do nothing when 
+	COMMENT . Return value of  function SDCardInserted is SD_PRESENT and ORIENTATION is not equal to PORTRAIT And
+	COMMENT return value of function RightEncoderInput is equal to RIGHT_ENC_PRESSED or ORIENTATION is equal
+	COMMENT to LAND_SCAPE And return value of function Button8Input is not RIGHT_ENC_PRESSED and SW_FLAG is equal to ONE 
+	COMMENT Equivalence Class 82,85
+	COMMENT 
+	COMMENT [hdudispbmain-Button8Input-DB-LLR-003] 
+	COMMENT  The function set status to BUTTON8_NOT_PRESSED when return value
+	COMMENT   of function HalGpioReadPin with GPIOB and SD_DETECT_PIN as its function
+	COMMENT   parameters is equal to GPIO_PIN_SET otherwise do nothing.
+	COMMENT Equivalence Class 91   
+    COMMENT   </TD> 
+
+
+	ELEMENT
+	
+		COMMENT INPUT SECTION:
+		
+			VAR PTU3_index,										init = 0,								   ev = 3		
+		
+            ARRAY Revno_id ,            					init = {0=>'/',1=>'.',2=>'-',3=>'=',4=>'^',
+            &                            					   5=>'{',6=>' ',7=>'a',8=>'A',9=>'7',10=>'-',11=>'0',
+            &													12=>'.',13=>'2',14=>'2',15=>' '},      
+            &                                                   								ev = init
+			ARRAY Du_config_files,								init = {others=>0},						ev = init 
+
+			VAR Appdata_appdata_boot->Flag.SoftwareJumpFlag,			init = 1,		ev = init
+			
+			VAR Appdata_appdata_boot->Orientation,			init = LAND_SCAPE,		ev = init				
+
+		COMMENT OUTPUT SECTION:
+		
+			-- to verify parameters of RterrFunc
+			ARRAY PTU_ptr_message,								init = NULL,					ev = "Application CRC Error."	
+			VAR PTU4_index,										init=0,							ev=24
+			
+			--Holds the return value 
+			VAR ret_MainFunc,									init = ONE,						ev = ZERO
+			
+			VAR PTU2_index,										init = 0,								   ev = 4			
+			
+			-- structure members for HalGpioInit of Button8Input
+			VAR PTU_gpio_init_structure[1].Pin,					init = 	0x0000,					ev= GPIO_PIN_13
+			VAR PTU_gpio_init_structure[1].Mode,				init = 	0x0001,					ev= GPIO_MODE_INPUT
+			VAR PTU_gpio_init_structure[1].Pull,				init = 	0x0000,					ev= GPIO_PULLUP
+			VAR PTU_gpio_init_structure[1].Speed,				init = 	0x0000,					ev= GPIO_SPEED_HIGH	
+
+			-- structure members for HalGpioInit of Button8Input
+			VAR PTU_gpio_init_structure[3].Pin,					init = 	0x0000,					ev= GPIO_PIN_13
+			VAR PTU_gpio_init_structure[3].Mode,				init = 	0x0001,					ev= GPIO_MODE_INPUT
+			VAR PTU_gpio_init_structure[3].Pull,				init = 	0x0000,					ev= GPIO_PULLUP
+			VAR PTU_gpio_init_structure[3].Speed,				init = 	0x0000,					ev= GPIO_SPEED_HIGH				
+
+		COMMENT INPUT/OUTPUT SECTION:
+
+			--None
+
+		-- Stub Calls :
+        SIMUL
+        
+			-- STUB calls to verify MainFunc
+			STUB	CRCRom(Boot_file_boot_code)ONE		
+			STUB	CRCRom(Boot_file_app_code)ZERO
+			STUB	HalInit()HAL_OK
+			STUB	BspSdramInit()0
+			STUB	HalRccExPeriphCLKConfig 1..2=>()HAL_OK
+			STUB	LcdConfig()
+			STUB	PwmInit()
+			STUB	TextInit()
+			STUB	RterrFunc(435)
+			
+			-- STUB calls to verify SDCardInserted and RightEncoderInput
+			STUB	HalGpioInit (SD_DETECT_GPIO_PORT)
+			STUB	HalGpioReadPin (SD_DETECT_GPIO_PORT, SD_DETECT_PIN) GPIO_PIN_RESET
+			
+			STUB	HalGpioInit (GPIOB)			
+			STUB	HalGpioReadPin(GPIOB, GPIO_PIN_13)GPIO_PIN_SET	
+
+			STUB	HalGpioInit (SD_DETECT_GPIO_PORT)
+			STUB	HalGpioReadPin (SD_DETECT_GPIO_PORT, SD_DETECT_PIN) GPIO_PIN_RESET		
+
+			STUB	HalGpioInit (GPIOB)			
+			STUB	HalGpioReadPin(GPIOB, GPIO_PIN_13)GPIO_PIN_SET				
+
+			-- STUB calls to verify MpuConfig
+			STUB	HalMpuDisable()
+			STUB	HalMpuConfigRegion 1..3=>()
+			STUB	HalMpuEnable(MPU_PRIVILEGED_DEFAULT)
+		
+			-- STUB calls to verify SystemClockConfig(void)
+			STUB	HalRccOscConfig()HAL_OK
+			STUB	HalPwrExEnableOverDrive()HAL_OK
+			STUB	HalRccClockConfig(FLASH_LATENCY_7)HAL_OK
+					
+			
+					
+        END SIMUL
+		 
+		-- Calling the Unit Under Test :
+			#ret_MainFunc = MainFunc();
+			
+	END ELEMENT
+
+END TEST -- TEST 14
+
+END SERVICE -- MainFunc

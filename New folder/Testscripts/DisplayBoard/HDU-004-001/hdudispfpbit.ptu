@@ -1,0 +1,1485 @@
+HEADER hdudispfpbit,Source Code Ver :1.19,TestScript Ver : 1.7
+--------------------------------------------------------------------------------
+-- Author Name         : Kavya M 
+--
+-- File Name           :hdudispfpbit.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : RamTest
+--                       ProcessorTest
+--                       SDRamTest
+--                       PdiIntegrityCheck
+--                       PbitCheck
+--						 CrcPages
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE               TESTER NAME        MODIFICATIONS
+--  ------------        ---------               -----------        -------------
+--     1.1              30.10.2017              Kavya M         created the ptu file
+--     1.2              11.11.2017              Kavya M         updated the ptu as per PR100171
+--     1.3              14.11.2017              Kavya M         updated the ptu as per PR100171
+--     1.4              10.04.2018              Chaitra T N     updated the ptu as per PR100201
+--	   1.5 				21.05.2020				Harshitha R		updated the ptu as per PR100249
+--	   1.6				04.08.2020				Harshitha R		updated the ptu as per PR100267
+--	   1.7				04.10.2020				Harshitha R		updated the ptu as per PR100281
+
+-------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfpbit.h"        
+##include "hdulibbasictypes.h" 
+##include "hdudispfpara.h"        
+##include "hdudispfpolygon2.h"    
+##include "hdudispfcrc.h"
+##include "hdudispfpdidata.h"
+##include "hdudispfresource.h"
+##include "hdudispfmenu.h"            /* contains prototype for menu module*/
+##include "hdudispfpanel.h"			
+
+##define BIT_SHIFT_BY_64	   64
+##define BIT_SHIFT_BY_16       16
+##define BIT_SHIFT_BY_8        8
+##define BIT_SHIFT_BY_8192     8192
+##define BMP_SIZE              0x2820000
+--#define BITMAP_SECTOR_OFFSET  0x200000*/
+
+--Modified for testing purpose
+#T_UINT32 PTU_BMP_START_ADDR[200];
+##define BMP_START_ADDR        &PTU_BMP_START_ADDR[0]
+--#define BMP_START_ADDR        0x60000000
+-- Commented for testing purpose
+-- #define BMP_CRC_ADDR          0x6281FFFC
+--Modified macro by stubbing hardware address for testing purpose
+#T_UINT32                    PTU_BMP_CRC_ADDR[100];
+##define BMP_CRC_ADDR (T_UINT32 *)PTU_BMP_CRC_ADDR
+##define BMP_SIZE              0x2820000
+
+--/*Commented for testing purpose*/
+--/*#define BITMAP_SECTOR_OFFSET  0x200000*/
+--/*Macro value is reduced for the purpose of testing*/
+##define BITMAP_SECTOR_OFFSET 6
+
+--/* Updated as per PR100196 */
+##define PDI_CRC_530G			             0x22412043
+##define BITMAP_CRC_530G           			 0x6242C317
+##define PDI_CRC_530F               			 0xA6992929
+##define BITMAP_CRC_530F            			 0x7BB6FF80   
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+        
+    #extern T_SPDIFILE Pdi_file_code;
+    #extern T_UINT16 Sdram_buffer_check[10];
+    #T_UINT16   U16_message_words[MAX_MESSAGE_WORDS];
+	#T_BOOL Bitmap_crc_check_bit[20];
+	#T_UINT8 page_num;
+   
+--Declaration of temporary variable
+
+    --Variables declared to verify the stub CrcCalculate.
+    #T_UINT32 PTU_u32_buffer[25],PTU_index,PTU_alutest;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Kavya M
+    COMMENT
+    COMMENT File Name        : hdudispfpbit.ptu
+    COMMENT
+    COMMENT Tested Functions : RamTest
+    COMMENT                    ProcessorTest
+    COMMENT                    SDRamTest
+    COMMENT                    PdiIntegrityCheck
+    COMMENT                    PbitCheck
+    COMMENT					   CrcPages
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT 1. Header file 'hdudispfpbit.h' is modified for testing purpose
+    COMMENT     /*Commented for testing purpose */
+    COMMENT     /*#define PDI_ADDR 0x62820000*/
+    COMMENT     /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT     T_UINT32                    PTU_PDI_ADDR[100];
+    COMMENT     #define PDI_ADDR            PTU_PDI_ADDR    
+    COMMENT 
+    COMMENT 2. Header file 'hdudispfpbit.h' is modified for testing purpose 
+    COMMENT     /*Commented for testing purpose*/
+    COMMENT     /*#define PDI_SIZE 0x17E000*/
+    COMMENT     /*Macro value is reduced for the purpose of testing*/
+    COMMENT     #define PDI_SIZE 16
+    COMMENT
+    COMMENT 3.Source file 'hdudispfpbit.c' is modified for testing purpose  
+    COMMENT     /*Commented for testing purpose*/
+    COMMENT     /*#define BMP_CRC_ADDR          0x6281FFFC*/
+    COMMENT     /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT     T_UINT32                    PTU_BMP_CRC_ADDR[100];    
+    COMMENT     #define BMP_CRC_ADDR (T_UINT32 *)PTU_BMP_CRC_ADDR
+    COMMENT  
+    COMMENT 4.Source file 'hdudispfpbit.c' is modified for testing purpose  
+    COMMENT     /*Commented for testing purpose*/
+    COMMENT     /*#define BMP_START_ADDR        0x60000000*/
+    COMMENT     /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT     T_UINT32 PTU_BMP_START_ADDR[200];    
+    COMMENT     #define BMP_START_ADDR        &PTU_BMP_START_ADDR[0]
+    COMMENT 
+    COMMENT 5. Source file 'hdudispfpbit.c' is modified for testing purpose 
+    COMMENT     /*Commented for testing purpose*/
+    COMMENT     /*#define BITMAP_SECTOR_OFFSET  0x200000*/
+    COMMENT    /*Macro value is reduced for the purpose of testing*/
+    COMMENT     #define BITMAP_SECTOR_OFFSET 6
+    COMMENT
+    COMMENT 6. Header file 'hdudispfpdidata.h' is modified for testing purpose
+    COMMENT     /*Commented for testing purpose */
+    COMMENT     /*#define PAGE_NUM_BASE_ADDR          0x628A0000UL*/  
+    COMMENT     /*Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT     T_UINT8 PTU_PAGE_NUM_BASE_ADDR[200];
+    COMMENT     #define PAGE_NUM_BASE_ADDR          &PTU_PAGE_NUM_BASE_ADDR[0]    
+    COMMENT
+    COMMENT 7. Header file 'hdudispfpdidata.h' is modified for testing purpose
+    COMMENT     /*Commented for testing purpose*/
+    COMMENT     /*#define SECTOR_SIZE               0x20000U*/
+    COMMENT     /*Macro value is reduced for the purpose of testing*/
+    COMMENT      #define SECTOR_SIZE                 2 
+    COMMENT
+    COMMENT 8. The equivalence Class 23 cannot be verified because in the function 'PdiIntegrityCheck' 
+    COMMENT the while loop cannot be covered for zero times since it contains a macro 'TWENTY' and the 
+    COMMENT value of 'page_count' is modified only with in while loop.
+    COMMENT
+    COMMENT 9.‘for’ loop cannot be covered for ‘0’ and '1' times since it is controlled by  macro 'ZERO' and
+	COMMENT	 RAM_SIZE  in the function ‘RamTest’.
+	COMMENT
+	COMMENT code snippet :
+	COMMENT  for(sram_buffer = ZERO; sdram_buffer < RAM_SIZE; sram_buffer++)
+	COMMENT    {
+ 	COMMENT      ......
+ 	COMMENT     }
+	COMMENT 
+	COMMENT  10.‘for’ loop cannot be covered for ‘0’ and '1' times since it is controlled by  macro 'ZERO' and 
+	COMMENT	 SDRAM_SIZE  in the function ‘SDRamTest’.
+	COMMENT
+	COMMENT code snippet :
+	COMMENT  for(sdram_buffer = ZERO; sdram_buffer < SDRAM_SIZE; sdram_buffer++)
+	COMMENT    {
+ 	COMMENT      ......
+ 	COMMENT     }
+ 	COMMENT 
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1     
+    COMMENT The function 'PbitCheck' calls the function 'ProcessorTest'.
+    COMMENT 
+    COMMENT Class 2 
+    COMMENT The function 'PbitCheck' calls the function 'RamTest'.
+    COMMENT 
+    COMMENT Class 3 
+    COMMENT The function 'PbitCheck' calls the function 'SDRamTest'.
+    COMMENT 
+    COMMENT Class 4 
+    COMMENT The function 'PbitCheck' calls the function 'PdiIntegrityCheck'.
+    COMMENT 
+    COMMENT Class 5 
+    COMMENT The function 'ProcessorTest' calls the function 'AluTest'.
+    COMMENT     
+    COMMENT Class 6
+    COMMENT The  function 'PdiIntegrityCheck' calls the function 'CrcCalculate'
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In function 'PdiIntegrityCheck' CRC(stored in FLASH) and calculated CRC are not equal
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function 'PdiIntegrityCheck' CRC(stored in FLASH) and calculated CRC are equal
+    COMMENT 
+    COMMENT Class 9
+    COMMENT In function 'SDRamTest' ,Sdram_buffer_check location is equal to CHECK_5A5A
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'SDRamTest' ,Sdram_buffer_check location is equal to CHECK_A5A5
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'RamTest' ,Sram_buffer_check location is equal to CHECK_5A5A
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'RamTest' ,Sram_buffer_check location is equal to CHECK_A5A5
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'ProcessorTest' the value of 'Proc_test_res' is equal to 'FAILED'
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'RamTest'Sram_buffer_check location is NOT equal to CHECK_5A5A
+    COMMENT 
+    COMMENT Class 14
+    COMMENT In function 'RamTest'Sram_buffer_check location is NOT equal to CHECK_A5A5
+    COMMENT 
+    COMMENT Class 15
+    COMMENT In function 'ProcessorTest' the value of 'Proc_test_res' is not equal to 'FAILED'
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'SDRamTest'Sram_buffer_check location is NOT equal to CHECK_5A5A
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'SDRamTest'Sram_buffer_check location is NOT equal to CHECK_A5A5
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'PdiIntegrityCheck',page counter is lesser than TWENTY.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'PdiIntegrityCheck',page counter is greater than TWENTY. 
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'PdiIntegrityCheck',page counter is equal to TWENTY.     
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'PdiIntegrityCheck', page number  is lesser than TWENTY.
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'PdiIntegrityCheck', page number  is greater than TWENTY. 
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'PdiIntegrityCheck', page number  is equal to TWENTY.
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'PbitCheck' PDI_CRC_530G is equal to pdi flash crc 
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'PbitCheck' PDI_CRC_530G is not equal to pdi flash crc
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'PbitCheck'  BITMAP_CRC_530G is equal to bitmap flash crc
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'PbitCheck'  BITMAP_CRC_530G is not equal to bitmap flash crc
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'PbitCheck' PDI_CRC_530F is equal to pdi flash crc 
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'PbitCheck' PDI_CRC_530F is not equal to pdi flash crc
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'PbitCheck'  BITMAP_CRC_530F is equal to bitmap flash crc
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'PbitCheck'  BITMAP_CRC_530F is not equal to bitmap flash crc
+    COMMENT
+	COMMENT	Class 37
+	COMMENT In function 'PdiIntegrityCheck',CrcPages funtion is called
+	COMMENT
+	COMMENT	Class 38
+	COMMENT In function 'PdiIntegrityCheck',Bitmap_crc_check_bit with 0 and 19th indices are set to TRUE
+	COMMENT
+	COMMENT Class 39
+	COMMENT In function 'CrcPages',page_num is less than 20
+	COMMENT
+	COMMENT Class 40
+	COMMENT In function 'CrcPages',page_num is greater than 20
+	COMMENT
+	COMMENT Class 41
+	COMMENT In function 'CrcPages',page_num is equal to 20
+	COMMENT
+	COMMENT Class 42
+    COMMENT The  function 'CrcPages' calls the function 'CrcCalculate'
+    COMMENT 
+    COMMENT Class 43
+    COMMENT In function 'CrcPages' CRC(stored in FLASH) and calculated CRC are not equal
+    COMMENT Invalid Class(es)
+    COMMENT None
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+DEFINE STUB hdudispfpbit_c
+
+    --Variable u32_buffer is made as _no since hardware address of a variable cannot be verified.
+    #T_UINT32 CrcCalculate(T_UINT32  _no *u32_buffer, T_UINT32  _in u32_buffer_length)
+    #{
+    # PTU_u32_buffer[PTU_index++]= *u32_buffer;
+    #}
+    
+    
+     --Stub defination modified to test variable 'Proc_test_res'  in function ProcessorTest
+    #void AluTest()
+    #{
+    # if (PTU_alutest == 1)
+    # {
+    # Proc_test_res = TRUE;
+    # }
+    #}
+    
+  
+END DEFINE
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfpbit_c
+ENVIRONMENT ENV_hdudispfpbit_c
+ 
+    VAR Proc_test_res,              init = 0,                   ev = init
+
+    ARRAY Sram_buffer_check,        init = { others => 0 },     ev = init
+    
+    ARRAY Sdram_buffer_check,       init = { others => 0 },     ev = init
+    
+    ARRAY PTU_PDI_ADDR,             init = {others=>1},         ev = init
+    
+    VAR Pbit_test_result,           init = 0,                   ev = init
+
+END ENVIRONMENT -- ENV_hdudispfpbit_c
+
+USE ENV_hdudispfpbit_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PdiIntegrityCheck
+--------------------------------------------------------------------------------
+SERVICE PdiIntegrityCheck
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbit-PdiIntegrityCheck-DB-LLR-001]
+    COMMENT The function calls 'CrcCalculate' with parameters load address
+    COMMENT (u32LoadAddr of Pdi_file_code) and load size(u32LoadSize of Pdi_file_code 
+    COMMENT divided by four and subtracted by one).
+    COMMENT Eqvivalence Class 6
+    COMMENT 
+    COMMENT [hdudispfpbit-PdiIntegrityCheck-DB-LLR-002]
+    COMMENT The function stores content of (u32LoadAddr of Pdi_file_code added with u32LoadSize
+    COMMENT of Pdi_file_code subtracted by four) to 32 bit CRC value(actual CRC which is stored in FLASH).
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfpbit-PdiIntegrityCheck-DB-LLR-003]
+    COMMENT The function Do the following
+    COMMENT set Pbit_Test_result as 1 and 
+    COMMENT set U16_message_words of index zero to U16_message_words of index zero logical OR with BIT_SHIFT_BY_64
+    COMMENT since actual CRC(stored in FLASH) and calculated CRC are not equal.
+    COMMENT Equivalence Class 7
+    COMMENT 
+	COMMENT [hdudispfpbit-PdiIntegrityCheck-DB-LLR-004]
+	COMMENT The function shall do the following,
+	COMMENT 1.	Call the function CrcPages with parameter as EPAGE19 and set Bitmap_crc_check_bit with index EPAGE19 to TRUE.
+	COMMENT 2.	Call the function CrcPages with parameter as EPAGE0 and set Bitmap_crc_check_bit with index EPAGE0 to TRUE.
+	COMMENT </TD>
+           
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+        
+            --  Initialising the PDI address array
+            ARRAY PTU_PDI_ADDR,             init = {others=>10},            ev = init
+            
+            -- Initialising the pdi file code
+            STRUCTURE Pdi_file_code,            init = { u32LoadSize => 16},  ev = init
+             
+            --Sets the page number value
+            ARRAY PTU_PAGE_NUM_BASE_ADDR[0..199], 
+            &                               init = 20,                      ev = init
+
+            
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- Index value of PTU_u32_buffer
+            VAR PTU_index,                  init = 0,                       ev = 1
+            
+        COMMENT OUTPUT SECTION: 
+
+		
+            -- Expecting pdit test results using Pbit_test_result
+            VAR Pbit_test_result,           init = 0,                       ev = 1
+            
+            -- Expecting the message word using the variable U16_message_words
+            VAR U16_message_words[0],       init = 0,                       ev = BIT_SHIFT_BY_64
+            
+            -- Parameter u32_buffer of CrcCalculate is expected using PTU_u32_buffer
+            VAR PTU_u32_buffer[0],          init = 0,                       ev = 10            
+        
+         -- Stub Calls :
+        SIMUL
+        
+            --Calculates the CRC value
+            STUB CrcCalculate(((Pdi_file_code.u32LoadSize)/4)-1) 5
+               
+        END SIMUL
+        
+            -- Calling the Unit Under Test :
+        #PdiIntegrityCheck();
+                
+        END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>    
+    COMMENT [hdudispfpbit-PdiIntegrityCheck-DB-LLR-001]
+    COMMENT The function calls 'CrcCalculate' with parameters load address
+    COMMENT(u32LoadAddr of Pdi_file_code) and load size(u32LoadSize of Pdi_file_code 
+    COMMENT divided by four and subtracted by one).
+    COMMENT Eqvivalence Class 6
+    COMMENT 
+    COMMENT [hdudispfpbit-PdiIntegrityCheck-DB-LLR-002]
+    COMMENT The function stores content of (u32LoadAddr of Pdi_file_code added with u32LoadSize
+    COMMENT of Pdi_file_code subtracted by four) to 32 bit CRC value(actual CRC which is stored in FLASH).
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT[hdudispfpbit-PdiIntegrityCheck-DB-LLR-003]
+    COMMENT The function Does the following
+    COMMENT set Error_status.pdi_test_fail as TRUE ,
+    COMMENT set Pbit_Test_result as 1 and 
+    COMMENT set U16_message_words of index zero to U16_message_words of index zero logical OR with BIT_SHIFT_BY_32
+    COMMENT since actual CRC(stored in FLASH) and calculated CRC are not equal.
+    COMMENT Equivalence Class 8
+	COMMENT
+	COMMENT [hdudispfpbit-PdiIntegrityCheck-DB-LLR-004]
+	COMMENT The function shall do the following,
+	COMMENT 1.	Call the function CrcPages with parameter as EPAGE19 and set Bitmap_crc_check_bit with index EPAGE19 to TRUE.
+	COMMENT 2.	Call the function CrcPages with parameter as EPAGE0 and set Bitmap_crc_check_bit with index EPAGE0 to TRUE.
+    COMMENT </TD>
+        
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+        
+            --  Initialising the PDI address array
+            ARRAY PTU_PDI_ADDR,             init = {others=>10},            ev = init
+
+            -- Initialising the pdi file code
+            STRUCTURE Pdi_file_code,            init = { u32LoadSize => 16},  ev = init
+
+            --Sets the page number value
+            ARRAY PTU_PAGE_NUM_BASE_ADDR[0..199], 
+            &                               init = 21,                      ev = init
+
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- Index value of PTU_u32_buffer
+            VAR PTU_index,                  init = 0,                       ev = 1
+
+        COMMENT OUTPUT SECTION: 
+
+		VAR Bitmap_crc_check_bit[19],		init = FALSE,					ev = TRUE
+		
+
+            -- Parameter u32_buffer of CrcCalculate is expected using PTU_u32_buffer
+            VAR PTU_u32_buffer[0],          init = 0,                       ev = 10    
+
+         -- Stub Calls :
+        SIMUL
+                --Calling the stub CrcCalculate
+            STUB CrcCalculate(((Pdi_file_code.u32LoadSize)/4)-1) 10
+
+        END SIMUL
+
+    -- Calling the Unit Under Test :
+    #PdiIntegrityCheck();
+
+    END ELEMENT
+
+END TEST -- TEST 2
+    
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>    
+	COMMENT [hdudispfpbit-PdiIntegrityCheck-DB-LLR-001 ]
+	COMMENT In function PdiIntegrityCheck,CrcPages is called.Bitmap_crc_check_bit with 0 and 19th indeces are set to TRUE.
+	COMMENT Equivalence Class:37,38
+    COMMENT [hdudispfpbit-CrcPages-DB-LLR-001]
+    COMMENT The function loops from till page counter is less than TWENTY 
+    COMMENT and does the following
+    COMMENT a)Sets page number to content present at location which is sum of (page counter multiplied  
+    COMMENT by SECTOR_SIZE added with PAGE_NUM_BASE_ADDR) and two.
+    COMMENT b)Does the following when page number is less than TWENTY
+    COMMENT - Calculates CRC value by calling 'CrcCalculate' function with parameter ((BMP_START_ADDR added 
+    COMMENT   with page number multiplied by BITMAP_SECTOR_OFFSET) and ((BITMAP_SECTOR_OFFSET divided by four)
+    COMMENT   and subtracted by one)) and store it to bitmap CRC value.
+    COMMENT - Stores content of ((sum of BMP_START_ADDR, page number and BITMAP_CRC_OFFSET) added with 
+    COMMENT   BITMAP_CRC_OFFSET and subtracted by four) to 32 bit CRC value(actual CRC which is stored in FLASH).
+    COMMENT - Does nothing when actual CRC(stored in FLASH) and calculated CRC are equal 
+    COMMENT c) increment the page counter by one.
+    COMMENT For iteration 20 -  page counter is equal to TWENTY,hence the loop is terminated.  
+    COMMENT The loop is executed in this test case for two or more times.
+    COMMENT Equivalence Class :39,42,43
+    COMMENT </TD>
+           
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+        
+            --  Initialising the PDI address array
+            ARRAY PTU_PDI_ADDR,                 init = {others=>10},        ev = init
+
+            -- Initialising the pdi file code
+            STRUCTURE Pdi_file_code,            init = { u32LoadSize => 16},  ev = init
+
+            --Sets the page number value
+            ARRAY PTU_PAGE_NUM_BASE_ADDR[0..199], 
+            &                                   init = 0,                   ev = init
+            
+            --Sets the value of actual bitmap CRC 
+            ARRAY PTU_BMP_START_ADDR[0..199],   init = (T_UINT32)0xFFFFFFFF,          ev = init
+                
+            
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- Index value of PTU_u32_buffer
+            VAR PTU_index,                  init = 0,                       ev = 2
+            
+        COMMENT OUTPUT SECTION: 
+        
+            --  Expecting pdit test results using Pbit_test_result
+            VAR Pbit_test_result,           init = 0,                       ev = 1
+            
+            -- Expecting the message word using the variable U16_message_words
+            VAR U16_message_words[0],       init = 0,                       ev = BIT_SHIFT_BY_64
+            
+            -- Parameter u32_buffer of CrcCalculate is expected using PTU_u32_buffer
+            VAR PTU_u32_buffer[0],          init = 0,                       ev = 10                    
+
+            VAR PTU_u32_buffer[1],      init = 0,                       ev =  0xFFFFFFFF 
+            
+        -- Stub Calls :        
+        SIMUL
+            --Calculates the CRC value
+            STUB CrcCalculate(((Pdi_file_code.u32LoadSize)/4)-1) 5
+            STUB CrcCalculate(((T_UINT32)((BITMAP_SECTOR_OFFSET/(T_UINT32)4)-(T_UINT32)1))) (T_UINT32)0xFFFFFFFF
+
+			END SIMUL
+        
+    -- Calling the Unit Under Test :
+    #PdiIntegrityCheck();
+
+    END ELEMENT
+
+END TEST -- TEST 3 
+        
+
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>    
+    COMMENT [hdudispfpbit-CrcPages-DB-LLR-001]
+    COMMENT The function loops from till page counter is less than TWENTY 
+    COMMENT and does the following
+    COMMENT a)Sets page number to content present at location which is sum of (page counter multiplied  
+    COMMENT by SECTOR_SIZE added with PAGE_NUM_BASE_ADDR) and two.
+    COMMENT b)Does the following when page number is less than TWENTY
+    COMMENT - Calculates CRC value by calling 'CrcCalculate' function with parameter ((BMP_START_ADDR added 
+    COMMENT   with page number multiplied by BITMAP_SECTOR_OFFSET) and ((BITMAP_SECTOR_OFFSET divided by four)
+    COMMENT   and subtracted by one)) and store it to bitmap CRC value.
+    COMMENT - Stores content of ((sum of BMP_START_ADDR, page number and BITMAP_CRC_OFFSET) added with 
+    COMMENT   BITMAP_CRC_OFFSET and subtracted by four) to 32 bit CRC value(actual CRC which is stored in FLASH).
+    COMMENT - Does following when actual CRC(stored in FLASH) and calculated CRC are not equal 
+    COMMENT 1. set Pbit_Test_result as one
+    COMMENT 2. set U16_message_words of index one to U16_message_words of index one logical OR with THIRTY_TWO
+    COMMENT 3. break the loop
+    COMMENT The loop is executed in this test case for one time.    
+    COMMENT Equivalence Class 42,43,40
+    COMMENT </TD>
+           
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+        
+            --  Initialising the PDI address array
+            ARRAY PTU_PDI_ADDR,                 init = {others=>5},         ev = init
+
+            -- Initialising the pdi file code
+            STRUCTURE Pdi_file_code,            init = { u32LoadSize => 16},  ev = init
+
+            --Sets the page number value
+            ARRAY PTU_PAGE_NUM_BASE_ADDR[0..199], 
+            &                                   init = 10,                  ev = init
+            
+            --Sets the value of actual bitmap CRC 
+            ARRAY PTU_BMP_START_ADDR[0..199],   init = 0xFFF,               ev = init
+                
+            
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            -- Index value of PTU_u32_buffer
+            VAR PTU_index,                  init = 0,                       ev = 2
+            
+        COMMENT OUTPUT SECTION: 
+        
+            --  Expecting pdit test results using Pbit_test_result
+            VAR Pbit_test_result,           init= 0,                        ev = 1
+            
+            -- Expecting the message word using the variable U16_message_words
+            VAR U16_message_words[1],       init = 0,                       ev = THIRTY_TWO
+
+            -- Parameter u32_buffer of CrcCalculate is expected using PTU_u32_buffer
+            VAR PTU_u32_buffer[0],          init = 0,                       ev = 5                    
+
+            
+         -- Stub Calls :       
+        SIMUL
+       
+            --Calculates the CRC value
+            STUB CrcCalculate(((Pdi_file_code.u32LoadSize)/4)-1) 5
+            STUB CrcCalculate(((T_UINT32)((BITMAP_SECTOR_OFFSET/(T_UINT32)4)-(T_UINT32)1))) (T_UINT32)0xFFFFFFFF
+        END SIMUL
+        
+    -- Calling the Unit Under Test :
+    #PdiIntegrityCheck();
+
+    END ELEMENT
+
+END TEST -- TEST 4
+
+END SERVICE -- PdiIntegrityCheck
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RamTest
+--------------------------------------------------------------------------------
+SERVICE RamTest
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbit-RamTest-DB-LLR-001]
+    COMMENT The function do the following for each Sram_buffer_check location(ZERO to RAM_SIZE)
+    COMMENT Set Sram_buffer_check location to CHECK_5A5A.
+    COMMENT Do the follwing since, Sram_buffer_check location is equal to CHECK_5A5A
+    COMMENT set Sram_buffer_check location to CHECK_A5A5.
+    COMMENT Eqvivalence Class 12,11
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+        
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --initialise sram buffer check variable
+            ARRAY Sram_buffer_check,            init = { others => CHECK_5A5A},
+            &                                    ev = { others => CHECK_A5A5}
+
+        COMMENT OUTPUT SECTION:
+        
+            --None
+        
+        -- Stub Calls :
+        SIMUL
+           
+           --None
+               
+        END SIMUL            
+
+        -- Calling the Unit Under Test :
+        #RamTest();
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+    
+-- TEST 2
+-- FAMILY nominal
+-- 
+--  COMMENT Test Description
+--  COMMENT <TD>
+--  COMMENT [hdudispfpbit-RamTest-DB-LLR-001]
+--  COMMENT The function does the following for each Sram_buffer_check location(ZERO to RAM_SIZE)
+--  COMMENT Set Sram_buffer_check location is not equal to CHECK_5A5A.
+--  COMMENT Eqvivalence Class 13
+--  COMMENT </TD>
+-- 
+--  ELEMENT
+-- 
+--      COMMENT INPUT SECTION:
+--      
+--          --initialise sram buffer check variable
+--          ARRAY Sram_buffer_check,            init = { others =>0} ,    ev = init
+-- 
+--      COMMENT INPUT/OUTPUT SECTION:
+-- 
+--          --None
+-- 
+--      COMMENT OUTPUT SECTION:
+-- 
+--          --initialise message words
+--          VAR U16_message_words[0],       init = 0,                     ev = BIT_SHIFT_BY_8192
+--          
+--          --Initialising test result variable.
+--          VAR Pbit_test_result,           init = 0,                     ev = 1
+-- 
+--      -- Stub Calls :
+--      SIMUL
+-- 
+--      --No Stubs
+-- 
+--      END SIMUL  
+-- 
+--  -- Calling the Unit Under Test :
+--  #RamTest();
+-- 
+--  END ELEMENT
+-- 
+-- END TEST -- TEST 2
+-- 
+-- TEST 3
+-- FAMILY nominal
+-- 
+--  COMMENT Test Description
+--  COMMENT <TD>
+--  COMMENT [hdudispfpbit-RamTest-DB-LLR-001]
+--  COMMENT The function do the following for each Sram_buffer_check location(ZERO to RAM_SIZE)
+--  COMMENT Set Sram_buffer_check location is  equal to CHECK_5A5A.
+--  COMMENT Also do the following since, Sram_buffer_check location is not equal to CHECK_5A5A
+--  COMMENT set Sram_buffer_check location to CHECK_A5A5.
+--  COMMENT Eqvivalence Class 13,14
+--  COMMENT </TD>
+-- 
+--  ELEMENT
+-- 
+--      COMMENT INPUT SECTION:
+-- 
+--          --initialise sram buffer check variable
+--          ARRAY Sram_buffer_check,        init = { others =>0} ,      ev = init   
+-- 
+--      COMMENT INPUT/OUTPUT SECTION:
+-- 
+--          --None
+-- 
+--      COMMENT OUTPUT SECTION:
+-- 
+--          --initialise message words
+--          VAR U16_message_words[0],       init = 0,                   ev = BIT_SHIFT_BY_8192
+-- 
+--          --Initialising test result variable.
+--          VAR Pbit_test_result,           init = 0,                   ev = 1
+-- 
+--      -- Stub Calls :
+--      SIMUL
+-- 
+--      --No Stubs
+-- 
+--      END SIMUL  
+-- 
+--  -- Calling the Unit Under Test :
+--  #RamTest();
+-- 
+--  END ELEMENT
+-- 
+-- END TEST -- TEST 3
+
+END SERVICE -- RamTest
+--------------------------------------------------------------------------------
+-- Declaration of the service SDRamTest
+--------------------------------------------------------------------------------
+SERVICE SDRamTest
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbit-SDRamTest-DB-LLR-001]
+    COMMENT The function does the following for each Sdram_buffer_check location(ZERO to RAM_SIZE)
+    COMMENT 1.Set Sdram_buffer_check location to CHECK_5A5A.
+    COMMENT 2.Do the following when Sdram_buffer_check location is equal to CHECK_5A5A
+    COMMENT 3.set Sdram_buffer_check location to CHECK_A5A5.
+    COMMENT since Sdram_buffer_check location is equal to CHECK_A5A5 does nothing.
+    COMMENT Eqvivalence Class 9,10
+    COMMENT </TD>
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+
+            --None
+
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --initialise sram buffer check variable
+            ARRAY Sdram_buffer_check,       init = { others => CHECK_5A5A },    
+            &                               ev = { others => CHECK_A5A5 }
+
+        COMMENT OUTPUT SECTION:
+
+            --None
+
+        -- Stub Calls :
+        SIMUL
+
+            --No stub calls
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #SDRamTest();
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+-- TEST 2
+-- FAMILY nominal
+--
+--  COMMENT Test Description
+--  COMMENT <TD>
+--  COMMENT [hdudispfpbit-SDRamTest-DB-LLR-001]
+--  COMMENT The function does the following for each Sdram_buffer_check location
+--  COMMENT (ZERO to RAM_SIZE).Set Sdram_buffer_check location is not equal to CHECK_5A5A.
+--  COMMENT Eqvivalence Class 17
+--  COMMENT </TD>
+--
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --Initialise sdram buffer check variable
+--          ARRAY Sdram_buffer_check,      init = { others =>0} ,   ev = init
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --Initialise message words
+--          VAR U16_message_words[0],       init = 0,             ev = BIT_SHIFT_BY_8
+--
+--          --Initialising test result variable.
+--          VAR Pbit_test_result,           init = 0,             ev = 1
+--
+--        -- Stub Calls :
+--        SIMUL
+--           
+--           --No Stubs
+--               
+--        END SIMUL  
+--
+--  --Calling the Unit Under Test:
+--  #SDRamTest();
+--
+--  END ELEMENT
+--
+-- END TEST -- TEST 2
+--
+-- TEST 3
+-- FAMILY nominal
+--
+--  COMMENT Test Description
+--  COMMENT <TD>
+--  COMMENT [hdudispfpbit-SDRamTest-DB-LLR-001]
+--  COMMENT The function does the following for each Sram_buffer_check location
+--  COMMENT (ZERO to RAM_SIZE) Set Sdram_buffer_check location is  equal to CHECK_5A5A.
+--  COMMENT Does the follwing since, Sdram_buffer_check location is not equal to CHECK_A5A5
+--  COMMENT set Sdram_buffer_check location to CHECK_A5A5.
+--  COMMENT Eqvivalence Class 18
+--  COMMENT </TD>
+--
+--  ELEMENT
+--
+--      COMMENT INPUT SECTION:
+--
+--          --Initialise sdram buffer check variable
+--          ARRAY Sdram_buffer_check,       init = { others =>0},           ev = init   
+--
+--      COMMENT INPUT/OUTPUT SECTION:
+--          
+--          --None
+--
+--      COMMENT OUTPUT SECTION:
+--
+--          --Initialise message words
+--          VAR U16_message_words[0],       init = 0,                       ev = BIT_SHIFT_BY_8
+--
+--          --Initialising test result variable.
+--          VAR Pbit_test_result,           init = 0,                       ev = 1
+--
+--        -- Stub Calls :
+--        SIMUL
+--           
+--           --No Stubs
+--               
+--        END SIMUL  
+--
+--  --Calling the Unit Under Test:
+--  #SDRamTest();
+--
+--  END ELEMENT
+--
+-- END TEST -- TEST 3
+
+END SERVICE -- SDRamTest
+
+--------------------------------------------------------------------------------
+-- Declaration of the service ProcessorTest
+--------------------------------------------------------------------------------
+SERVICE ProcessorTest
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbit-ProcessorTest-DB-LLR-001]
+    COMMENT The function does the following:
+	COMMENT a) set Proc_test_res to FAILED
+	COMMENT b) Calls the function AluTest to perform the arithmetical and logical operations on registers.
+	COMMENT c) If the value of Proc_test_res is equal to FAILED then set U16_message_words with index zero to 
+	COMMENT U16_message_words with index zero logical OR with BIT_SHIFT_BY_16(PBIT ERROR - ERR 02)  and Pbit_test_result to one.
+    COMMENT Eqvivalence Class 5,16
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT  INPUT SECTION:
+        
+            VAR PTU_alutest,			    init = 0,				ev = init
+
+        COMMENT  INPUT/OUTPUT SECTION:
+
+            --holds global value 
+            VAR Proc_test_res,              init = PASSED ,           ev = FAILED
+
+
+        COMMENT  OUTPUT SECTION:
+
+            --Initializing the message words
+            VAR U16_message_words[0],       init = 0 ,                ev = BIT_SHIFT_BY_16
+
+            --Initialising the test result pdit 
+            VAR Pbit_test_result,           init = 0,                 ev = 1
+
+        -- Stub Calls :
+        SIMUL
+
+            STUB    AluTest()
+
+        END SIMUL
+
+    -- Calling the Unit Under Test :
+    #ProcessorTest();
+    
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbit-ProcessorTest-DB-LLR-001]
+    COMMENT The function calls 'AluTest' to perform the arithmetical and logical operations on registers.
+    COMMENT 'Proc_test_res' is not equal to 'FAILED' hence does nothing
+    COMMENT Eqvivalence Class 5,15
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT  INPUT SECTION:
+        
+            --holds the value of process test result.
+            VAR Proc_test_res,              init = FAILED ,          ev = init
+
+        COMMENT  INPUT/OUTPUT SECTION:
+        
+            --None
+                    
+        COMMENT  OUTPUT SECTION:
+        
+            --holds the value of message words
+            VAR U16_message_words[0],       init = 0 ,                ev = BIT_SHIFT_BY_16
+
+            --holds the value of test results
+            VAR Pbit_test_result,           init = 0,                 ev = 1
+
+        -- Stub Calls :
+        SIMUL
+
+            STUB    AluTest()
+
+        END SIMUL
+
+    -- Calling the Unit Under Test :
+    #ProcessorTest();
+    
+    END ELEMENT
+
+END TEST -- TEST 2
+   
+END SERVICE -- ProcessorTest
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service PbitCheck
+--------------------------------------------------------------------------------
+SERVICE PbitCheck
+SERVICE_TYPE extern
+
+	--Local variable 
+	#T_UINT32 PTU_u32LoadAddr;
+	
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbit-PbitCheck-DB-LLR-001]
+    COMMENT The function 'PbitCheck' calls the following functions.
+    COMMENT - ProcessorTest
+    COMMENT - RamTest
+    COMMENT - SDRamTest
+    COMMENT - PdiIntegrityCheck.
+    COMMENT Eqvivalence Class 1,2,3,4
+    COMMENT 
+    COMMENT </TD>
+
+    ELEMENT
+    
+        COMMENT INPUT SECTION:
+    
+              --Initalising the pdi address.
+            ARRAY PTU_PDI_ADDR,             init={others=>10},                         ev = init
+
+            --Initialising the sturcture Pdi_file_code.
+            STRUCTURE Pdi_file_code,        init = {u32LoadSize => 4 },               ev = init
+
+			VAR Pdi_file_code.u32LoadAddr,
+			&								init = (T_UINT32)&PTU_u32LoadAddr,				   ev = init
+			
+			--VAR PTU_u32LoadAddr,			init = (T_UINT32)PDI_CRC_530G,						ev = init
+			
+            --Initialising the crc address of BMP.
+            --VAR PTU_BMP_CRC_ADDR,           init={others=>0} ,                         ev = init     
+
+
+            --Sets the page number value
+            ARRAY PTU_PAGE_NUM_BASE_ADDR[0..199], 
+            &                               init = 21,                                 ev = init
+            
+        COMMENT INPUT/OUTPUT  SECTION :
+    
+            -- Index value of PTU_u32_buffer
+            VAR PTU_index,                          init = 0,                   ev = 1
+        
+        COMMENT OUTPUT SECTION :
+        
+            --Initialising  Sram buffer check array
+            ARRAY Sram_buffer_check,                init = { others => 0 },     ev = 0xA5A5
+
+            --Initialising  Sdram buffer check array
+            ARRAY Sdram_buffer_check,               init = { others => 0 },     ev = 0xA5A5
+
+            --Initialising test result pdit
+            VAR Pbit_test_result,                   init = 0,                   ev = 1
+
+            --Initialising the message word
+            VAR U16_message_words[0],               init = 0,                   ev = 80
+            --VAR U16_message_words[1],               init = 0,                   ev = 8
+
+            -- Parameter u32_buffer of CrcCalculate is expected using PTU_u32_buffer
+            --VAR PTU_u32_buffer[0],                  init = 0,                   ev = PDI_CRC_530G     
+
+        -- Stub Calls :
+        SIMUL
+
+            --Performs Arithematic operations
+            STUB AluTest()  
+
+            --Calculates the CRC value
+            STUB CrcCalculate(((Pdi_file_code.u32LoadSize)/4)-1) 16
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #PbitCheck();
+        
+    END ELEMENT
+
+END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbit-PbitCheck-DB-LLR-001]
+    COMMENT The function 'PbitCheck' calls the following functions.
+    COMMENT - ProcessorTest
+    COMMENT - RamTest
+    COMMENT - SDRamTest
+    COMMENT - PdiIntegrityCheck.
+    COMMENT Eqvivalence Class 1,2,3,4
+    COMMENT 
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION :
+
+            VAR PTU_alutest,			    init = 1,				ev = init
+    
+            --Initialising the pdi address 
+            ARRAY PTU_PDI_ADDR,             init={others=>(T_UINT32)0x5A18F0C0},                ev = init
+            
+            --Initialising the structure Pdi_file_code
+            STRUCTURE Pdi_file_code,        init = {u32LoadSize => 4 },                      ev = init
+			
+			VAR Pdi_file_code.u32LoadAddr,
+			&								init = (T_UINT32)&PTU_u32LoadAddr,				   ev = init
+			
+			
+			--VAR PTU_u32LoadAddr,			init = (T_UINT32)PDI_CRC_530G,					 ev = init
+		
+			
+            --Initialising the BMP_CRC_ADDR
+            --VAR PTU_BMP_CRC_ADDR,           init = {others=>(T_UINT32)BITMAP_CRC_530G} ,     ev = init
+            
+             --Sets the page number value
+            ARRAY PTU_PAGE_NUM_BASE_ADDR[0..199], 
+            &                               init = 21,                             ev = init           
+            
+        COMMENT INPUT/OUTPUT  SECTION :
+    
+            -- Index value of PTU_u32_buffer
+            VAR PTU_index,                  init = 0,                              ev = 1
+            
+        COMMENT OUTPUT SECTION :
+        
+            --Initialising the sram buffer check 
+            ARRAY Sram_buffer_check,                    init = { others => 0 },     ev = 0xA5A5
+            
+            --Initialising  Sdram buffer check array
+            ARRAY Sdram_buffer_check,                   init = { others => 0 },     ev = 0xA5A5
+            
+            --Initialising pbit test result 
+            VAR Pbit_test_result,                       init = 0,                   ev = 1
+            
+            --Initialising the message word
+            VAR U16_message_words[0],                   init = 0,                   ev = 64
+            
+            -- Parameter u32_buffer of CrcCalculate is expected using PTU_u32_buffer
+            --VAR PTU_u32_buffer[0],                      init = 0,                   ev = PDI_CRC_530G
+ 
+             --Expected value of Proc_test_res
+            VAR Proc_test_res,                          init = 0,                   ev = 1
+
+        -- Stub Calls :
+        SIMUL
+        
+            --Performs Arithematic operations
+            STUB AluTest()
+            
+            --Calculates the CRC value
+            STUB  CrcCalculate(((Pdi_file_code.u32LoadSize)/4)-1) 10
+                  
+        END SIMUL
+
+    -- Calling the Unit Under Test :
+    #PbitCheck();
+    
+    END ELEMENT
+
+END TEST -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbit-PbitCheck-DB-LLR-003]
+    COMMENT The function does nothing when
+    COMMENT - PDI_CRC_530G is not equal to pdi flash crc.
+    COMMENT - PDI_CRC_530F is equal to pdi flash crc AND BITMAP_CRC_530F is equal to 
+    COMMENT   bitmap flash crc (MCDC : FXTT)
+    COMMENT Equivalence Class 30,33,35
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION :
+
+            VAR PTU_alutest,			    init = 1,				ev = init
+    
+            --Initialising the pdi address 
+            ARRAY PTU_PDI_ADDR,             init={others=>(T_UINT32)0x5A18F0C0},                ev = init
+            
+            --Initialising the structure Pdi_file_code
+            STRUCTURE Pdi_file_code,        init = {u32LoadSize => 4 },                      ev = init
+
+			--VAR PTU_u32LoadAddr,			init = (T_UINT32)PDI_CRC_530F,					 ev = init
+            
+            --Initialising the BMP_CRC_ADDR
+            --VAR PTU_BMP_CRC_ADDR,           init = {others=>(T_UINT32)BITMAP_CRC_530F} ,     ev = init
+            
+             --Sets the page number value
+            ARRAY PTU_PAGE_NUM_BASE_ADDR[0..199], 
+            &                               init = 21,                             ev = init           
+            
+        COMMENT INPUT/OUTPUT  SECTION :
+    
+            -- Index value of PTU_u32_buffer
+            VAR PTU_index,                  init = 0,                              ev = 1
+            
+        COMMENT OUTPUT SECTION :
+        
+            --Initialising the sram buffer check 
+            ARRAY Sram_buffer_check,                    init = { others => 0 },     ev = 0xA5A5
+            
+            --Initialising  Sdram buffer check array
+            ARRAY Sdram_buffer_check,                   init = { others => 0 },     ev = 0xA5A5
+            
+            --Initialising pbit test result 
+            VAR Pbit_test_result,                       init = 0,                   ev = 1
+            
+            --Initialising the message word
+            VAR U16_message_words[0],                   init = 0,                   ev = 64
+            
+            -- Parameter u32_buffer of CrcCalculate is expected using PTU_u32_buffer
+            --VAR PTU_u32_buffer[0],                      init = 0,                   ev = PDI_CRC_530F
+ 
+             --Expected value of Proc_test_res
+            VAR Proc_test_res,                          init = 0,                   ev = 1
+
+        -- Stub Calls :
+        SIMUL
+        
+            --Performs Arithematic operations
+            STUB AluTest()
+            
+            --Calculates the CRC value
+            STUB  CrcCalculate(((Pdi_file_code.u32LoadSize)/4)-1) 10
+                  
+        END SIMUL
+
+    -- Calling the Unit Under Test :
+    #PbitCheck();
+    
+    END ELEMENT
+
+END TEST -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbit-PbitCheck-DB-LLR-003]
+    COMMENT The function sets Pbit_test_result to ONE, set 4th bit of U16_message_words 
+    COMMENT with index one to ONE when
+    COMMENT - PDI_CRC_530G is not equal to pdi flash crc.
+    COMMENT - PDI_CRC_530F is equal to pdi flash crc AND BITMAP_CRC_530F is not equal to 
+    COMMENT   bitmap flash crc (MCDC : FXTF)
+    COMMENT Equivalence Class 30, 33, 36
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION :
+
+            VAR PTU_alutest,			    init = 1,				ev = init
+    
+            --Initialising the pdi address 
+            ARRAY PTU_PDI_ADDR,             init={others=>(T_UINT32)0x5A18F0C0},                ev = init
+            
+            --Initialising the structure Pdi_file_code
+            --STRUCTURE Pdi_file_code,        init = {u32LoadSize => 4 },                      ev = init
+
+			--VAR PTU_u32LoadAddr,			init = (T_UINT32)PDI_CRC_530F,					 ev = init
+            
+            --Initialising the BMP_CRC_ADDR
+            --VAR PTU_BMP_CRC_ADDR,           init = {others=>(T_UINT32)BITMAP_CRC_530G} ,     ev = init
+            
+             --Sets the page number value
+            ARRAY PTU_PAGE_NUM_BASE_ADDR[0..199], 
+            &                               init = 21,                             ev = init           
+            
+        COMMENT INPUT/OUTPUT  SECTION :
+    
+            -- Index value of PTU_u32_buffer
+            VAR PTU_index,                  init = 0,                              ev = 1
+            
+        COMMENT OUTPUT SECTION :
+        
+            --Initialising the sram buffer check 
+            ARRAY Sram_buffer_check,                    init = { others => 0 },     ev = 0xA5A5
+            
+            --Initialising  Sdram buffer check array
+            ARRAY Sdram_buffer_check,                   init = { others => 0 },     ev = 0xA5A5
+            
+            --Initialising pbit test result 
+            VAR Pbit_test_result,                       init = 0,                   ev = 1
+            
+            --Initialising the message word
+            VAR U16_message_words[0],                   init = 0,                   ev = 64
+            
+            -- Parameter u32_buffer of CrcCalculate is expected using PTU_u32_buffer
+            --VAR PTU_u32_buffer[0],                      init = 0,                   ev = PDI_CRC_530F
+ 
+             --Expected value of Proc_test_res
+            VAR Proc_test_res,                          init = 0,                   ev = 1
+
+        -- Stub Calls :
+        SIMUL
+        
+            --Performs Arithematic operations
+            STUB AluTest()
+            
+            --Calculates the CRC value
+            STUB  CrcCalculate(((Pdi_file_code.u32LoadSize)/4)-1) 10
+                  
+        END SIMUL
+
+    -- Calling the Unit Under Test :
+    #PbitCheck();
+    
+    END ELEMENT
+
+END TEST -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfpbit-PbitCheck-DB-LLR-003]
+    COMMENT The function sets Pbit_test_result to ONE, set 4th bit of U16_message_words with index one to ONE
+    COMMENT - PDI_CRC_530G is not equal to pdi flash crc.
+    COMMENT - PDI_CRC_530F is not equal to pdi flash crc  (MCDC : FXFX)
+    COMMENT Equivalence Class 30,34
+    COMMENT </TD>
+    
+    ELEMENT
+        
+        COMMENT INPUT SECTION :
+
+            VAR PTU_alutest,			    init = 1,				ev = init
+    
+            --Initialising the pdi address 
+            ARRAY PTU_PDI_ADDR,             init={others=>(T_UINT32)0x5A18F0C0},                ev = init
+            
+            --Initialising the structure Pdi_file_code
+            STRUCTURE Pdi_file_code,        init = {u32LoadSize => 4 },                      ev = init
+
+			--VAR PTU_u32LoadAddr,			init = (T_UINT32)0x5A18F0C0,						 ev = init
+            
+            --Initialising the BMP_CRC_ADDR
+            --VAR PTU_BMP_CRC_ADDR,           init = {others=>(T_UINT32)BITMAP_CRC_530G} ,     ev = init
+            
+             --Sets the page number value
+            ARRAY PTU_PAGE_NUM_BASE_ADDR[0..199], 
+            &                               init = 21,                             ev = init           
+            
+        COMMENT INPUT/OUTPUT  SECTION :
+    
+            -- Index value of PTU_u32_buffer
+            VAR PTU_index,                  init = 0,                              ev = 1
+            
+        COMMENT OUTPUT SECTION :
+        
+            --Initialising the sram buffer check 
+            ARRAY Sram_buffer_check,                    init = { others => 0 },     ev = 0xA5A5
+            
+            --Initialising  Sdram buffer check array
+            ARRAY Sdram_buffer_check,                   init = { others => 0 },     ev = 0xA5A5
+            
+            --Initialising pbit test result 
+            VAR Pbit_test_result,                       init = 0,                   ev = 1
+            
+            --Initialising the message word
+            VAR U16_message_words[0],                   init = 0,                   ev = 64
+            
+            -- Parameter u32_buffer of CrcCalculate is expected using PTU_u32_buffer
+            --VAR PTU_u32_buffer[0],                      init = 0,                   ev = 0x5A18F0C0
+ 
+             --Expected value of Proc_test_res
+            VAR Proc_test_res,                          init = 0,                   ev = 1
+
+        -- Stub Calls :
+        SIMUL
+        
+            --Performs Arithematic operations
+            STUB AluTest()
+            
+            --Calculates the CRC value
+            STUB  CrcCalculate(((Pdi_file_code.u32LoadSize)/4)-1) 10
+                  
+        END SIMUL
+
+		-- Calling the Unit Under Test :
+		#PbitCheck();
+    
+    END ELEMENT
+
+END TEST -- TEST 5
+
+
+
+END SERVICE -- PbitCheck
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

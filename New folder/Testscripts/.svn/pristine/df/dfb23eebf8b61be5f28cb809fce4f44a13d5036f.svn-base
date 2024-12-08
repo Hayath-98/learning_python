@@ -1,0 +1,408 @@
+HEADER hdulibstm32f4xxcrc,Source Code Ver :1.2,TestScript Ver : 1.3
+-------------------------------------------------------------------------------
+-- Author Name         : Manu K M
+--
+-- File Name           : hdulibstm32f4xxcrc.ptu 
+--
+-- Test creation Date  : 30.10.2017
+--
+-- Tested Functions    : CrcResetDr
+--                       CrcCalcBlockCrc
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE         TESTER NAME        MODIFICATIONS
+--  ------------        ---------         -----------        -------------
+--  	1.1             30.10.2017        Manu K M	      created ptu file
+--		1.2				10.11.2017		  Manu K M 		  Updated as per #PR100171
+--		1.3				14.11.2017        Manu K M        Updated as per #PR100171
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                     */
+#/*============================================================================*/
+
+##include "hdulibstm32f4xxcrc.h"           
+##include "hdulibstm32f4xx.h"              
+##include "hdulibbasicfunc.h"              
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+    -- None
+    
+-- Declarations of the temporary variable
+    -- None
+	
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name      :Manu K M
+    COMMENT
+    COMMENT File Name        :hdulibstm32f4xxcrc.ptu 
+    COMMENT
+    COMMENT Tested Functions :CrcResetDr
+    COMMENT                   CrcCalcBlockCrc
+    COMMENT 
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT 
+    COMMENT Assumption(s):
+	COMMENT 1.LLR :'hdulibstm32f4xxcrc-CrcCalcBlockCrc-CB-LLR-001' contains parameter 'pbuffer'that computes the 32-bit CRC data. 
+    COMMENT   The length of the formal parameter 'pbuffer' for function 'CrcCalcBlockCrc' is not provided.
+    COMMENT   Since the length is undefined, for testing purpose the length of 'pbuffer' is set to 20.
+    COMMENT 
+	COMMENT Constraint(s): 
+	COMMENT
+	COMMENT	1.Header file "hdulibstm32f4xx.h" is modified for testing purpose. The macro 'CRC' is modified for stubbing hardware address.
+    COMMENT
+	COMMENT /*Commented for testing purpose*/
+	COMMENT	//#define CRC                   ((T_CRC_TYPE *) CRC_BASE)
+	COMMENT
+	COMMENT	/* Modified macro by stubbing hardware address for testing purpose*/
+	COMMENT	T_CRC_TYPE     PTU_CRC;
+	COMMENT	#define CRC 						((T_CRC_TYPE *) &PTU_CRC)
+    COMMENT 
+	COMMENT
+    COMMENT </AC>
+    COMMENT Equivalence class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT The function 'CrcResetDr', sets the RESET bit of CRC Control register(cr).
+    COMMENT 
+    COMMENT Class 2
+    COMMENT The function 'CrcCalcBlockCrc', copies the data from pbuffer to CRC data register
+    COMMENT and returns the calculated crc.
+    COMMENT 
+    COMMENT </ECD>
+	
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hdulibstm32f4xxcrc_c
+
+        -- No stubs
+
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--Environment of the file hdulibstm32f4xxcrc.c
+
+--ENVIRONMENT   ENV_hdulibstm32f4xxcrc_c
+
+        --None
+
+--END ENVIRONMENT --ENV_hdulibstm32f4xxcrc_c
+
+--USE ENV_hdulibstm32f4xxcrc_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CrcCalcBlockCrc
+--------------------------------------------------------------------------------
+SERVICE CrcCalcBlockCrc
+SERVICE_TYPE extern
+
+-- Tested service parameters declarations
+	
+	#T_UINT32 pbuffer[20];
+	#T_UINT32 buffer_length;
+	
+-- By function returned type declaration
+	
+	#T_UINT32 ret_CrcCalcBlockCrc;
+
+ENVIRONMENT ENV_CrcCalcBlockCrc
+			
+	ARRAY pbuffer,						init = { others => 0 },					ev = init
+			
+	VAR buffer_length,					init = 0,								ev = init
+		
+	VAR ret_CrcCalcBlockCrc,			init = 0,								ev = init
+	
+	VAR CRC->DR,						init = (T_VLT_UINT32)0xFFFFFFFF,		ev = init
+   
+END ENVIRONMENT -- ENV_CrcCalcBlockCrc
+    
+USE ENV_CrcCalcBlockCrc
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test description 
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxcrc-CrcCalcBlockCrc-CB-LLR-001]
+    COMMENT The function copies the data from pbuffer to CRC data register for
+    COMMENT the buffer_length value 0(min) and returns the initial value of DR register
+    COMMENT Equivalence Class 2
+    COMMENT </TD>
+    
+	ELEMENT
+		
+		COMMENT INPUT SECTION:
+			--specifies the buffer
+			ARRAY pbuffer,				init = {0 => 0xFFFF, others => 0x10},	ev = init
+			
+			--specifies the buffer length
+			VAR buffer_length,			init = 0x0,								ev = init
+			
+			
+		COMMENT OUTPUT SECTION:
+				
+			--returns the value
+			VAR ret_CrcCalcBlockCrc,	init = 0,								ev = (T_VLT_UINT32)0xFFFFFFFF
+	
+		COMMENT INPUT/OUTPUT SECTION:
+				
+			--None
+        
+		-- Stub Calls :
+        SIMUL
+        
+            --No stubs
+        
+        END SIMUL
+        
+        -- Calling the Unit Under Test :				
+        #ret_CrcCalcBlockCrc = CrcCalcBlockCrc(pbuffer, buffer_length);
+        
+	END ELEMENT
+
+END TEST -- TEST 1
+	
+TEST 2
+FAMILY nominal
+
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxcrc-CrcCalcBlockCrc-CB-LLR-001]
+    COMMENT The function copies the data from pbuffer to CRC data register for
+    COMMENT the index 0 and returns the calculated crc
+    COMMENT Equivalence Class 2
+    COMMENT </TD>
+
+    ELEMENT
+		
+		COMMENT INPUT SECTION:
+			
+			--specifies the buffer with minimum value 
+			ARRAY pbuffer,				init = {0 => 0xFFFF, others => 0x10},		ev = init
+				
+			--specifies the buffer length with min+1 value
+			VAR buffer_length,			init = 0x1,									ev = init
+			
+		COMMENT OUTPUT SECTION:
+			
+			--specifies the CRC DR register with value
+			VAR CRC->DR,				init = (T_VLT_UINT32)0xFFFFFFFF,			ev = 0xFFFF
+				
+			--returns the value
+			VAR ret_CrcCalcBlockCrc,	init = 0,									ev = 0xFFFF
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+				
+        -- Stub Calls :
+        SIMUL
+        
+            --No stubs
+        
+        END SIMUL
+		
+		-- Calling the Unit Under Test :		
+        #ret_CrcCalcBlockCrc = CrcCalcBlockCrc(pbuffer, buffer_length);
+       
+	END ELEMENT
+
+END TEST -- TEST 2
+	
+TEST 3
+FAMILY nominal
+ 
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxcrc-CrcCalcBlockCrc-CB-LLR-001]
+    COMMENT The function copies the data from pbuffer to CRC data register for
+    COMMENT all the index from 0 to 5 and returns the calculated crc
+    COMMENT Equivalence Class 2
+    COMMENT </TD>
+
+    ELEMENT
+		
+		COMMENT INPUT SECTION:
+		
+		    --specifies the buffer with a nominal value
+			ARRAY pbuffer,				init = {0..5 => 0x1234, others => 0xABCD},		ev = init
+			
+			--specifies the buffer length with nominal value
+			VAR buffer_length,			init = 0x5,										ev = init
+			
+		COMMENT OUTPUT SECTION:
+			
+			--specifies the CRC DR register with value
+			VAR CRC->DR,				init = (T_VLT_UINT32)0xFFFFFFFF,				ev = 0x1234
+				
+			--returns the value
+			VAR ret_CrcCalcBlockCrc,	init = 0,										ev = 0x1234
+			
+		COMMENT INPUT/OUTPUT SECTION:
+				
+			--None
+        
+		-- Stub Calls :
+		SIMUL
+        
+			--No stubs
+        
+		END SIMUL
+				
+        -- Calling the Unit Under Test :				
+        #ret_CrcCalcBlockCrc = CrcCalcBlockCrc(pbuffer, buffer_length);
+        
+	END ELEMENT
+
+END TEST -- TEST 3
+	
+TEST 4
+FAMILY nominal
+    
+	COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxcrc-CrcCalcBlockCrc-CB-LLR-001]
+    COMMENT The function copies the data from pbuffer to CRC data register for
+    COMMENT all the index from 0 to 18 and returns the calculated crc
+    COMMENT Equivalence Class 2
+    COMMENT </TD>
+
+    ELEMENT
+		
+		COMMENT INPUT SECTION:
+		    
+			--specifies the buffer with a maximum value
+			ARRAY pbuffer,				init = {0..18 => 0x1234, others => 0xABCD},			ev = init
+			
+			--specifies the buffer length with max value	
+			VAR buffer_length,			init = 0x14,										ev = init
+			
+		COMMENT OUTPUT SECTION:
+			
+			--specifies the CRC DR register with value
+			VAR CRC->DR,				init = (T_VLT_UINT32)0xFFFFFFFF,					ev = 0xABCD
+			
+			--returns the value
+			VAR ret_CrcCalcBlockCrc,	init = 0,											ev = 0xABCD
+			
+		COMMENT INPUT/OUTPUT SECTION:
+			--None
+
+		-- Stub Calls :
+		SIMUL
+        
+			--No stubs
+        
+		END SIMUL
+        
+        -- Calling the Unit Under Test :				
+        #ret_CrcCalcBlockCrc = CrcCalcBlockCrc(pbuffer, buffer_length);
+        
+	END ELEMENT
+
+END TEST -- TEST 4
+
+END SERVICE -- CrcCalcBlockCrc
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CrcResetDr
+--------------------------------------------------------------------------------
+SERVICE CrcResetDr
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test description
+    COMMENT <TD>
+    COMMENT [hdulibstm32f4xxcrc-CrcResetDr-CB-LLR-001]
+    COMMENT The function sets the RESET bit of CRC Control register(CR)
+    COMMENT Equivalence Class 1
+    COMMENT </TD>
+
+
+    ELEMENT
+		
+		COMMENT INPUT SECTION:
+			
+			--None
+		
+		COMMENT OUTPUT SECTION:
+		
+			--specifies the CR register of CRC with minimum value
+			VAR CRC->CR,						init = 0x00000000,						ev = 0x01
+		
+		COMMENT INPUT/OUTPUT SECTION:
+			
+			--None
+		
+		-- Stub Calls :
+        SIMUL
+
+            --No stubs
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :		
+        #CrcResetDr();
+
+	END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- CrcResetDr
+

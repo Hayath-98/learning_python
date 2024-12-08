@@ -1,0 +1,1275 @@
+HEADER hdudispfarinc825perph1,Source Code Ver : 1.8,TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name         : Bhanuprakash E
+--
+-- File Name           : hdudispfarinc825perph1_3.ptu
+--
+-- Test Creation Date  : 10.04.2018
+--
+-- Tested Functions    : CAN1DemoConfig
+--                       
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE        TESTER NAME        MODIFICATIONS
+-- ------------        ---------        -----------        -------------
+--    1.4              10.04.2018       Bhanuprakash E       Created the ptu file as per #PR100201.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfresource.h"   
+##include "hdulibstm32f746xx.h"  
+##include "hdulibstm32f7xxhalcan.h"   
+##include "hdulibstm32f7xxhalgpio.h"  
+##include "hdudispfarinc825.h"   
+##include "hdudispfa825def.h" 
+##include "hdulibstm32f7xx.h"   
+##include "hdulibbasictypes.h"  
+##include "hdulibstm32f7xxhalcortex.h"
+##include "hdulibstmcorecomm.h"  
+##include "hdudispfucos.h"        
+##include "hdulibstm32hallegacy.h"  
+
+##define  GPIO_SPEED_FREQ_VERY_HIGH   ((T_UINT32)0x00000003U)
+##define  GPIO_SPEED_HIGH                          GPIO_SPEED_FREQ_VERY_HIGH
+##define  GPIO_SPEED_LOW                           GPIO_SPEED_FREQ_LOW
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    ##define PRESCLR_FOUR 4U
+    ##define BANK_NO_14    14U
+    
+-- Declarations of the temporary variables
+    --Temporary variables to hold GPIO_Init structure
+    #T_GPIO_INIT PTU_GPIO_Init_TX, PTU_GPIO_Init_RX;
+
+    --Temporary variables to hold CAN handle structure
+    #T_CAN_HANDLE PTU_HalCanInit, PTU_HalCanTransmit;
+
+    --Temporary variable to hold filter_config structure
+    #T_CAN_FILTER_CONF_TYPE PTU_filter_config;
+
+    --Temporary variables for stub call count and loop
+    #T_UINT8 PTU_count;
+    #T_UINT16 PTU_i, PTU_lcc_val, PTU_u8PaySize;
+
+    --Temporary variable to hold Sem_a8251_commtask value
+    #T_OS_EVENT PTU_Sem_a8251_commtask;
+    # volatile  T_INT32 Itm_rx_buffer;
+    
+    --Temporary variable to hold Tx_message,Rx_message value
+    #T_CAN_TX_MSG_TYPE PTU_Tx_message;
+    #T_CAN_RX_MSG_TYPE PTU_Rx_message;
+--------------------------------------------------------------------------------
+
+BEGIN
+    
+    COMMENT Author Name      : Bhanuprakash E
+    COMMENT
+    COMMENT File Name        : hdudispfarinc825perph1_3.ptu
+    COMMENT
+    COMMENT Tested Functions : CAN1DemoConfig
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1.Header file 'hdulibstm32f746xx.h' is modified for testing purpose.
+    COMMENT   /*Commented for testing purpose*/
+    COMMENT   /*#define CAN1                ((T_CAN *) CAN1_BASE)*/
+    COMMENT   /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT   T_CAN PTU_CAN1;
+    COMMENT   #define CAN1                ((T_CAN *) &PTU_CAN1)
+    COMMENT
+    COMMENT   /*Commented for testing purpose*/
+    COMMENT   /*#define CAN2                ((T_CAN *) CAN2_BASE)*/
+    COMMENT   /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT   T_CAN PTU_CAN2;
+    COMMENT   #define CAN2                ((T_CAN *) &PTU_CAN2)
+    COMMENT
+    COMMENT   /*Commented for testing purpose*/
+    COMMENT   /*#define RCC                 ((T_RCC *) RCC_BASE)*/
+    COMMENT   /* Modified for stubbing hardware address */
+    COMMENT   T_RCC PTU_RCC;
+    COMMENT   #define RCC                 ((T_RCC *) &PTU_RCC)
+    COMMENT    
+	COMMENT 2. Source file "hdudispfarinc825perph1.c" is modified for testing LLR "hdudispfarinc825perph2-CAN1Config-DB-LLR-002"
+	COMMENT	The "while(TRUE)" is modified for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'CAN1Config':
+    COMMENT 
+    COMMENT T_UINT16 PTU1_count=0; /*local variable declared for testing purpose*/
+	COMMENT
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT .................
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU1_count++;
+    COMMENT if(PTU1_count == 4)
+    COMMENT {
+    COMMENT     break;
+    COMMENT }
+    COMMENT else
+    COMMENT {
+    COMMENT     /*nothing*/
+    COMMENT }  
+    COMMENT }    
+    COMMENT  Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition     
+    COMMENT
+    COMMENT 3. PTU is split into hdudispfarinc825perph1_1.ptu and hdudispfarinc825perph1_2.ptu,hdudispfarinc825perph1_3.ptu
+    COMMENT    since static variable dependency in the source code.
+    COMMENT 
+    COMMENT 4. Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+    COMMENT    warning #191-D: type qualifier is meaningless on cast type
+    COMMENT 
+	COMMENT 5. Source file "hdudispfarinc825perph1.c" is modified for testing LLR "hdudispfarinc825perph2-CAN1Config-DB-LLR-004"
+	COMMENT	The "while(TRUE)" is modified for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'CAN1Config':
+    COMMENT 
+    COMMENT T_UINT16 PTU2_count=0; /*local variable declared for testing purpose*/
+    COMMENT 
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT .................
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU2_count++;
+    COMMENT if(PTU2_count == 4)
+    COMMENT {
+    COMMENT     break;
+    COMMENT }
+    COMMENT else
+    COMMENT {
+    COMMENT     /*nothing*/
+    COMMENT }  
+    COMMENT }    
+    COMMENT  Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition 
+    COMMENT
+	COMMENT 6. Source file "hdudispfarinc825perph1.c" is modified for testing LLR "hdudispfarinc825perph2-CAN1DemoConfig-DB-LLR-004"
+	COMMENT	The "while(TRUE)" is modified for terminating the infinite loop.
+    COMMENT 
+    COMMENT Snippet of code is added in function 'CAN1DemoConfig':
+    COMMENT 
+    COMMENT T_UINT16 PTU_count=0; /*local variable declared for testing purpose*/
+    COMMENT 
+    COMMENT while(TRUE)
+    COMMENT {
+    COMMENT .................
+    COMMENT /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT PTU_count++;
+    COMMENT if(PTU_count == 4)
+    COMMENT {
+    COMMENT     break;
+    COMMENT }
+    COMMENT else
+    COMMENT {
+    COMMENT     /*nothing*/
+    COMMENT }  
+    COMMENT }    
+    COMMENT  Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition 
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In function 'CANITConfig', the new state of CAN interrupt 'new_state' is equal to ENABLE
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function 'CANITConfig', the new state of CAN interrupt 'new_state' is equal to DISABLE
+    COMMENT
+    COMMENT Class 3
+    COMMENT The function 'U8MailBoxAvail', result of TSR of Instance of h_can bitwise AND with CAN_TSR_TME0 is CAN_TSR_TME0
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'A8251GetMessage', the channel(e_channel) is Normal Operating Channel.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'A8251GetMessage', the channel(e_channel) is Node Service Channel.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'A8251GetMessage', the channel(e_channel) is other than NOC and NSC.
+    COMMENT
+    COMMENT Class 7
+    COMMENT The function 'A8251GetMessage', calls the function 'RxQueueRemove'
+    COMMENT
+    COMMENT Class 8
+    COMMENT The function 'TxQueueInsert', calls the function 'CANITConfig'
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'TxQueueInsert', number of messages in the Tx queue (TxCntr of ps_which_q) is equal to CAN_X_Q_SIZE
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'TxQueueInsert', number of messages in the Tx queue (TxCntr of ps_which_q) is not equal to CAN_X_Q_SIZE
+    COMMENT
+    COMMENT Class 11
+    COMMENT In function 'TxQueueInsert', the next message to insert is in the Transmit message Queue Size 
+    COMMENT range(TxBuf [CAN_X_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'TxQueueInsert', the next message to insert is not in the Transmit message Queue Size 
+    COMMENT range(TxBuf [CAN_X_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 13
+    COMMENT The function 'TxQueueInsert', calls the function 'CAN1TxIrqHandler'
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'BuildBroadcastExtId', Build the 29 bit CAN identifier for an ARINC 825 broadcast type message.
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'BuildPeerToPeerExtId', Builds the 29 bit CAN identifier for an ARINC 825 peer to peer type message.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'A8251Xmit', selected channel is NOC.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'A8251Xmit', selected channel is NSC.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'A8251Xmit', selected channel is other than NOC and NSC.
+    COMMENT
+    COMMENT Class 19
+    COMMENT The function 'A8251Xmit', calls the function 'BuildPeerToPeerExtId'.
+    COMMENT
+    COMMENT Class 20
+    COMMENT In function 'A8251Xmit', number of bytes of payload(u8PaySize of ps_xm) is greater than PAYLOAD_SIZE
+    COMMENT
+    COMMENT Class 21
+    COMMENT In function 'A8251Xmit', number of bytes of payload(u8PaySize of ps_xm) is less than or equal to PAYLOAD_SIZE
+    COMMENT
+    COMMENT Class 22
+    COMMENT The function 'A8251Xmit', calls the function 'TxQueueInsert'.
+    COMMENT
+    COMMENT Class 23    
+    COMMENT The function 'XmitFromBuff', calls the function 'U8MailBoxAvail'.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'XmitFromBuff',  return value of U8MailBoxAvail is other than ZERO.
+    COMMENT
+    COMMENT Class 25    
+    COMMENT In function 'XmitFromBuff',  return value of U8MailBoxAvail is equal to ZERO.
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'XmitFromBuff',  The next message to transmit is in the Transmit message Queue Size 
+    COMMENT range (TxBuf [CAN_X_Q_SIZE] of ps_which_q)
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'XmitFromBuff',  The next message to transmit is not in the Transmit message Queue Size 
+    COMMENT range (TxBuf [CAN_X_Q_SIZE] of ps_which_q)
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'CAN1TxIrqHandler', number of messages in the Tx queue(TxCntr of NOC transmit queue)is not equal to ZERO.
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'CAN1TxIrqHandler', number of messages in the Tx queue(TxCntr of NOC transmit queue)is equal to ZERO.
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'CAN1TxIrqHandler', there is no mailbox free for  transmission of NOC i.e the return value of the 
+    COMMENT function XmitFromBuff is ZERO.
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'CAN1TxIrqHandler', there is mailbox free for  transmission of NOC i.e the return value of the 
+    COMMENT function XmitFromBuff is not equal to ZERO.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'CAN1TxIrqHandler', calls the function 'XmitFromBuff'.
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'CAN1TxIrqHandler', number of messages in the Tx queue(TxCntr of NSC transmit queue)is not equal to ZERO
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'CAN1TxIrqHandler', number of messages in the Tx queue(TxCntr of NSC transmit queue)is equal to ZERO
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'CAN1TxIrqHandler', there is no mailbox free for transmission of NSC i.e the return value of the 
+    COMMENT function XmitFromBuff is ZERO.
+    COMMENT
+    COMMENT Class 36
+    COMMENT In function 'CAN1TxIrqHandler', there is mailbox free for transmission of NSC i.e the return value of the 
+    COMMENT function XmitFromBuff is not equal to ZERO.
+    COMMENT
+    COMMENT Class 37
+    COMMENT The function 'CAN1TxIrqHandler', calls the function 'CANITConfig'.
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'HalCanMspInit', Instance of h_can is CAN1.
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'HalCanMspInit', Instance of h_can is CAN2.
+    COMMENT
+    COMMENT Class 40    
+    COMMENT The function 'XmitFromBuff', calls the function 'HalCanTransmit'.
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'HalCanMspInit', Instance of h_can is neither CAN1 nor CAN2.
+    COMMENT
+    COMMENT Class 42
+    COMMENT The function 'HalCanMspInit', calls the macro 'CAN1_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 43
+    COMMENT The function 'HalCanMspInit', calls the macro 'CAN1_GPIO_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 44
+    COMMENT The function 'HalCanMspInit', calls the function 'HalGpioInit'
+    COMMENT
+    COMMENT Class 45
+    COMMENT The function 'HalCanMspInit', calls the function 'HalNvicSetPriority'
+    COMMENT
+    COMMENT Class 46
+    COMMENT The function 'HalCanMspInit', calls the function 'HalNvicEnableIrq'
+    COMMENT
+    COMMENT Class 47
+    COMMENT The function 'HalCanMspInit', calls the macro 'CAN2_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function 'HalCanMspInit', calls the macro 'CAN2_GPIO_CLK_ENABLE'
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function 'CAN1Config', the return value of the function HalCanInit is not equal to HAL_OK.
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function 'CAN1Config', the return value of the function HalCanInit is equal to HAL_OK.
+    COMMENT
+    COMMENT Class 51
+    COMMENT The function 'CAN1Config', calls the function 'HalCanInit'
+    COMMENT
+    COMMENT Class 52
+    COMMENT The function 'CAN1Config', calls the function 'HalCanConfigFilter'
+    COMMENT
+    COMMENT Class 53
+    COMMENT In function 'CAN1Config', return value of the function HalCanConfigFilter is not equal to HAL_OK.
+    COMMENT
+    COMMENT Class 54
+    COMMENT In function 'CAN1Config', return value of the function HalCanConfigFilter is equal to HAL_OK.
+    COMMENT
+    COMMENT Class 55
+    COMMENT The function 'CAN1Config', calls the function 'CANITConfig'
+    COMMENT
+    COMMENT Class 56
+    COMMENT The function 'A8251Init', calls the function 'OsSemCreate'
+    COMMENT
+    COMMENT Class 57
+    COMMENT The function 'A8251Init', calls the function 'CAN1Config'
+    COMMENT
+    COMMENT Class 58
+    COMMENT In function 'RxQueueRemove', the number of messages in the Rx queue is ZERO (RxCntr of ps_which_q is ZERO).
+    COMMENT
+    COMMENT Class 59
+    COMMENT In function 'RxQueueRemove', the number of messages in the Rx queue is not equal to ZERO (RxCntr of ps_which_q is ZERO).
+    COMMENT
+    COMMENT Class 60
+    COMMENT The function 'CAN1Rx0IrqHandler', calls the function 'OsIntEnter'
+    COMMENT
+    COMMENT Class 61
+    COMMENT The function 'CAN1Rx0IrqHandler', calls the function 'HalCanReceive'
+    COMMENT
+    COMMENT Class 62
+    COMMENT In function 'CAN1Rx0IrqHandler', channel is neither NOC nor NSC.
+    COMMENT
+    COMMENT Class 63
+    COMMENT The function 'CAN1Rx0IrqHandler', calls the function 'OsIntExit'
+    COMMENT
+    COMMENT Class 64
+    COMMENT In function 'CAN1Rx0IrqHandler', calls the function 'RxQueueInsert'
+    COMMENT
+    COMMENT Class 65
+    COMMENT The function 'RxQueueRemove', calls the function 'CANITConfig'
+    COMMENT
+    COMMENT Class 66
+    COMMENT In function 'RxQueueRemove', the next message to receive is in the message queue size range
+    COMMENT (RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 67
+    COMMENT In function 'RxQueueRemove', the next message to receive is not in the message queue size range
+    COMMENT (RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 68
+    COMMENT In function 'RxQueueRemove', the message is a broadcast message i.e. lcc of ARINC 825 message is NOC
+    COMMENT
+    COMMENT Class 69
+    COMMENT In function 'RxQueueRemove', the message is a peer to peer message i.e. lcc of ARINC 825 message is NSC
+    COMMENT
+    COMMENT Class 70
+    COMMENT In function 'RxQueueRemove', number of bytes of payload (u8_paysize) of ARINC 825 message is 
+    COMMENT greater than PAYLOAD_SIZE.
+    COMMENT
+    COMMENT Class 71
+    COMMENT In function 'RxQueueRemove', number of bytes of payload (u8_paysize) of ARINC 825 message 
+    COMMENT is lesser than or equal to PAYLOAD_SIZE.
+    COMMENT
+    COMMENT Class 72
+    COMMENT In function 'RxQueueInsert', number of messages in the Rx queue (RxCntr of ps_which_q) is CAN_R_Q_SIZE
+    COMMENT
+    COMMENT Class 73
+    COMMENT In function 'RxQueueInsert', number of messages in the Rx queue (RxCntr of ps_which_q) is not CAN_R_Q_SIZE
+    COMMENT
+    COMMENT Class 74
+    COMMENT In function 'RxQueueInsert', the next message to insert is in the message queue size 
+    COMMENT range(RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 75
+    COMMENT In function 'RxQueueInsert', the next message to insert is not in the message queue size 
+    COMMENT range(RxBuf [CAN_R_Q_SIZE] of ps_which_q).
+    COMMENT
+    COMMENT Class 76
+    COMMENT In function 'CAN1Rx0IrqHandler', channel is NOC
+    COMMENT
+    COMMENT Class 77
+    COMMENT In function 'CAN1Rx0IrqHandler', channel is NSC
+    COMMENT
+    COMMENT Class 78
+    COMMENT The function 'CAN1Rx0IrqHandler', calls the function 'OsSemPost'
+    COMMENT
+    COMMENT Class 79
+    COMMENT In function 'CAN1Rx0IrqHandler', return value of RxQueueInsert is equal to A825_RX_OK.
+    COMMENT
+    COMMENT Class 80
+    COMMENT In function 'CAN1Rx0IrqHandler', return value of RxQueueInsert is not equal to A825_RX_OK.
+    COMMENT
+    COMMENT Class 81
+    COMMENT The function 'A8251Xmit', calls the function 'BuildBroadcastExtId'.
+    COMMENT
+    COMMENT Class 85
+    COMMENT The function 'A8251GetMessage', returns the updated state.
+    COMMENT
+    COMMENT Class 86
+    COMMENT The function 'U8MailBoxAvail', TSR of Instance of h_can bitwise AND with CAN_TSR_TME1 is CAN_TSR_TME1
+    COMMENT
+    COMMENT Class 87
+    COMMENT The function 'U8MailBoxAvail', TSR of Instance of h_can bitwise AND with CAN_TSR_TME2 is CAN_TSR_TME2
+    COMMENT
+    COMMENT Class 88
+    COMMENT The function 'U8MailBoxAvail', TSR of Instance of h_can bitwise AND with CAN_TSR_TME2 is not equal to CAN_TSR_TME2
+    COMMENT
+    COMMENT Class 89
+    COMMENT The function 'U8MailBoxAvail', TSR of Instance of h_can bitwise AND with CAN_TSR_TME1 is not equal to CAN_TSR_TME1
+    COMMENT
+    COMMENT Class 90
+    COMMENT The function 'U8MailBoxAvail', result of TSR of Instance of h_can bitwise AND with CAN_TSR_TME0 is not equal to CAN_TSR_TME0
+	COMMENT	
+    COMMENT Class 91
+    COMMENT In function 'CAN1DemoConfig',  return value of the function HalCanInit is not equal to HAL_OK. 
+    COMMENT
+    COMMENT Class 92
+    COMMENT In function 'CAN1DemoConfig',  return value of the function HalCanInit is equal to HAL_OK.
+    COMMENT
+    COMMENT Class 93
+    COMMENT In function 'CAN1DemoConfig',  return value of the function HalCanConfigFilter is not equal to HAL_OK. 
+    COMMENT
+    COMMENT Class 94
+    COMMENT In function 'CAN1DemoConfig',  return value of the function HalCanConfigFilter is equal to HAL_OK.  
+    COMMENT
+    COMMENT Class 95
+    COMMENT The function 'CAN1DemoConfig', calls the function 'CANITConfig'
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT Class 82
+    COMMENT The function "A8251GetMessage", with invalid Parameter.
+    COMMENT
+    COMMENT Class 83
+    COMMENT The function "A8251Xmit", with invalid Parameter.
+    COMMENT
+    COMMENT Class 84
+    COMMENT The function "HalCanMspInit", with invalid Parameter.
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hdudispfarinc825perph1_c
+    
+    #T_OS_EVENT* OsSemCreate(T_UWORD _in count);
+    
+    --In stub HalCanConfigFilter, 'h_can' and 'filter_config' parameters made as _no because local varible address cannot be expected. 
+    #T_HAL_STATUS HalCanConfigFilter(T_CAN_HANDLE _no *h_can, T_CAN_FILTER_CONF_TYPE _no *filter_config)
+    #{
+    #   PTU_filter_config = *filter_config;
+    #}
+    
+    --In stub HalCanInit, 'h_can' parameter made as _no because local varible address cannot be expected.
+    #T_HAL_STATUS HalCanInit(T_CAN_HANDLE _no *h_can)
+    #{
+    #   PTU_HalCanInit = *h_can;
+    #	PTU_Tx_message=*PTU_HalCanInit.pTxMsg;
+    #	PTU_Rx_message=*PTU_HalCanInit.pRxMsg;
+    #}
+    
+    #void HalNvicEnableIrq(T_IRQN_TYPE _in IRQn);
+    #void HalNvicSetPriority(T_IRQN_TYPE _in IRQn, T_UINT32 _in PreemptPriority, T_UINT32 _in SubPriority);
+    
+    --In stub HalGpioInit, 'GPIO_Init' parameter made as _no because local varible address cannot be expected.
+    #void HalGpioInit(T_GPIO _in *GPIOx, T_GPIO_INIT _no *GPIO_Init)
+    #{
+    # PTU_count++;
+    # if(PTU_count==1)
+    # {
+    #  PTU_GPIO_Init_TX = *GPIO_Init;
+    # }
+    # else
+    # {
+    #  PTU_GPIO_Init_RX = *GPIO_Init;
+    # }
+    #}
+    
+    --In stub HalCanTransmit, 'h_can' parameter made as _no because local varible address cannot be expected.
+    #T_HAL_STATUS HalCanTransmit(T_CAN_HANDLE _no *h_can, T_UINT32 _in time_out)
+    #{
+    #   PTU_HalCanTransmit = *h_can;
+    #}
+    
+    #void OsIntExit(void);
+    #T_UBYTE OsSemPost(T_OS_EVENT _in *param_event);
+    
+    --In stub HalCanReceive, 'h_can' parameter made as _no because local varible address cannot be expected.
+    #T_HAL_STATUS HalCanReceive(T_CAN_HANDLE _no *h_can, T_UINT8 _in fifo_number, T_UINT32 _in time_out)
+    #{  
+    #  if(PTU_lcc_val == 2)
+    #  {
+    #   (*h_can).pRxMsg->ExtId=0x08A0FFFF;
+    #  }
+    #  else if(PTU_lcc_val == 4)
+    #  {
+    #   (*h_can).pRxMsg->ExtId=0x10000000;
+    #  }
+    #  else
+    #  {
+    #   (*h_can).pRxMsg->ExtId=0x00000000;
+    #  }
+    #  if(PTU_u8PaySize == 1)
+    #  {
+    #  (*h_can).pRxMsg->DLC = 1;
+    #  }
+    #  else if(PTU_u8PaySize == 7)
+    #  {
+    #  (*h_can).pRxMsg->DLC = 7;
+    #  }
+    #  else if(PTU_u8PaySize == 8)
+    #  {
+    #  (*h_can).pRxMsg->DLC = 8;
+    #  }
+    #  else if(PTU_u8PaySize == 9)
+    #  {
+    #  (*h_can).pRxMsg->DLC = 9;
+    #  }
+    #  else
+    #  {
+    #   /*nothing*/
+    #  }    
+    #}    
+    
+    #void OsIntEnter(void); 
+    
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfarinc825perph1.c
+
+ENVIRONMENT ENV_hdudispfarinc825perph1_c
+
+  VAR Sem_a8251_commtask,       init = NIL,     ev = init
+  
+END ENVIRONMENT -- ENV_hdudispfarinc825perph1_c
+
+USE ENV_hdudispfarinc825perph1_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CAN1DemoConfig
+--------------------------------------------------------------------------------
+SERVICE CAN1DemoConfig
+SERVICE_TYPE extern
+
+
+TEST 1
+FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+ 		COMMENT [hdudispfarinc825perph1-CAN1DemoConfig-DB-LLR-001]
+        COMMENT The function configures the CAN peripheral as follows
+		COMMENT a)	Sets Instance of can handle structure to CAN1
+		COMMENT b)	Sets pTxMsg of can handle structure to reference to transmission message
+		COMMENT c)	Sets pRxMsg of can handle structure to reference to reception message
+		COMMENT d)	Sets TTCM of Init of can handle structure to DISABLE.
+		COMMENT e)	Sets ABOM of Init of can handle structure to ENABLE.
+		COMMENT f)	Sets AWUM of Init of can handle structure to DISABLE.
+		COMMENT g)	Sets NART of Init of can handle structure to DISABLE.
+		COMMENT	h)	Sets RFLM of Init of can handle structure to DISABLE.
+		COMMENT i)	Sets TXFP of Init of can handle structure to DISABLE.
+		COMMENT j)	Sets Mode of Init of can handle structure to CAN_MODE_LOOPBACK.
+		COMMENT k)	Sets SJW of Init of can handle structure to CAN_SJW_1TQ.
+		COMMENT l)	Sets BS1 of Init of can handle structure to CAN_BS1_6TQ.
+		COMMENT m)	Sets BS2 of Init of can handle structure to CAN_BS2_7TQ.
+		COMMENT n)	Sets Prescaler of Init of can handle structure to PRESCLR_FOUR.
+        COMMENT Equivalence Class None
+        COMMENT 
+ 		COMMENT [hdudispfarinc825perph1-CAN1DemoConfig-DB-LLR-002]        
+ 		COMMENT The function does nothing when the return value of the function HalCanInit with parameter reference
+ 		COMMENT to can handle structure is equal to HAL_OK.
+        COMMENT Equivalence Class 92
+        COMMENT
+        COMMENT [hdudispfarinc825perph1-CAN1DemoConfig-DB-LLR-003]
+        COMMENT The function configures the CAN Filter as follows:
+		COMMENT a)	Sets FilterNumber of CAN filter config to ZERO
+		COMMENT	b)	Sets FilterMode of CAN filter config to CAN_FILTERMODE_IDMASK
+		COMMENT c)	Sets FilterScale of CAN filter config to CAN_FILTERSCALE_32BIT
+		COMMENT d)	Sets FilterIdHigh of CAN filter config to ZERO
+		COMMENT e)	Sets FilterIdLow of CAN filter config to ZERO
+		COMMENT f)	Sets FilterMaskIdHigh of CAN filter config to ZERO
+		COMMENT g)	Sets FilterMaskIdLow of CAN filter config to ZERO
+		COMMENT h)	Sets FilterFIFOAssignment of CAN filter config to ZERO
+		COMMENT i)	Sets FilterActivation of CAN filter config to ENABLE
+		COMMENT j)	Sets BankNumber of CAN filter config to BANK_NO_14
+        COMMENT Equivalence Class None
+        COMMENT 
+        COMMENT [hdudispfarinc825perph1-CAN1DemoConfig-DB-LLR-004]
+        COMMENT The function does nothing when the return value of the function HalCanConfigFilter with parameter (reference 
+        COMMENT to can handle structure and reference to CAN filter config) is equal to HAL_OK.
+        COMMENT Equivalence Class 94
+        COMMENT
+        COMMENT [hdudispfarinc825perph1-CAN1DemoConfig-DB-LLR-005]        
+		COMMENT The function enables FIFO 0 message pending Interrupt by calling the function CANITConfig with 
+		COMMENT parameters CAN1, CAN_IT_FMP0 and ENABLE.
+        COMMENT Equivalence Class 95
+		COMMENT
+		COMMENT [hdudispfarinc825perph1-CANITConfig-DB-LLR-001]
+		COMMENT The function configures interrupt enable register(IER) of can_x to enable the selected can_x interrupt 
+		COMMENT can_it when the new state of CAN interrupt 'new_state' is equal to ENABLE.
+		COMMENT This verifies "hdudispfarinc825perph1-CAN1DemoConfig-DB-LLR-005"
+        COMMENT </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION : 
+            
+                 --None               
+               
+            COMMENT INPUT/OUTPUT SECTION :
+            
+                -- Enables the selected can_x interrupt
+                VAR CAN1->IER, init=0x00000000, ev=0x00000002
+                           
+            COMMENT OUTPUT SECTION :     
+
+                --Configured the CAN peripheral
+                VAR PTU_HalCanInit.Instance,            init = CAN2,                       ev = CAN1                
+
+       			VAR PTU_Tx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Tx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+
+
+       			VAR PTU_Rx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Rx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+       			VAR PTU_Rx_message.FMI,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.FIFONumber,	init = 1,						  ev = 0
+       
+                VAR PTU_HalCanInit.Init.TTCM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.ABOM,           init = DISABLE,                    ev = ENABLE
+                VAR PTU_HalCanInit.Init.AWUM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.NART,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.RFLM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.TXFP,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.Mode,           init = CAN_MODE_LOOPBACK,          ev = CAN_MODE_LOOPBACK
+                VAR PTU_HalCanInit.Init.SJW,            init = 0x00000001,                 ev = CAN_SJW_1TQ
+                VAR PTU_HalCanInit.Init.BS1,            init = CAN_BS2_7TQ,                ev = CAN_BS1_6TQ
+                VAR PTU_HalCanInit.Init.BS2,            init = CAN_BS1_6TQ,                ev = CAN_BS2_7TQ
+                VAR PTU_HalCanInit.Init.Prescaler,      init = ZERO,                       ev = PRESCLR_FOUR
+
+                -- Configure the CAN Filter
+                VAR PTU_filter_config.FilterNumber,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMode,           init = 0x01,                  ev = CAN_FILTERMODE_IDMASK
+                VAR PTU_filter_config.FilterScale,          init = CAN_FILTERSCALE_16BIT, ev = CAN_FILTERSCALE_32BIT
+                VAR PTU_filter_config.FilterIdHigh,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterIdLow,          init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdHigh,     init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdLow,      init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterFIFOAssignment, init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterActivation,     init = DISABLE,               ev = ENABLE
+                VAR PTU_filter_config.BankNumber,           init = ZERO,                  ev = BANK_NO_14
+    
+            
+            SIMUL
+       
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+            END SIMUL
+            
+            --Calling Unit Under Test      
+            #CAN1DemoConfig();
+            
+            END ELEMENT
+
+    END TEST -- TEST 1    
+    
+
+TEST 2
+FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfarinc825perph1-CAN1DemoConfig-DB-LLR-004]
+        COMMENT The function loops infinitely and does nothing when the return value of the function HalCanConfigFilter 
+        COMMENT with parameter (reference to can handle structure and reference to CAN filter config) is not equal to HAL_OK.
+        COMMENT Equivalence Class 93
+        COMMENT </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION : 
+            
+                 --None               
+               
+            COMMENT INPUT/OUTPUT SECTION :
+            
+                -- Enables the selected can_x interrupt
+                VAR CAN1->IER, init=0x00000000, ev=0x00000002
+                           
+            COMMENT OUTPUT SECTION :     
+
+                --Configured the CAN peripheral
+                VAR PTU_HalCanInit.Instance,            init = CAN2,                       ev = CAN1                
+       			VAR PTU_Tx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Tx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+
+
+       			VAR PTU_Rx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Rx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+       			VAR PTU_Rx_message.FMI,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.FIFONumber,	init = 1,						  ev = 0                           				
+                VAR PTU_HalCanInit.Init.TTCM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.ABOM,           init = DISABLE,                    ev = ENABLE
+                VAR PTU_HalCanInit.Init.AWUM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.NART,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.RFLM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.TXFP,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.Mode,           init = CAN_MODE_LOOPBACK,          ev = CAN_MODE_LOOPBACK
+                VAR PTU_HalCanInit.Init.SJW,            init = 0x00000001,                 ev = CAN_SJW_1TQ
+                VAR PTU_HalCanInit.Init.BS1,            init = CAN_BS2_7TQ,                ev = CAN_BS1_6TQ
+                VAR PTU_HalCanInit.Init.BS2,            init = CAN_BS1_6TQ,                ev = CAN_BS2_7TQ
+                VAR PTU_HalCanInit.Init.Prescaler,      init = ZERO,                       ev = PRESCLR_FOUR
+
+                -- Configure the CAN Filter
+                VAR PTU_filter_config.FilterNumber,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMode,           init = 0x01,                  ev = CAN_FILTERMODE_IDMASK
+                VAR PTU_filter_config.FilterScale,          init = CAN_FILTERSCALE_16BIT, ev = CAN_FILTERSCALE_32BIT
+                VAR PTU_filter_config.FilterIdHigh,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterIdLow,          init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdHigh,     init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdLow,      init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterFIFOAssignment, init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterActivation,     init = DISABLE,               ev = ENABLE
+                VAR PTU_filter_config.BankNumber,           init = ZERO,                  ev = BANK_NO_14
+    
+            
+            SIMUL
+       
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_BUSY
+            
+            END SIMUL
+            
+            --Calling Unit Under Test      
+            #CAN1DemoConfig();
+            
+            END ELEMENT
+
+    END TEST -- TEST 2   
+    
+TEST 3
+FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+ 		COMMENT [hdudispfarinc825perph1-CAN1DemoConfig-DB-LLR-002]        
+ 		COMMENT The function loops(2 loops or more) infinitely and does nothing when the return value of the function HalCanInit with 
+ 		COMMENT parameter reference to can handle structure is not equal to HAL_OK.
+        COMMENT Equivalence Class 91
+        COMMENT </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION : 
+            
+                 --None               
+               
+            COMMENT INPUT/OUTPUT SECTION :
+            
+                -- Enables the selected can_x interrupt
+                VAR CAN1->IER, init=0x00000000, ev=0x00000002
+                           
+            COMMENT OUTPUT SECTION :     
+
+                --Configured the CAN peripheral
+                VAR PTU_HalCanInit.Instance,            init = CAN2,                       ev = CAN1                
+       			VAR PTU_Tx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Tx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+
+
+       			VAR PTU_Rx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Rx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+       			VAR PTU_Rx_message.FMI,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.FIFONumber,	init = 1,						  ev = 0                         				
+                VAR PTU_HalCanInit.Init.TTCM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.ABOM,           init = DISABLE,                    ev = ENABLE
+                VAR PTU_HalCanInit.Init.AWUM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.NART,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.RFLM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.TXFP,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.Mode,           init = CAN_MODE_LOOPBACK,          ev = CAN_MODE_LOOPBACK
+                VAR PTU_HalCanInit.Init.SJW,            init = 0x00000001,                 ev = CAN_SJW_1TQ
+                VAR PTU_HalCanInit.Init.BS1,            init = CAN_BS2_7TQ,                ev = CAN_BS1_6TQ
+                VAR PTU_HalCanInit.Init.BS2,            init = CAN_BS1_6TQ,                ev = CAN_BS2_7TQ
+                VAR PTU_HalCanInit.Init.Prescaler,      init = ZERO,                       ev = PRESCLR_FOUR
+
+                -- Configure the CAN Filter
+                VAR PTU_filter_config.FilterNumber,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMode,           init = 0x01,                  ev = CAN_FILTERMODE_IDMASK
+                VAR PTU_filter_config.FilterScale,          init = CAN_FILTERSCALE_16BIT, ev = CAN_FILTERSCALE_32BIT
+                VAR PTU_filter_config.FilterIdHigh,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterIdLow,          init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdHigh,     init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdLow,      init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterFIFOAssignment, init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterActivation,     init = DISABLE,               ev = ENABLE
+                VAR PTU_filter_config.BankNumber,           init = ZERO,                  ev = BANK_NO_14
+    
+            
+            SIMUL
+       
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit 1=>()HAL_TIMEOUT
+
+                STUB HalCanInit 2=>()HAL_TIMEOUT
+ 
+                STUB HalCanInit 3=>()HAL_TIMEOUT
+                
+                STUB HalCanInit 4=>()HAL_OK
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+            END SIMUL
+            
+            --Calling Unit Under Test      
+            #CAN1DemoConfig();
+            
+            END ELEMENT
+
+    END TEST -- TEST 3
+    
+TEST 4
+FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+ 		COMMENT [hdudispfarinc825perph1-CAN1DemoConfig-DB-LLR-002]        
+ 		COMMENT The function loops(1 loop) infinitely and does nothing when the return value of the function HalCanInit with 
+ 		COMMENT parameter reference to can handle structure is not equal to HAL_OK.
+        COMMENT Equivalence Class 91
+        COMMENT </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION : 
+            
+                 --None               
+               
+            COMMENT INPUT/OUTPUT SECTION :
+            
+                -- Enables the selected can_x interrupt
+                VAR CAN1->IER, init=0x00000000, ev=0x00000002
+                           
+            COMMENT OUTPUT SECTION :     
+
+                --Configured the CAN peripheral
+                VAR PTU_HalCanInit.Instance,            init = CAN2,                       ev = CAN1                
+       			VAR PTU_Tx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Tx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+
+
+       			VAR PTU_Rx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Rx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+       			VAR PTU_Rx_message.FMI,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.FIFONumber,	init = 1,						  ev = 0                            				
+                VAR PTU_HalCanInit.Init.TTCM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.ABOM,           init = DISABLE,                    ev = ENABLE
+                VAR PTU_HalCanInit.Init.AWUM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.NART,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.RFLM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.TXFP,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.Mode,           init = CAN_MODE_LOOPBACK,          ev = CAN_MODE_LOOPBACK
+                VAR PTU_HalCanInit.Init.SJW,            init = 0x00000001,                 ev = CAN_SJW_1TQ
+                VAR PTU_HalCanInit.Init.BS1,            init = CAN_BS2_7TQ,                ev = CAN_BS1_6TQ
+                VAR PTU_HalCanInit.Init.BS2,            init = CAN_BS1_6TQ,                ev = CAN_BS2_7TQ
+                VAR PTU_HalCanInit.Init.Prescaler,      init = ZERO,                       ev = PRESCLR_FOUR
+
+                -- Configure the CAN Filter
+                VAR PTU_filter_config.FilterNumber,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMode,           init = 0x01,                  ev = CAN_FILTERMODE_IDMASK
+                VAR PTU_filter_config.FilterScale,          init = CAN_FILTERSCALE_16BIT, ev = CAN_FILTERSCALE_32BIT
+                VAR PTU_filter_config.FilterIdHigh,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterIdLow,          init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdHigh,     init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdLow,      init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterFIFOAssignment, init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterActivation,     init = DISABLE,               ev = ENABLE
+                VAR PTU_filter_config.BankNumber,           init = ZERO,                  ev = BANK_NO_14
+    
+            
+            SIMUL
+       
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit 1=>()HAL_TIMEOUT
+
+                STUB HalCanInit 2=>()HAL_TIMEOUT
+ 
+                STUB HalCanInit 3=>()HAL_OK
+                       
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+            END SIMUL
+            
+            --Calling Unit Under Test      
+            #CAN1DemoConfig();
+            
+            END ELEMENT
+
+    END TEST -- TEST 4
+    
+TEST 5
+FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+ 		COMMENT [hdudispfarinc825perph1-CAN1DemoConfig-DB-LLR-002]        
+ 		COMMENT The function loops(0 loop) infinitely and does nothing when the return value of the function HalCanInit with 
+ 		COMMENT parameter reference to can handle structure is not equal to HAL_OK.
+        COMMENT Equivalence Class 91
+        COMMENT </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION : 
+            
+                 --None               
+               
+            COMMENT INPUT/OUTPUT SECTION :
+            
+                -- Enables the selected can_x interrupt
+                VAR CAN1->IER, init=0x00000000, ev=0x00000002
+                           
+            COMMENT OUTPUT SECTION :     
+
+                --Configured the CAN peripheral
+                VAR PTU_HalCanInit.Instance,            init = CAN2,                       ev = CAN1                
+       			VAR PTU_Tx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Tx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+
+
+       			VAR PTU_Rx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Rx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+       			VAR PTU_Rx_message.FMI,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.FIFONumber,	init = 1,						  ev = 0                        				
+                VAR PTU_HalCanInit.Init.TTCM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.ABOM,           init = DISABLE,                    ev = ENABLE
+                VAR PTU_HalCanInit.Init.AWUM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.NART,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.RFLM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.TXFP,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.Mode,           init = CAN_MODE_LOOPBACK,          ev = CAN_MODE_LOOPBACK
+                VAR PTU_HalCanInit.Init.SJW,            init = 0x00000001,                 ev = CAN_SJW_1TQ
+                VAR PTU_HalCanInit.Init.BS1,            init = CAN_BS2_7TQ,                ev = CAN_BS1_6TQ
+                VAR PTU_HalCanInit.Init.BS2,            init = CAN_BS1_6TQ,                ev = CAN_BS2_7TQ
+                VAR PTU_HalCanInit.Init.Prescaler,      init = ZERO,                       ev = PRESCLR_FOUR
+
+                -- Configure the CAN Filter
+                VAR PTU_filter_config.FilterNumber,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMode,           init = 0x01,                  ev = CAN_FILTERMODE_IDMASK
+                VAR PTU_filter_config.FilterScale,          init = CAN_FILTERSCALE_16BIT, ev = CAN_FILTERSCALE_32BIT
+                VAR PTU_filter_config.FilterIdHigh,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterIdLow,          init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdHigh,     init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdLow,      init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterFIFOAssignment, init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterActivation,     init = DISABLE,               ev = ENABLE
+                VAR PTU_filter_config.BankNumber,           init = ZERO,                  ev = BANK_NO_14
+    
+            
+            SIMUL
+       
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit 1=>()HAL_TIMEOUT
+
+                STUB HalCanInit 2=>()HAL_OK
+                       
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+            END SIMUL
+            
+            --Calling Unit Under Test      
+            #CAN1DemoConfig();
+            
+            END ELEMENT
+
+    END TEST -- TEST 5
+
+END SERVICE -- CAN1DemoConfig
+
+--------------------------------------------------------------------------------
+-- Declaration of the service A8251Init
+--------------------------------------------------------------------------------
+SERVICE A8251Init
+SERVICE_TYPE extern
+
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT  Test Description
+        COMMENT  <TD>
+        COMMENT  [hdudispfarinc825perph1-A8251Init-DB-LLR-001]
+        COMMENT  The function creates a Semaphore to signaling the A825 receiver task by calling 
+        COMMENT  the function OsSemCreate with ZERO as parameter.
+        COMMENT  Equivalence Class 56
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-A8251Init-DB-LLR-002]
+        COMMENT  The function configures the CAN1 by calling CAN1Config function.
+        COMMENT  Equivalence Class 57
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-CAN1Config-DB-LLR-001]
+        COMMENT  The function configures the CAN peripheral as follows
+        COMMENT  a)  Sets Instance of can handle structure to CAN1
+        COMMENT  b)  Sets pTxMsg of can handle structure to reference to transmission message
+        COMMENT  c)  Sets pRxMsg of can handle structure to reference to reception message
+        COMMENT  d)  Sets TTCM of Init of can handle structure to DISABLE.
+        COMMENT  e)  Sets ABOM of Init of can handle structure to ENABLE.
+        COMMENT  f)  Sets AWUM of Init of can handle structure to DISABLE.
+        COMMENT  g)  Sets NART of Init of can handle structure to DISABLE.
+        COMMENT  h)  Sets RFLM of Init of can handle structure to DISABLE.
+        COMMENT  i)  Sets TXFP of Init of can handle structure to DISABLE.
+        COMMENT  j)  Sets Mode of Init of can handle structure to CAN_MODE_NORMAL.
+        COMMENT  k)  Sets SJW of Init of can handle structure to CAN_SJW_1TQ.
+        COMMENT  l)  Sets BS1 of Init of can handle structure to CAN_BS1_6TQ.
+        COMMENT  m)  Sets BS2 of Init of can handle structure to CAN_BS2_7TQ.
+        COMMENT  n)  Sets Prescaler of Init of can handle structure to PRESCLR_FOUR.
+        COMMENT  Equivalence Class None
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-CAN1Config-DB-LLR-002]
+        COMMENT  The function does nothing when the return value of the function HalCanInit with parameter reference 
+        COMMENT  to can handle structure is equal to HAL_OK.
+        COMMENT  Equivalence Class 51, 50
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-CAN1Config-DB-LLR-003]
+        COMMENT  The function configures the CAN Filter as follows:
+        COMMENT  a)  Set FilterNumber of CAN filter config to ZERO
+        COMMENT  b)  Set FilterMode of CAN filter config to CAN_FILTERMODE_IDMASK
+        COMMENT  c)  Set FilterScale of CAN filter config to CAN_FILTERSCALE_32BIT
+        COMMENT  d)  Set FilterIdHigh of CAN filter config to ZERO
+        COMMENT  e)  Set FilterIdLow of CAN filter config to ZERO
+        COMMENT  f)  Set FilterMaskIdHigh of CAN filter config to ZERO
+        COMMENT  g)  Set FilterMaskIdLow of CAN filter config to ZERO
+        COMMENT  h)  Set FilterFIFOAssignment of CAN filter config to ZERO
+        COMMENT  i)  Set FilterActivation of CAN filter config to ENABLE
+        COMMENT  j)  Set BankNumber of CAN filter config to BANK_NO_14
+        COMMENT  Equivalence Class None
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-CAN1Config-DB-LLR-004]
+        COMMENT  The function does nothing when the return value of the function HalCanConfigFilter with parameter 
+        COMMENT  (reference to can handle structure and reference to CAN filter config) is equal to HAL_OK.
+        COMMENT  Equivalence Class 52, 54
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-CAN1Config-DB-LLR-005]
+        COMMENT  The function enables FIFO 0 message pending Interrupt by calling the function CANITConfig with parameters 
+        COMMENT  CAN1, CAN_IT_FMP0 and ENABLE
+        COMMENT  Equivalence Class 55
+        COMMENT 
+        COMMENT  [hdudispfarinc825perph1-CANITConfig-DB-LLR-001]
+        COMMENT  The function configures interrupt enable register(IER) of can_x to enable the selected can_x interrupt can_it 
+        COMMENT  when the new state of CAN interrupt 'new_state' is equal to ENABLE.
+        COMMENT  Equivalence Class 1
+        COMMENT 
+        COMMENT  </TD>
+
+        ELEMENT
+        
+            COMMENT INPUT SECTION : 
+                
+                --Holds the value of PTU_Sem_a8251_commtask
+                VAR PTU_Sem_a8251_commtask,             init = 0,                       ev = init                  
+ 	
+ 			COMMENT INPUT/OUTPUT SECTION :
+			
+				--None
+				
+            COMMENT OUTPUT SECTION :     
+                --Holds the value of Sem_a8251_commtask
+                VAR Sem_a8251_commtask,                 init=NULL,                        ev=&PTU_Sem_a8251_commtask
+
+                --Configured the CAN peripheral
+                VAR PTU_HalCanInit.Instance,            init = CAN2,                       ev = CAN1
+                
+       			VAR PTU_Tx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Tx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Tx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Tx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+
+
+       			VAR PTU_Rx_message.StdId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.ExtId,		init = 1,						  ev = 0
+       			VAR PTU_Rx_message.IDE,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.RTR,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.DLC,			init = 1,						  ev = 0
+       			ARRAY PTU_Rx_message.Data,		init = {others=>1},				  ev = {others=>0}	
+       			VAR PTU_Rx_message.FMI,			init = 1,						  ev = 0
+       			VAR PTU_Rx_message.FIFONumber,	init = 1,						  ev = 0
+       			
+                VAR PTU_HalCanInit.Init.TTCM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.ABOM,           init = DISABLE,                    ev = ENABLE
+                VAR PTU_HalCanInit.Init.AWUM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.NART,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.RFLM,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.TXFP,           init = ENABLE,                     ev = DISABLE
+                VAR PTU_HalCanInit.Init.Mode,           init = CAN_MODE_LOOPBACK,          ev = CAN_MODE_NORMAL
+                VAR PTU_HalCanInit.Init.SJW,            init = 0x00000001,                 ev = CAN_SJW_1TQ
+                VAR PTU_HalCanInit.Init.BS1,            init = CAN_BS2_7TQ,                ev = CAN_BS1_6TQ
+                VAR PTU_HalCanInit.Init.BS2,            init = CAN_BS1_6TQ,                ev = CAN_BS2_7TQ
+                VAR PTU_HalCanInit.Init.Prescaler,      init = ZERO,                       ev = PRESCLR_FOUR
+
+                -- Configure the CAN Filter
+                VAR PTU_filter_config.FilterNumber,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMode,           init = 0x01,                  ev = CAN_FILTERMODE_IDMASK
+                VAR PTU_filter_config.FilterScale,          init = CAN_FILTERSCALE_16BIT, ev = CAN_FILTERSCALE_32BIT
+                VAR PTU_filter_config.FilterIdHigh,         init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterIdLow,          init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdHigh,     init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterMaskIdLow,      init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterFIFOAssignment, init = ONE,                   ev = ZERO
+                VAR PTU_filter_config.FilterActivation,     init = DISABLE,               ev = ENABLE
+                VAR PTU_filter_config.BankNumber,           init = ZERO,                  ev = BANK_NO_14
+    
+                -- Enables the selected can_x interrupt
+                VAR CAN1->IER, init=32765, ev=32767
+            
+            SIMUL
+        
+                --creates a Semaphore  
+                STUB OsSemCreate(ZERO)&PTU_Sem_a8251_commtask
+        
+                --initializes the CAN peripheral 
+                STUB HalCanInit()HAL_OK
+        
+                --configures the CAN reception filter
+                STUB HalCanConfigFilter()HAL_OK
+            
+            END SIMUL
+            
+            --Calling Unit Under Test      
+            #A8251Init();
+            
+            END ELEMENT
+
+    END TEST -- TEST 1
+END SERVICE -- A8251Init

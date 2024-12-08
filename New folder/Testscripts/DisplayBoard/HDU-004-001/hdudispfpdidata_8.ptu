@@ -1,0 +1,2094 @@
+HEADER hdudispfpdidata,Source Code Ver : 1.17,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Vignesh Sunil
+--
+-- File Name           : hdudispfpdidata_8.ptu
+--
+-- Test Creation Date  : 10.10.2020
+--
+-- Tested Functions    : PdiPageDataInit
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE               TESTER NAME          MODIFICATIONS
+-- ------------        ---------               -----------          -------------
+--	   1.1 			   15.10.2020			   Vignesh Sunil		Created the PTU #PR100295
+--	   1.2 			   29.04.2021			   Vignesh Sunil		Created the PTU #PR100338
+--	   1.3 			   14.05.2021			   Vignesh Sunil		Created the PTU #PR100354
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+##include "hdudispfgrapp.h"   /* defines graphical applications */
+##include "hdudispfpdidata.h" /* provides pdi declarations */
+##include "hdudispfbargraphs.h" /* definitions for bar graphs */
+##include "hdudispfrounddial.h" /* definitions for round dials */
+##include "hdudispfbinascii.h" /* converts character to ascii */
+##include "hdudispfpara.h"  /*builds faults, messages, sys info list and configures the top menu*/
+##include "hdudispfnumbox.h"  /* definitions for number box */
+##include "hdudispfcarrotgraph.h"  /* definitions for number box */
+##include "hdudispfmenu.h"    /* contains prototype for menu module*/
+##include "hdudispfa429.h"    /* contains definition of a429*/
+##include "hdudispfconfig.h"   /* contains page and color config information*/
+##include "hdudispfresource.h"  /* provides central location to use On Chip Peripherals*/
+##include "hdudispfforeground.h"  /* provides coordinates for displaying redx on screen*/
+##include "hdudispfpdicheck.h" /*contains pdi check*/
+##include "hdudispfpolygon2.h" /* definitions for polygon */
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+
+
+    #extern T_UINT8 Cas_cnt;
+
+    #extern T_SDISREGION Nb_dis_region[50];
+    #extern T_LOOKUP_TABLE Bg_lookuptable[30];
+    #extern void CasLocationSett(T_UINT8 * cas_sett_addr);
+    #extern void AcdtExtract(T_UINT8 * address);
+    #extern T_LOOKUP_TABLE Cg_lookuptable[30];
+    #extern T_UINT32 FindFormat(T_UINT32 format);
+    #extern void ForegroundExtract(T_UINT8 * address);
+    #extern T_ETXALIGN TextAlign(T_UINT16 align);
+    #extern T_FLOAT IeeeToFloat(T_UINT32 number_convert);
+    #extern T_SDISREGION Bg_dis_region[30];
+    #extern T_LOOKUP_TABLE Rd_lookuptable[30];
+    #extern T_SDISREGION Cg_dis_region[30];
+    #extern void NumberOfPages(void);
+    #extern T_SDISREGION Txt_dis_region[30];
+    #extern T_ETXV TextState(T_UINT16 state);
+    #extern T_ETXFLASH TextFlash(T_UINT16 flash);
+    #extern T_SDISREGION Rd_dis_region[30];
+    #extern T_SDISREGION Tb_dis_region[50];
+    #extern T_EPENCOLOR FindColor(T_UINT16 color);
+	
+    #T_EPAGE_NUM Page_num; 
+    #T_ELOG_LABEL_STRUCT Elog_label[5]; 
+    #T_ELOG_TRIG_STRUCT Elog_trig[5]; 
+    #T_ACDT_STRUCT Auto_cool_down_tmr; 
+    #T_CAS_MSG Cas_messages_setting; 
+    #T_CAS_MSG_DEF Cas_msg[64]; 
+    #T_UINT8 Cas_message_count; 
+    #T_TEXT Page_txt[30]; 
+    #T_STEXTBOXPDIDATA Ap_page_tbs[50]; 
+    #T_CARROTGRAPHDEF Ap_page2_carrot[30]; 
+    #T_PARAM_TABLE Parameters_numbox[256]; 
+    #T_SNUMBOXDEF Page_num_boxes[50]; 
+    #T_ROUNDDIALDEF Ap_page0_dials[30]; 
+    #T_PARAM_TABLE Parameters[256]; 
+    #T_FLOAT Scu_bg_lim_val[2]; 
+    #T_UINT8 Scu_fty_offset_flag;
+    #T_SBARGRAPHDEF Ap_page1_bar_graphs[30]; 
+    #T_PARAM_TABLE Scu_parameters[3]; 
+    #T_POLYGRAPHDEF Ap_poly_graph[30]; 
+    #T_CHAR Encoder_page_text[360];  	
+		
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      :  Vignesh Sunil
+    COMMENT
+    COMMENT File Name        :  hdudispfpdidata_8.ptu
+    COMMENT
+    COMMENT Tested Functions :  PdiPageDataInit
+   	COMMENT
+    COMMENT Assumptions and Constraints		
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+	COMMENT 1. In the function 'ConfigExtract', 'while' loop cannot be covered for 0 and 1 times for 
+	COMMENT	since it is controlled by the macro "PDI_PART_NUM_SIZE".
+	COMMENT	
+	COMMENT	2. In the function 'PageExtract', 'while' loop cannot be covered for 0 time  
+	COMMENT	since it is controlled by the macro "PAGE_SET_LEN"
+	COMMENT	
+	COMMENT 3. In the function 'ForegroundExtract', 'while' loop cannot be covered for 0 time  
+	COMMENT	since it is controlled by the macro "SECTOR_SIZE"
+	COMMENT	
+	COMMENT 4. In the function 'CasExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_NUM_CAS"
+	COMMENT 
+	COMMENT 5. In the function 'CasExtract' while loop cannot be covered for 0 time
+	COMMENT since it is controlled by the macro "MAX_LEN_CAS"
+	COMMENT 
+	COMMENT 6. In the function 'CasExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_CAS_TEXT_LEN"
+	COMMENT 
+	COMMENT 7. In the function 'CasLocationSett' while loop cannot be covered for 0 time
+	COMMENT since it is controlled by the macro "CAS_LOC_MAX"
+	COMMENT 
+	COMMENT 8. In the function 'AcdtExtract' while loop cannot be covered for 0 time
+	COMMENT since it is controlled by the macro "MAX_LEN_ACDT"
+	COMMENT 
+	COMMENT 9. In the function 'AcdtExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "PARA_MAX_SIZE" in switch case "LABEL"
+	COMMENT 
+	COMMENT 10. In the function 'AcdtExtract' for loop cannot be covered for 0 time
+	COMMENT since it is controlled by the macro "PARA_MAX_SIZE" in switch case "WOG_LABEL"
+	COMMENT 
+	COMMENT 11. In the function 'ExceedExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_NUM_EXCE"
+	COMMENT 
+	COMMENT 12. In the function 'ExceedExtract' while loop cannot be covered for 0 time
+	COMMENT since it is controlled by the macro "MAX_LEN_EXCE"
+	COMMENT 
+	COMMENT 13. In the function 'ExceedExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "PARA_MAX_SIZE" in switch case "LABEL"
+	COMMENT 
+	COMMENT 14. In the function 'A429Extract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_NUM_A429"
+	COMMENT 
+	COMMENT 15. In the function 'A429Extract' while loop cannot be covered for 0 time
+	COMMENT since it is controlled by the macro "MAX_LEN_A429"
+	COMMENT 
+	COMMENT 16. Header file "hdudispfgrapp.h" is modified for testing purpose. The macro 'PAGE_EXCEEDANCE_ADDR' is modified for stubbing hardware address.
+	COMMENT 
+	COMMENT	/*Commented for testing purpose */
+	COMMENT	//#define PAGE_EXCEEDANCE_ADDR  (T_UINT8 *)0x62B40000
+	COMMENT	
+	COMMENT	/* Modified macro by stubbing hardware address for testing purpose */
+	COMMENT	T_UINT8 PTU_PAGE_EXCEEDANCE_ADDR[600];
+	COMMENT	#define PAGE_EXCEEDANCE_ADDR  (T_UINT8 *)&PTU_PAGE_EXCEEDANCE_ADDR[0]
+	COMMENT	
+	COMMENT	17. Header file "hdudispfpdidata.h" is modified for testing purpose. The macro 'ACDT_ADDRESS' is modified for stubbing hardware address.
+	COMMENT	
+	COMMENT	/*Commented for testing purpose*/
+	COMMENT	//#define ACDT_ADDRESS                0x62B20000
+	COMMENT	
+	COMMENT	/* Modified macro by stubbing hardware address for testing purpose */
+	COMMENT	T_UINT8 PTU_ACDT_ADDRESS[50];
+	COMMENT	#define ACDT_ADDRESS              (T_UINT8*) &PTU_ACDT_ADDRESS[0]
+	COMMENT  	
+	COMMENT  	
+	COMMENT  18. Header file "hdudispfpdidata.h" is modified for testing purpose. The macro 'PAGE_NUM_BASE_ADDR' is modified for stubbing hardware address.
+	COMMENT	/*Commented for testing purpose*/
+	COMMENT	//#define PAGE_NUM_BASE_ADDR          0x628A0000UL
+	COMMENT	
+	COMMENT	/* Modified macro by stubbing hardware address for testing purpose */
+	COMMENT	T_UINT8 PTU_PAGE_NUM_BASE_ADDR[262147];
+	COMMENT	#define PAGE_NUM_BASE_ADDR (T_UINT8 *)&PTU_PAGE_NUM_BASE_ADDR[0]
+	COMMENT
+	COMMENT
+	COMMENT	19. Header file "hdudispfpdidata.h" is modified for testing purpose. The macro 'CAS_SETTING_ADDRESS' is modified for stubbing hardware address.
+	COMMENT	/*Commented for testing purpose*/
+	COMMENT	//#define CAS_SETTING_ADDRESS         0x628605DCUL
+	COMMENT
+	COMMENT	/* Modified macro by stubbing hardware address for testing purpose */
+	COMMENT	T_UINT8 PTU_CAS_SETTING_ADDRESS[450];
+	COMMENT	#define CAS_SETTING_ADDRESS         (T_UINT8 *)&PTU_CAS_SETTING_ADDRESS[0]
+	COMMENT
+	COMMENT
+	COMMENT	20. Header file "hdudispfpdidata.h" is modified for testing purpose. The macro 'PDI_PART_NUM_ADDR' is modified for stubbing hardware address.
+	COMMENT	/*Commented for testing purpose*/
+	COMMENT	//#define PDI_PART_NUM_ADDR                0x63FFFFEC
+	COMMENT
+	COMMENT	/* Modified macro by stubbing hardware address for testing purpose */
+	COMMENT	T_UINT8 PTU_PDI_PART_NUM_ADDR[65];
+	COMMENT #define PDI_PART_NUM_ADDR (T_UINT8*)&PTU_PDI_PART_NUM_ADDR[0]
+	COMMENT
+	COMMENT 21. In the function 'ForegroundExtract' for loop cannot be covered for 0,1 time
+	COMMENT since it is controlled by the macro "ASSOCIALTED_LABEL"
+	COMMENT
+	COMMENT 22. In the function 'ForegroundExtract' for loop cannot be covered for 0 time
+	COMMENT since it is controlled by the macro "PARAMTR_MAX_VAL"
+	COMMENT
+	COMMENT 23. In the function 'ForegroundExtract' for loop cannot be covered for 0,1 time
+	COMMENT since it is controlled by the macro "MAX_NUM_PAGE_DIALS"
+	COMMENT
+	COMMENT 24. In the function 'CalculatePower' for loop cannot be covered for 0,1 time
+	COMMENT since it is controlled by the local variable
+	COMMENT
+	COMMENT 25.PTU has been split into 9 due to memory constraints
+	COMMENT 
+	COMMENT	26. Header file "hdudispfpdidata.h" is modified for testing purpose. The macro 'ELOG_TRIG_ADDRESS' is modified for stubbing hardware address.
+	COMMENT	
+	COMMENT	/*Commented for testing purpose*/
+	COMMENT	//#define ELOG_TRIG_ADDRESS           0x62B60000UL
+	COMMENT	
+	COMMENT	/* Modified macro by stubbing hardware address for testing purpose */
+	COMMENT	T_UINT8 PTU_ELOG_TRIG_ADDRESS[100];
+	COMMENT	#define ELOG_TRIG_ADDRESS           (T_UINT8*)&PTU_ELOG_TRIG_ADDRESS[0]
+	COMMENT  	
+	COMMENT  27. Header file "hdudispfpdidata.h" is modified for testing purpose. The macro 'ELOG_PARAM_ADDRESS' is modified for stubbing hardware address.
+	COMMENT
+	COMMENT	/*Commented for testing purpose*/
+	COMMENT	//#define ELOG_PARAM_ADDRESS          0x62B60064UL
+	COMMENT	
+	COMMENT	/* Modified macro by stubbing hardware address for testing purpose */
+	COMMENT	T_UINT8 PTU_ELOG_PARAM_ADDRESS[2000];
+	COMMENT	#define ELOG_PARAM_ADDRESS           (T_UINT8*)&PTU_ELOG_PARAM_ADDRESS[0]
+	COMMENT
+	COMMENT 28. In the function 'ElogTrigExtract' while loop cannot be covered for 0 time
+	COMMENT since it is controlled by the macro "MAX_LEN_ELOG_TRIG"
+	COMMENT 
+	COMMENT 29. In the function 'ElogTrigExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_ELOG_TRIG_COND" in switch case "ELOG_TRIG_LABEL"
+	COMMENT 
+	COMMENT 30. In the function 'ElogTrigExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_ELOG_TRIG_COND" in switch case "ELOG_TRIG_STRT_VAL"
+	COMMENT 
+	COMMENT 31. In the function 'ElogTrigExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_ELOG_TRIG_COND" in switch case "ELOG_TRIG_CROSS_VAL"
+	COMMENT
+	COMMENT 32. In the function 'ElogTrigExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_ELOG_TRIG_COND" in switch case "ELOG_TRIG_TIME"
+	COMMENT
+	COMMENT 33. In the function 'ElogParamExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_ELOG_EVENT"
+	COMMENT 
+	COMMENT 34. In the function 'ElogParamExtract' while loop cannot be covered for 0 time
+	COMMENT since it is controlled by the macro "MAX_LEN_ELOG_EVENT"
+	COMMENT
+	COMMENT 35. In the function 'ElogParamExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_LEN_EXCE" in switch case "ELOG_BIT_LABEL"
+	COMMENT
+	COMMENT 36. In the function 'ElogParamExtract' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macro "MAX_LEN_EXCE" in switch case "ELOG_BIT_PARAM"
+	COMMENT
+	COMMENT 37. In the function 'ElogParamExtract' for loop cannot be covered for 0 time
+	COMMENT since it is controlled by the macro "MAX_ELOG_PARAM_SIZE + 2" in switch case "ELOG_BIT_PARAM"
+	COMMENT 
+	COMMENT 38. Header file "hdudispfpdidata.h" is modified for testing purpose. The macro 'MAX_POLYGON_GRAPHS' is modified.
+	COMMENT
+	COMMENT	/*Commented for testing purpose*/
+	COMMENT //#define MAX_POLYGON_GRAPHS           30
+	COMMENT	
+	COMMENT	/* Modified macro for testing purpose */
+	COMMENT	#define MAX_POLYGON_GRAPHS           5	
+	COMMENT	
+	COMMENT 39. In the function 'GlobalExtract', 'while' loop cannot be covered for 0 time  
+	COMMENT	since it is controlled by the macro "SECTOR_SIZE"
+	COMMENT 40. In the function 'GlobalExtract' for loop cannot be covered for 0,1 time
+	COMMENT since it is controlled by the macro "MAX_POLYGON_GRAPHS"
+	COMMENT		
+    COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT 
+	COMMENT Valid Class(es)
+	COMMENT
+	COMMENT Class 1
+	COMMENT In function 'FindColor', color is COLOR_BLACK.
+	COMMENT
+	COMMENT Class 3
+	COMMENT In function 'FindColor', color is COLOR_RED
+	COMMENT
+	COMMENT Class 4
+	COMMENT In function 'FindColor', color is COLOR_LIGHT_RED
+	COMMENT
+	COMMENT Class 6
+	COMMENT In function 'FindColor', color is COLOR_TEAL
+	COMMENT
+	COMMENT Class 7
+	COMMENT In function 'FindColor', color is COLOR_GREEN
+	COMMENT
+	COMMENT Class 10
+	COMMENT In function 'FindColor', color is COLOR_DARK_BLUE
+	COMMENT
+	COMMENT Class 12
+	COMMENT In function 'FindColor', color is COLOR_BLUE
+	COMMENT
+	COMMENT Class 13
+	COMMENT In function 'FindColor', color is COLOR_LIGHT_GRAY
+	COMMENT
+	COMMENT Class 17
+	COMMENT In function 'FindColor', color is COLOR_YELLOW
+	COMMENT
+	COMMENT Class 19
+	COMMENT In function 'FindColor', color is COLOR_WHITE
+	COMMENT
+	COMMENT Class 20
+	COMMENT In function 'FindColor', color is other than  COLOR_BLACK, COLOR_RED, COLOR_LIGHT_RED, COLOR_TEAL, COLOR_GREEN,
+	COMMENT COLOR_DARK_BLUE, COLOR_BLUE, COLOR_LIGHT_GRAY, COLOR_YELLOW and COLOR_WHITE.	
+	COMMENT
+	COMMENT Class 21 
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_ONEW is equal to 0.
+	COMMENT  
+	COMMENT Class 22
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_ONEW is not equal to 0.
+	COMMENT
+	COMMENT Class 23
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_TWOW is equal to 0.
+	COMMENT
+	COMMENT class 24
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_TWOW is not equal to 0.
+	COMMENT
+	COMMENT Class 25 
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_THREEW is equal to 0.
+	COMMENT
+	COMMENT Class 26
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_THREEW is not equal to 0.
+	COMMENT
+	COMMENT Class 27
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_FOURW is equal to 0.
+	COMMENT
+	COMMENT Class 28
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_FOURW is not equal to 0.
+	COMMENT
+	COMMENT Class 29
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_FIVEW is equal to 0.
+	COMMENT
+	COMMENT Class 30
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_FIVEW is not equal to 0.
+	COMMENT
+	COMMENT Class 37
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_ONED is equal to 0.
+	COMMENT
+	COMMENT Class 38
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_ONED is not equal to 0.
+	COMMENT
+	COMMENT Class 51
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_ONEB is equal to 0.
+	COMMENT
+	COMMENT Class 52
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_ONEB is not equal to 0.
+	COMMENT
+	COMMENT Class 53
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_TWOB is equal to 0.
+	COMMENT
+	COMMENT Class 54
+	COMMENT In function 'FindFormat', result of format bitwise AND with NUM_TWOB is not equal to 0.
+	COMMENT
+	COMMENT Class 59
+	COMMENT In function 'IeeeToFloat', number_convert is equal to zero
+	COMMENT
+	COMMENT Class 60
+	COMMENT In function 'IeeeToFloat', number_convert is not equal to zero
+	COMMENT
+	COMMENT Class 61
+	COMMENT In function 'FindCasType', type is ADVISORY
+	COMMENT
+	COMMENT Class 62
+	COMMENT In function 'FindCasType', type is CAUTION
+	COMMENT
+	COMMENT Class 63
+	COMMENT In function 'FindCasType', type is WARNING
+	COMMENT
+	COMMENT Class 64
+	COMMENT In function 'FindCasType', type is other than ADVISORY,WARNING and CAUTION
+	COMMENT
+	COMMENT Class 65
+	COMMENT In function 'CasExtract', address is valid
+	COMMENT
+	COMMENT Class 66 
+	COMMENT In function 'CasExtract', address is invalid
+	COMMENT
+	COMMENT Class 67
+	COMMENT In function 'CasExtract', length is less than MAX_LEN_CAS.
+	COMMENT
+	COMMENT Class 68
+	COMMENT In function 'CasExtract', length is greater than MAX_LEN_CAS.
+	COMMENT
+	COMMENT Class 69
+	COMMENT In function 'CasExtract', length is equal to MAX_LEN_CAS.
+	COMMENT
+	COMMENT Class 70
+	COMMENT In function 'CasExtract', enum value is equal to MAX_16_BITS.
+	COMMENT
+	COMMENT Class 71
+	COMMENT In function 'CasExtract', enum value is not equal to MAX_16_BITS.
+	COMMENT
+	COMMENT Class 72 
+	COMMENT In function 'CasExtract', enum value read from result of address, offset value and length location is not zero. 
+	COMMENT
+	COMMENT Class 73
+	COMMENT In function 'CasExtract', enum value read from result of address, offset value and length location is  zero. 
+	COMMENT
+	COMMENT Class 74
+	COMMENT In function 'CasExtract', index is less than CAS_MAX_MSGS.
+	COMMENT
+	COMMENT Class 76
+	COMMENT In function 'CasExtract', index is equal to CAS_MAX_MSGS.
+	COMMENT
+	COMMENT Class 77
+	COMMENT In function 'CasExtract', enum value is CAS_STRING
+	COMMENT
+	COMMENT Class 78
+	COMMENT In function 'CasExtract', enum value is CAS_LABEL
+	COMMENT
+	COMMENT Class 79
+	COMMENT In function 'CasExtract', enum value is CAS_START_BIT
+	COMMENT
+	COMMENT Class 80
+	COMMENT In function 'CasExtract', enum value is CAS_PRIORITY
+	COMMENT
+	COMMENT Class 81
+	COMMENT In function 'CasExtract', enum value is CAS_TYPE
+	COMMENT
+	COMMENT Class 82
+	COMMENT In function 'CasExtract', enum value is CAS_ID
+	COMMENT
+	COMMENT Class 83
+	COMMENT In function 'CasExtract', enum value is other than CAS_STRING, CAS_LABEL, CAS_START_BIT, CAS_PRIORITY, CAS_TYPE and CAS_ID.
+	COMMENT
+	COMMENT Class 88
+	COMMENT In function 'CasLocationSett', cas setting address is valid.
+	COMMENT
+	COMMENT Class 89 
+	COMMENT In function 'CasLocationSett', cas setting address is invalid.
+	COMMENT
+	COMMENT Class 90
+	COMMENT In function 'CasLocationSett', length count is less than CAS_LOC_MAX.
+	COMMENT
+	COMMENT Class 91
+	COMMENT In function 'CasLocationSett', length count is greater than CAS_LOC_MAX.
+	COMMENT
+	COMMENT Class 92
+	COMMENT In function 'CasLocationSett', length count is equal CAS_LOC_MAX.
+	COMMENT
+	COMMENT Class 93
+	COMMENT In function 'CasLocationSett', enum value is MAX_16_BITS.
+	COMMENT
+	COMMENT Class 94
+	COMMENT In function 'CasLocationSett', enum value is not equal to MAX_16_BITS.
+	COMMENT
+	COMMENT Class 95 
+	COMMENT In function 'CasLocationSett', enum value is CAS_AXIS.
+	COMMENT
+	COMMENT Class 96
+	COMMENT In function 'CasLocationSett', enum value is CAS_NUM_ROWS.
+	COMMENT
+	COMMENT Class 97
+	COMMENT In function 'CasLocationSett', enum value is CAS_NUM_COLUMN.
+	COMMENT
+	COMMENT Class 98
+	COMMENT In function 'CasLocationSett', enum value is CAS_ROW_HEIGHT.
+	COMMENT
+	COMMENT Class 99
+	COMMENT In function 'CasLocationSett', enum value is CAS_COL_WIDTH.
+	COMMENT
+	COMMENT Class 100
+	COMMENT In function 'CasLocationSett', enum value is CAS_FONT.
+	COMMENT
+	COMMENT Class 101
+	COMMENT In function 'CasLocationSett', enum value is CAS_ADV_FLASH_TIMER.
+	COMMENT
+	COMMENT Class 180
+	COMMENT In function 'CasLocationSett', enum value is CAS_CAUT_FLASH_TIMER.
+	COMMENT
+	COMMENT Class 181
+	COMMENT In function 'CasLocationSett', enum value is CAS_WARN_FLASH_TIMER.
+	COMMENT
+	COMMENT Class 182
+	COMMENT In function 'CasLocationSett', enum value is CAS_REDX_TXT.
+	COMMENT
+	COMMENT Class 183 
+	COMMENT In function 'CasLocationSett', content of (addition of cas_sett_addr, offset value and length ) is not zero. 
+	COMMENT
+	COMMENT Class 184
+	COMMENT In function 'CasLocationSett', content of (addition of cas_sett_addr, offset value and length ) is  zero. 
+	COMMENT
+	COMMENT Class 185
+	COMMENT In function 'CasLocationSett', index is less than REDX_STRING_MAX.
+	COMMENT
+	COMMENT Class 187
+	COMMENT In function 'CasLocationSett', index is equal to REDX_STRING_MAX.
+	COMMENT
+	COMMENT Class 102
+	COMMENT In function 'CasLocationSett', enum value is other than CAS_AXIS ,CAS_NUM_ROWS ,CAS_NUM_COLUMN ,CAS_ROW_HEIGHT ,
+	COMMENT CAS_COL_WIDTH ,CAS_FONT, CAS_ADV_FLASH_TIMER, CAS_CAUT_FLASH_TIMER,CAS_WARN_FLASH_TIMER and CAS_REDX_TXT
+	COMMENT	
+	COMMENT Class 103
+	COMMENT In function 'AcdtExtract', address is valid.
+	COMMENT
+	COMMENT Class 104
+	COMMENT In function 'AcdtExtract', address is invalid.
+	COMMENT
+	COMMENT Class 105
+	COMMENT In function 'AcdtExtract', length is less than MAX_LEN_ACDT
+	COMMENT
+	COMMENT Class 106
+	COMMENT In function 'AcdtExtract', length is greater than MAX_LEN_ACDT
+	COMMENT
+	COMMENT Class 107
+	COMMENT In function 'AcdtExtract', length is equal to MAX_LEN_ACDT
+	COMMENT
+	COMMENT Class 108
+	COMMENT In function 'AcdtExtract', enum value is equal to MAX_16_BITS
+	COMMENT
+	COMMENT Class 109 
+	COMMENT In function 'AcdtExtract', enum value is not equal to MAX_16_BITS.
+	COMMENT
+	COMMENT Class 110
+	COMMENT In function 'AcdtExtract', label of Parameters with the loop value as index is equal to label of Auto_cool_down_tmr.
+	COMMENT
+	COMMENT Class 111
+	COMMENT In function 'AcdtExtract', label of Parameters with the loop value as index is not equal to label of Auto_cool_down_tmr.
+	COMMENT
+	COMMENT Class 112
+	COMMENT In function 'AcdtExtract', enum value is LABEL
+	COMMENT
+	COMMENT Class 113
+	COMMENT In function 'AcdtExtract', enum value is ACDT_TIME
+	COMMENT
+	COMMENT Class 114
+	COMMENT In function 'AcdtExtract', enum value is WOG_LABEL
+	COMMENT 
+	COMMENT Class 115
+	COMMENT In function 'AcdtExtract', label of Parameters with the loop value as index is equal to wog_label of Auto_cool_down_tmr.
+	COMMENT
+	COMMENT Class 116
+	COMMENT In function 'AcdtExtract', label of Parameters with the loop value as index is not equal to wog_label of Auto_cool_down_tmr.		
+	COMMENT
+	COMMENT Class 117
+	COMMENT In function 'AcdtExtract', enum value is WOG_START_BIT
+	COMMENT
+	COMMENT Class 188
+	COMMENT In function 'AcdtExtract', enum value is ACDT_ON_TRIGGER
+	COMMENT
+	COMMENT Class 189
+	COMMENT In function 'AcdtExtract', enum value is ACDT_ON_COND
+	COMMENT
+	COMMENT Class 190
+	COMMENT In function 'AcdtExtract', enum value is ACDT_OFF_CONDITION
+	COMMENT
+	COMMENT Class 191
+	COMMENT In function 'AcdtExtract', enum value is other  LABEL, ACDT_TIME, WOG_LABEL, WOG_START_BIT, ACDT_ON_TRIGGER,
+	COMMENT ACDT_ON_COND and ACDT_OFF_CONDITION	
+	COMMENT
+	COMMENT Class 118
+	COMMENT In function 'ExceedExtract', address is valid.
+	COMMENT
+	COMMENT Class 119
+	COMMENT In function 'ExceedExtract', address is invalid.
+	COMMENT
+	COMMENT Class 120
+	COMMENT In function 'ExceedExtract', length is less than MAX_LEN_EXCE
+	COMMENT
+	COMMENT Class 121
+	COMMENT In function 'ExceedExtract', length is greater than MAX_LEN_EXCE
+	COMMENT
+	COMMENT Class 122
+	COMMENT In function 'ExceedExtract', length is equal to MAX_LEN_EXCE
+	COMMENT
+	COMMENT Class 123
+	COMMENT In function 'ExceedExtract', enum value is equal to MAX_16_BITS
+	COMMENT
+	COMMENT Class 124
+	COMMENT In function 'ExceedExtract', enum value is not equal to MAX_16_BITS.
+	COMMENT
+	COMMENT Class 125
+	COMMENT In function 'ExceedExtract', enum value is EXCEED_BIT
+	COMMENT
+	COMMENT Class 126
+	COMMENT In function 'ExceedExtract', enum value is LABEL
+	COMMENT
+	COMMENT Class 192
+	COMMENT In function 'ExceedExtract', label of Parameters with loop counter as index is equal to label of
+	COMMENT Exceed_data with Exceed_cnt as index
+	COMMENT
+	COMMENT Class 193
+	COMMENT In function 'ExceedExtract', label of Parameters with loop counter as index is not equal to label of
+	COMMENT Exceed_data with Exceed_cnt as index			
+	COMMENT
+	COMMENT Class 127
+	COMMENT In function 'ExceedExtract', enum value is EXCEED_AXIS
+	COMMENT
+	COMMENT Class 128
+	COMMENT In function 'ExceedExtract', enum value is EXCEED_FONT
+	COMMENT
+	COMMENT Class 129
+	COMMENT In function 'ExceedExtract', enum value is other than EXCEED_FONT, LABEL, EXCEED_AXIS, EXCEED_FONT
+	COMMENT
+	COMMENT Class 148
+	COMMENT In function 'A429Extract', address is valid.
+	COMMENT
+	COMMENT Class 149
+	COMMENT In function 'A429Extract', address is invalid.
+	COMMENT
+	COMMENT Class 150 
+	COMMENT In function 'A429Extract', length is less than MAX_LEN_A429
+	COMMENT  
+	COMMENT Class 151 
+	COMMENT In function 'A429Extract', length is greater than MAX_LEN_A429
+	COMMENT  
+	COMMENT Class 152 
+	COMMENT In function 'A429Extract', length is equal to MAX_LEN_A429
+	COMMENT
+	COMMENT Class 153
+	COMMENT In function 'A429Extract', enum value is equal to MAX_16_BITS
+	COMMENT
+	COMMENT Class 154
+	COMMENT In function 'A429Extract', enum value is not equal to MAX_16_BITS.
+	COMMENT
+	COMMENT Class 155
+	COMMENT In function 'A429Extract', enum value is A429_PORT.
+	COMMENT
+	COMMENT Class 156
+	COMMENT In function 'A429Extract', enum value is LABEL.
+	COMMENT
+	COMMENT Class 157
+	COMMENT In function 'A429Extract', enum value is A429_TYPE.
+	COMMENT
+	COMMENT Class 159
+	COMMENT In function 'A429Extract', enum value is A429_BNR_BITS.
+	COMMENT
+	COMMENT Class 160
+	COMMENT In function 'A429Extract', enum value is A429_BNR_START_BIT.
+	COMMENT
+	COMMENT Class 161
+	COMMENT In function 'A429Extract', enum value is A429_BNR_MAX.
+	COMMENT
+	COMMENT Class 162
+	COMMENT In function 'A429Extract', enum value is A429_BNR_MIN.
+	COMMENT
+	COMMENT Class 163
+	COMMENT In function 'A429Extract', enum value is A429_BNR_OFFSET.
+	COMMENT
+	COMMENT Class 164
+	COMMENT In function 'A429Extract', enum value is A429_BNR_TIMEOUT.
+	COMMENT
+	COMMENT Class 165
+	COMMENT In function 'A429Extract', enum value is A429_BNR_SCALE_FACTOR.
+	COMMENT
+	COMMENT Class 166
+	COMMENT In function 'A429Extract', enum value is A429_DDW_TIMEOUT.
+	COMMENT
+	COMMENT Class 167
+	COMMENT In function 'A429Extract', enum value is other than A429_PORT,LABEL,A429_TYPE,A429_BNR_RANGE,A429_BNR_BITS,A429_BNR_START_BIT,
+	COMMENT  A429_BNR_MAX,A429_BNR_MIN,A429_BNR_OFFSET,A429_BNR_TIMEOUT,A429_BNR_SCALE_FACTOR,A429_DDW_TIMEOUT
+	COMMENT
+	COMMENT Class 194
+	COMMENT In function 'PageExtract', address is valid.
+	COMMENT
+	COMMENT Class 195
+	COMMENT In function 'PageExtract', address is invalid.
+	COMMENT
+	COMMENT Class 196
+	COMMENT In function 'PageExtract', length count is less than PAGE_SET_LEN 
+	COMMENT  
+	COMMENT Class 197 
+	COMMENT In function 'PageExtract', length count is greater than PAGE_SET_LEN
+	COMMENT  
+	COMMENT Class 198 
+	COMMENT In function 'PageExtract', length count is equal to PAGE_SET_LEN
+	COMMENT
+	COMMENT Class 199
+	COMMENT In function 'PageExtract', enum value is equal to MAX_16_BITS
+	COMMENT
+	COMMENT Class 200
+	COMMENT In function 'PageExtract', enum value is not equal to MAX_16_BITS.
+	COMMENT
+	COMMENT Class 201
+	COMMENT In function 'PageExtract', enum value is PAGE_NUM.
+	COMMENT
+	COMMENT Class 202
+	COMMENT In function 'PageExtract', enum value is PAGE_NAME.	
+	COMMENT
+	COMMENT Class 203
+	COMMENT In function 'PageExtract', content of (address plus offset of address plus length count) is not equal to zero
+	COMMENT
+	COMMENT Class 204
+	COMMENT In function 'PageExtract', content of (address plus offset of address plus length count) is equal to zero 		
+	COMMENT
+	COMMENT Class 205
+	COMMENT In function 'PageExtract', character count in page name is less than 20
+	COMMENT
+	COMMENT Class 206
+	COMMENT In function 'PageExtract', character count in page name is equal to 20		
+	COMMENT
+	COMMENT Class 208
+	COMMENT In function 'PageExtract', enum value is PAGE_MENU.
+	COMMENT
+	COMMENT Class 209
+	COMMENT In function 'PageExtract', enum value is PAGE_MENU_COLOR	
+	COMMENT
+	COMMENT Class 210
+	COMMENT In function 'PageExtract', enum value is PAGE_ACTION_COLOR		
+	COMMENT
+	COMMENT Class 211
+	COMMENT In function 'PageExtract', enum value is MENU_TXT_COLOR
+	COMMENT
+	COMMENT Class 212
+	COMMENT In function 'PageExtract', enum value is TIMER_AXIS
+	COMMENT
+	COMMENT Class 213
+	COMMENT In function 'PageExtract', enum value is TIMER_FONT
+	COMMENT
+	COMMENT Class 214
+	COMMENT In function 'PageExtract', enum value is ACDT_AXIS	
+	COMMENT
+	COMMENT Class 215
+	COMMENT In function 'PageExtract', enum value is other than PAGE_NUM,PAGE_NAME,PAGE_MENU,PAGE_MENU_COLOR,PAGE_ACTION_COLOR
+	COMMENT MENU_TXT_COLOR,TIMER_AXIS,TIMER_FONT,ACDT_AXIS
+	COMMENT
+	COMMENT Class 170
+	COMMENT  The function 'PdiPageDataInit', calls 'PageExtract'.
+	COMMENT
+	COMMENT Class 171
+	COMMENT  The function 'PdiPageDataInit' ,calls 'ForegroundExtract'.
+	COMMENT
+	COMMENT Class 172
+	COMMENT  The function 'PdiPageDataInit', calls 'CasLocationSett'.
+	COMMENT
+	COMMENT Class 173
+	COMMENT  The function 'PdiPageDataInit' ,calls 'ExceedExtract'.
+	COMMENT
+	COMMENT Class 174
+	COMMENT  The function 'PdiDataInit', calls 'NumberOfPages'.
+	COMMENT
+	COMMENT Class 176
+	COMMENT  The function 'PdiDataInit',calls 'AcdtExtract'.	
+	COMMENT 
+	COMMENT Class 216
+	COMMENT In the function 'CalculatePower',the parameter mul is zero.
+	COMMENT 
+	COMMENT Class 217
+	COMMENT In the function 'CalculatePower',the parameter mul is not equal to zero.
+	COMMENT 	
+	COMMENT Class 218
+	COMMENT In the function 'CalculatePower',the parameter mul is less than zero.
+	COMMENT 
+	COMMENT Class 219
+	COMMENT In the function 'CalculatePower',the parameter mul is greater than zero
+	COMMENT 		
+	COMMENT Class 220
+	COMMENT In function 'ConfigExtract', address is NULL.
+	COMMENT
+	COMMENT Class 221
+	COMMENT In function 'ConfigExtract', address is other than NULL.
+	COMMENT
+	COMMENT Class 222
+	COMMENT In function 'ConfigExtract', content of (address plus length value) is not equal to zero.
+	COMMENT
+	COMMENT Class 223
+	COMMENT In function 'ConfigExtract', content of (address plus length value) is equal to zero.
+	COMMENT
+	COMMENT Class 224
+	COMMENT In function 'ConfigExtract', index value is less than MAX_CONFIG.
+	COMMENT
+	COMMENT Class 225
+	COMMENT In function 'ConfigExtract', index value is equal to MAX_CONFIG.
+	COMMENT
+	COMMENT Class 227
+	COMMENT In function 'ConfigExtract', index value is less than result of ENG_CONFIG_LEN.
+	COMMENT
+	COMMENT Class 229
+	COMMENT In function 'ConfigExtract', index value is equal to result of ENG_CONFIG_LEN.
+	COMMENT
+	COMMENT Class 230
+	COMMENT In function 'ConfigExtract', content of (address added by length value) is other than HEX_0XFF.
+	COMMENT
+	COMMENT Class 231
+	COMMENT In function 'ConfigExtract', content of (address added by length value) is HEX_0XFF
+	COMMENT
+	COMMENT Class 232
+	COMMENT In function 'ConfigExtract', index value is less than result of PDI_PART_NUM_SIZE.
+	COMMENT
+	COMMENT Class 234
+	COMMENT In function 'ConfigExtract', index value is equal to result of PDI_PART_NUM_SIZE.	
+	COMMENT
+	COMMENT Class 235
+	COMMENT In function 'NumberOfPages', ((page count multiplied by SECTOR_SIZE plus PAGE_NUM_BASE_ADDR )  plus length) 
+	COMMENT is other than INVALID_PAGE_NUM
+	COMMENT
+	COMMENT Class 236
+	COMMENT In function 'NumberOfPages', ((page count multiplied by SECTOR_SIZE plus PAGE_NUM_BASE_ADDR )  plus length) 
+	COMMENT is INVALID_PAGE_NUM
+	COMMENT
+	COMMENT Class 237
+	COMMENT In function 'NumberOfPages', page count is other than zero
+	COMMENT
+	COMMENT Class 238
+	COMMENT In function 'NumberOfPages', page count is an zero	
+	COMMENT
+	COMMENT Class 239
+	COMMENT In function 'NumberOfPages', ((page count multiplied by SECTOR_SIZE added with PAGE_NUM_BASE_ADDR)
+	COMMENT added to length) is other than zero
+	COMMENT
+	COMMENT Class 240
+	COMMENT In function 'NumberOfPages', ((page count multiplied by SECTOR_SIZE added with PAGE_NUM_BASE_ADDR)
+	COMMENT added to length) is zero		
+	COMMENT
+	COMMENT Class 241
+	COMMENT In function 'NumberOfPages', page character count is less than MAX_NUM_CHAR 	
+	COMMENT
+	COMMENT Class 243
+	COMMENT In function 'NumberOfPages', page character count is equal to MAX_NUM_CHAR 		
+	COMMENT
+	COMMENT Class 244
+	COMMENT In function 'NumberOfPages', Page_name_char_cnt is less than Page character count  	
+	COMMENT
+	COMMENT Class 245
+	COMMENT In function 'NumberOfPages', Page_name_char_cnt is equal to Page character count 
+	COMMENT
+	COMMENT Class 246
+	COMMENT In function 'NumberOfPages', Page_name_char_cnt is greater than Page character count 			
+	COMMENT
+	COMMENT Class 247
+	COMMENT In function 'ForegroundExtract', address is NULL.
+	COMMENT
+	COMMENT Class 248
+	COMMENT In function 'ForegroundExtract', address is other than NULL.
+	COMMENT
+	COMMENT Class 249
+	COMMENT In function 'ForegroundExtract', length count is less than SECTOR_SIZE 
+	COMMENT
+	COMMENT Class 250
+	COMMENT In function 'ForegroundExtract', length count is greater than SECTOR_SIZE
+	COMMENT 
+	COMMENT Class 251
+	COMMENT In function 'ForegroundExtract', length count is equal to SECTOR_SIZE
+	COMMENT
+	COMMENT Class 252
+	COMMENT In function 'ForegroundExtract', enum value is equal to MAX_16_BITS
+	COMMENT
+	COMMENT Class 253
+	COMMENT In function 'ForegroundExtract', enum value is not equal to MAX_16_BITS.
+	COMMENT	
+	COMMENT Class 254
+	COMMENT In function 'ForegroundExtract', enum value is ELEMENT
+	COMMENT
+	COMMENT Class 255
+	COMMENT In function 'ForegroundExtract', enum value is other than ELEMENT.
+	COMMENT	
+	COMMENT Class 256
+	COMMENT In function 'ForegroundExtract', Foreground element is BAR_GRAPH
+	COMMENT
+	COMMENT Class 257
+	COMMENT In function 'ForegroundExtract', Foreground element is other than BAR_GRAPH.
+	COMMENT	
+	COMMENT Class 258
+	COMMENT In function 'ForegroundExtract', enum value is LABEL
+	COMMENT
+	COMMENT Class 259
+	COMMENT In function 'ForegroundExtract', enum value is other than LABEL.		
+	COMMENT	
+	COMMENT Class 260
+	COMMENT In function 'ForegroundExtract', Foreground element is ROUND_DIAL
+	COMMENT
+	COMMENT Class 261
+	COMMENT In function 'ForegroundExtract', Foreground element is other than ROUND_DIAL.
+	COMMENT	
+	COMMENT Class 262
+	COMMENT In function 'ForegroundExtract', Foreground element is NUMBER_BOX
+	COMMENT
+	COMMENT Class 263
+	COMMENT In function 'ForegroundExtract', Foreground element is other than NUMBER_BOX.
+	COMMENT	
+	COMMENT Class 264
+	COMMENT In function 'ForegroundExtract', enum value is BG_AXIS
+	COMMENT	
+	COMMENT Class 266
+	COMMENT In function 'ForegroundExtract', enum value is BG_NO_LIN
+	COMMENT	
+	COMMENT Class 268
+	COMMENT In function 'ForegroundExtract', enum value is BG_LIN_RANGE
+	COMMENT	
+	COMMENT Class 270
+	COMMENT In function 'ForegroundExtract', enum value is BG_LIN_LENGTH	
+	COMMENT	
+	COMMENT Class 272
+	COMMENT In function 'ForegroundExtract', enum value is BG_WIDTH	
+	COMMENT	
+	COMMENT Class 274
+	COMMENT In function 'ForegroundExtract', enum value is BG_ORIEN		
+	COMMENT	
+	COMMENT Class 276
+	COMMENT In function 'ForegroundExtract', enum value is BG_NB_AXIS		
+	COMMENT	
+	COMMENT Class 278
+	COMMENT In function 'ForegroundExtract', enum value is BG_NB_FORMAT
+	COMMENT	
+	COMMENT Class 280
+	COMMENT In function 'ForegroundExtract', enum value is BG_NB_FONT
+	COMMENT	
+	COMMENT Class 282
+	COMMENT In function 'ForegroundExtract', enum value is BG_NO_LIM	
+	COMMENT	
+	COMMENT Class 284
+	COMMENT In function 'ForegroundExtract', enum value is BG_LIM_VAL	
+	COMMENT	
+	COMMENT Class 286
+	COMMENT In function 'ForegroundExtract', enum value is BG_LIM_COLOR	
+	COMMENT	
+	COMMENT Class 288
+	COMMENT In function 'ForegroundExtract', enum value is BG_REDX_AXIS		
+	COMMENT	
+	COMMENT Class 290
+	COMMENT In function 'ForegroundExtract', enum value is BG_REDX_WIDTH		
+	COMMENT	
+	COMMENT Class 292
+	COMMENT In function 'ForegroundExtract', enum value is BG_REDX_HEIGHT
+	COMMENT	
+	COMMENT Class 294
+	COMMENT In function 'ForegroundExtract', enum value is BG_REDX_OFFSET_AXIS
+	COMMENT	
+	COMMENT Class 296
+	COMMENT In function 'ForegroundExtract', enum value is BG_REDX_FONT
+	COMMENT	
+	COMMENT Class 298
+	COMMENT In function 'ForegroundExtract', enum value is BG_REDX_TXT
+	COMMENT	
+	COMMENT Class 300
+	COMMENT In function 'ForegroundExtract', content of (address plus offset of address plus length count) is not equal to zero 
+	COMMENT
+	COMMENT Class 301
+	COMMENT In function 'ForegroundExtract', content of (address plus offset of address plus length count) is equal to zero 
+	COMMENT	
+	COMMENT Class 302
+	COMMENT In function 'ForegroundExtract', character count of red X text is less than thirty one 
+	COMMENT
+	COMMENT Class 303
+	COMMENT In function 'ForegroundExtract', character count of red X text is equal to thirty one 
+	COMMENT	
+	COMMENT Class 305
+	COMMENT In function 'ForegroundExtract', bg_redx_txt with index character count of red X text of Bg_settings with 
+	COMMENT index  (bar graph count minus one) of Page_settings is character n  
+	COMMENT	
+	COMMENT Class 306
+	COMMENT In function 'ForegroundExtract', bg_redx_txt with index character count of red X text of Bg_settings with 
+	COMMENT index  (bar graph count minus one) of Page_settings is other than character n 
+	COMMENT	
+	COMMENT Class 307
+	COMMENT In function 'ForegroundExtract', bg_redx_txt with index character count of red X text minus one of Bg_settings
+	COMMENT with index  (bar graph count minus one) of Page_settings is character \
+ 	COMMENT	
+ 	COMMENT Class 308
+ 	COMMENT In function 'ForegroundExtract', bg_redx_txt with index character count of red X text minus one of Bg_settings
+	COMMENT with index  (bar graph count minus one) of Page_settings is other than character \
+	COMMENT	
+	COMMENT Class 309
+	COMMENT In function 'ForegroundExtract', bg_redx_txt with index character count of red X text of Bg_settings with 
+	COMMENT index  (bar graph count minus one) of Page_settings is character r  
+	COMMENT	
+	COMMENT Class 310
+	COMMENT In function 'ForegroundExtract', bg_redx_txt with index character count of red X text of Bg_settings with 
+	COMMENT index  (bar graph count minus one) of Page_settings is other than character r 
+	COMMENT	
+	COMMENT Class 311
+	COMMENT In function 'ForegroundExtract', enum value is RD_ASSOCIATED_LABELS
+	COMMENT	
+	COMMENT Class 313
+	COMMENT In function 'ForegroundExtract', enum value is RD_AXIS	
+	COMMENT	
+	COMMENT Class 315
+	COMMENT In function 'ForegroundExtract', enum value is RD_NO_LIN
+	COMMENT	
+	COMMENT Class 317
+	COMMENT In function 'ForegroundExtract', enum value is RD_LIN_RANGE	
+	COMMENT	
+	COMMENT Class 319
+	COMMENT In function 'ForegroundExtract', enum value is RD_LIN_ANGLE	
+	COMMENT	
+	COMMENT Class 321
+	COMMENT In function 'ForegroundExtract', enum value is RD_NO_PTR	
+	COMMENT	
+	COMMENT Class 323
+	COMMENT In function 'ForegroundExtract', enum value is RD_PTR_COLOR
+	COMMENT	
+	COMMENT Class 325
+	COMMENT In function 'ForegroundExtract', enum value is RD_PTR_SHAPE
+	COMMENT	
+	COMMENT Class 327
+	COMMENT In function 'ForegroundExtract', enum value is RD_PTR_SCALE
+	COMMENT	
+	COMMENT Class 329
+	COMMENT In function 'ForegroundExtract', enum value is RD_PTR_SCALE_OFFSET
+	COMMENT	
+	COMMENT Class 331
+	COMMENT In function 'ForegroundExtract', enum value is RD_LENGTH
+	COMMENT	
+	COMMENT Class 333
+	COMMENT In function 'ForegroundExtract', enum value is RD_NB_AXIS
+	COMMENT	
+	COMMENT Class 335
+	COMMENT In function 'ForegroundExtract', enum value is RD_NB_FORMAT
+	COMMENT	
+	COMMENT Class 337
+	COMMENT In function 'ForegroundExtract', enum value is RD_NB_FONT
+	COMMENT	
+	COMMENT Class 339
+	COMMENT In function 'ForegroundExtract', enum value is RD_NO_LIM
+	COMMENT
+	COMMENT Class 341
+	COMMENT In function 'ForegroundExtract', enum value is RD_LIM_VAL
+	COMMENT	
+	COMMENT Class 343
+	COMMENT In function 'ForegroundExtract', enum value is RD_LIM_COLOR
+	COMMENT	
+	COMMENT Class 345
+	COMMENT In function 'ForegroundExtract', enum value is RD_REDX_AXIS
+	COMMENT	
+	COMMENT Class 347
+	COMMENT In function 'ForegroundExtract', enum value is RD_REDX_WIDTH
+	COMMENT	
+	COMMENT Class 349
+	COMMENT In function 'ForegroundExtract', enum value is RD_REDX_HEIGHT
+	COMMENT	
+	COMMENT Class 351
+	COMMENT In function 'ForegroundExtract', enum value is RD_REDX_OFFSET_AXIS
+	COMMENT	
+	COMMENT Class 353
+	COMMENT In function 'ForegroundExtract', enum value is RD_REDX_FONT
+	COMMENT	
+	COMMENT Class 355
+	COMMENT In function 'ForegroundExtract', enum value is RD_REDX_TXT
+	COMMENT
+	COMMENT Class 357
+	COMMENT In function 'ForegroundExtract', character count of red X text of round dial is lesser than thirty one 
+	COMMENT
+	COMMENT Class 358
+	COMMENT In function 'ForegroundExtract', character count of red X text of round dial is equal to thirty one
+	COMMENT	
+	COMMENT Class 360
+	COMMENT In function 'ForegroundExtract', enum value is NB_AXIS
+	COMMENT	
+	COMMENT Class 362
+	COMMENT In function 'ForegroundExtract', enum value is NB_FORMAT
+	COMMENT	
+	COMMENT Class 364
+	COMMENT In function 'ForegroundExtract', enum value is NB_FONT
+	COMMENT	
+	COMMENT Class 366
+	COMMENT In function 'ForegroundExtract', enum value is NB_NO_LIM
+	COMMENT	
+	COMMENT Class 368
+	COMMENT In function 'ForegroundExtract', enum value is NB_LIM_VAL
+	COMMENT	
+	COMMENT Class 370
+	COMMENT In function 'ForegroundExtract', enum value is NB_LIM_COLOR
+	COMMENT	
+	COMMENT Class 372
+	COMMENT In function 'ForegroundExtract', enum value is NB_REDX_AXIS
+	COMMENT	
+	COMMENT Class 374
+	COMMENT In function 'ForegroundExtract', enum value is NB_REDX_WIDTH	
+	COMMENT	
+	COMMENT Class 376
+	COMMENT In function 'ForegroundExtract', enum value is NB_REDX_HEIGHT
+	COMMENT
+	COMMENT Class 378
+	COMMENT In function 'ForegroundExtract', enum value is NB_REDX_OFFSET_AXIS
+	COMMENT	
+	COMMENT Class 380
+	COMMENT In function 'ForegroundExtract', enum value is NB_REDX_FONT	
+	COMMENT	
+	COMMENT Class 382
+	COMMENT In function 'ForegroundExtract', enum value is NB_REDX_TXT		
+	COMMENT	
+	COMMENT Class 384
+	COMMENT In function 'ForegroundExtract', character count of red X text of number box is less than thirty one 
+	COMMENT
+	COMMENT Class 385
+	COMMENT In function 'ForegroundExtract', character count of red X text of number box is equal to thirty one
+	COMMENT	
+	COMMENT Class 387
+	COMMENT In function 'ForegroundExtract', label of Parameters with index as loop counter is equal to label of
+	COMMENT Bg_settings with index as loop index value of Page_settings
+	COMMENT
+	COMMENT Class 388
+	COMMENT In function 'ForegroundExtract', label of Parameters with index as loop counter is not equal to label of
+	COMMENT Bg_settings with index as loop index value of Page_settings
+	COMMENT
+	COMMENT Class 389
+	COMMENT The function 'ForegroundExtract', calls 'MemSet'.	
+	COMMENT	
+	COMMENT Class 390
+	COMMENT In function 'ForegroundExtract', label of Parameters with index as loop counter is equal to label of
+	COMMENT Rd_settings with index as loop index value of Page_settings
+	COMMENT
+	COMMENT Class 391
+	COMMENT In function 'ForegroundExtract', label of Parameters with index as loop counter is not equal to label of
+	COMMENT Rd_settings with index as loop index value of Page_settings
+	COMMENT	
+	COMMENT Class 392
+	COMMENT In function 'ForegroundExtract', label of Page_num_boxes with index as loop counter is equal to label of
+	COMMENT Nb_settings with index as loop index value of Page_settings
+	COMMENT
+	COMMENT Class 393
+	COMMENT In function 'ForegroundExtract', label of Page_num_boxes with index as loop counter is not equal to label of
+	COMMENT Nb_settings with index as loop index value of Page_settings
+	COMMENT	
+	COMMENT Class 394
+	COMMENT In function 'ForegroundExtract', enum value is BG_LIM_COLOR
+	COMMENT	
+	COMMENT Class 396
+	COMMENT The function 'PageExtract', calls 'FindColor'.
+	COMMENT	
+	COMMENT Class 397
+	COMMENT The function 'PdiDataInit', calls 'ElogTrigExtract'	
+	COMMENT
+	COMMENT Class 398
+	COMMENT The function 'PdiDataInit', calls 'ElogParamExtract'	
+	COMMENT
+	COMMENT Class 399
+	COMMENT In function 'ElogTrigExtract', address is valid.
+	COMMENT
+	COMMENT Class 400
+	COMMENT In function 'ElogTrigExtract', address is invalid.
+	COMMENT
+	COMMENT Class 401
+	COMMENT In function 'ElogTrigExtract', length is less than MAX_LEN_ELOG_TRIG
+	COMMENT
+	COMMENT Class 402
+	COMMENT In function 'ElogTrigExtract', length is greater than MAX_LEN_ELOG_TRIG
+	COMMENT
+	COMMENT Class 403
+	COMMENT In function 'ElogTrigExtract', length is equal to MAX_LEN_ELOG_TRIG
+	COMMENT
+	COMMENT Class 404
+	COMMENT In function 'ElogTrigExtract', enum value is equal to MAX_16_BITS
+	COMMENT
+	COMMENT Class 405
+	COMMENT In function 'ElogTrigExtract', enum value is not equal to MAX_16_BITS.
+	COMMENT
+	COMMENT Class 406
+	COMMENT In function 'ElogTrigExtract', enum value is 'ELOG_TRIG_LABEL'	
+	COMMENT	
+	COMMENT Class 407
+	COMMENT In function 'ElogTrigExtract',loop index of elog_trig_label of Elog_trig is not equal to NULL_LABEL 
+	COMMENT	
+	COMMENT Class 408
+	COMMENT In function 'ElogTrigExtract',loop index of elog_trig_label of Elog_trig is equal to NULL_LABEL 	
+	COMMENT
+	COMMENT Class 409
+	COMMENT In function 'ElogTrigExtract', enum value is 'ELOG_TRIG_STRT_VAL'
+	COMMENT
+	COMMENT Class 410
+	COMMENT In function 'ElogTrigExtract', enum value is 'ELOG_TRIG_CROSS_VAL'	
+	COMMENT
+	COMMENT Class 411
+	COMMENT In function 'ElogTrigExtract', enum value is 'ELOG_TRIG_TIME'		
+	COMMENT
+	COMMENT Class 412
+	COMMENT In function 'ElogTrigExtract', enum value is otherthan 'ELOG_TRIG_LABEL', 'ELOG_TRIG_STRT_VAL','ELOG_TRIG_CROSS_VAL'
+	COMMENT and 'ELOG_TRIG_TIME'	
+	COMMENT	
+	COMMENT Class 413
+	COMMENT In function 'ElogParamExtract', address is valid.
+	COMMENT
+	COMMENT Class 414
+	COMMENT In function 'ElogParamExtract', address is invalid.
+	COMMENT
+	COMMENT Class 415
+	COMMENT In function 'ElogParamExtract', length is less than MAX_LEN_ELOG_EVENT
+	COMMENT
+	COMMENT Class 416
+	COMMENT In function 'ElogParamExtract', length is greater than MAX_LEN_ELOG_EVENT
+	COMMENT
+	COMMENT Class 417
+	COMMENT In function 'ElogParamExtract', length is equal to MAX_LEN_ELOG_EVENT
+	COMMENT
+	COMMENT Class 418
+	COMMENT In function 'ElogParamExtract', enum value is equal to MAX_16_BITS
+	COMMENT
+	COMMENT Class 419
+	COMMENT In function 'ElogParamExtract', enum value is not equal to MAX_16_BITS.
+	COMMENT
+	COMMENT Class 420
+	COMMENT In function 'ElogParamExtract', enum value is 'ELOG_LABEL'	
+	COMMENT
+	COMMENT Class 421
+	COMMENT In function 'ElogParamExtract', enum value is 'ELOG_BIT_LABEL'	
+	COMMENT
+	COMMENT Class 422
+	COMMENT In function 'ElogParamExtract', enum value is 'ELOG_BIT_PARAM'	
+	COMMENT
+	COMMENT Class 423
+	COMMENT In function 'ElogParamExtract',character variable is equal to NULL_LABEL
+	COMMENT
+	COMMENT Class 424
+	COMMENT In function 'ElogParamExtract', character variable is not equal to NULL_LABEL
+	COMMENT
+	COMMENT Class 425
+	COMMENT In function 'ElogParamExtract', enum value is otherthan 'ELOG_TRIG_LABEL', 'ELOG_TRIG_STRT_VAL','ELOG_TRIG_CROSS_VAL'
+	COMMENT and 'ELOG_TRIG_TIME'	
+	COMMENT 
+	COMMENT Class 426
+	COMMENT The function 'ElogTrigExtract', calls "IeeeToFloat"
+	COMMENT
+	COMMENT Class 427
+	COMMENT In function 'FindColor', color is COLOR_DARK_RED
+	COMMENT 
+	COMMENT Class 428
+	COMMENT In function 'FindColor', color is COLOR_PINK
+	COMMENT 	
+	COMMENT Class 429
+	COMMENT In function 'FindColor', color is COLOR_BRIGHT_GREEN
+	COMMENT	
+	COMMENT Class 430
+	COMMENT In function 'FindColor', color is COLOR_TURQUOISE
+	COMMENT		
+	COMMENT Class 431
+	COMMENT In function 'FindColor', color is COLOR_VIOLET
+	COMMENT		
+	COMMENT Class 432
+	COMMENT In function 'FindColor', color is COLOR_GRAY
+	COMMENT		
+	COMMENT Class 433
+	COMMENT In function 'FindColor', color is COLOR_DARK_GRAY
+	COMMENT		
+	COMMENT Class 434
+	COMMENT In function 'FindColor', color is COLOR_DARK_YELLOW
+	COMMENT		
+	COMMENT Class 435
+	COMMENT In function 'FindColor', color is COLOR_ORANGE
+	COMMENT		
+	COMMENT Class 436
+	COMMENT In function 'FindColor', color is Zero
+	COMMENT		
+	COMMENT Class 437
+	COMMENT In function 'ExceedExtract', enum value is SDI	
+	COMMENT 
+	COMMENT Class 438
+	COMMENT In function 'ForegroundExtract', enum value is SDI
+	COMMENT	
+	COMMENT Class 439
+	COMMENT In function 'ForegroundExtract', enum value is BG_LIM_TYPE	
+	COMMENT	
+	COMMENT Class 440
+	COMMENT In function 'ForegroundExtract', sdi of Parameters with index as loop counter is equal to sdi of 
+	COMMENT Bg_settings with index as loop index value of Page_settings 
+	COMMENT
+	COMMENT Class 441
+	COMMENT In function 'ForegroundExtract', sdi of Parameters with index as loop counter is not equal to sdi of 
+	COMMENT Bg_settings with index as loop index value of Page_settings 	
+	COMMENT	      
+	COMMENT	Class 442     
+	COMMENT In function 'ForegroundExtract', bg_nb_font of Bg_settings with index loop counter of Page_settings is ZERO.
+	COMMENT	         
+	COMMENT	Class 443        
+	COMMENT	In function 'ForegroundExtract', bg_redx_font of Bg_settings with index loop counter of Page_settings is ZERO.         
+	COMMENT	      
+	COMMENT	Class 444   
+	COMMENT In function 'ForegroundExtract', bg_nb_font of Bg_settings with index loop counter of Page_settings is not ZERO.
+	COMMENT	         
+	COMMENT	Class 445        
+	COMMENT	In function 'ForegroundExtract', bg_redx_font of Bg_settings with index loop counter of Page_settings is not ZERO.	
+	COMMENT 
+	COMMENT Class 446
+	COMMENT In function 'ForegroundExtract', enum value is RD_PTR_ROT
+	COMMENT
+	COMMENT Class 447
+	COMMENT In function 'ForegroundExtract', enum value is RD_VERN	
+	COMMENT 
+	COMMENT Class 448
+	COMMENT In function 'ForegroundExtract', enum value is RD_VERN_POS		
+	COMMENT 
+	COMMENT Class 449
+	COMMENT In function 'ForegroundExtract', sdi of Parameters with index as loop counter is equal to sdi of Rd_settings
+	COMMENT with index as loop index value of Page_setting
+	COMMENT 
+	COMMENT Class 450
+	COMMENT In function 'ForegroundExtract', sdi of Parameters with index as loop counter is not equal to sdi of Rd_settings
+	COMMENT with index as loop index value of Page_setting
+	COMMENT 
+	COMMENT Class 451
+	COMMENT In function 'ForegroundExtract',rd_nb_font of Rd_settings with index as loop index value of Page_settings is equal to zero.
+	COMMENT 
+	COMMENT Class 452
+	COMMENT In function 'ForegroundExtract',rd_redx_font of Rd_settings with index as loop index value of Page_settings is equal to zero.
+	COMMENT 
+	COMMENT Class 453
+	COMMENT In function 'ForegroundExtract',rd_nb_font of Rd_settings with index as loop index value of Page_settings is not equal to zero.
+	COMMENT 
+	COMMENT Class 454
+	COMMENT In function 'ForegroundExtract',rd_redx_font of Rd_settings with index as loop index value of Page_settings is not equal to zero.
+	COMMENT 
+	COMMENT Class 455
+	COMMENT In function 'ForegroundExtract', sdi of Parameters _numbox with index as loop 
+	COMMENT counter is equal to sdi of Nb_settings with index as loop index value of Page_settings
+	COMMENT 
+	COMMENT Class 456
+	COMMENT In function 'ForegroundExtract', sdi of Parameters _numbox with index as loop 
+	COMMENT counter is not equal to sdi of Nb_settings with index as loop index value of Page_settings
+	COMMENT 
+	COMMENT Class 457
+	COMMENT In function 'ForegroundExtract',nb_font of Nb_settings with index as loop index value of Page_settings is equal to zero.
+	COMMENT 
+	COMMENT Class 458
+	COMMENT In function 'ForegroundExtract',nb_redx_font of Nb_settings with index as loop index value of Page_settings is equal to zero.
+	COMMENT 
+	COMMENT Class 459
+	COMMENT In function 'ForegroundExtract',nb_font of Nb_settings with index as loop index value of Page_settings is not equal to zero.
+	COMMENT 
+	COMMENT Class 460
+	COMMENT In function 'ForegroundExtract',nb_redx_font of Nb_settings with index as loop index value of Page_settings is not equal to zero.
+	COMMENT
+	COMMENT Class 461
+	COMMENT In function 'ForegroundExtract', Foreground element is other than CARROT_GRAPH.
+	COMMENT
+	COMMENT Class 462
+	COMMENT In function 'ForegroundExtract', Foreground element is other than TEXT_BOX_PDI.
+	COMMENT
+	COMMENT Class 463
+	COMMENT In function 'ForegroundExtract', Foreground element is other than TEXT_ONLY.
+	COMMENT
+	COMMENT Class 464
+	COMMENT In function 'ForegroundExtract', Foreground element is TEXT_BOX_PDI
+	COMMENT
+	COMMENT Class 465
+	COMMENT In function 'ForegroundExtract', enum value is TB_STRING
+	COMMENT
+	COMMENT Class 466
+	COMMENT In function 'ForegroundExtract', enum value is TB_AXIS	
+	COMMENT
+	COMMENT Class 467
+	COMMENT In function 'ForegroundExtract', enum value is TB_WIDTH		
+	COMMENT
+	COMMENT Class 468
+	COMMENT In function 'ForegroundExtract', enum value is TB_HEIGHT	
+	COMMENT
+	COMMENT Class 469
+	COMMENT In function 'ForegroundExtract', enum value is TB_MARGIN
+	COMMENT
+	COMMENT Class 470
+	COMMENT In function 'ForegroundExtract', enum value is TB_FRAME_WIDTH
+	COMMENT
+	COMMENT Class 471
+	COMMENT In function 'ForegroundExtract', enum value is TB_FRAME_COLOR
+	COMMENT
+	COMMENT Class 472
+	COMMENT In function 'ForegroundExtract', enum value is TB_BG_COLOR
+	COMMENT
+	COMMENT Class 473
+	COMMENT In function 'ForegroundExtract', enum value is TB_BIT
+	COMMENT
+	COMMENT Class 474
+	COMMENT In function 'ForegroundExtract', enum value is TB_CROSS_VAL
+	COMMENT
+	COMMENT Class 475
+	COMMENT In function 'ForegroundExtract', enum value is TB_ALIGN
+	COMMENT
+	COMMENT Class 476
+	COMMENT In function 'ForegroundExtract', enum value is TB_FONT
+	COMMENT
+	COMMENT Class 477
+	COMMENT In function 'ForegroundExtract', enum value is TB_COLOR
+	COMMENT
+	COMMENT Class 478
+	COMMENT In function 'ForegroundExtract', enum value is TB_REDX_AXIS
+	COMMENT
+	COMMENT Class 479
+	COMMENT In function 'ForegroundExtract', enum value is TB_REDX_WIDTH
+	COMMENT
+	COMMENT Class 480
+	COMMENT In function 'ForegroundExtract', enum value is TB_REDX_HEIGHT
+	COMMENT
+	COMMENT Class 481
+	COMMENT In function 'ForegroundExtract', enum value is TB_REDX_OFFSET_AXIS
+	COMMENT
+	COMMENT Class 482
+	COMMENT In function 'ForegroundExtract', enum value is TB_REDX_FONT
+	COMMENT
+	COMMENT Class 483
+	COMMENT In function 'ForegroundExtract', enum value is TB_REDX_TXT	
+	COMMENT
+	COMMENT Class 484
+	COMMENT In function 'ForegroundExtract', Foreground element is CARROT_GRAPH
+	COMMENT
+	COMMENT Class 485
+	COMMENT In function 'ForegroundExtract', enum value is CG_AXIS	
+	COMMENT
+	COMMENT Class 486	
+	COMMENT In function 'ForegroundExtract', enum value is CG_NO_LIN	
+	COMMENT
+	COMMENT Class 487	
+	COMMENT In function 'ForegroundExtract', enum value is CG_LIN_RANGE		
+	COMMENT
+	COMMENT Class 488	
+	COMMENT In function 'ForegroundExtract', enum value is CG_LIN_OFFSET	
+	COMMENT
+	COMMENT Class 489	
+	COMMENT In function 'ForegroundExtract', enum value is CG_NO_PTR		
+	COMMENT
+	COMMENT Class 490	
+	COMMENT In function 'ForegroundExtract', enum value is CG_PTR_COLOR	
+	COMMENT
+	COMMENT Class 491	
+	COMMENT In function 'ForegroundExtract', enum value is CG_PTR_SHAPE		
+	COMMENT
+	COMMENT Class 492	
+	COMMENT In function 'ForegroundExtract', enum value is CG_PTR_SCALE		
+	COMMENT
+	COMMENT Class 493	
+	COMMENT In function 'ForegroundExtract', enum value is CG_PTR_SCALE_OFFSET	
+	COMMENT
+	COMMENT Class 494	
+	COMMENT In function 'ForegroundExtract', enum value is CG_PTR_ROT
+	COMMENT
+	COMMENT Class 495	
+	COMMENT In function 'ForegroundExtract', enum value is CG_ORIEN	
+	COMMENT
+	COMMENT Class 496	
+	COMMENT In function 'ForegroundExtract', enum value is CG_NB_AXIS	
+	COMMENT
+	COMMENT Class 497	
+	COMMENT In function 'ForegroundExtract', enum value is CG_NB_FORMAT	
+	COMMENT
+	COMMENT Class 498	
+	COMMENT In function 'ForegroundExtract', enum value is CG_NB_FONT			
+	COMMENT
+	COMMENT Class 499	
+	COMMENT In function 'ForegroundExtract', enum value is CG_NO_LIM	
+	COMMENT
+	COMMENT Class 500	
+	COMMENT In function 'ForegroundExtract', enum value is CG_LIM_VAL	
+	COMMENT
+	COMMENT Class 501	
+	COMMENT In function 'ForegroundExtract', enum value is CG_LIM_COLOR	
+	COMMENT
+	COMMENT Class 502
+	COMMENT In function 'ForegroundExtract', enum value is CG_LIM_TYPE	
+	COMMENT
+	COMMENT Class 503
+	COMMENT In function 'ForegroundExtract', enum value is CG_REDX_AXIS
+	COMMENT
+	COMMENT Class 504	
+	COMMENT In function 'ForegroundExtract', enum value is CG_REDX_WIDTH	
+	COMMENT
+	COMMENT Class 505	
+	COMMENT In function 'ForegroundExtract', enum value is CG_REDX_HEIGHT	
+	COMMENT
+	COMMENT Class 506	
+	COMMENT In function 'ForegroundExtract', enum value is CG_REDX_OFFSET_AXIS	
+	COMMENT
+	COMMENT Class 507	
+	COMMENT In function 'ForegroundExtract', enum value is CG_REDX_FONT			
+	COMMENT
+	COMMENT Class 508	
+	COMMENT In function 'ForegroundExtract', enum value is CG_REDX_TXT	
+	COMMENT	
+	COMMENT Class 509
+	COMMENT In function 'ForegroundExtract', label of Parameters with index as loop counter is equal to label of Cg_settings
+	COMMENT with index asloop index value of Page_settings
+	COMMENT
+	COMMENT Class 510
+	COMMENT In function 'ForegroundExtract', label of Parameters with index as loop counter is not equal to label of Cg_settings
+	COMMENT with index asloop index value of Page_settings
+	COMMENT 
+	COMMENT Class 511
+	COMMENT In function 'ForegroundExtract', sdi of Parameters with index as loop counter is equal to sdi of Cg_settings with index as loop index value of Page_settings
+	COMMENT
+	COMMENT Class 512
+	COMMENT In function 'ForegroundExtract', sdi of Parameters with index as loop counter is not equal to sdi of Cg_settings with index as loop index value of Page_settings
+	COMMENT
+	COMMENT Class 513
+	COMMENT In function 'ForegroundExtract', cg_redx_font of Cg_settings with index as loop index value of Page_settings  is zero.
+	COMMENT
+	COMMENT Class 514
+	COMMENT In function 'ForegroundExtract', cg_redx_font of Cg_settings with index as loop index value of Page_settings  is not  zero.	
+	COMMENT
+	COMMENT Class 515
+	COMMENT In function 'ForegroundExtract', cg_nb_font of Cg_settings with index as loop index value of Page_settings  is zero.		
+	COMMENT
+	COMMENT Class 516
+	COMMENT In function 'ForegroundExtract', cg_nb_font of Cg_settings with index as loop index value of Page_settings  is not zero.		
+	COMMENT 	
+	COMMENT Class 517
+	COMMENT In function 'ForegroundExtract', tb_font of Tb_settings with Text box index counter of Page_settings  is equal to zero
+	COMMENT
+	COMMENT Class 518
+	COMMENT In function 'ForegroundExtract', tb_redx_font of Tb_settings with Text box index counter of Page_settings  is equal to zero.
+	COMMENT
+	COMMENT Class 519
+	COMMENT In function 'ForegroundExtract', tb_align of Tb_settings with Text box index counter of Page_settings  is equal to zero.		
+	COMMENT
+	COMMENT Class 520
+	COMMENT In function 'ForegroundExtract', tb_state of Tb_settings with Text box index counter of Page_settings  is equal to zero.	
+	COMMENT
+	COMMENT Class 521
+	COMMENT In function 'ForegroundExtract', tb_flash of Tb_settings with Text box index of Page_settings  is equal to zero.		
+	COMMENT	
+	COMMENT Class 522
+	COMMENT In function 'GlobalExtract', length count is less than SECTOR_SIZE 
+	COMMENT
+	COMMENT Class 523
+	COMMENT In function 'GlobalExtract', length count is greater than SECTOR_SIZE
+	COMMENT 
+	COMMENT Class 524
+	COMMENT In function 'GlobalExtract', length count is equal to SECTOR_SIZE
+	COMMENT
+	COMMENT Class 525
+	COMMENT In function 'GlobalExtract', enum value is equal to MAX_16_BITS
+	COMMENT
+	COMMENT Class 526
+	COMMENT In function 'GlobalExtract', enum value is not equal to MAX_16_BITS.
+	COMMENT
+	COMMENT Class 527
+	COMMENT The function 'GlobalExtract', calls 'MemSet'.	
+	COMMENT	
+	COMMENT Class 528
+	COMMENT In function 'GlobalExtract', enum value is ELEMENT_GLOBAL
+	COMMENT
+	COMMENT Class 529
+	COMMENT In function 'GlobalExtract', enum value is other than ELEMENT_GLOBAL.	
+	COMMENT	
+	COMMENT Class 530
+	COMMENT In function 'GlobalExtract', enum value is POLY_SHAPE
+	COMMENT	
+	COMMENT Class 531
+	COMMENT In function 'GlobalExtract', enum value is POLY_NO_PTS
+	COMMENT	
+	COMMENT Class 532
+	COMMENT In function 'GlobalExtract', enum value is POLY_PTS
+	COMMENT	
+	COMMENT Class 533
+	COMMENT In function 'GlobalExtract', enum value is POLY_INC_NO_PTS
+	COMMENT	
+	COMMENT Class 534
+	COMMENT In function 'GlobalExtract', enum value is POLY_INC_PTS	
+	COMMENT	
+	COMMENT Class 535
+	COMMENT In function 'GlobalExtract', poly_inc_no_pts of Pg_settings with indx of Page_settings is not equal to ZERO	
+	COMMENT	
+	COMMENT Class 536
+	COMMENT In function 'GlobalExtract', poly_inc_no_pts of Pg_settings with indx of Page_settings is not equal to ZERO	
+	COMMENT
+	COMMENT Class 537
+	COMMENT In function 'GlobalExtract', enum value is POLY_GRAPH
+	COMMENT
+	COMMENT Class 538
+	COMMENT In function 'GlobalExtract', enum value is other than POLY_GRAPH.	
+	COMMENT	
+	COMMENT Class 539
+	COMMENT In function 'A429Extract', enum value is LABEL		
+	COMMENT	
+	COMMENT Class 540
+	COMMENT In function 'TextAlign', align is equal to ALIGN_CENTER_LEFT	
+	COMMENT	
+	COMMENT Class 541
+	COMMENT In function 'TextAlign', align is equal to ALIGN_RIGHT	
+	COMMENT		
+	COMMENT Class 542
+	COMMENT In function 'TextAlign', align is equal to ALIGN_LEFT	
+	COMMENT		
+	COMMENT Class 543
+	COMMENT In function 'TextAlign', align is equal to ALIGN_CENTER	
+	COMMENT	
+	COMMENT Class 544
+	COMMENT In function 'TextFlash', flash is equal to TEXT_FLASH_OFF	
+	COMMENT	
+	COMMENT Class 545
+	COMMENT In function 'TextFlash', flash is equal to TEXT_FLASH_ON	
+	COMMENT	
+	COMMENT Class 546
+	COMMENT In function 'TextFlash', flash is othethan to TEXT_FLASH_ON, TEXT_FLASH_OFF	
+	COMMENT	
+	COMMENT Class 547
+	COMMENT In function 'TextState', state is equal to TXT_STATE_NORMAL
+	COMMENT	
+	COMMENT Class 548
+	COMMENT In function 'TextState', state is equal to TXT_STATE_REVERSE
+	COMMENT		
+	COMMENT Class 549
+	COMMENT In function 'TextState', state is otherthan to TXT_STATE_REVERSE, TXT_STATE_NORMAL
+	COMMENT			
+	COMMENT Class 550
+	COMMENT In function 'TextAlign', align is otherthan to ALIGN_CENTER, ALIGN_LEFT, ALIGN_RIGHT, ALIGN_CENTER_LEFT		
+	COMMENT 	
+	COMMENT Class 551
+	COMMENT In function 'FindParamType', type is equal to TYPE_NORMAL	
+	COMMENT 
+	COMMENT Class 552
+	COMMENT In function 'FindParamType', type is equal to TYPE_ADVISORY	
+	COMMENT 
+	COMMENT Class 553
+	COMMENT In function 'FindParamType', type is equal to TYPE_CAUTION	
+	COMMENT 	
+	COMMENT Class 554
+	COMMENT In function 'FindParamType', type is equal to TYPE_WARNING	
+	COMMENT 
+	COMMENT Class 555
+	COMMENT In function 'FindParamType', type is otherthan to TYPE_WARNING, TYPE_CAUTION, TYPE_ADVISORY, TYPE_NORMAL
+	COMMENT
+	COMMENT Class 556
+	COMMENT In function 'ForegroundExtract', Foreground element is TEXT_ONLY
+	COMMENT
+	COMMENT Class 557
+	COMMENT In function 'ForegroundExtract', enum value is TXT_STRING
+	COMMENT
+	COMMENT Class 558
+	COMMENT In function 'ForegroundExtract', enum value is TXT_AXIS		
+	COMMENT
+	COMMENT Class 559
+	COMMENT In function 'ForegroundExtract', enum value is TXT_BIT	
+	COMMENT
+	COMMENT Class 560
+	COMMENT In function 'ForegroundExtract', enum value is TXT_CROSS_VAL
+	COMMENT
+	COMMENT Class 561
+	COMMENT In function 'ForegroundExtract', enum value is TXT_ALIGN		
+	COMMENT
+	COMMENT Class 562
+	COMMENT In function 'ForegroundExtract', enum value is TXT_FONT		
+	COMMENT
+	COMMENT Class 563
+	COMMENT In function 'ForegroundExtract', enum value is TXT_COLOR
+	COMMENT
+	COMMENT Class 564
+	COMMENT In function 'ForegroundExtract', enum value is TXT_STATE		
+	COMMENT
+	COMMENT Class 565
+	COMMENT In function 'ForegroundExtract', enum value is TXT_FLASH	
+	COMMENT
+	COMMENT Class 566
+	COMMENT In function 'ForegroundExtract', enum value is TXT_REDX_AXIS		
+	COMMENT
+	COMMENT Class 567
+	COMMENT In function 'ForegroundExtract', enum value is TXT_REDX_WIDTH		
+	COMMENT
+	COMMENT Class 568
+	COMMENT In function 'ForegroundExtract', enum value is TXT_REDX_HEIGHT
+	COMMENT
+	COMMENT Class 569
+	COMMENT In function 'ForegroundExtract', enum value is TXT_REDX_OFFSET_AXIS		
+	COMMENT
+	COMMENT Class 570
+	COMMENT In function 'ForegroundExtract', enum value is TXT_REDX_FONT	
+	COMMENT
+	COMMENT Class 571
+	COMMENT In function 'ForegroundExtract', enum value is TXT_REDX_TXT	
+	COMMENT	
+	COMMENT Class 572
+	COMMENT In function 'ForegroundExtract', enum value is not SDI
+	COMMENT
+	COMMENT Class 573
+	COMMENT In function 'ForegroundExtract', txt_font of Text_settings with Text index counter of Page_settings is not equal to zero	
+	COMMENT
+	COMMENT Class 574
+	COMMENT In function 'ForegroundExtract', txt_redx_font of Text_settings with Text index counter of Page_settings is not equal to zero.
+	COMMENT
+	COMMENT Class 575
+	COMMENT In function 'ForegroundExtract', txt_align of Text_settings with Text index counter of Page_settings is not equal to zero.
+	COMMENT	
+	COMMENT Class 576
+	COMMENT In function 'ForegroundExtract', txt_state of Text_settings with Text index counter of Page_settings is not equal to zero
+	COMMENT	
+	COMMENT Class 577
+	COMMENT In function 'ForegroundExtract', txt_state of Text_settings with Text index counter of Page_settings is not equal to zero	
+	COMMENT
+	COMMENT Class 578
+	COMMENT In function 'ForegroundExtract', txt_font of Text_settings with Text index counter of Page_settings is equal to zero	
+	COMMENT
+	COMMENT Class 579
+	COMMENT In function 'ForegroundExtract', txt_redx_font of Text_settings with Text index counter of Page_settings is equal to zero.
+	COMMENT
+	COMMENT Class 580
+	COMMENT In function 'ForegroundExtract', txt_align of Text_settings with Text index counter of Page_settings is equal to zero.
+	COMMENT	
+	COMMENT Class 581
+	COMMENT In function 'ForegroundExtract', txt_state of Text_settings with Text index counter of Page_settings is equal to zero
+	COMMENT	
+	COMMENT Class 582
+	COMMENT In function 'ForegroundExtract', txt_state of Text_settings with Text index counter of Page_settings is equal to zero		
+	COMMENT	
+	COMMENT Invalid Class(es)
+	COMMENT None
+	COMMENT </ECD>
+	
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+ 
+SIMUL
+
+    DEFINE STUB hdudispfpdidata_c 
+
+    #void PdiDataCheck();
+  	
+	END DEFINE 
+
+	DEFINE STUB hdudispfpdidata_c
+
+		#void MemSet(void * _in p_dest, T_UINT16  _in val, T_UINT16  _in cnt);
+		
+	END DEFINE 
+
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+--No special things that have to be done on the host to run the test.
+
+--ELSE
+
+--No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+-- Environment of the file hdudispfpdidata.c
+
+--ENVIRONMENT ENV_hdudispfpdidata_c
+
+    --None 
+
+--END ENVIRONMENT -- ENV_hdudispfpdidata_c
+
+--USE ENV_hdudispfpdidata_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service PdiPageDataInit
+--------------------------------------------------------------------------------
+SERVICE PdiPageDataInit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT8 page_num;
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description 
+    COMMENT <TD>
+    COMMENT [hdudispfpdidata-PdiPageDataInit-DB-LLR-001]
+    COMMENT The function calls the function PageExtract with sum of PAGE_NUM_BASE_ADDR and product of page_num and 
+    COMMENT PAGE_NUM_BASE_OFFSET as its function parameters.
+    COMMENT Equivalence Class 170
+    COMMENT 
+    COMMENT [hdudispfpdidata-PageExtract-DB-LLR-002]
+    COMMENT The function sets Acdt_flag to FALSE
+    COMMENT This LLR verifies 'hdudispfpdidata-PdiPageDataInit-DB-LLR-001'
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfpdidata-PdiPageDataInit-DB-LLR-002]
+    COMMENT The function calls the function ForegroundExtract with sum of PAGE_NUM_BASE_ADDR,(page_num multiplied by 
+    COMMENT PAGE_NUM_BASE_OFFSET) and FRGRND_ADDR_60 as its parameter.
+    COMMENT Equivalence Class 171
+    COMMENT 
+    COMMENT [hdudispfpdidata-ForegroundExtract-DB-LLR-002]
+    COMMENT The function does the following
+    COMMENT a.  sets bar graph count(Bg_cnt) to zero
+    COMMENT b.  sets round dial count(Rd_cnt) to zero
+    COMMENT c.  sets number box count(Nb_cnt) to zero
+    COMMENT This LLR verifies 'hdudispfpdidata-PdiPageDataInit-DB-LLR-002'
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfpdidata-ForegroundExtract-DB-LLR-077]
+    COMMENT The function loops zero to MAX_NUM_PAGE_DIALS -1 times and in each loop call the function MemSet with parameters reference to Ap_page0_dials with
+    COMMENT index as loop counter , zero and sizeof of T_ROUNDDIALDEF.
+    COMMENT This LLR verifies 'hdudispfpdidata-PdiPageDataInit-DB-LLR-002'
+    COMMENT Equivalence Class 389
+    COMMENT
+    COMMENT [hdudispfpdidata-PdiPageDataInit-DB-LLR-003]
+    COMMENT The function calls the function CasLocationSett with result of (page_num multiplied by CAS_LOC_MAX) 
+    COMMENT added to CAS_SETTING_ADDRESS as its parameter.
+    COMMENT Equivalence Class 172
+    COMMENT
+    COMMENT [hdudispfpdidata-CasLocationSett-DB-LLR-003]
+    COMMENT The function loops for ZERO to CAS_LOC_MAX -1(Loop branch:2 loops or more and length is less than CAS_LOC_MAX) and does the following
+    COMMENT iii)Does the following when enum value is CAS_NUM_ROWS.
+    COMMENT Provides CAS number of row information by setting cas_num_rows  of Cas_loc_settings of Page_settings  to the values read by 
+    COMMENT CNOR flash at result of addition of cas_sett_addr, offset value and length and increments the length by TWO 
+    COMMENT This LLR verifies 'hdudispfpdidata-PdiPageDataInit-DB-LLR-003'
+    COMMENT Equivalence Class 90,96
+    COMMENT
+    COMMENT [hdudispfpdidata-CasLocationSett-DB-LLR-004]
+    COMMENT The function does the following to set members of Cas_messages_setting.
+    COMMENT 6.  Sets row of Cas_messages_setting to cas_num_rows of Cas_loc_settings of  Page_settings
+    COMMENT This LLR verifies 'hdudispfpdidata-PdiPageDataInit-DB-LLR-003'
+    COMMENT Equivalence Class None      
+    COMMENT
+    COMMENT [hdudispfpdidata-PdiPageDataInit-DB-LLR-004]
+    COMMENT The function calls ExceedExtract with sum of PAGE_EXCEEDANCE_ADDR and product of Page_num , 
+    COMMENT MAX_NUM_EXCE and MAX_LEN_EXCE as its function parameters.
+    COMMENT Equivalence Class 173  
+    COMMENT 
+    COMMENT [hdudispfpdidata-ExceedExtract-DB-LLR-001]
+    COMMENT The function resets the value of Exceed_cnt to ZERO.
+    COMMENT This LLR verifies 'hdudispfpdidata-PdiPageDataInit-DB-LLR-004'
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfpdidata-ExceedExtract-DB-LLR-003]
+    COMMENT The function loops for ZERO to MAX_NUM_EXCE-1(Loop branch:2 loops or more) and does the following
+    COMMENT i)  resets the length to ZERO
+    COMMENT ii) loops till length is less than MAX_LEN_EXCE(Loop branch:1 loop) and read the enum value from NOR flash at result of  
+    COMMENT addition of address, offset value and length and increment the length by TWO.
+    COMMENT a)  Breaks the loop when enum value is MAX_16_BITS
+    COMMENT This LLR verifies 'hdudispfpdidata-PdiPageDataInit-DB-LLR-004'
+    COMMENT Equivalence Class 120,123
+    COMMENT </TD>
+    
+    ELEMENT
+                
+        COMMENT INPUT SECTION:
+        
+            --Holds page_num value
+            VAR page_num,                       init = 0,                                                           ev = init
+
+            --Holds PTU_PAGE_NUM_BASE_ADDR value
+            VAR PTU_PAGE_NUM_BASE_ADDR[0..1],   init = 0xFF,                                                            ev = init  
+                        
+            --Holds PTU_PAGE_NUM_BASE_ADDR value            
+            VAR PTU_PAGE_NUM_BASE_ADDR[60..61], init = 0xFF,                                                        ev = init
+
+            --Holds PTU_CAS_SETTING_ADDRESS value
+            ARRAY PTU_CAS_SETTING_ADDRESS,      init = {0=>0x57,1=>0x04,2=>0x01,3=>0x11,4=>0xFF,5=>0xFF,
+            &                                               others=>0x01},                                          ev = init
+            
+            --Holds PTU_PAGE_EXCEEDANCE_ADDR value
+            ARRAY PTU_PAGE_EXCEEDANCE_ADDR,     init = {0..1=>0xFF,20..21=>0xFF,40..41=>0xFF,60..61=>0xFF,80..81=>0xFF,100..101=>0xFF,
+            &                                           120..121=>0xFF,140..141=>0xFF,160..161=>0xFF,180..181=>0xFF,200..201=>0xFF,
+            &                                           220..221=>0xFF,240..241=>0xFF,260..261=>0xFF,280..281=>0xFF,300..301=>0xFF,
+            &                                           320..321=>0xFF,340..341=>0xFF,360..361=>0xFF,380..381=>0xFF,400..401=>0xFF,
+            &                                           420..421=>0xFF,440..441=>0xFF,460..461=>0xFF,480..481=>0xFF,500..501=>0xFF,
+            &                                           520..521=>0xFF,540..541=>0xFF,580..581=>0xFF,600..601=>0xFF,620..621=>0xFF,                     
+            &                                           others=>0x10},                      ev = init     
+			
+
+            
+
+        COMMENT INPUT/OUTPUT SECTION:
+        
+            --None
+        
+        COMMENT OUTPUT SECTION:
+
+            --Holds Acdt_flag value
+            VAR Acdt_flag,                                      init = TRUE,                                        ev =FALSE       
+            
+            --holds Bg_cnt value
+            VAR Bg_cnt,                                         init = 0x10,                                        ev = 0x00
+
+            --holds Rd_cnt value
+            VAR Rd_cnt,                                         init = 0x10,                                        ev = 0x00
+
+            --holds Nb_cnt value
+            VAR Nb_cnt,                                         init = 0x10,                                        ev = 0x00
+			
+            VAR Cg_cnt,                                         init = 0x10,                                        ev = 0x00
+			
+            VAR Tb_cnt,                                         init = 0x10,                                        ev = 0x00
+			
+            VAR Text_cnt,                                         init = 0x10,                                        ev = 0x00			
+
+            --Holds Page_cas value
+            VAR Page_cas,                                       init = 0x02,                                        ev = 0x00
+            
+            --Holds members of structure Page_settings 
+            VAR Page_settings.Cas_loc_settings.cas_num_rows,    init = 0xFFFF,                                      ev = 0x1101
+            
+            --Holds members of structure Cas_messages_setting           
+            VAR Cas_messages_setting.row,                       init = 0x1F,                                        ev = 0x01
+
+        -- Stub calls:
+        SIMUL
+        
+            --copies value to destination buffer
+
+			STUB PdiDataCheck()			
+			
+             STUB MemSet 1=>(&Ap_page0_dials[0],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 2=>(&Ap_page0_dials[1],0,sizeof(T_ROUNDDIALDEF))
+
+            STUB MemSet 3=>(&Ap_page0_dials[2],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 4=>(&Ap_page0_dials[3],0,sizeof(T_ROUNDDIALDEF))            
+            
+            STUB MemSet 5=>(&Ap_page0_dials[4],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 6=>(&Ap_page0_dials[5],0,sizeof(T_ROUNDDIALDEF))
+
+            STUB MemSet 7=>(&Ap_page0_dials[6],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 8=>(&Ap_page0_dials[7],0,sizeof(T_ROUNDDIALDEF))                
+            
+            STUB MemSet 9=>(&Ap_page0_dials[8],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 10=>(&Ap_page0_dials[9],0,sizeof(T_ROUNDDIALDEF))
+
+            STUB MemSet 11=>(&Ap_page0_dials[10],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 12=>(&Ap_page0_dials[11],0,sizeof(T_ROUNDDIALDEF))              
+            
+            STUB MemSet 13=>(&Ap_page0_dials[12],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 14=>(&Ap_page0_dials[13],0,sizeof(T_ROUNDDIALDEF))
+
+            STUB MemSet 15=>(&Ap_page0_dials[14],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 16=>(&Ap_page0_dials[15],0,sizeof(T_ROUNDDIALDEF))              
+            
+            STUB MemSet 17=>(&Ap_page0_dials[16],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 18=>(&Ap_page0_dials[17],0,sizeof(T_ROUNDDIALDEF))
+
+            STUB MemSet 19=>(&Ap_page0_dials[18],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 20=>(&Ap_page0_dials[19],0,sizeof(T_ROUNDDIALDEF))              
+            
+            STUB MemSet 21=>(&Ap_page0_dials[20],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 22=>(&Ap_page0_dials[21],0,sizeof(T_ROUNDDIALDEF))
+
+            STUB MemSet 23=>(&Ap_page0_dials[22],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 24=>(&Ap_page0_dials[23],0,sizeof(T_ROUNDDIALDEF))      
+            
+            STUB MemSet 25=>(&Ap_page0_dials[24],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 26=>(&Ap_page0_dials[25],0,sizeof(T_ROUNDDIALDEF))
+
+            STUB MemSet 27=>(&Ap_page0_dials[26],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 28=>(&Ap_page0_dials[27],0,sizeof(T_ROUNDDIALDEF))  
+            
+            STUB MemSet 29=>(&Ap_page0_dials[28],0,sizeof(T_ROUNDDIALDEF))
+            
+            STUB MemSet 30=>(&Ap_page0_dials[29],0,sizeof(T_ROUNDDIALDEF))  
+            
+            STUB MemSet 31=>(&Page_num_boxes[0],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 32=>(&Page_num_boxes[1],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 33=>(&Page_num_boxes[2],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 34=>(&Page_num_boxes[3],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 35=>(&Page_num_boxes[4],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 36=>(&Page_num_boxes[5],0,sizeof(T_SNUMBOXDEF))
+
+            STUB MemSet 37=>(&Page_num_boxes[6],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 38=>(&Page_num_boxes[7],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 39=>(&Page_num_boxes[8],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 40=>(&Page_num_boxes[9],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 41=>(&Page_num_boxes[10],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 42=>(&Page_num_boxes[11],0,sizeof(T_SNUMBOXDEF))
+
+            STUB MemSet 43=>(&Page_num_boxes[12],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 44=>(&Page_num_boxes[13],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 45=>(&Page_num_boxes[14],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 46=>(&Page_num_boxes[15],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 47=>(&Page_num_boxes[16],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 48=>(&Page_num_boxes[17],0,sizeof(T_SNUMBOXDEF))
+
+            STUB MemSet 49=>(&Page_num_boxes[18],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 50=>(&Page_num_boxes[19],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 51=>(&Page_num_boxes[20],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 52=>(&Page_num_boxes[21],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 53=>(&Page_num_boxes[22],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 54=>(&Page_num_boxes[23],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 55=>(&Page_num_boxes[24],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 56=>(&Page_num_boxes[25],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 57=>(&Page_num_boxes[26],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 58=>(&Page_num_boxes[27],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 59=>(&Page_num_boxes[28],0,sizeof(T_SNUMBOXDEF))
+            
+            STUB MemSet 60=>(&Page_num_boxes[29],0,sizeof(T_SNUMBOXDEF))
+			
+--			STUB MemSet 61..90 =>(&Ap_page2_carrot[29],0,sizeof(T_CARROTGRAPHDEF))
+
+			STUB MemSet 61 =>(&Ap_page2_carrot[0],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 62=>(&Ap_page2_carrot[1],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 63=>(&Ap_page2_carrot[2],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 64=>(&Ap_page2_carrot[3],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 65=>(&Ap_page2_carrot[4],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 66=>(&Ap_page2_carrot[5],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 67=>(&Ap_page2_carrot[6],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 68=>(&Ap_page2_carrot[7],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 69=>(&Ap_page2_carrot[8],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 70=>(&Ap_page2_carrot[9],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 71=>(&Ap_page2_carrot[10],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 72=>(&Ap_page2_carrot[11],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 73=>(&Ap_page2_carrot[12],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 74=>(&Ap_page2_carrot[13],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 75=>(&Ap_page2_carrot[14],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 76=>(&Ap_page2_carrot[15],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 77=>(&Ap_page2_carrot[16],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 78=>(&Ap_page2_carrot[17],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 79=>(&Ap_page2_carrot[18],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 80=>(&Ap_page2_carrot[19],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 81=>(&Ap_page2_carrot[20],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 82=>(&Ap_page2_carrot[21],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 83=>(&Ap_page2_carrot[22],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 84=>(&Ap_page2_carrot[23],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 85=>(&Ap_page2_carrot[24],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 86=>(&Ap_page2_carrot[25],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 87=>(&Ap_page2_carrot[26],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 88=>(&Ap_page2_carrot[27],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 89=>(&Ap_page2_carrot[28],0,sizeof(T_CARROTGRAPHDEF))
+			
+			STUB MemSet 90=>(&Ap_page2_carrot[29],0,sizeof(T_CARROTGRAPHDEF))	
+						
+            
+        END SIMUL
+
+        -- Calling the unit under test
+        #PdiPageDataInit(page_num);
+
+    END ELEMENT
+
+END TEST -- TEST 1
+
+END SERVICE -- PdiPageDataInit

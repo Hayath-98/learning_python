@@ -1,0 +1,646 @@
+HEADER hdudispfrterror , Source Code Ver : 1.6 , TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+-- Author Name      	: 	Santosh Mithari
+--
+-- File Name        	: 	hdudispfrterror.ptu
+--
+-- Test Creation Date  	: 	30.10.2017
+--
+-- Tested Functions 	: 	RterrWidget
+--									  		  
+-- Version History      :
+--
+-- TEST-VERSION         TEST-DATE         TESTER NAME           MODIFICATIONS
+-- ------------        -----------        -----------           -------------
+--    1.1             	30.10.2017       Santosh Mithari      	
+--										 Manju Kiran M			Created the PTU file
+--	  1.2				10.11.2017		 Manju Kiran M 			Updated as per #PR100171
+--	  1.3				14.11.2017		 Manju Kiran M 			Updated as per #PR100171
+--	  1.4				30.07.2020		 Harshitha R			Updated as per #PR100259
+--	  1.5				15.09.2020		 Harshitha R			Updated as per #PR100281
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfrterror.h"
+##include "hdulibbasictypes.h"
+##include "hdudispfbinascii.h"
+##include "hdudispffonts.h"
+##include "hdudispfconfig.h"
+##include "hdudispftext.h"
+##include "hdudispfwdog.h"
+##include "hdudispfpanel.h"
+##include "hdudispfforeground.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #T_APPDATA_PANELSTRUCT ptu_Appdata_appdata;
+	#T_APPDATA_PANELSTRUCT *Appdata_appdata = (T_APPDATA_PANELSTRUCT*)&ptu_Appdata_appdata;
+	# volatile  T_INT32 Itm_rx_buffer;
+	#extern T_UINT32 PTU_data[1920];
+	##define M_TWENTY 20
+	##define M_TWENTY_FIVE 25
+	##define M_SEVENTY_FIVE 75
+	##define M_HUNDRED_TEN 110
+	##define M_ONEHUNDRED_TWENTY_FIVE 125
+
+-- Declarations of the temporary variables of the tested file
+
+	-- Temporary variables created to verify stub parameters 
+    # T_UINT32 PTU_src;
+    # T_CHAR PTU_dest[9];
+	
+    -- Temporary variables used for loop usage
+    # T_UINT32 PTU_i,PTU_j,flag;
+	
+	
+	
+	
+	-- Temporary variables created to verify the parameter 'pc_string' character by character.  
+    # T_UINT8 PTU_string1[2];
+    # T_UINT8 PTU_string2[3];
+    # T_UINT8 PTU_string3[8];
+    # T_UINT8 PTU_string4[4];
+    # T_UINT8 PTU_string5[9];
+    # T_UINT8 PTU_string6[9];
+    # T_UINT8 PTU_string7[2];
+    # T_UINT8 PTU_string8[11];
+	
+	
+--------------------------------------------------------------------------------
+
+BEGIN
+
+	COMMENT Author Name         : 	Santosh Mithari 
+	COMMENT							Manju Kiran M
+	COMMENT
+	COMMENT File Name           : 	hdudispfrterror.ptu
+	COMMENT 
+	COMMENT Tested Functions    :  	RterrWidget
+	COMMENT
+	COMMENT 
+	COMMENT Assumptions and Constraints
+	COMMENT <AC>
+	COMMENT 
+	COMMENT Assumption(s): 
+	COMMENT None
+	COMMENT
+	COMMENT Constraint(s):
+	COMMENT 
+	COMMENT  1.Source file "hdudispfrterror.c" is modified for testing purpose.    
+	COMMENT    The function 'RterrWidget' is modified to break infinite loop.
+	COMMENT   Code Snippet:
+	COMMENT     /*local variable declared for testing purpose*/
+	COMMENT		T_UINT16 PTU_count =0;
+	COMMENT		....
+	COMMENT		while (ONE)
+	COMMENT	   	{ 
+	COMMENT		   /*Modified for testing purpose to terminate infinite loop*/
+	COMMENT	   	 PTU_count++;
+	COMMENT	   		 if(PTU_count == 4)
+	COMMENT	   	  	 {
+	COMMENT	 		 	break;
+	COMMENT	   	  	 }
+	COMMENT	    	 else
+	COMMENT	    	  {
+	COMMENT	    	  	;
+	COMMENT	          }
+	COMMENT     }	
+	COMMENT	Hence while loop cannot be covered for 0 and 1 times and coverage cannot be obtained for the FALSE part of while condition
+	COMMENT   
+	COMMENT  2. modified for testing purpose, as the actual values of macro results in a very huge number
+	COMMENT		when the macro FG_FB_SIZE is used,'PANEL_WIDTH' and 'PANEL_HEIGHT' need to be given 20 and 12 rspectively for testing purpose in ptu
+	COMMENT
+	COMMENT		/*Modified for testing purpose*/
+	COMMENT		#define  PANEL_WIDTH                ((T_UINT16)20) 
+	COMMENT		#define  PANEL_HEIGHT               ((T_UINT16)12) 
+	COMMENT		....
+	COMMENT
+	COMMENT  3. Source file "hdudispfrterror.c" is modified for stubbing hardware address.
+	COMMENT	
+	COMMENT		Code Snippet:
+	COMMENT		....
+	COMMENT		/*Commented for testing purpose*/
+	COMMENT		/*#define SDRAM_BASE 0xC0000000*/
+	COMMENT
+	COMMENT		/* Modified macro by stubbing hardware address for testing purpose*/ 
+	COMMENT		T_UINT32 PTU_data[1920];
+	COMMENT	
+	COMMENT		#define SDRAM_BASE (T_UINT32 *) &PTU_data[0]
+	COMMENT		....
+	COMMENT
+	COMMENT	4. The for loop in the function 'RterrWidget' cannot be covered for 0 and 1 times as it is controled by
+	COMMENT	   a local variable and macro FG_FB_SIZE.
+	COMMENT
+	COMMENT	5. Following Test script related warning is observed during Target Execution for stub function return value:
+	COMMENT	   warning #120-D: 
+	COMMENT	   return value type does not match the function type
+	COMMENT	   return(Attol_ptr_out->ret);
+	COMMENT
+	COMMENT </AC>
+
+	COMMENT Equivalence Class Description
+	COMMENT <ECD>
+	COMMENT
+	COMMENT Valid Class(es)
+	COMMENT
+	COMMENT Class 1
+	COMMENT	The function 'RterrWidget', calls the function 'LCDBackgroundOn'.
+	COMMENT
+	COMMENT Class 2
+	COMMENT	The function 'RterrWidget', calls the function 'BinasByteFormatInfo'.
+	COMMENT
+	COMMENT Class 3
+	COMMENT	The function 'RterrWidget', calls the function 'TextDispString'.
+	COMMENT
+	COMMENT Class 4
+	COMMENT	The function 'RterrWidget', calls the function 'ForegroundReDraw1'.
+	COMMENT
+	COMMENT Invalid class(es)
+	COMMENT 
+	COMMENT Class 5
+    COMMENT In function 'RterrWidget', invalid reference is passed to the function parameter pc_file.
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'RterrWidget', invalid reference is passed to the function parameter pc_message.
+	COMMENT
+	COMMENT </ECD>
+
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+	DEFINE STUB hdudispfrterror_c
+    
+		#void ForegroundReDraw1(void);
+		
+		#void TextDispString(T_INT8 _no *pc_string, T_UINT16 _in u16_x, T_UINT16 _in u16_y, T_ETXFONT _in e_tx_font, T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv, T_ETXALIGN _in e_tx_align)
+		# {
+        #   if(flag == 1)
+        #	{
+        # 		for(PTU_i=0;PTU_i<2;PTU_i++)
+        #  		PTU_string1[PTU_i] = pc_string[PTU_i];
+        #	}
+        #   else if(flag == 2)
+        #	{
+        # 		for(PTU_i=0;PTU_i<3;PTU_i++)
+        #  		PTU_string2[PTU_i] = pc_string[PTU_i];
+        #	}
+        #   else if(flag == 3)
+        #	{
+        # 		for(PTU_i=0;PTU_i<8;PTU_i++)
+        #  		PTU_string3[PTU_i] = pc_string[PTU_i];
+        #	}
+        #   else if(flag == 4)
+        #	{
+        # 		for(PTU_i=0;PTU_i<4;PTU_i++)
+        #  		PTU_string4[PTU_i] = pc_string[PTU_i];
+        #	}
+        #   else if(flag == 5)
+        #	{
+        # 		for(PTU_i=0;PTU_i<9;PTU_i++)
+        #  		PTU_string5[PTU_i] = pc_string[PTU_i];
+        #	}
+        #   else if(flag == 6)
+        #	{
+        # 		for(PTU_i=0;PTU_i<9;PTU_i++)
+        #  		PTU_string6[PTU_i] = pc_string[PTU_i];
+        #	}
+        #   else if(flag == 7)
+        #	{
+        # 		for(PTU_i=0;PTU_i<2;PTU_i++)
+        #  		PTU_string7[PTU_i] = pc_string[PTU_i];
+        #	}
+        #   else if(flag == 8)
+        #	{
+        # 		for(PTU_i=0;PTU_i<11;PTU_i++)
+        #		{
+        #  		PTU_string8[PTU_i] = pc_string[PTU_i];
+        #		flag = 1;
+        #   	}
+        #	}
+        # flag=flag+1;
+        # }
+		
+		#T_INT8* BinasByteFormatInfo(void _no *src, T_UINT16 _in format, T_INT8 _no *dest)
+		#{
+		# PTU_src=100;
+        # src = &PTU_src;
+        # for(PTU_j=0;PTU_j<9;PTU_j++)
+        #	 {
+        #		PTU_dest[PTU_j]=dest[PTU_j];
+        #  }
+        # }
+		
+		
+		#void LCDBackgroundOn(void);
+		
+		
+	END DEFINE
+	
+ELSE_SIMUL
+
+    --No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+--No special things that have to be done on the host to run the test.
+
+--ELSE
+
+--No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+--Environment of the hdudispfrterror.c
+
+--ENVIRONMENT ENV_hdudispfrterror_c
+
+    --None
+
+--END ENVIRONMENT  --ENV_hdudispfrterror_c
+--USE ENV_hdudispfrterror_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RterrWidget
+--------------------------------------------------------------------------------
+SERVICE RterrWidget
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_CHAR  pc_file[200];
+    #T_INT32 s32_line_number;
+    #T_CHAR  pc_message[200];
+
+    ENVIRONMENT ENV_RterrWidget
+		
+		VAR s32_line_number,		init = 0,			ev = init
+		
+    END ENVIRONMENT -- ENV_RterrWidget
+    
+	USE ENV_RterrWidget
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrterror-RterrWidget-DB-LLR-001]
+    COMMENT The function 'RterrWidget' does following:
+	COMMENT	i.calls the function 'LCDBackgroundOn'.
+	COMMENT	ii.loops from 0 to FG_FB_SIZE*4 and clear the NVRAM(with base address 0xC0000000)
+	COMMENT	by setting to 0 and increment the NVRAM address by one.
+	COMMENT	iii.calls the function 'BinasByteFormatInfo' with reference to s32_line_number,
+	COMMENT	FOURB+FOURW and address of destination ascii array as parameters.
+	COMMENT Equivalence Class 1,2
+    COMMENT
+    COMMENT [hdudispfrterror-RterrWidget-DB-LLR-002]
+    COMMENT The function loop infinitely and does nothing.
+    COMMENT Equivalence Class None.
+	COMMENT	
+	COMMENT	[hdudispfrterror-RterrWidget-DB-LLR-003]
+	COMMENT The function 'RterrWidget' does the following:
+	COMMENT	i.calls the function 'TextDispString' with "\r\n", 20, 0, E_SMALL_FONT, RED,
+	COMMENT	TX_NO_FLASH, V_NORMAL and ALIGN_LEFT as parameters.
+	COMMENT	ii.calls the function 'TextDispString' with address of pc_message, 20, 25,
+	COMMENT	E_SMALL_FONT, RED, TX_NO_FLASH, V_NORMAL and ALIGN_LEFT as parameters.
+	COMMENT	iii.calls the function 'TextDispString' with "\r\nFile: ", 20, 25, E_SMALL_FONT,
+	COMMENT RED, TX_NO_FLASH, V_NORMAL and ALIGN_LEFT as parameters.
+	COMMENT	iv.calls the function 'TextDispString' with address of pc_file, 20, 75, E_SMALL_FONT,
+	COMMENT	RED, TX_NO_FLASH, V_NORMAL and ALIGN_LEFT as parameters.
+	COMMENT	v.calls the function 'TextDispString' with "\r\nLine #:", 20, 75, E_SMALL_FONT, RED,
+	COMMENT	TX_NO_FLASH, V_NORMAL and ALIGN_LEFT as parameters.
+	COMMENT	vi.calls the function 'TextDispString' with address of ascii array of line number, 110,
+	COMMENT	100, E_SMALL_FONT, RED, TX_NO_FLASH, V_NORMAL and ALIGN_LEFT as parameters.
+	COMMENT	vii.calls the function 'TextDispString' with "\r\n", 20, 100, E_SMALL_FONT, RED, TX_NO_FLASH,
+	COMMENT	V_NORMAL and ALIGN_LEFT as parameters.
+	COMMENT	viii.calls the function 'TextDispString' with "\r\nHalted!!!", 20, 125, E_SMALL_FONT, RED,
+	COMMENT	TX_NO_FLASH, V_NORMAL and ALIGN_LEFT as parameters.
+	COMMENT	ix.calls the function 'ForegroundReDraw1'.
+	COMMENT Equivalence Class 3,4
+	COMMENT
+    COMMENT </TD> 
+
+    ELEMENT
+
+		COMMENT INPUT SECTION:
+			
+			VAR Appdata_appdata->panelWidth,		init = 20, 			ev = init
+
+          	VAR Appdata_appdata->panelHeight,		init = 12, 			ev = init
+
+				
+			
+				-- Parameter "pc_file" initialized before usage. 
+        	VAR pc_file[0],					init = 'A',				ev = init
+        	VAR pc_file[1],					init = 'B',				ev = init
+        	VAR pc_file[2],					init = 'C',				ev = init
+        	VAR pc_file[3],					init = 'Z',				ev = init
+			
+        	-- Parameter "pc_message" initialized before usage.
+        	VAR pc_message[0],				init = 'x',				ev = init
+        	VAR pc_message[1],				init = 'y',				ev = init
+        	VAR pc_message[2],				init = 'z',				ev = init
+			
+
+		--VAR PTU_data[0],					init = 100000,			ev = init 
+        	-- Specifies Line Number
+        	VAR s32_line_number,     		init = 100  ,        	ev = init 
+	
+        COMMENT INPUT/OUTPUT SECTION:	
+
+        	-- Variable 'flag' is initialized before usage
+        	VAR flag , 		  				init = 1 , 	     		ev = 2
+			
+			--Variable used to verify local variable 'pu32_dest'
+			ARRAY PTU_data[0..1919],			init = 10 ,			ev = 0
+			
+        COMMENT OUTPUT SECTION:
+
+        	-- Holds the source value
+        	VAR PTU_src,		  			init = 20 ,        		ev = 100  
+			
+        	-- 'PTU_dest' holds the 'Ascii_num' value
+        	VAR PTU_dest[0],     	 		init = ONE ,    	   	ev = ZERO
+        	VAR PTU_dest[1],     	 		init = ONE ,    	   	ev = ZERO
+        	VAR PTU_dest[2],     	 		init = ONE ,    	   	ev = ZERO
+        	VAR PTU_dest[3],     	 		init = ONE ,    	   	ev = ZERO
+        	VAR PTU_dest[4],     	 		init = ONE ,    	   	ev = ZERO
+        	VAR PTU_dest[5],     	 		init = ONE ,    	   	ev = ZERO
+        	VAR PTU_dest[6],     	 		init = ONE ,    	   	ev = ZERO
+        	VAR PTU_dest[7],     	 		init = ONE ,    	   	ev = ZERO
+        	VAR PTU_dest[8],     	 		init = ONE ,    	   	ev = ZERO
+
+        	-- Prints the ASCII values of character '\r'
+        	VAR PTU_string1[0],  			init = 15 ,       		ev = 13
+        	
+        	-- Prints the ASCII values of character '\n'
+        	VAR PTU_string1[1],  		 	init = 14 ,      		ev = 10
+
+        	-- Prints the ASCII values of character stored in parameter 'pc_message' as 'x'
+        	VAR PTU_string2[0],   		 	init = 10 ,       		ev = 120
+        	
+        	-- Prints the ASCII values of character stored in parameter 'pc_message' as 'y'
+        	VAR PTU_string2[1],   			init = 10 ,        		ev = 121
+        	
+        	-- Prints the ASCII values of character stored in parameter 'pc_message' as 'z'
+        	VAR PTU_string2[2],   			init = 10 ,      		ev = 122
+
+        	-- Prints the ASCII values of character '\r'
+        	VAR PTU_string3[0],   			init = 10 ,       		ev = 13
+        	
+        	-- Prints the ASCII values of character '\n'
+        	VAR PTU_string3[1],   			init = 14 ,       		ev = 10
+        	
+        	-- Prints the ASCII values of character 'F'
+        	VAR PTU_string3[2],   			init = 10 ,        		ev = 70
+        	
+        	-- Prints the ASCII values of character 'i'
+        	VAR PTU_string3[3],   			init = 10 ,        		ev = 105
+        	
+        	-- Prints the ASCII values of character 'l'
+        	VAR PTU_string3[4],   			init = 10 ,       		ev = 108
+        	
+        	-- Prints the ASCII values of character 'e'
+        	VAR PTU_string3[5],   			init = 10 ,        		ev = 101
+        	
+        	-- Prints the ASCII values of character ':'
+        	VAR PTU_string3[6],  	 		init = 10 ,        		ev = 58
+        	
+        	-- Prints the ASCII values of character ' (space)'
+        	VAR PTU_string3[7],   			init = 10 ,        		ev = 32
+
+        	-- Prints the ASCII values of character stored in parameter 'pc_file' as 'A'
+        	VAR PTU_string4[0],   			init = 10 ,        		ev = 65
+        	
+        	-- Prints the ASCII values of character stored in parameter 'pc_file' as 'B'
+        	VAR PTU_string4[1],   			init = 10 ,        		ev = 66
+        	
+        	-- Prints the ASCII values of character stored in parameter 'pc_file' as 'C'
+        	VAR PTU_string4[2],   			init = 10 ,        		ev = 67
+        	
+        	-- Prints the ASCII values of character stored in parameter 'pc_file' as 'Z'
+        	VAR PTU_string4[3],   			init = 10 ,        		ev = 90
+
+        	-- Prints the ASCII values of character '\r'
+        	VAR PTU_string5[0],   			init = 10 ,       	 	ev = 13
+        	
+        	-- Prints the ASCII values of character '\n'
+        	VAR PTU_string5[1],   			init = 14 ,        		ev = 10
+        	
+        	-- Prints the ASCII values of character 'L'
+        	VAR PTU_string5[2],   			init = 10 ,        		ev = 76
+        	
+        	-- Prints the ASCII values of character 'i'
+        	VAR PTU_string5[3],   			init = 10 ,        		ev = 105
+        	
+        	-- Prints the ASCII values of character 'n'
+        	VAR PTU_string5[4],   			init = 10 ,        		ev = 110
+        	
+        	-- Prints the ASCII values of character 'e'
+        	VAR PTU_string5[5],   			init = 10 ,        		ev = 101
+        	
+        	-- Prints the ASCII values of character ' (space)'
+        	VAR PTU_string5[6],   			init = 10 ,        		ev = 32
+        	
+        	-- Prints the ASCII values of character '#'
+        	VAR PTU_string5[7],   			init = 10 ,        		ev = 35
+        	
+        	-- Prints the ASCII values of character ':'
+        	VAR PTU_string5[8],   			init = 10 ,        		ev = 58
+
+        	-- Prints the ASCII values of character stored in static variable 'Ascii_num' 
+        	ARRAY PTU_string6,      		init = { others =>10} , ev = { others =>ZERO}
+
+        	-- Prints the ASCII values of character '\r'
+        	VAR PTU_string7[0],   			init = 15 ,        		ev = 13
+        	
+        	-- Prints the ASCII values of character '\n'
+        	VAR PTU_string7[1],   			init = 14 ,        		ev = 10
+
+        	-- Prints the ASCII values of character '\r'
+        	VAR PTU_string8[0],   			init = 10 ,        		ev = 13
+        	
+        	-- Prints the ASCII values of character '\n'
+        	VAR PTU_string8[1],   			init = 14 ,        		ev = 10
+        	
+        	-- Prints the ASCII values of character 'H'
+        	VAR PTU_string8[2],   			init = 10 ,        		ev = 72
+        	
+        	-- Prints the ASCII values of character 'a'
+        	VAR PTU_string8[3],   			init = 10 ,        		ev = 97
+        	
+        	-- Prints the ASCII values of character 'l'
+        	VAR PTU_string8[4],   			init = 10 ,        		ev = 108
+        	
+        	-- Prints the ASCII values of character 't'
+        	VAR PTU_string8[5],   			init = 10 ,        		ev = 116
+        	
+        	-- Prints the ASCII values of character 'e'
+        	VAR PTU_string8[6],   			init = 10 ,        		ev = 101
+        	
+        	-- Prints the ASCII values of character 'd'
+        	VAR PTU_string8[7],   			init = 10 ,        		ev = 100
+        	
+        	-- Prints the ASCII values of character '!'
+        	VAR PTU_string8[8],   			init = 10 ,        		ev = 33
+        	
+        	-- Prints the ASCII values of character '!'
+        	VAR PTU_string8[9],   			init = 10 ,        		ev = 33
+        	
+        	-- Prints the ASCII values of character '!'
+        	VAR PTU_string8[10],  			init = 10 ,        		ev = 33
+        
+        -- Stub Calls:
+        SIMUL
+            
+			STUB LCDBackgroundOn()
+			
+			STUB BinasByteFormatInfo(FOURB+FOURW) (T_INT8 *)0
+			
+			STUB TextDispString(20,0,E_SMALL_FONT,RED,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+			
+			STUB TextDispString(20,25,E_SMALL_FONT,RED,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+			
+			STUB TextDispString(20,25,E_SMALL_FONT,RED,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+			
+			STUB TextDispString(20,75,E_SMALL_FONT,RED,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+			
+			STUB TextDispString(20,75,E_SMALL_FONT,RED,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+			
+			STUB TextDispString(110,100,E_SMALL_FONT,RED,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+			
+			STUB TextDispString(20,100,E_SMALL_FONT,RED,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+			
+			STUB TextDispString(20,125,E_SMALL_FONT,RED,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+			
+			STUB ForegroundReDraw1()
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+     	#RterrWidget(pc_file, s32_line_number, pc_message);
+
+    END ELEMENT
+
+END TEST -- TEST 1   
+
+--TEST 2
+--FAMILY robustness
+--
+--      COMMENT Test Description 
+--      COMMENT <TD>
+--		COMMENT [hdudispfrterror-RterrWidget-DB-LLR-003]
+--      COMMENT The function does nothing as NULL is passed for the formal pointer parameter pc_file.
+--      COMMENT Equivalence Class 5
+--      COMMENT </TD>
+--	
+--      ELEMENT
+--
+--        COMMENT INPUT SECTION:	
+--	
+--        	-- Parameter "pc_message" initialized before usage.
+--        	VAR pc_message ,  	 			init = 'XYZ' , 	     	ev = init
+--			
+--        	-- Specifies Line Number
+--        	VAR s32_line_number,      		init = 100  ,        	ev = init 
+--	
+--        COMMENT INPUT/OUTPUT SECTION:	
+--
+--        	--None
+--			
+--        COMMENT OUTPUT SECTION:
+--
+--        	-- None
+--          	
+--        --- Stub Calls :
+--        SIMUL
+--			
+--        	-- None
+--
+--        END SIMUL
+--		
+--        -- Calling the Unit Under Test :
+--        #RterrFunc(NULL, s32_line_number, &pc_message);
+--        
+--        END ELEMENT
+--
+--END TEST -- TEST 2
+--
+--TEST 3
+--FAMILY robustness
+--
+--      COMMENT Test Description 
+--      COMMENT <TD>
+--      COMMENT [hdudispfrterror-RterrWidget-DB-LLR-003]
+--      COMMENT The function does nothing as NULL is passed for the formal pointer parameter pc_message.
+--      COMMENT Equivalence Class 6
+--      COMMENT </TD>
+--	
+--      ELEMENT
+--	
+--        COMMENT INPUT SECTION:
+--
+--        	-- Parameter "pc_file" initialized before usage. 
+--        	VAR pc_file[0] ,	  			init = 'A' ,	     	ev = init
+--        	VAR pc_file[1] ,	  			init = 'B' ,	     	ev = init
+--        	VAR pc_file[2] ,	  			init = 'C' ,	     	ev = init
+--        	VAR pc_file[3] ,	  			init = 'Z' ,	     	ev = init
+--			
+--        	-- Specifies Line Number
+--        	VAR s32_line_number,      		init = 101  ,        	ev = init 
+--	
+--        COMMENT INPUT/OUTPUT SECTION:	
+--
+--        	--None
+--			
+--        COMMENT OUTPUT SECTION:
+--
+--        	-- None
+--          	
+--        --- Stub Calls :
+--        SIMUL
+--			
+--        	-- None
+--
+--        END SIMUL
+--		
+--        -- Calling the Unit Under Test :
+--        #RterrFunc(&pc_file, s32_line_number, NULL);
+--        
+--        END ELEMENT
+--
+--END TEST -- TEST 3
+
+END SERVICE -- RterrWidget
+

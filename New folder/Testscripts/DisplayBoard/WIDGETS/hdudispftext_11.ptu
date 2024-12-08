@@ -1,0 +1,561 @@
+HEADER hdudispftext,Source Code Ver :1.10,TestScript Ver : 1.3
+--------------------------------------------------------------------------------
+-- Author Name         : Swaroopa N 
+--
+-- File Name           : hdudispftext_11.ptu
+--
+-- Test Creation Date  : 28.07.2020
+--
+-- Tested Functions    : TextDrawPDI
+--
+--
+-- Version History             :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME           MODIFICATIONS
+--  ------------        ---------       -----------           -------------       
+--      1.1             29.07.2020      Swaroopa N       	Created the ptu file. 
+--      1.2             20.08.2020      Swaroopa N       	Updated as per #PR100267.    
+--      1.3             03.10.2020      Vignesh Sunil       Updated as per #PR100281.    
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes*/
+#/*============================================================================*/
+##include "hdudispfdma2d.h"    
+##include "hdudispffonts.h"    
+##include "hdudispfrterror.h"  
+##include "hdudispftext.h"     
+##include "hdudispfwidgets.h"  
+##include "hdudispfconfig.h"   
+##include "hdudispfforeground.h" 
+##include "hdulibbasictypes.h"   
+##include "hdudispfpanel.h"
+##include "hdudispfgrapp.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+--------------------------------------------------------------------------------
+    #T_INT16 S16_panel_width; 
+    #T_INT16 S16_panel_height; 
+    #void *Vp_fgfb2; 
+    #T_ELANDSCAPEORPORTRIAT E_orientation; 
+    # volatile  T_INT32 Itm_rx_buffer; 
+    #extern T_CHAR glob_file_name[];
+	# T_PAGE Page_settings;
+	# T_PARAM_TABLE Parameters_reading[256];
+	# T_TEXT Page_txt[30];
+	#T_UINT8 Text_cnt;
+    #T_APPDATA_PANELSTRUCT *Appdata_appdata; 
+    #T_DISPLAYSIZE Display_size; 
+	
+-- Declaration of temporary variables  
+
+    -- temporary variable used in execution of test
+    # T_UINT8 PTU_tmp;
+    
+    -- temporary structure declared for receiving the address
+    # T_BFC_FONT PTU_FontsGetFont;
+
+    -- temporary structure declared for passing the address
+    # T_UINT8 PTU_pData8;
+
+    -- Created to verify the 1st parameter of RterrWidget
+    # char PTU_pc_file_in_1[200],PTU_pc_file_out_1[200];
+    # T_UINT8 PTU_temp;
+
+    -- Created to verify the 3rd parameter of RterrWidget
+   # char PTU_pc_message_in_1[200],PTU_pc_message_out_1[200];
+
+	# T_SDISREGION_TXT PTU_psDisRegion; 
+     
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Swaroopa N 
+    COMMENT
+    COMMENT File name        : hdudispftext_11.ptu
+    COMMENT
+    COMMENT Tested functions : TextDrawPDI
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 
+    COMMENT 1. Source file "hdudispftext.c" is modified for testing purpose to verify the file name
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT
+    COMMENT 2.Warning "enumerated type mixed with another type" is obtained when parameter 
+    COMMENT    '(enum T_EPENCOLOR)type' of e_pen_color
+    COMMENT    '(enum T_ETXFONT)type' of e_tx_font 
+    COMMENT    is exercised with value "CAS_WHITE+1" and "E_BEZEL_FONT+1" to test LLR 
+    COMMENT    "hdudispftext-TextDrawChar-DB-LLR-010" and "hdudispftext-TextDispString-DB-LLR-001"
+    COMMENT    in PTU "hdudispftext_1.ptu", "hdudispftext_5.ptu" and "hdudispftext_6.ptu".
+    COMMENT
+    COMMENT 3. Testscript is split into 19 due to static dependency
+    COMMENT</AC>
+
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'TextAllocat', the function 'RterrWidget' is called. 
+    COMMENT 
+    COMMENT Class 2
+    COMMENT In function 'TextAllocat', Text_objects_installed is equal to MAX_TEXT_OBJECTS.
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function 'TextAllocat', Text_objects_installed is not equal to MAX_TEXT_OBJECTS.
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In function 'TextDraw', the function 'TextDispString' is called.
+    COMMENT 
+    COMMENT Class 5
+    COMMENT In function 'TextDispString', the function 'FontsGetFont' is called.
+    COMMENT 
+    COMMENT Class 6
+    COMMENT In function 'TextDispString', the function 'DispStringAt' is called.
+    COMMENT 
+    COMMENT Class 7
+    COMMENT In function 'TextDispString', the function 'FontsGetStringWidth' is called.
+    COMMENT 
+    COMMENT Class 8
+    COMMENT In function 'TextDispString', the function 'FontsGetFontHeight' is called.
+    COMMENT     
+    COMMENT Class 9
+    COMMENT In function 'TextDispString', e_tx_align is equal to ALIGN_CENTER.
+    COMMENT     
+    COMMENT Class 10
+    COMMENT In function 'TextDispString', e_tx_align is not equal to ALIGN_CENTER.
+    COMMENT 
+    COMMENT Class 11
+    COMMENT In function 'TextDispString', e_tx_align is equal to ALIGN_CENTER_LEFT.
+    COMMENT 
+    COMMENT Class 12
+    COMMENT In function 'TextDispString', e_tx_align is not equal to ALIGN_CENTER_LEFT.
+    COMMENT 
+    COMMENT Class 14
+    COMMENT In function 'DispStringAt', e_tx_flash is equal to TX_FLASH.
+    COMMENT 
+    COMMENT Class 15
+    COMMENT In function 'DispStringAt', e_tx_flash is not equal to TX_FLASH.
+    COMMENT 
+    COMMENT Class 16
+    COMMENT In function 'DispStringAt', the function 'TextDrawChar' is called.
+    COMMENT 
+    COMMENT Class 17
+    COMMENT In function 'TextDrawChar', the function 'Pu8GetCharBitMap' is called.
+    COMMENT 
+    COMMENT Class 18
+    COMMENT In function 'TextDrawChar', the function 'PsGetCharInfo' is called.
+    COMMENT 
+    COMMENT Class 19
+    COMMENT In function 'TextDrawChar', the function 'Dma2dDrawChar' is called.
+    COMMENT 
+    COMMENT Class 20
+    COMMENT In function 'TextDrawChar', E_orientation is equal to E_LAND_SCAPE.
+    COMMENT 
+    COMMENT Class 21
+    COMMENT In function 'TextDrawChar', E_orientation is not equal to E_LAND_SCAPE.
+    COMMENT 
+    COMMENT Class 22
+    COMMENT In function 'TextDrawChar', e_color is equal to CAS_RED.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'TextDrawChar', e_color is not equal to CAS_RED .
+    COMMENT 
+    COMMENT Class 26
+    COMMENT In function 'TextDrawChar', E_orientation is equal to E_PORTRAIT.
+    COMMENT 
+    COMMENT Class 27
+    COMMENT In function 'TextDrawChar', E_orientation is not equal to E_PORTRAIT.
+    COMMENT 
+    COMMENT Class 28
+    COMMENT In function 'DispStringAt', e_txv is not equal to V_REVERSE.
+    COMMENT 
+    COMMENT Class 29
+    COMMENT In function 'DispStringAt', e_txv is equal to V_REVERSE.
+    COMMENT 
+    COMMENT Class 30
+    COMMENT In function 'DispStringAt', return value of EGetFlashState is equal to FLASH_OFF.
+    COMMENT 
+    COMMENT Class 31
+    COMMENT In function 'DispStringAt', return value of EGetFlashState is not equal to FLASH_OFF.
+    COMMENT 
+    COMMENT Class 32
+    COMMENT In function 'TextDraw', u16_text_ctr is lesser than Text objects installed.
+    COMMENT     
+    COMMENT Class 33
+    COMMENT In function 'TextDraw', u16_text_ctr is greater than Text objects installed.
+    COMMENT 
+    COMMENT Class 47
+    COMMENT In function 'TextDraw', u16_text_ctr is equal to Text objects installed.
+    COMMENT 
+    COMMENT Class 37
+    COMMENT In function 'DispStringAt', the function 'VHadFlash' is called.
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'TextDrawChar',result of bitwise AND of u8_char and EXTRACT_8_BIT is equal to TRUE.
+    COMMENT 
+    COMMENT Class 39
+    COMMENT In function 'TextDrawChar',result of bitwise AND of u8_char and EXTRACT_8_BIT is equal to FALSE.
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'DispStringAt', u8_achar is equal to ZERO.
+    COMMENT 
+    COMMENT Class 41
+    COMMENT In function 'DispStringAt', u8_achar is not equal to ZERO.
+    COMMENT 
+    COMMENT Class 42
+    COMMENT In function 'DispStringAt', character is equal to newline character.
+    COMMENT 
+    COMMENT Class 43
+    COMMENT In function 'DispStringAt', character is equal to Carriage Return character.
+    COMMENT 
+    COMMENT Class 44
+    COMMENT In function 'DispStringAt', character is not equal to newline character.
+    COMMENT 
+    COMMENT Class 45
+    COMMENT In function 'DispStringAt', character is not equal to Carriage Return character.
+    COMMENT 
+    COMMENT Class 46
+    COMMENT In function 'DispStringAt', PsGetCharInfo function is called.
+    COMMENT 
+	COMMENT Class 49
+    COMMENT In function 'TextAllocatPdi', Text_installed is greater than MAX_TEXT_PDI_OBJECTS.
+    COMMENT 
+	COMMENT Class 50
+    COMMENT In function 'TextAllocatPdi', Text_installed is less than MAX_TEXT_PDI_OBJECTS.
+    COMMENT
+	COMMENT Class 51
+    COMMENT In function 'TextAllocatPdi', Text_installed is equal to MAX_TEXT_PDI_OBJECTS.
+	COMMENT
+	COMMENT Class 52
+    COMMENT In function 'TextAllocatPdi', the function 'RterrWidget' is called.
+	COMMENT
+	COMMENT Calss 54
+	COMMENT In function 'TextDrawPDI', label of Text_settings of Page_settings is equal to label of Parameters_reading.
+	COMMENT
+	COMMENT Calss 55
+	COMMENT In function 'TextDrawPDI', label of Text_settings of Page_settings is not equal to label of Parameters_reading.
+	COMMENT
+	COMMENT Calss 56
+	COMMENT In function 'TextDrawPDI', stat of reading of Parameters_reading is equal to PARAM_OK.
+	COMMENT
+	COMMENT Calss 57
+	COMMENT In function 'TextDrawPDI', stat of reading of Parameters_reading is not equal to PARAM_OK.
+	COMMENT
+	COMMENT Calss 58
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is equal to DDW.
+	COMMENT
+	COMMENT Calss 59
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is not equal to DDW.
+	COMMENT
+	COMMENT Calss 60
+	COMMENT In function 'TextDrawPDI', member r of reading of Parameters_reading is rightshift by ONE is equal to ZERO. 
+	COMMENT
+	COMMENT Calss 61
+	COMMENT In function 'TextDrawPDI', member r of reading of Parameters_reading is rightshift by ONE is not equal to ZERO. 
+	COMMENT
+	COMMENT Calss 62
+	COMMENT In function 'TextDrawPDI', calls the function TextDispString. 
+	COMMENT
+	COMMENT Calss 63
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is equal to BNR.
+	COMMENT
+	COMMENT Calss 64
+	COMMENT In function 'TextDrawPDI', type of Parameters_reading is not equal to BNR.
+	COMMENT
+	COMMENT class 65
+	COMMENT IN function 'TextDrawPDI', fread of reading of Parameters_reading is greater than txt_cross_val of Text_settings of Page_settings.
+	COMMENT
+	COMMENT class 66
+	COMMENT IN function 'TextDrawPDI', fread of reading of Parameters_reading is less than txt_cross_val of Text_settings of Page_settings.
+	COMMENT
+	COMMENT class 67
+	COMMENT IN function 'TextDrawPDI', fread of reading of Parameters_reading is equal to txt_cross_val of Text_settings of Page_settings.
+	COMMENT 
+	COMMENT class 68
+	COMMENT IN function 'TextDrawPDI',psDisRegion of ps_txt is equal to NULL.
+	COMMENT
+	COMMENT class 69
+	COMMENT IN function 'TextDrawPDI',psDisRegion of ps_txt is not equal to NULL.
+	COMMENT
+	COMMENT Calss 70
+	COMMENT In function 'TextDrawPDI', calls the function WidgetsRedX. 
+	COMMENT
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT     
+    COMMENT Class 34
+    COMMENT In function 'TextDrawChar', p_font is equal to NULL.
+    COMMENT 
+    COMMENT Class 35
+    COMMENT In function 'TextDispString', pc_string is equal to NULL.
+    COMMENT 
+    COMMENT Class 36
+    COMMENT In function 'TextAllocat', pps_handle_add and pu8_string is equal to NULL.
+    COMMENT 
+    COMMENT Class 48
+    COMMENT In function 'DispStringAt', p_font is equal to NULL.
+    COMMENT 
+    COMMENT </ECD>
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+
+    DEFINE STUB hdudispftext_c
+
+        -- Created to verify the parameter 'pu8_string' of function 'FontsGetStringWidth'
+        #T_UINT8 PTU_IN_pu8_string,*PTU_OUT_pu8_string;
+        -- Created to verify the return value of function 'Pu8GetCharBitMap'
+        #T_UINT8 PTU_Pu8GetCharBitMap;
+        -- Created to verify the parameters 'character_data and write_loc' of function 'Dma2dDrawChar'
+        #void *PTU_Dma2dDrawChar;
+        #void *PTU_write_loc;
+        -- Created to verify the parameters 'ps_font' of function 'Pu8GetCharBitMap'
+        #T_BFC_FONT *PTU_IN_Pu8GetCharBitMap;
+        -- Created to verify the parameters 'ps_font' of function 'PsGetCharInfo'
+        #T_BFC_FONT *PTU_IN_PsGetCharInfo;
+        -- Created to provide address for variable Vp_fgfb2 
+        #T_UINT8 PTU_Vp_fgfb2; 
+        -- Created to verify the return value of function 'PsGetCharInfo'
+        #T_BFC_CHARINFO PTU_PsGetCharInfo;
+
+     -- Created to verify the 'ps_dis_region and pps_poly_red_x;' of function 'TextDraw'	 
+	 # T_SDISREGION PTU_ps_dis_region;
+	 # T_SPOLY PTU_pps_poly_red_x;
+        
+    --Parameter pc_file, pc_message is made as _no and is verified explicitly
+    #void RterrWidget(char _no pc_file[200], T_INT32 _in s32_line_number, char _no pc_message[200])
+        #{
+        # 
+        #  PTU_temp = 0;
+        #  while(pc_file[PTU_temp]!= ZERO)
+        #  {
+        #    PTU_pc_file_in_1[PTU_temp]= pc_file[PTU_temp];
+        #    PTU_temp = PTU_temp+1;
+        #  }
+        #    PTU_pc_file_in_1[PTU_temp]= ZERO;
+        #
+        #  PTU_temp = 0;
+        #  while(pc_message[PTU_temp]!= ZERO)
+        #  {
+        #    PTU_pc_message_in_1[PTU_temp]= pc_message[PTU_temp];
+        #    PTU_temp = PTU_temp+1;
+        #  }
+        #    PTU_pc_message_in_1[PTU_temp]= ZERO;
+        #
+        #  PTU_temp = 0;
+        #  while(PTU_pc_file_out_1[PTU_temp]!= ZERO)
+        #  {
+        #   pc_file[PTU_temp]       = PTU_pc_file_out_1[PTU_temp];
+        #   PTU_temp = PTU_temp+1;
+        #  }
+        #   pc_file[PTU_temp]= ZERO;
+        #
+        #  PTU_temp = 0;
+        #  while(PTU_pc_message_out_1[PTU_temp]!= ZERO)
+        #  {
+        #    pc_message[PTU_temp] = PTU_pc_message_out_1[PTU_temp];
+        #    PTU_temp = PTU_temp+1;
+        #  }
+        #   pc_message[PTU_temp]= ZERO;
+        #}
+        #T_INT16 FontsGetFontHeight(T_ETXFONT _in e_tx_font); 
+        
+        --Parameters_reading pu8_string is made as _no and is verified explicitly
+        #T_INT16 FontsGetStringWidth(T_UINT8 _no pu8_string, T_ETXFONT _in e_tx_font)
+        #{
+        #   PTU_IN_pu8_string =(T_UINT8)*pu8_string;
+        #   pu8_string = (T_UINT8 *)PTU_OUT_pu8_string;
+        #}
+        #T_BFC_FONT* FontsGetFont(T_ETXFONT _in e_tx_font);
+        #T_EFLASHSTATE EGetFlashState(void); 
+        #void VHadFlash(void); 
+
+        --Parameters_reading character_data and write_loc are made as _no and is verified explicitly
+        #void Dma2dDrawChar(void _no *character_data, void _no *write_loc, T_UINT32 _in u32_width, T_UINT32 _in u32_height, T_UINT16 _in e_color)
+        #{
+        #  PTU_Dma2dDrawChar = (void *)character_data;
+        #  PTU_write_loc = (T_UINT16 *)write_loc;
+        #}
+        
+        --Parameter ps_font is made as _no and is verified explicitly
+        # const  T_BFC_CHARINFO* PsGetCharInfo(T_BFC_FONT _no ps_font, T_UINT8 _in u8_char)
+        #{
+        #   PTU_IN_PsGetCharInfo = ps_font;
+        #   ps_font = &PTU_FontsGetFont;
+        #}
+        
+        --Parameter ps_font is made as _no and is verified explicitly
+        # const  T_UINT8* Pu8GetCharBitMap(T_BFC_FONT _no *ps_font, T_UINT8 _in u8_char) 
+        #{
+        #   PTU_IN_Pu8GetCharBitMap = ps_font;
+        #   ps_font = &PTU_FontsGetFont;
+        #}
+
+	 --Parameter ps_dis_region and  pps_poly_red_x is made as _no and  verified explicitly
+	 #void WidgetsRedX(T_SDISREGION  _no ps_dis_region, T_SPOLY  _no **pps_poly_red_x)
+	 #{
+	 # PTU_ps_dis_region = *ps_dis_region;
+	 # PTU_pps_poly_red_x = *((T_SPOLY *)pps_poly_red_x);
+	 #}
+	 
+	 #T_UINT8 CompareLimit(T_FLOAT  _in val, T_FLOAT  _in range, T_UINT8  _in operator);	
+
+    END DEFINE
+    
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+--Environment of the hdudispftext.c
+
+--ENVIRONMENT ENV_hdudispftext_c
+
+    --None
+
+--END ENVIRONMENT -- ENV_hdudispftext_c
+--USE ENV_hdudispftext_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service TextDrawPDI
+--------------------------------------------------------------------------------
+SERVICE TextDrawPDI
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations 
+    #T_PTEXT pps_handle_add;
+    #T_UINT8 pu8_string[50];
+    
+    ENVIRONMENT ENV_TextDrawPDI
+    VAR pu8_string,     init = 0,           ev = init
+    END ENVIRONMENT -- ENV_TextDrawPDI
+    USE ENV_TextDrawPDI
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispftext-TextDrawPDI-DB-LLR-002]
+    COMMENT The function TextDrawPDI initialises p_text to A_text_pdi and loops for ONE time and do the following.
+    COMMENT when label of Text_settings of Page_settings is equal to label of Parameters_reading and do the floowing
+	COMMENT  when stat of reading of Parameters_reading  is equal to PARAM_OK and do the following
+	COMMENT    when type of Parameters_reading is equal to BNR and do the following
+	COMMENT      when fread of reading of Parameters_reading is greater than txt_cross_val of Text_settings with index u16_text_ctr of
+	COMMENT		 Page_settings calls the function TextDispString. 
+    COMMENT Equivalence Class 54,56,59,62,63
+    COMMENT Test case is exercised for min value of fread.
+    COMMENT Equivalence Class 
+    COMMENT 
+    COMMENT Note :  
+    COMMENT
+    COMMENT Variable A_text_pdi is static , hence it is not expected in 
+    COMMENT the Output section and the functionality of the requirement is verified implicitly.
+    COMMENT
+    COMMENT </TD> 
+    
+        ELEMENT
+
+
+        COMMENT INPUT SECTION:
+
+            -- initialization of temporary structure
+            STRUCTURE PTU_FontsGetFont,  init = { FontType => 0x01010140, FontHeight => 24, Baseline => 19, Reversed => 0, p_var_type => { pData => NULL } },  ev=init
+            VAR PTU_OUT_pu8_string,     init = 0,       ev = init
+            VAR pu8_string,                 init = {others => 0},               ev = init
+			
+			VAR Page_txt[0..29].psDisRegion,					init = NULL,	ev = init
+			VAR Page_settings.Text_settings[0..29].label,		init = 0,					ev = init
+			VAR Parameters_reading[0..255].label,						init = 0,					ev = init
+			VAR Parameters_reading[0..255].reading.stat,				init = PARAM_OK,			ev = init
+			VAR Parameters_reading[0..255].type,						init = BNR,					ev = init
+			VAR Parameters_reading[0..255].reading.fread,					init = 1.0,					ev = init
+			VAR Page_settings.Text_settings[0..29].txt_cross_val,		init = 0,					ev = init
+			
+			VAR Text_cnt,				init = 1,					ev = init
+    
+        COMMENT OUTPUT SECTION:
+        
+            --None 
+        
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+        
+        
+        --Stub Calls:
+        SIMUL
+            STUB FontsGetFont (E_BEZEL_FONT) &PTU_FontsGetFont
+			
+            STUB CompareLimit(1.0,0,0)1
+        END SIMUL
+    
+    --TextAllocat is called to increment Text_objects_installed
+        #TextAllocatPdi(&pps_handle_add, pu8_string, (T_UINT16)65535, (T_UINT16)65535, ALIGN_LEFT, E_BEZEL_FONT, CAS_WHITE, V_NORMAL, TX_FLASH);  
+
+    -- Calling the Unit Under Test        
+        #TextDrawPDI();
+        END ELEMENT
+
+END TEST -- TEST 4
+
+  
+END SERVICE -- TextDrawPDI
+
+
+
+
+
+
+
+
+
+
+

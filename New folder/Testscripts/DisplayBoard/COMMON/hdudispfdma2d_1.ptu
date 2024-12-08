@@ -1,0 +1,3095 @@
+HEADER hdudispfdma2d,Source Code Ver : 1.7,TestScript Ver : 1.4
+--------------------------------------------------------------------------------
+-- Author Name         : Soumya Patil
+--
+-- File Name           : hdudispfdma2d_1.ptu
+--
+-- Test Creation Date  : 26.10.2017
+--
+-- Tested Functions    : HalDma2dConfigLayer
+--                       Dma2dSetConfig
+--                       HalDma2dBlendingStartIt
+--                       HalDma2dStartIt
+--                       HalDma2dInit
+--                       Dma2dWait
+--                       Dma2dIsBusy
+--                       Dma2dInitRtoM
+--                       Dma2dInitChartoM
+--                       Dma2dDrawChar
+--                       ClearScanLine
+--                       Dma2dInitScanLine
+--                       Dma2dScanLineBlend
+--                       Dma2dInitRgbToArgb4444
+--                       Dma2dRgbToArgb4444
+--                       Dma2dInit
+--                       
+--
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE        TESTER NAME        MODIFICATIONS
+-- ------------        ---------        -----------        -------------
+--    1.1              26.10.2017       Soumya Patil       Created the ptu file.
+--    1.2              10.11.2017       Soumya Patil       Updated as per #PR100171
+--    1.3              14.11.2017       Soumya Patil       Updated as per #PR100171
+--	1.4		     31.08.2020	 Harshitha R	    Updated as  per #PR100267
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfdma2d.h" 
+##include "hdulibcmsisgcc.h" 
+##include "hdulibstm32f746xx.h" 
+##include "hdulibstm32f7xxhaldma2d.h" 
+##include "hdulibstm32f7xxhalltdc.h"  
+##include "hdudispfconfig.h"  
+##include "hdudispfwidgets.h"  
+##include "hdulibstm32hallegacy.h" 
+##include "hdulibbasictypes.h"  
+##include "hdulibstm32f7xx.h"       
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+    #extern T_DMA2D_HANDLE_TYPE Dma2d_handle;
+    #void *Vp_fgfb2; 
+    #T_INT16 S16_panel_width;
+    
+-- Declarations of the temporary variable
+    -- Temporary variable created to verify value in Source Location
+    #T_UINT32 PTU_scan_line[10];
+    
+    -- Temporary variable created to verify value in Source Location
+    #T_UINT32 PTU_frame_data[10];
+	
+		#T_DMA2D PTU_DMA2D;
+	
+	##define DMA2D               ((T_DMA2D *)&PTU_DMA2D)
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Soumya Patil
+    COMMENT
+    COMMENT File Name        : hdudispfdma2d_1.ptu
+    COMMENT
+    COMMENT Tested Functions : HalDma2dConfigLayer
+    COMMENT                    Dma2dSetConfig
+    COMMENT                    HalDma2dBlendingStartIt
+    COMMENT                    HalDma2dStartIt
+    COMMENT                    HalDma2dInit
+    COMMENT                    Dma2dWait
+    COMMENT                    Dma2dIsBusy
+    COMMENT                    Dma2dInitRtoM
+    COMMENT                    Dma2dInitChartoM
+    COMMENT                    Dma2dDrawChar
+    COMMENT                    ClearScanLine
+    COMMENT                    Dma2dInitScanLine
+    COMMENT                    Dma2dScanLineBlend
+    COMMENT                    Dma2dInitRgbToArgb4444
+    COMMENT                    Dma2dRgbToArgb4444
+    COMMENT                    Dma2dInit
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1.Header file 'hdulibstm32f746xx.h' is modified for testing purpose.
+    COMMENT Since the macro __HAL_RCC_DMA2D_CLK_ENABLE is used in the CSU Dma2dInit, which inturn calls RCC register.
+    COMMENT /*Commented for testing purpose*/
+    COMMENT /*#define RCC                 ((T_RCC *) RCC_BASE)*/
+    COMMENT /* Modified macro by stubbing hardware address for testing purpose*/
+    COMMENT T_RCC PTU_RCC; 
+    COMMENT #define RCC                 ((T_RCC *) &PTU_RCC)
+    COMMENT
+    COMMENT 2.Header file 'hdulibstm32f746xx.h' is modified for testing purpose.
+    COMMENT/*Commented for testing purpose*/
+    COMMENT /*#define DMA2D               ((T_DMA2D *)DMA2D_BASE)*/
+    COMMENT /* Modified for stubbing hardware address */
+    COMMENT T_DMA2D PTU_DMA2D;
+    COMMENT #define DMA2D               ((T_DMA2D *)&PTU_DMA2D)
+    COMMENT
+    COMMENT 3.Source file "hdudispfdma2d.c" is modified for testing purpose.
+    COMMENT The while(ZERO == (DMA2D->ISR & DMA2D_ISR_TCIF))is modified for terminating the infinite loop.
+    COMMENT Snippet of code is added in function 'Dma2dWait':
+    COMMENT T_UINT16 PTU1_count =0 /*local variable declared for testing purpose*/
+    COMMENT   while(ZERO == (DMA2D->ISR & DMA2D_ISR_TCIF))
+    COMMENT   {
+    COMMENT      u32_test++;
+    COMMENT   
+    COMMENT    /*Modified for testing purpose to terminate infinite loop*/
+    COMMENT    PTU1_count++;
+    COMMENT    if(PTU1_count == 3)
+    COMMENT    {
+    COMMENT        PTU1_count == 0;
+    COMMENT        break;
+    COMMENT    }   
+    COMMENT    else
+    COMMENT        {
+    COMMENT           /*nothing*/
+    COMMENT        }
+    COMMENT    .......
+    COMMENT   }
+    COMMENT  Hence while loop cannot be covered for 1 time.
+    COMMENT
+    COMMENT 4.In Source file "hdudispfdma2d.c" for LLR hdudispfdma2d-Dma2dInit-DB-LLR-001, coverage cannot be 
+    COMMENT   obtained for do while loop two or more times and TRUE condition. 
+    COMMENT   Since while(0) is mentioned which loops for only one time in the below snippet:
+    COMMENT   #define __HAL_RCC_DMA2D_CLK_ENABLE()   do { \
+    COMMENT                                        __IO T_UINT32 tmpreg; \
+    COMMENT                                        SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA2DEN);\
+    COMMENT                                        /* Delay after an RCC peripheral clock enabling */ \
+    COMMENT                                        tmpreg = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA2DEN);\
+    COMMENT                                        UNUSED(tmpreg); \
+    COMMENT                                        } while(0)
+    COMMENT
+    COMMENT 5. Following Test script related warnings are observed during Target Execution for volatile keyword member/variable:
+    COMMENT    warning #191-D: type qualifier is meaningless on cast type
+    COMMENT   
+    COMMENT </AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT In function 'HalDma2dConfigLayer', InputColorMode of LayerCfg with index layer_idx of h_dma2d is equal to DMA2D_INPUT_A4 
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function 'HalDma2dConfigLayer', InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A4 
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'HalDma2dConfigLayer', InputColorMode of LayerCfg with index layer_idx of h_dma2d is equal to DMA2D_INPUT_A8
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'HalDma2dConfigLayer', InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A8
+    COMMENT
+    COMMENT Class 6
+    COMMENT In function 'HalDma2dConfigLayer', layer_idx is equal to zero. 
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function 'HalDma2dConfigLayer', layer_idx is not equal to zero. 
+    COMMENT
+    COMMENT Class 8
+    COMMENT The function 'HalDma2dConfigLayer', calls macro MODIFY_REG 
+    COMMENT
+    COMMENT Class 9
+    COMMENT The function 'HalDma2dConfigLayer', calls macro WRITE_REG 
+    COMMENT
+    COMMENT Class 10
+    COMMENT The function 'Dma2dSetConfig', calls macro MODIFY_REG 
+    COMMENT
+    COMMENT Class 11
+    COMMENT The function 'Dma2dSetConfig', calls macro WRITE_REG 
+    COMMENT
+    COMMENT Class 12
+    COMMENT The function 'Dma2dSetConfig', Mode of Init of h_dma2d is equal to DMA2D_R2M 
+    COMMENT
+    COMMENT Class 13
+    COMMENT The function 'Dma2dSetConfig', Mode of Init of h_dma2d is not equal to DMA2D_R2M 
+    COMMENT
+    COMMENT Class 14
+    COMMENT The function 'Dma2dSetConfig', ColorMode of Init of h_dma2d is equal to DMA2D_OUTPUT_ARGB8888.
+    COMMENT
+    COMMENT Class 15
+    COMMENT The function 'Dma2dSetConfig', ColorMode of Init of h_dma2d is equal to DMA2D_OUTPUT_RGB888.
+    COMMENT
+    COMMENT Class 16
+    COMMENT The function 'Dma2dSetConfig', ColorMode of Init of h_dma2d is equal to DMA2D_OUTPUT_RGB565
+    COMMENT
+    COMMENT Class 17
+    COMMENT The function 'Dma2dSetConfig', ColorMode of Init of h_dma2d is equal to DMA2D_OUTPUT_ARGB1555.
+    COMMENT
+    COMMENT Class 18
+    COMMENT The function 'Dma2dSetConfig', ColorMode of Init of h_dma2d is other than DMA2D_OUTPUT_ARGB8888, 
+    COMMENT DMA2D_OUTPUT_RGB888, DMA2D_OUTPUT_RGB565, DMA2D_OUTPUT_ARGB1555.
+    COMMENT
+    COMMENT Class 19
+    COMMENT The function 'HalDma2dBlendingStartIt', calls macro WRITE_REG 
+    COMMENT
+    COMMENT Class 20
+    COMMENT The function 'HalDma2dBlendingStartIt', calls Dma2dSetConfig function
+    COMMENT
+    COMMENT Class 21
+    COMMENT The function 'HalDma2dBlendingStartIt', calls macro __HAL_DMA2D_ENABLE_IT
+    COMMENT
+    COMMENT Class 22
+    COMMENT The function 'HalDma2dBlendingStartIt', calls macro __HAL_DMA2D_ENABLE
+    COMMENT
+    COMMENT Class 23
+    COMMENT The function 'HalDma2dStartIt', calls Dma2dSetConfig function
+    COMMENT
+    COMMENT Class 24
+    COMMENT The function 'HalDma2dStartIt', calls macro __HAL_DMA2D_ENABLE_IT
+    COMMENT
+    COMMENT Class 25
+    COMMENT The function 'HalDma2dStartIt', calls macro __HAL_DMA2D_ENABLE
+    COMMENT
+    COMMENT Class 26
+    COMMENT The function 'HalDma2dInit', calls macro MODIFY_REG
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'Dma2dWait', first call is one
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'Dma2dWait', first call is zero
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'Dma2dWait', result of bitwise AND of DMA2D_ISR_TCIF and ISR of DMA2D is ZERO
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'Dma2dWait', result of bitwise AND of DMA2D_ISR_TCIF and ISR of DMA2D is not ZERO
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'Dma2dIsBusy', bitwise AND of ISR of DMA2D and DMA2D_ISR_TCIF is zero
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'Dma2dIsBusy', bitwise AND of ISR of DMA2D and DMA2D_ISR_TCIF is not zero
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'Dma2dInitRtoM', calls function HalDma2dInit
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'Dma2dFillBox', calls function Dma2dWait
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'Dma2dFillBox', DMA mode is not equal to RTOM
+    COMMENT
+    COMMENT Class 37
+    COMMENT In function 'Dma2dFillBox', calls function Dma2dInitRtoM
+    COMMENT
+    COMMENT Class 38
+    COMMENT In function 'Dma2dFillBox', calls function HalDma2dStartIt
+    COMMENT
+    COMMENT Class 39
+    COMMENT In function 'Dma2dInitChartoM', calls function HalDma2dInit
+    COMMENT
+    COMMENT Class 40
+    COMMENT In function 'Dma2dInitChartoM', calls function HalDma2dConfigLayer
+    COMMENT
+    COMMENT Class 41
+    COMMENT In function 'Dma2dDrawChar', e_color not equal to static color
+    COMMENT
+    COMMENT Class 42
+    COMMENT In function 'Dma2dDrawChar', e_color equal to static color
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function 'Dma2dDrawChar', calls function Dma2dWait
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'Dma2dDrawChar', DMA mode is not equal to CHARTOM
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function 'Dma2dDrawChar', DMA mode is equal to CHARTOM
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'Dma2dDrawChar', calls function Dma2dInitChartoM
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'Dma2dDrawChar', calls function HalDma2dBlendingStartIt
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function 'ClearScanLine', clear count is not equal to zero 
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function 'ClearScanLine', clear count is equal to zero 
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function 'ClearScanLine', clear count is greater than FOUR 
+    COMMENT
+    COMMENT Class 51
+    COMMENT In function 'ClearScanLine', clear count is not greater than FOUR 
+    COMMENT
+    COMMENT Class 52
+    COMMENT The function 'Dma2dInitScanLine', calls function HalDma2dInit
+    COMMENT
+    COMMENT Class 53
+    COMMENT The function 'Dma2dInitScanLine', calls function HalDma2dConfigLayer
+    COMMENT
+    COMMENT Class 54
+    COMMENT The function 'Dma2dScanLineBlend', static color is not equal to e_color
+    COMMENT
+    COMMENT Class 55
+    COMMENT The function 'Dma2dScanLineBlend', static color is equal to e_color
+    COMMENT
+    COMMENT Class 56
+    COMMENT The function 'Dma2dScanLineBlend', calls function Dma2dWait
+    COMMENT
+    COMMENT Class 57
+    COMMENT The function 'Dma2dScanLineBlend', DMA mode is not equal to SCAN_LINE
+    COMMENT
+    COMMENT Class 58
+    COMMENT The function 'Dma2dScanLineBlend', DMA mode is equal to SCAN_LINE
+    COMMENT
+    COMMENT Class 59
+    COMMENT The function 'Dma2dScanLineBlend', calls function Dma2dInitScanLine 
+    COMMENT
+    COMMENT Class 60
+    COMMENT The function 'Dma2dScanLineBlend', calls macro WRITE_REG  
+    COMMENT
+    COMMENT Class 61
+    COMMENT The function 'Dma2dScanLineBlend', calls macro MODIFY_REG  
+    COMMENT
+    COMMENT Class 62
+    COMMENT The function 'Dma2dScanLineBlend', calls function ClearScanLine  
+    COMMENT
+    COMMENT Class 63
+    COMMENT The function 'Dma2dInitRgbToArgb4444', calls function HalDma2dInit  
+    COMMENT
+    COMMENT Class 64
+    COMMENT The function 'Dma2dInitRgbToArgb4444', calls function HalDma2dConfigLayer  
+    COMMENT
+    COMMENT Class 65
+    COMMENT The function 'Dma2dRgbToArgb4444', calls function Dma2dWait  
+    COMMENT
+    COMMENT Class 66
+    COMMENT The function 'Dma2dRgbToArgb4444', DMA mode is not equal to RGB565TOARGB4444 
+    COMMENT
+    COMMENT Class 67
+    COMMENT The function 'Dma2dRgbToArgb4444', DMA mode is equal to RGB565TOARGB4444 
+    COMMENT
+    COMMENT Class 68
+    COMMENT The function 'Dma2dRgbToArgb4444', calls function Dma2dInitRgbToArgb4444  
+    COMMENT
+    COMMENT Class 69
+    COMMENT The function 'Dma2dRgbToArgb4444', calls function HalDma2dStartIt  
+    COMMENT
+    COMMENT Class 70    
+    COMMENT The function 'Dma2dInit', calls macro __HAL_RCC_DMA2D_CLK_ENABLE   
+    COMMENT
+    COMMENT Class 71    
+    COMMENT The function 'Dma2dDrawChar', calls function WidgetsRGB444ToRGB888   
+    COMMENT
+    COMMENT Class 81    
+    COMMENT In function 'Dma2dFillBox', DMA mode is equal to RTOM  
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT Class 73
+    COMMENT The function 'HalDma2dInit', with invalid Parameter 'h_dma2d'. 
+    COMMENT
+    COMMENT Class 74
+    COMMENT The function 'HalDma2dStartIt', with invalid Parameter 'h_dma2d'.
+    COMMENT
+    COMMENT Class 5
+    COMMENT The function 'HalDma2dConfigLayer', with invalid Parameter 'h_dma2d'.
+    COMMENT
+    COMMENT Class 36
+    COMMENT The function 'HalDma2dBlendingStartIt', with invalid Parameter 'h_dma2d'.
+    COMMENT
+    COMMENT Class 75
+    COMMENT The function 'Dma2dDrawChar', with invalid Parameter 'character_data'.
+    COMMENT
+    COMMENT Class 76
+    COMMENT The function 'Dma2dDrawChar', with invalid Parameter 'write_loc'.
+    COMMENT
+    COMMENT Class 77
+    COMMENT The function 'Dma2dRgbToArgb4444', with Parameter 'bit_map' as NULL pointer.
+    COMMENT
+    COMMENT Class 78
+    COMMENT The function 'Dma2dRgbToArgb4444', with Parameter 'write_loc' as NULL pointer.
+    COMMENT
+    COMMENT Class 79
+    COMMENT The function 'Dma2dScanLineBlend', with Parameter 'scan_line' as NULL pointer.
+    COMMENT
+    COMMENT Class 80
+    COMMENT The function 'Dma2dScanLineBlend', with Parameter 'frame_data' as NULL pointer.
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+    DEFINE STUB hdudispfdma2d_c
+        
+        #T_UINT32 WidgetsRGB444ToRGB888(T_EPENCOLOR _in e_pen_color); 
+    
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfdma2d.c
+
+ENVIRONMENT ENV_hdudispfdma2d_c
+
+  STRUCTURE Dma2d_handle,   init = { Instance => NIL, Init => { Mode => 0, ColorMode => 0, 
+  &                                  OutputOffset => 0 }, XferCpltCallback => NIL, XferErrorCallback => NIL, 
+  &                                  LayerCfg => { others => { InputOffset => 0, InputColorMode => 0, 
+  &                                  AlphaMode => 0, InputAlpha => 0 } }, Lock=> HAL_UNLOCKED, 
+  &                                  State => HAL_DMA2D_STATE_RESET, ErrorCode => 0 },     ev = init
+
+END ENVIRONMENT -- ENV_hdudispfdma2d_c
+
+USE ENV_hdudispfdma2d_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service Dma2dScanLineBlend
+--------------------------------------------------------------------------------
+SERVICE Dma2dScanLineBlend
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #void *scan_line;
+    #void *frame_data;
+    #T_UINT32 u32_width;
+    #T_UINT16 e_color;
+
+    ENVIRONMENT ENV_Dma2dScanLineBlend
+    
+    VAR scan_line,      init = 0,       ev = init
+    
+    VAR frame_data,     init = 0,       ev = init
+    
+    VAR u32_width,      init = 0,       ev = init
+    
+    VAR e_color,        init = 0,       ev = init
+    
+    END ENVIRONMENT -- ENV_Dma2dScanLineBlend
+    
+    USE ENV_Dma2dScanLineBlend
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-001]
+        COMMENT The function does nothing when static color is equal to e_color. 
+        COMMENT Equivalence Class 55
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-002]
+        COMMENT The function calls Dma2dWait function to wait until Dma2d interrupts to get cleared. 
+        COMMENT Equivalence Class 56
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-003]
+        COMMENT The function does following when DMA mode is not equal to SCAN_LINE
+        COMMENT 1.  Call function Dma2dInitScanLine to initializes the DMA2D for scan line blend.
+        COMMENT 2.  Set OOR of Instance of Dma2d_handle to S16_panel_width.
+        COMMENT 3.  Set BGOR of Instance of Dma2d_handle to S16_panel_width.
+        COMMENT Equivalence Class 57, 59
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitScanLine-DB-LLR-001]
+        COMMENT The function Configures the DMA2D Mode, Color Mode and output offset to the value given below:
+        COMMENT 1. Set Mode of Init of Dma2d_handle to DMA2D_M2M_BLEND.
+        COMMENT 2. Set ColorMode of Init of Dma2d_handle to LTDC_PIXEL_FORMAT_ARGB4444.
+        COMMENT 3. Set OutputOffset of Init of Dma2d_handle to ZERO.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitScanLine-DB-LLR-002]
+        COMMENT The function Configures Foreground layer to the value given below:
+        COMMENT 1. Set AlphaMode of LayerCfg with index one of Dma2d_handle to DMA2D_NO_MODIF_ALPHA.
+        COMMENT 2. Set InputAlpha of LayerCfg with index one of Dma2d_handle to HEX_FF.
+        COMMENT 3. Set InputColorMode of LayerCfg with index one of Dma2d_handle DMA2D_INPUT_A8.
+        COMMENT 4. Set InputOffset of LayerCfg with index one of Dma2d_handle to ZERO.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitScanLine-DB-LLR-003]
+        COMMENT The function Configures Background layer to the value given below:
+        COMMENT 1. Set AlphaMode of LayerCfg with index zero of Dma2d_handle to DMA2D_NO_MODIF_ALPHA.
+        COMMENT 2. Set InputAlpha of LayerCfg with index zero of Dma2d_handle to HEX_FF.
+        COMMENT 3. Set InputColorMode of LayerCfg with index zero of Dma2d_handle to DMA2D_INPUT_ARGB4444.
+        COMMENT 4. Set InputOffset of LayerCfg with index zero of Dma2d_handle to ZERO.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitScanLine-DB-LLR-004]
+        COMMENT The function does the following :
+        COMMENT 1. Set Instance of Dma2d_handle to DMA2D.   
+        COMMENT 2. Call function HalDma2dInit with parameter address of Dma2d_handle to Initialize the DMA2D.
+        COMMENT 3. Call function HalDma2dConfigLayer with parameters address of Dma2d_handle and ONE
+        COMMENT    to configure the DMA2D foreground Layer.
+        COMMENT 4. Call function HalDma2dConfigLayer with parameters address of Dma2d_handle and ZERO 
+        COMMENT    to configure the DMA2D background Layer.
+        COMMENT 5. Set DMA mode to SCAN_LINE.
+        COMMENT Equivalence Class 52, 53
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-004]
+        COMMENT The function calls macro WRITE_REG with parameter FGCOLR of DMA2D and colour variable.
+        COMMENT Equivalence Class 60
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-005]
+        COMMENT The function calls macro WRITE_REG with parameter FGMAR of DMA2D and scan_line.
+        COMMENT Note: Values for FGMAR of DMA2D cannot be expected since the reference to parameters "scan_line"
+        COMMENT varies from Normal Run(No Code Insertion) to Instrumented Run(Code Coverage). 
+        COMMENT Equivalence Class 60
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-006]
+        COMMENT The function calls macro WRITE_REG with parameter BGMAR of DMA2D and frame_data.
+        COMMENT Note: Values for BGMAR of DMA2D cannot be expected since the reference to parameters "frame_data"
+        COMMENT varies from Normal Run(No Code Insertion) to Instrumented Run(Code Coverage). 
+        COMMENT Equivalence Class 60
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-007]
+        COMMENT The function calls macro WRITE_REG with parameter OMAR of DMA2D and frame_data.
+        COMMENT Note: Values for OMAR of DMA2D cannot be expected since the reference to parameters "frame_data"
+        COMMENT varies from Normal Run(No Code Insertion) to Instrumented Run(Code Coverage). 
+        COMMENT Equivalence Class 60
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-008]
+        COMMENT The function calls macro MODIFY_REG with parameter NLR of DMA2D, result of bitwise OR
+        COMMENT of DMA2D_NLR_NL and DMA2D_NLR_PL and result of bitwise OR of ONE and u32_width 
+        COMMENT left shift by DMA2D_POSITION_NLR_PL.
+        COMMENT Equivalence Class 61
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-009]
+        COMMENT The function sets CR of DMA2D to result of bitwise OR of CR of DMA2D and DMA2D_IT_TC.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-010]
+        COMMENT The function sets CR of DMA2D to result of bitwise OR of CR of DMA2D and DMA2D_CR_START.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-011]
+        COMMENT The function shall call ClearScanLine function to clears the line points.
+        COMMENT Equivalence Class 62
+        COMMENT
+        COMMENT [hdudispfdma2d-ClearScanLine-DB-LLR-001]
+        COMMENT The function does nothing when clear count is equal to zero.
+        COMMENT Equivalence Class 49
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-012]
+        COMMENT The function set Clear_addr to scan_line and Clear_Count to u32_width.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT In Second Element block
+        COMMENT 
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-001]
+        COMMENT The function does the following if static color is not equal to e_color. 
+        COMMENT 1.  Set red colour to COND2.
+        COMMENT 2.  Set green colour to COND4.
+        COMMENT 3.  Set blue colour to COND6.
+        COMMENT 4.  Set colour variable to result of bitwise OR of red colour , green clour and blue colour
+        COMMENT 5.  Set static color  to e_color.
+        COMMENT Where,
+        COMMENT COND1 = (bitwise AND of e_color and HEX_F00) right shift by EIGHT
+        COMMENT COND2 = ((COND1 left shift by FOUR) plus COND1) left shift by SIXTEEN
+        COMMENT COND3 = (bitwise AND of e_color and HEX_0F0) right shift by FOUR
+        COMMENT COND4 = ((COND3 left shift by FOUR) plus COND3) left shift by EIGHT
+        COMMENT COND5 = bitwise AND of e_color and HEX_00F
+        COMMENT COND6 = (COND5 left shift by FOUR) plus COND5
+        COMMENT Equivalence Class 54
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dScanLineBlend-DB-LLR-003]
+        COMMENT The function does nothing when DMA mode is equal to SCAN_LINE
+        COMMENT Equivalence Class 58
+        COMMENT
+        COMMENT [hdudispfdma2d-ClearScanLine-DB-LLR-001]
+        COMMENT The function does the following when clear count is not equal to zero 
+        COMMENT and does not loop(Loops for zero time) when clear count is less than FOUR.
+        COMMENT Equivalence Class 48, 51
+        COMMENT
+        COMMENT [hdudispfdma2d-ClearScanLine-DB-LLR-002]
+        COMMENT The function does the following when clear count is not equal to zero  
+        COMMENT and loop till clear count is equal to one. (Loops for one time)
+        COMMENT 1.  initializes clear address contents to ZERO.
+        COMMENT 2.  Sets clear address to clear count plus ONE.
+        COMMENT 3.  Sets clear count to clear count minus ONE.
+        COMMENT Equivalence Class 48
+        COMMENT  </TD>  
+    
+        ELEMENT
+        
+            COMMENT INPUT section :
+                --Source Location
+                VAR scan_line,                        init = (T_UINT32)PTU_scan_line,  ev = init
+                
+                --Temporary variable to hold Source Location
+                ARRAY PTU_scan_line,                    init = {others => 0},                     ev = init      
+                
+                --Initialization of value for Destination address
+                VAR frame_data,                     init = (T_UINT32)PTU_frame_data,             ev = init
+                
+                --Temporary variable to hold frame_data                
+                ARRAY PTU_frame_data,                 init = {others => 0},                       ev = init
+                
+                --width of the data 
+                VAR u32_width,                      init = 1,                       ev = init
+            
+                --Color to be displayed.
+                VAR e_color,                        init = 0,                       ev = init 
+                
+                -- Initialize the value for S16_panel_width
+                VAR S16_panel_width,                init = 0x3FFF,                  ev = init
+
+            COMMENT INPUT/OUTPUT section : 
+            
+                --Configures DMA2D Control Register
+                VAR DMA2D->CR,                      init = 0,                       ev = (T_UINT32)131585
+            
+            COMMENT OUTPUT section :  
+                --Configures the DMA2D Mode, Color Mode and output offset
+                VAR Dma2d_handle.Init.Mode,                  init = 0,                  ev = DMA2D_M2M_BLEND                 
+                VAR Dma2d_handle.Init.OutputOffset,          init = ONE,                ev = ZERO               
+                VAR Dma2d_handle.Init.ColorMode,             init = LTDC_PIXEL_FORMAT_ARGB1555, 
+                &                                                                       ev = LTDC_PIXEL_FORMAT_ARGB4444                
+               
+                --Foreground layer Configuration
+                VAR Dma2d_handle.LayerCfg[1].AlphaMode,      init = 1,                  ev = DMA2D_NO_MODIF_ALPHA
+                VAR Dma2d_handle.LayerCfg[1].InputAlpha,     init = HEX_1F,             ev = HEX_FF
+                VAR Dma2d_handle.LayerCfg[1].InputColorMode, init = DMA2D_INPUT_A4,     ev = DMA2D_INPUT_A8
+                VAR Dma2d_handle.LayerCfg[1].InputOffset,    init = ONE,                ev = ZERO
+                
+                --Background layer Configuration
+                VAR Dma2d_handle.LayerCfg[0].AlphaMode,      init = 1,                  ev = DMA2D_NO_MODIF_ALPHA
+                VAR Dma2d_handle.LayerCfg[0].InputAlpha,     init = HEX_1F,             ev = HEX_FF
+                VAR Dma2d_handle.LayerCfg[0].InputColorMode, init = DMA2D_INPUT_A4,     ev = DMA2D_INPUT_ARGB4444
+                VAR Dma2d_handle.LayerCfg[0].InputOffset,    init = ONE,                ev = ZERO
+                VAR Dma2d_handle.Instance,                   init = NULL,               ev = DMA2D            
+            
+                --Sets OOR of Instance of Dma2d_handle to S16_panel_width.                
+                VAR DMA2D->OOR,                 init = 1,           ev = (T_UINT32)0x3FFF
+                
+                --Sets BGOR of Instance of Dma2d_handle to S16_panel_width.
+                VAR DMA2D->BGOR,                init = 1,           ev = (T_UINT32)0x3FFF            
+        
+                --Configures the color register.
+                VAR DMA2D->FGCOLR,              init = 1,           ev = (T_UINT32)0
+                
+               --Configures DMA2D data size
+               VAR DMA2D->NLR,                 init = 0,            ev = (T_UINT32)65537
+                
+               --DMA2D OPFCCR register configuration
+               VAR DMA2D->OPFCCR,              init = 0,            ev = (T_UINT32)4
+        
+            SIMUL
+            
+            --None 
+
+            END SIMUL    
+            
+        --Calling Unit Under Test    
+        #Dma2dScanLineBlend(scan_line, frame_data, u32_width, e_color);
+        
+        END ELEMENT  
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+            
+                --Source Location
+                VAR scan_line,                  init = (T_UINT32) PTU_scan_line,             
+                &                                                           ev = init                
+                
+                --Initialization of value for Destination address
+                VAR frame_data,                 init = (T_UINT32)PTU_frame_data,         ev = init
+                
+                --Temporary variable to hold frame_data                                
+                ARRAY PTU_frame_data,           init = {others => 1},       ev = init
+                
+                --width of the data 
+                VAR u32_width,                  init = 3,                   ev = init
+            
+                --Color to be displayed.
+                VAR e_color,                    init = 1,                   ev = init
+                     
+          
+            COMMENT INPUT/OUTPUT section :
+            
+                --Temporary variable to hold  Source Location
+                ARRAY PTU_scan_line,            init = {others => (T_UINT32)0xFFFFFFFF},       
+                &                                                           ev = {0 => 0xFFFFFF00, others => init}
+                
+                --Configures DMA2D Control Register
+                VAR DMA2D->CR,                  init = 0,                   ev = (T_UINT32)513
+                
+            COMMENT OUTPUT section :  
+        
+                --Configures the color register.
+                VAR DMA2D->FGCOLR,              init = 0,                   ev = (T_UINT32)17
+                
+                --Configures DMA2D data size
+                VAR DMA2D->NLR,                 init = 0,                   ev = (T_UINT32)196609
+                
+                --DMA2D Interrupt Flag Clear Register
+                VAR DMA2D->IFCR,                init = 0,                   ev = (T_UINT32)DMA2D_ISR_TCIF       
+            
+            SIMUL
+            
+            --None 
+ 
+            
+            END SIMUL
+            
+        --Calling Unit Under Test    
+        #Dma2dScanLineBlend(scan_line, frame_data, u32_width, e_color); 
+             
+        END ELEMENT
+        
+ END TEST -- TEST 1
+END SERVICE -- Dma2dScanLineBlend
+
+--------------------------------------------------------------------------------
+-- Declaration of the service Dma2dRgbToArgb4444
+--------------------------------------------------------------------------------
+SERVICE Dma2dRgbToArgb4444
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #void *bit_map;
+    #void *write_loc;
+    #T_UINT32 u32_width;
+    #T_UINT32 u32_height;
+
+
+    ENVIRONMENT ENV_Dma2dRgbToArgb4444
+    
+    VAR bit_map,        init = 0,       ev = init
+    
+    VAR write_loc,      init = 0,       ev = init
+    
+    VAR u32_width,      init = 0,       ev = init
+    
+    VAR u32_height,     init = 0,       ev = init
+    
+    END ENVIRONMENT -- ENV_Dma2dRgbToArgb4444
+    
+    USE ENV_Dma2dRgbToArgb4444
+
+    TEST 1
+    FAMILY nominal       
+
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dRgbToArgb4444-DB-LLR-001]
+        COMMENT The function calls Dma2dWait function to wait until Dma2d interrupts to get cleared.
+        COMMENT Equivalence Class 65
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dRgbToArgb4444-DB-LLR-002]
+        COMMENT The function calls the function Dma2dInitRgbToArgb4444 to initializes 
+        COMMENT the DMA2D for character draws when DMA mode is not equal to RGB565TOARGB4444.
+        COMMENT Equivalence Class 66, 68
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitRgbToArgb4444-DB-LLR-001]
+        COMMENT The function Configures the DMA2D Mode, Color Mode and output offset to the value given below:
+        COMMENT 1.  Sets Mode of Init of Dma2d_handle to DMA2D_M2M_PFC.
+        COMMENT 2.  Sets ColorMode of Init of Dma2d_handle to LTDC_PIXEL_FORMAT_ARGB4444.
+        COMMENT 3.  Sets OutputOffset of Init of Dma2d_handle to ZERO.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitRgbToArgb4444-DB-LLR-002]
+        COMMENT The function Configures Foreground layer to the value given below:
+        COMMENT 1.  Sets AlphaMode of LayerCfg with index one of Dma2d_handle to DMA2D_NO_MODIF_ALPHA.
+        COMMENT 2.  Sets InputAlpha of LayerCfg with index one of Dma2d_handle to HEX_FF.
+        COMMENT 3.  Sets InputColorMode of LayerCfg with index one of Dma2d_handle to DMA2D_INPUT_RGB565.
+        COMMENT 4.  Sets InputOffset of LayerCfg with index one of Dma2d_handle to ZERO.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitRgbToArgb4444-DB-LLR-003]
+        COMMENT The function does the following:
+        COMMENT 1.  Sets Instance of Dma2d_handle to DMA2D.
+        COMMENT 2.  Calls function HalDma2dInit with parameter address of Dma2d_handle to Initialize the DMA2D.
+        COMMENT 3.  Calls function HalDma2dConfigLayer with parameters address of Dma2d_handle 
+        COMMENT     and ONE to configure the DMA2D foreground Layer.
+        COMMENT 4.  Sets DMA mode to RGB565TOARGB4444.
+        COMMENT Equivalence Class 63, 64
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dRgbToArgb4444-DB-LLR-003]
+        COMMENT The function does the following:
+        COMMENT 1.  Sets OOR of Instance of Dma2d_handle to S16_panel_width minus    u32_width.
+        COMMENT 2.  Sets BGOR of Instance of Dma2d_handle to S16_panel_width minus u32_width.
+        COMMENT 3.  Calls function HalDma2dStartIt with parameters address of Dma2d_handle, bit_map, 
+        COMMENT     write_loc, u32_width and u32_height to configure DMA and enable transfers interrupts.
+        COMMENT Equivalence Class 69
+        COMMENT
+        COMMENT Note:Tested parameters (bit_map, write_loc, u32_width, u32_height) for min values
+        COMMENT 
+        COMMENT In Second Element block
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dRgbToArgb4444-DB-LLR-002]
+        COMMENT The function does nothing when DMA mode is equal to RGB565TOARGB4444.
+        COMMENT Equivalence Class 67
+        COMMENT
+        COMMENT Tested parameters (bit_map, write_loc, u32_width, u32_height) for max values
+        COMMENT  </TD>  
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+            
+                -- Initialize the value for S16_panel_width
+                VAR S16_panel_width,            init = -32768,               ev = init  
+            
+                --Bitmap address of the image to be displayed.
+                VAR bit_map,                    init = 0,               ev = init
+                
+                --Destination address.
+                VAR write_loc,                  init = 0,               ev = init
+                
+                --The width of the data.
+                VAR u32_width,                  init = 0,               ev = init
+                
+                --The height of the data
+                VAR u32_height,                 init = 0,               ev = init
+                
+                --Instance of Dma2d_handle is set to DMA2D
+                VAR Dma2d_handle.Instance, init = DMA2D, ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --None
+            
+            COMMENT OUTPUT section :  
+                --Configure the DMA2D Mode, Color Mode and output offset 
+                VAR Dma2d_handle.Init.Mode,                  init = DMA2D_M2M_BLEND,                ev = DMA2D_M2M_PFC
+                VAR Dma2d_handle.Init.ColorMode,             init = LTDC_PIXEL_FORMAT_ARGB1555,     ev = LTDC_PIXEL_FORMAT_ARGB4444
+                VAR Dma2d_handle.Init.OutputOffset,          init = ONE,                            ev = ZERO
+
+                --Foreground layer Configuration
+                VAR Dma2d_handle.LayerCfg[1].AlphaMode,      init = DMA2D_REPLACE_ALPHA,            ev = DMA2D_NO_MODIF_ALPHA
+                VAR Dma2d_handle.LayerCfg[1].InputAlpha,     init = HEX_1F,                         ev = HEX_FF
+                VAR Dma2d_handle.LayerCfg[1].InputColorMode, init = DMA2D_INPUT_ARGB1555,           ev = DMA2D_INPUT_RGB565
+                VAR Dma2d_handle.LayerCfg[1].InputOffset,    init = ONE,                            ev = ZERO
+                
+                --Sets OOR of Instance of Dma2d_handle to S16_panel_width.                
+                VAR DMA2D->OOR,                             init = 1,                               ev = (T_UINT32)4294934528
+                
+                --Sets BGOR of Instance of Dma2d_handle to S16_panel_width.
+                VAR DMA2D->BGOR,                            init = 1,                               ev = (T_UINT32)4294934528  
+            
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+         
+        --Calling Unit Under Test 
+        #Dma2dRgbToArgb4444(bit_map, write_loc, u32_width, u32_height);
+        
+        END ELEMENT
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+            
+                -- Initialize the value for S16_panel_width
+                VAR S16_panel_width,            init = 32767,               ev = init  
+            
+                --Bitmap address of the image to be displayed.
+                VAR bit_map,                    init = (T_UINT32)4294967295,               ev = init
+                
+                --Destination address.
+                VAR write_loc,                  init = (T_UINT32)4294967295,               ev = init
+                
+                --The width of the data.
+                VAR u32_width,                  init = 4294967295,               ev = init
+                
+                --The height of the data
+                VAR u32_height,                 init = 4294967295,               ev = init
+                
+                --Instance of Dma2d_handle is set to DMA2D
+                VAR Dma2d_handle.Instance,      init = DMA2D,                   ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --None
+            
+            COMMENT OUTPUT section :   
+                
+                --Sets OOR of Instance of Dma2d_handle to S16_panel_width.                
+                VAR DMA2D->OOR,         init = 1,           ev = (T_UINT32)32768
+                
+                --Sets BGOR of Instance of Dma2d_handle to S16_panel_width.
+                VAR DMA2D->BGOR,        init = 1,           ev = (T_UINT32)32768  
+            
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+         
+        --Calling Unit Under Test 
+        #Dma2dRgbToArgb4444(bit_map, write_loc, u32_width, u32_height);
+        
+        END ELEMENT
+    END TEST -- TEST 1
+
+END SERVICE -- Dma2dRgbToArgb4444
+
+--------------------------------------------------------------------------------
+-- Declaration of the service Dma2dIsBusy
+--------------------------------------------------------------------------------
+SERVICE Dma2dIsBusy
+SERVICE_TYPE extern
+
+    -- By function returned type declaration
+    #T_INT16 ret_Dma2dIsBusy;
+
+    ENVIRONMENT ENV_Dma2dIsBusy
+    
+    VAR ret_Dma2dIsBusy,        init = 0,       ev = init
+    
+    END ENVIRONMENT -- ENV_Dma2dIsBusy
+    
+    USE ENV_Dma2dIsBusy
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dIsBusy-DB-LLR-001]
+        COMMENT The function returns one when result of bitwise AND of ISR of 
+        COMMENT DMA2D and DMA2D_ISR_TCIF is zero.
+        COMMENT Equivalence Class 31
+        COMMENT
+        COMMENT  </TD>    
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+            
+                --Initialize value to DMA2D Interrupt Status Register
+                VAR DMA2D->ISR,         init=0,         ev = init
+                
+            COMMENT INPUT/OUTPUT section : 
+                --None
+            
+            COMMENT OUTPUT section :              
+                
+                --Holds the value of DMA2D status
+                VAR ret_Dma2dIsBusy,    init = 0,       ev = 1
+            
+            SIMUL
+            
+            --None
+            
+            END SIMUL
+        
+        --Calling Unit Under Test   
+        #ret_Dma2dIsBusy = Dma2dIsBusy();
+        
+        END ELEMENT
+
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dIsBusy-DB-LLR-001]
+        COMMENT The function returns zero when result of bitwise AND of ISR of 
+        COMMENT DMA2D and DMA2D_ISR_TCIF is not zero.
+        COMMENT Equivalence Class 32
+        COMMENT
+        COMMENT  </TD>    
+
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+                
+                --Initialize value to DMA2D Interrupt Status Register
+                VAR DMA2D->ISR,     init = (T_UINT32)DMA2D_ISR_TCIF,  ev = init
+                
+            COMMENT INPUT/OUTPUT section : 
+                --None
+            
+            COMMENT OUTPUT section :              
+        
+                --Holds the value of DMA2D status
+                VAR ret_Dma2dIsBusy,    init = 1,           ev = 0
+                
+            SIMUL
+            
+            --None
+            
+            END SIMUL
+            
+        --Calling Unit Under Test 
+        #ret_Dma2dIsBusy = Dma2dIsBusy();
+        
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+END SERVICE -- Dma2dIsBusy
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service Dma2dDrawChar
+--------------------------------------------------------------------------------
+SERVICE Dma2dDrawChar
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #void *character_data;
+    #void *write_loc;
+    #T_UINT32 u32_width;
+    #T_UINT32 u32_height;
+    #T_UINT16 e_color;
+
+    ENVIRONMENT ENV_Dma2dDrawChar
+    VAR character_data, init = 0,       ev = init
+    VAR write_loc,      init = 0,       ev = init
+    VAR u32_width,      init = 0,       ev = init
+    VAR u32_height,     init = 0,       ev = init
+    VAR e_color,        init = 0,       ev = init
+    END ENVIRONMENT -- ENV_Dma2dDrawChar
+    USE ENV_Dma2dDrawChar
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dDrawChar-DB-LLR-001]
+        COMMENT The function sets colour variable to return value of function WidgetsRGB444ToRGB888 
+        COMMENT with parameter e_color and static color to e_color when e_color equal to static color.
+        COMMENT Equivalence Class 42, 71
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dDrawChar-DB-LLR-002]
+        COMMENT The function calls Dma2dWait function to wait until Dma2d interrupts to get cleared.
+        COMMENT Equivalence Class 43
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dDrawChar-DB-LLR-003]
+        COMMENT The function calls function Dma2dInitChartoM to initializes the DMA2D for character to 
+        COMMENT memory if DMA mode is not equal to CHARTOM.
+        COMMENT Equivalence Class 44, 46
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitChartoM-DB-LLR-001]
+        COMMENT The function Configures the DMA2D Mode, Color Mode and output offset to the value given below:
+        COMMENT 1.  Sets Mode of Init of Dma2d_handle to DMA2D_M2M_BLEND.
+        COMMENT 2.  Sets ColorMode of Init of Dma2d_handle to LTDC_PIXEL_FORMAT_ARGB4444.
+        COMMENT 3.  Sets OutputOffset of Init of Dma2d_handle to ZERO.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitChartoM-DB-LLR-002]
+        COMMENT The function Configures Foreground layer to the value given below:
+        COMMENT 1.  Sets AlphaMode of LayerCfg with index one of Dma2d_handle to DMA2D_NO_MODIF_ALPHA.
+        COMMENT 2.  Sets InputAlpha of LayerCfg with index one of Dma2d_handle to HEX_FF.
+        COMMENT 3.  Sets InputColorMode of LayerCfg with index one of Dma2d_handle to DMA2D_INPUT_A4.
+        COMMENT 4.  Sets InputOffset of LayerCfg with index one of Dma2d_handle to ZERO.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitChartoM-DB-LLR-003]
+        COMMENT The function Configures Background layer to the value given below:
+        COMMENT 1.  Set AlphaMode of LayerCfg with index zero of Dma2d_handle to DMA2D_NO_MODIF_ALPHA.
+        COMMENT 2.  Set InputAlpha of LayerCfg with index zero of Dma2d_handle to HEX_FF.
+        COMMENT 3.  Set InputColorMode of LayerCfg with index zero of Dma2d_handle to LTDC_PIXEL_FORMAT_ARGB4444.
+        COMMENT 4.  Set InputOffset of LayerCfg with index zero of Dma2d_handle to ZERO.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dInitChartoM-DB-LLR-004]
+        COMMENT The function does the following :
+        COMMENT 1.  Calls function HalDma2dInit with parameter address of Dma2d_handle to Initialize the DMA2D.
+        COMMENT 2.  Calls function HalDma2dConfigLayer with parameters address of Dma2d_handle and ONE to configure the DMA2D foreground Layer.
+        COMMENT 3.  Calls function HalDma2dConfigLayer with parameters address of Dma2d_handle and ZERO to configure the DMA2D background Layer.
+        COMMENT 4.  Sets DMA mode to CHARTOM.
+        COMMENT Equivalence Class 39, 40 
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dDrawChar-DB-LLR-004]
+        COMMENT The function does the following :
+        COMMENT 1.  Set OOR of Instance of Dma2d_handle to S16_panel_width minus COND2
+        COMMENT 2.  Set BGOR of Instance of Dma2d_handle to S16_panel_width minus COND2
+        COMMENT 3.  Set FGCOLR of Instance of Dma2d_handle to colour variable.  
+        COMMENT Where,
+        COMMENT COND1 = u32_width mod TWO.
+        COMMENT COND2 = COND1 addition with u32_width.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dDrawChar-DB-LLR-005]
+        COMMENT The function configures the DMA2D registers for background and foreground image blending and enable transfer 
+        COMMENT interrupts by calling function HalDma2dBlendingStartIt with parameters address of Dma2d_handle, 
+        COMMENT character_data, write_loc, write_loc, u32_width and u32_height.
+        COMMENT Equivalence Class 47
+        COMMENT
+        COMMENT Note: Parameter are tested for min values
+        COMMENT
+        COMMENT In Second Element block
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dDrawChar-DB-LLR-001]
+        COMMENT The function does nothing when e_color not equal to static color.
+        COMMENT Equivalence Class 41
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dDrawChar-DB-LLR-003]
+        COMMENT The function does nothing when DMA mode is equal to CHARTOM.
+        COMMENT Equivalence Class 45
+        COMMENT
+        COMMENT Note: Parameter are tested for max values
+        COMMENT
+        COMMENT  </TD> 
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+                --Color in which character is displayed.
+                VAR e_color,                init = 0,               ev = init  
+                
+                --Value to the parameters
+                VAR character_data,         init = (T_UINT32)0,     ev = init
+                VAR write_loc,              init = (T_UINT32)0,     ev = init
+                VAR u32_width,              init = 0,               ev = init
+                VAR u32_height,             init = 0,               ev = init      
+                
+                --Instance of Dma2d_handle is set to DMA2D
+                VAR Dma2d_handle.Instance,  init = DMA2D,           ev = init
+                
+                --Set value of S16_panel_width
+                VAR S16_panel_width,        init= -32768,           ev = init 
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+                --Configure the DMA2D Mode, Color Mode and output offset
+                VAR Dma2d_handle.Init.Mode,init = DMA2D_M2M_PFC,       
+                &                                                   ev = DMA2D_M2M_BLEND
+                VAR Dma2d_handle.Init.ColorMode,init = LTDC_PIXEL_FORMAT_ARGB1555,           
+                &                                                   ev = LTDC_PIXEL_FORMAT_ARGB4444
+                VAR Dma2d_handle.Init.OutputOffset,
+                &                          init = ONE,              ev = ZERO
+  
+                --Foreground layer Configuration
+                VAR Dma2d_handle.LayerCfg[1].AlphaMode, 
+                &                       init = DMA2D_REPLACE_ALPHA, ev = DMA2D_NO_MODIF_ALPHA
+                VAR Dma2d_handle.LayerCfg[1].InputAlpha,         
+                &                       init = HEX_1F,              ev = HEX_FF
+                VAR Dma2d_handle.LayerCfg[1].InputColorMode,         
+                &                      init = DMA2D_INPUT_A8,       ev = DMA2D_INPUT_A4
+                VAR Dma2d_handle.LayerCfg[1].InputOffset,         
+                &                      init = ONE,                  ev = ZERO
+  
+                --Background layer Configuration
+                VAR Dma2d_handle.LayerCfg[0].AlphaMode,         
+                &                     init = DMA2D_REPLACE_ALPHA,   ev = DMA2D_NO_MODIF_ALPHA
+                VAR Dma2d_handle.LayerCfg[0].InputAlpha,         
+                &                     init = HEX_1F,                ev = HEX_FF
+                VAR Dma2d_handle.LayerCfg[0].InputColorMode,         
+                &                     init = DMA2D_INPUT_A8,        ev = LTDC_PIXEL_FORMAT_ARGB4444
+                VAR Dma2d_handle.LayerCfg[0].InputOffset,         
+                &                     init = ONE,                   ev = ZERO
+                
+                --Holds the value of OOR of of Instance of Dma2d_handle
+                VAR DMA2D->OOR,         init = 1,                   ev = (T_UINT32)4294934528
+                
+                --Holds the value of BGOR of of Instance of Dma2d_handle
+                VAR DMA2D->BGOR,        init = 1,                   ev = (T_UINT32)4294934528
+                
+                --Holds the value of FGCOLR of of Instance of Dma2d_handle
+                VAR DMA2D->FGCOLR,      init = 1,                   ev = 0 
+            
+            SIMUL
+            
+                --None
+        
+            END SIMUL
+        
+        --Calling Unit Under Test      
+        #Dma2dDrawChar(&character_data, write_loc, u32_width, u32_height, e_color);
+        
+        END ELEMENT
+
+        ELEMENT
+            COMMENT INPUT section :
+                --Color in which character is displayed.
+                VAR e_color,                init = 1,           ev = init
+                
+                --Value to the parameters
+                VAR character_data,     init = (T_UINT32)4294967295,       ev = init
+                VAR write_loc,          init = (T_UINT32)4294967295,       ev = init
+                VAR u32_width,          init = 4294967295,       ev = init
+                VAR u32_height,         init = 65535,       ev = init 
+                
+                --Instance of Dma2d_handle is set to DMA2D
+                VAR Dma2d_handle.Instance,  init = DMA2D,       ev = init
+                
+                --Initialize a value for S16_panel_width
+                VAR S16_panel_width, init= 32767, ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+                --Holds the value of OOR of of Instance of Dma2d_handle
+                VAR DMA2D->OOR,         init = 1,       ev =    (T_UINT32)32767
+                
+                --Holds the value of BGOR of of Instance of Dma2d_handle
+                VAR DMA2D->BGOR,         init = 1,       ev =    (T_UINT32)32767 
+                
+                --Holds the value of FGCOLR of of Instance of Dma2d_handle    
+                VAR DMA2D->FGCOLR,         init = 1,       ev =    0 
+            
+            SIMUL
+            
+                STUB WidgetsRGB444ToRGB888(1)0
+        
+            END SIMUL
+        
+        --Calling Unit Under Test     
+        #Dma2dDrawChar(&character_data, write_loc, u32_width, u32_height, e_color);
+        
+        END ELEMENT
+    END TEST -- TEST 1
+ 
+    
+--    TEST 2
+--    FAMILY robustness
+--
+--        COMMENT Test Description
+--        COMMENT <TD>
+--        COMMENT [hdudispfdma2d-Dma2dDrawChar-DB-LLR-005]
+--        COMMENT The function configures the DMA2D registers for background and foreground image blending and enable transfer 
+--        COMMENT interrupts by calling function HalDma2dBlendingStartIt with parameters address of Dma2d_handle, 
+--        COMMENT character_data, write_loc, write_loc, u32_width and u32_height.
+--        COMMENT Note: Parameter character_data is tested NULL pointer check.
+--        COMMENT Equivalence Class 75
+--        COMMENT
+--        COMMENT  </TD> 
+--
+--        ELEMENT
+--            COMMENT INPUT section :
+--                --Color in which character is displayed.
+--                VAR e_color,                init = 1,           ev = init
+--                
+--                --Value to the parameters
+--                VAR write_loc,              init = (T_UINT32)1, ev = init
+--                VAR u32_width,              init = 1,           ev = init
+--                VAR u32_height,             init = 1,           ev = init 
+--                
+--            COMMENT INPUT/OUTPUT section :
+--                --none
+--            
+--            COMMENT OUTPUT section :
+--                --none
+--            
+--            SIMUL
+--            
+--            --None
+--        
+--            END SIMUL
+--
+--        --Calling Unit Under Test     
+--        #Dma2dDrawChar(NULL, write_loc, u32_width, u32_height, e_color);
+--        
+--        END ELEMENT
+--
+--    
+--    END TEST -- TEST 2
+
+--    TEST 3
+--    FAMILY robustness
+--
+--        COMMENT Test Description
+--        COMMENT <TD>
+--        COMMENT [hdudispfdma2d-Dma2dDrawChar-DB-LLR-005]
+--        COMMENT The function configures the DMA2D registers for background and foreground image blending and enable transfer 
+--        COMMENT interrupts by calling function HalDma2dBlendingStartIt with parameters address of Dma2d_handle, 
+--        COMMENT character_data, write_loc, write_loc, u32_width and u32_height.
+--        COMMENT Note: Parameter write_loc is tested NULL pointer check.
+--        COMMENT Equivalence Class 76
+--        COMMENT
+--        COMMENT  </TD> 
+--
+--        ELEMENT
+--            COMMENT INPUT section :
+--                --Color in which character is displayed.
+--                VAR e_color,                init = 1,           ev = init
+--                
+--                --Value to the parameters
+--                VAR character_data,         init = (T_UINT32)1, ev = init
+--                VAR u32_width,              init = 1,           ev = init
+--                VAR u32_height,             init = 1,           ev = init 
+--                
+--            COMMENT INPUT/OUTPUT section :
+--                --none
+--            
+--            COMMENT OUTPUT section :
+--                --none
+--            
+--            SIMUL
+--            
+--            --None
+--        
+--            END SIMUL
+--
+--        --Calling Unit Under Test     
+--        #Dma2dDrawChar(&character_data, NULL, u32_width, u32_height, e_color);
+--        
+--        END ELEMENT
+--    
+--    END TEST -- TEST 3
+
+END SERVICE -- Dma2dDrawChar
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalDma2dInit
+--------------------------------------------------------------------------------
+SERVICE HalDma2dInit
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_DMA2D_HANDLE_TYPE h_dma2d;
+
+    ENVIRONMENT ENV_HalDma2dInit
+    
+    STRUCTURE h_dma2d,      init = { Instance => NIL, Init => { Mode => 0, ColorMode => 0, OutputOffset => 0 }, 
+    &                                XferCpltCallback => NIL, XferErrorCallback => NIL, LayerCfg => { others => 
+    &                                { InputOffset => 0, InputColorMode => 0, AlphaMode => 0, InputAlpha => 0 } }, 
+    &                               Lock => HAL_UNLOCKED, State => HAL_DMA2D_STATE_RESET, ErrorCode => 0 },     
+    &                       ev = init
+    
+    END ENVIRONMENT -- ENV_HalDma2dInit
+    USE ENV_HalDma2dInit
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dInit-DB-LLR-001]
+        COMMENT The function configures DMA2D CR register by calling macro MODIFY_REG 
+        COMMENT with parameter CR of DMA2D, DMA2D_CR_MODE and Mode of Init of h_dma2d.
+        COMMENT Equivalence Class 26
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dInit-DB-LLR-002]
+        COMMENT The function configures DMA2D OPFCCR register by calling macro MODIFY_REG 
+        COMMENT with parameter OPFCCR of DMA2D, DMA2D_OPFCCR_CM and ColorMode of Init of h_dma2d. 
+        COMMENT Equivalence Class 26
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dInit-DB-LLR-003]
+        COMMENT The function configures DMA2D OOR register by calling macro MODIFY_REG with 
+        COMMENT parameter OOR of DMA2D, DMA2D_OOR_LO and OutputOffset of Init of h_dma2d.
+        COMMENT Equivalence Class 26
+        COMMENT
+        COMMENT  </TD>   
+
+
+        ELEMENT
+            COMMENT INPUT section :
+            
+                --DMA2D communication parameters
+                VAR h_dma2d.Init.Mode,          init = 0x30000,         ev = init
+                VAR h_dma2d.Init.ColorMode,     init = 0,               ev = init
+                VAR h_dma2d.Init.OutputOffset,  init = 0x3FFF,          ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+            
+                --DMA2D CR register configuration
+                VAR DMA2D->CR,                  init = 0,               ev = (T_UINT32)0x30000
+                
+                --DMA2D OPFCCR register configuration
+                VAR DMA2D->OPFCCR,              init = 1,               ev = (T_UINT32)0
+                
+                --DMA2D OOR register configuration
+                VAR DMA2D->OOR,                 init = 0,               ev = (T_UINT32)0x3FFF
+           
+           SIMUL
+           
+           --None
+           
+           END SIMUL
+           
+        --Calling Unit Under Test 
+        #HalDma2dInit(&h_dma2d);
+        
+        END ELEMENT        
+
+    END TEST -- TEST 1
+
+--    TEST 2
+--    FAMILY nominal
+--
+--        COMMENT Test Description
+--        COMMENT <TD>
+--        COMMENT [hdudispfdma2d-HalDma2dInit-DB-LLR-001]
+--        COMMENT The function configures DMA2D CR register by calling macro MODIFY_REG 
+--        COMMENT with parameter CR of DMA2D, DMA2D_CR_MODE and Mode of Init of h_dma2d.
+--        COMMENT Equivalence Class 73
+--        COMMENT
+--        COMMENT Note: Parameter h_dma2d is exercised for NULL
+--        COMMENT  </TD>   
+--
+--
+--        ELEMENT
+--            COMMENT INPUT section :
+--                --none
+--                
+--            COMMENT INPUT/OUTPUT section :
+--                --none
+--            
+--            COMMENT OUTPUT section :
+--                --none
+--           
+--           SIMUL
+--           
+--           --None
+--           
+--           END SIMUL
+--           
+--        --Calling Unit Under Test 
+--        #HalDma2dInit(NULL);
+--        
+--        END ELEMENT        
+--
+--    END TEST -- TEST 2
+
+    TEST 3
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dInit-DB-LLR-001]
+        COMMENT The function configures DMA2D CR register by calling macro MODIFY_REG 
+        COMMENT with parameter CR of DMA2D, DMA2D_CR_MODE and Mode of Init of h_dma2d.
+        COMMENT Equivalence Class 26
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dInit-DB-LLR-002]
+        COMMENT The function configures DMA2D OPFCCR register by calling macro MODIFY_REG 
+        COMMENT with parameter OPFCCR of DMA2D, DMA2D_OPFCCR_CM and ColorMode of Init of h_dma2d. 
+        COMMENT Equivalence Class 26
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dInit-DB-LLR-003]
+        COMMENT The function configures DMA2D OOR register by calling macro MODIFY_REG with 
+        COMMENT parameter OOR of DMA2D, DMA2D_OOR_LO and OutputOffset of Init of h_dma2d.
+        COMMENT Equivalence Class 26
+        COMMENT
+        COMMENT Note: Inputs are exercised for min values
+        COMMENT  </TD>   
+
+
+        ELEMENT
+            COMMENT INPUT section :
+            
+                --DMA2D communication parameters
+                VAR h_dma2d.Init.Mode,          init = 0,         ev = init
+                VAR h_dma2d.Init.ColorMode,     init = 0,               ev = init
+                VAR h_dma2d.Init.OutputOffset,  init = 0,          ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+            
+                --DMA2D CR register configuration
+                VAR DMA2D->CR,                  init = 0,               ev = init
+                
+                --DMA2D OPFCCR register configuration
+                VAR DMA2D->OPFCCR,              init = 1,               ev = (T_UINT32)0
+                
+                --DMA2D OOR register configuration
+                VAR DMA2D->OOR,                 init = 1,               ev = (T_UINT32)0
+           
+           SIMUL
+           
+           --None
+           
+           END SIMUL
+           
+        --Calling Unit Under Test 
+        #HalDma2dInit(&h_dma2d);
+        
+        END ELEMENT        
+
+    END TEST -- TEST 3
+
+    TEST 4
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dInit-DB-LLR-001]
+        COMMENT The function configures DMA2D CR register by calling macro MODIFY_REG 
+        COMMENT with parameter CR of DMA2D, DMA2D_CR_MODE and Mode of Init of h_dma2d.
+        COMMENT Equivalence Class 26
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dInit-DB-LLR-002]
+        COMMENT The function configures DMA2D OPFCCR register by calling macro MODIFY_REG 
+        COMMENT with parameter OPFCCR of DMA2D, DMA2D_OPFCCR_CM and ColorMode of Init of h_dma2d. 
+        COMMENT Equivalence Class 26
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dInit-DB-LLR-003]
+        COMMENT The function configures DMA2D OOR register by calling macro MODIFY_REG with 
+        COMMENT parameter OOR of DMA2D, DMA2D_OOR_LO and OutputOffset of Init of h_dma2d.
+        COMMENT Equivalence Class 26
+        COMMENT
+        COMMENT Note: Inputs are exercised for max values
+        COMMENT  </TD>   
+
+
+        ELEMENT
+            COMMENT INPUT section :
+            
+                --DMA2D communication parameters
+                VAR h_dma2d.Init.Mode,          init = (T_UINT32)4294967295,         ev = init
+                VAR h_dma2d.Init.ColorMode,     init = (T_UINT32)4294967295,               ev = init
+                VAR h_dma2d.Init.OutputOffset,  init = (T_UINT32)4294967295,          ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+            
+                --DMA2D CR register configuration
+                VAR DMA2D->CR,                  init = 0,               ev = (T_UINT32)4294967295
+                
+                --DMA2D OPFCCR register configuration
+                VAR DMA2D->OPFCCR,              init = 1,               ev = (T_UINT32)4294967295
+                
+                --DMA2D OOR register configuration
+                VAR DMA2D->OOR,                 init = 1,               ev = (T_UINT32)4294967295
+           
+           SIMUL
+           
+           --None
+           
+           END SIMUL
+           
+        --Calling Unit Under Test 
+        #HalDma2dInit(&h_dma2d);
+        
+        END ELEMENT        
+
+    END TEST -- TEST 4
+
+END SERVICE -- HalDma2dInit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalDma2dStartIt
+--------------------------------------------------------------------------------
+SERVICE HalDma2dStartIt
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_DMA2D_HANDLE_TYPE h_dma2d;
+    #T_UINT32 p_data;
+    #T_UINT32 dst_address;
+    #T_UINT32 width;
+    #T_UINT32 height;
+
+    ENVIRONMENT ENV_HalDma2dStartIt
+    
+    STRUCTURE h_dma2d,      init = { Instance => NIL, Init => { Mode => 0, ColorMode => 0, 
+    &                                OutputOffset => 0 }, XferCpltCallback => NIL, 
+    &                                XferErrorCallback => NIL, LayerCfg => { others => 
+    &                                { InputOffset => 0, InputColorMode => 0, AlphaMode => 0, 
+    &                                InputAlpha => 0 } }, Lock=> HAL_UNLOCKED, State => HAL_DMA2D_STATE_RESET, 
+    &                                ErrorCode => 0 },     
+    &                       ev = init
+    
+    VAR p_data,     init = 0,       ev = init
+    
+    VAR dst_address,        init = 0,       ev = init
+   
+    VAR width,      init = 0,       ev = init
+    
+    VAR height,     init = 0,       ev = init
+    
+    END ENVIRONMENT -- ENV_HalDma2dStartIt
+    
+    USE ENV_HalDma2dStartIt
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dStartIt-DB-LLR-001]
+        COMMENT The function calls Dma2dSetConfig with parameters h_dma2d, p_data, dst_address, 
+        COMMENT width and height to configure source, destination address and the data size..
+        COMMENT Equivalence Class 23
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-001]
+        COMMENT The function calls macro MODIFY_REG with parameters NLR of  Instance of h_dma2d, 
+        COMMENT bitwise OR of DMA2D_NLR_Nl and DMA2D_NLR_PL , bitwise OR of height and width 
+        COMMENT left shift by DMA2D_POSITION_NLR_PL.
+        COMMENT Equivalence Class 10
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-002]
+        COMMENT The function calls macro WRITE_REG with parameter OMAR of  Instance of h_dma2d and dst_address.
+        COMMENT Equivalence Class 11
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-009]
+        COMMENT The function calls macro WRITE_REG with parameter FGMAR of  Instance of h_dma2d 
+        COMMENT and p_data when Mode of Init of h_dma2d is not equal to DMA2D_R2M.
+        COMMENT Equivalence Class 11, 13
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dStartIt-DB-LLR-002]
+        COMMENT The function calls macro __HAL_DMA2D_ENABLE_IT with parameter DMA2D, result of bitwise OR of 
+        COMMENT DMA2D_IT_TC, DMA2D_IT_TE, DMA2D_IT_CE to Enable the specified DMA2D interrupts.
+        COMMENT Equivalence Class 24
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dStartIt-DB-LLR-003]
+        COMMENT The function calls macro __HAL_DMA2D_ENABLE with parameter DMA2D to Enable the DMA2D Peripheral.
+        COMMENT Equivalence Class 25
+        COMMENT
+        COMMENT  </TD>   
+        
+        ELEMENT
+            COMMENT INPUT section :
+                STRUCTURE h_dma2d,      init = { Instance => DMA2D, Init => { Mode => 0, ColorMode => 0, 
+                &                                OutputOffset => 0 }, XferCpltCallback => NIL, 
+                &                                XferErrorCallback => NIL, LayerCfg => { others => 
+                &                                { InputOffset => 0, InputColorMode => 0, AlphaMode => 0, 
+                &                                InputAlpha => 0 } }, Lock=> HAL_UNLOCKED, State => HAL_DMA2D_STATE_RESET, 
+                &                                ErrorCode => 0 },     
+                &                               ev = init
+    
+                VAR p_data,     init = 0,       ev = init
+    
+                VAR dst_address, init = 0,      ev = init
+   
+                VAR width,      init = 0,       ev = init
+    
+                VAR height,     init = 0,       ev = init
+
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+            
+                --Configure DMA2D data size
+                VAR DMA2D->NLR, init = 1, ev = (T_UINT32)0
+            
+                --Configure DMA2D destination address
+                VAR DMA2D->OMAR, init = 1, ev = (T_UINT32)0
+            
+                --Configure DMA2D source address
+                VAR DMA2D->FGMAR, init = 1, ev = (T_UINT32)0
+            
+                --Configure DMA2D CR register
+                VAR DMA2D->CR, init = 0, ev = (T_UINT32)8961
+                           
+            SIMUL
+            
+            --None
+            
+            END SIMUL
+            
+        --Calling Unit Under Test 
+        #HalDma2dStartIt(&h_dma2d, p_data, dst_address, width, height);
+                
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-003]
+        COMMENT The function stores the result of bitwise OR of COND1, COND2, COND3, COND4 to a temporary variable.
+        COMMENT When all of the below conditions are satisified
+        COMMENT 1.  Mode of Init of h_dma2d is equal to DMA2D_R2M 
+        COMMENT 2.  ColorMode of Init of h_dma2d is equal to DMA2D_OUTPUT_ARGB8888.
+        COMMENT 
+        COMMENT Where: 
+        COMMENT COND1 - Bitwise AND of p_data and DMA2D_OCOLR_ALPHA_1
+        COMMENT COND2 - Bitwise AND of p_data and DMA2D_OCOLR_RED_1
+        COMMENT COND3 - Bitwise AND of p_data and DMA2D_OCOLR_GREEN_1
+        COMMENT COND4 - Bitwise AND of p_data and DMA2D_OCOLR_BLUE_1
+        COMMENT Equivalence Class 12, 14
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-008]
+        COMMENT The function calls macro WRITE_REG with parameter OCOLR of  Instance of h_dma2d and 
+        COMMENT temporary variable when Mode of Init of h_dma2d is equal to DMA2D_R2M.
+        COMMENT Equivalence Class 11
+        COMMENT 
+        COMMENT  </TD>  
+        
+        ELEMENT
+            COMMENT INPUT section :
+                STRUCTURE h_dma2d,      init = { Instance => DMA2D, Init => { Mode => DMA2D_R2M, ColorMode => DMA2D_OUTPUT_ARGB8888, 
+                &                                OutputOffset => 1 }, XferCpltCallback => NIL, 
+                &                                XferErrorCallback => NIL, LayerCfg => { others => 
+                &                                { InputOffset => 1, InputColorMode => 1, AlphaMode => 1, 
+                &                                InputAlpha => 1} }, Lock=> HAL_UNLOCKED, State => HAL_DMA2D_STATE_RESET, 
+                &                                ErrorCode => 1 },     
+                &                                       ev = init
+    
+                VAR p_data,             init = 1,       ev = init
+    
+                VAR dst_address,        init = 1,       ev = init
+   
+                VAR width,              init = 1,       ev = init
+    
+                VAR height,             init = 1,       ev = init
+                
+
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+            
+                --Configure DMA2D data size
+                VAR DMA2D->NLR,         init = 0,       ev = (T_UINT32)65537
+            
+                --Configure DMA2D destination address
+                VAR DMA2D->OMAR,        init = 0,       ev = (T_UINT32)1
+                        
+                --Configure DMA2D CR register
+                VAR DMA2D->CR,          init = 1,       ev = (T_UINT32)8961
+            
+                --Writes to DMA2D OCOLR register
+                VAR DMA2D->OCOLR,       init = 0,       ev = (T_UINT32)1
+            
+            SIMUL
+            
+            --None
+            
+            END SIMUL        
+        
+        --Calling Unit Under Test 
+        #HalDma2dStartIt(&h_dma2d, p_data, dst_address, width, height);
+        
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+    TEST 3
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-004]
+        COMMENT The function stores the result of bitwise OR of COND1, COND2, COND3 to a temporary variable.
+        COMMENT When all of the below conditions are satisified
+        COMMENT 1.  Mode of Init of h_dma2d is equal to DMA2D_R2M 
+        COMMENT 2.  ColorMode of Init of h_dma2d is equal to DMA2D_OUTPUT_RGB888.
+        COMMENT Where: 
+        COMMENT COND1 - Bitwise AND of p_data and DMA2D_OCOLR_RED_1
+        COMMENT COND2 - Bitwise AND of p_data and DMA2D_OCOLR_GREEN_1
+        COMMENT COND3 - Bitwise AND of p_data and DMA2D_OCOLR_BLUE_1
+        COMMENT Equivalence Class 12, 15
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-008]
+        COMMENT The function calls macro WRITE_REG with parameter OCOLR of  Instance of h_dma2d and 
+        COMMENT temporary variable when Mode of Init of h_dma2d is equal to DMA2D_R2M.
+        COMMENT Equivalence Class 11
+        COMMENT 
+        COMMENT  </TD>  
+
+        ELEMENT
+            COMMENT INPUT section :
+            
+                STRUCTURE h_dma2d,      init = { Instance => DMA2D, Init => { Mode => DMA2D_R2M, ColorMode => DMA2D_OUTPUT_RGB888, 
+                &                                OutputOffset => 4294967295 }, XferCpltCallback => NIL, 
+                &                                XferErrorCallback => NIL, LayerCfg => { others => 
+                &                                { InputOffset => 4294967295, InputColorMode => 4294967295, AlphaMode => 4294967295, 
+                &                                InputAlpha => 4294967295} }, Lock=> HAL_UNLOCKED, State => HAL_DMA2D_STATE_RESET, 
+                &                                ErrorCode => 4294967295 },     
+                &                                       ev = init
+    
+                VAR p_data,             init = 4294967295,       ev = init
+    
+                VAR dst_address,        init = 4294967295,       ev = init
+   
+                VAR width,              init = 4294967295,       ev = init
+    
+                VAR height,             init = 4294967295,       ev = init
+
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+            
+                --Configure DMA2D data size
+                VAR DMA2D->NLR,         init = 0,       ev = (T_UINT32)4294967295
+            
+                --Configure DMA2D destination address
+                VAR DMA2D->OMAR,        init = 0,       ev = (T_UINT32)4294967295
+                        
+                --Configure DMA2D CR register
+                VAR DMA2D->CR,          init = 0,       ev = (T_UINT32)8961
+            
+                --Writes to DMA2D OCOLR register
+                VAR DMA2D->OCOLR,       init = 0,       ev = (T_UINT32)16777215
+            
+            SIMUL
+            
+            --None
+            
+            END SIMUL        
+        
+        --Calling Unit Under Test 
+        #HalDma2dStartIt(&h_dma2d, p_data, dst_address, width, height);
+        
+        END ELEMENT
+
+    END TEST -- TEST 3
+
+    TEST 4
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-005]
+        COMMENT The function stores the result of bitwise OR of COND1 left shift by ELEVEN, 
+        COMMENT COND2 left shift by FIVE, COND3 to a temporary variable.
+        COMMENT When all of the below conditions are satisified
+        COMMENT 1.  Mode of Init of h_dma2d is equal to DMA2D_R2M 
+        COMMENT 2.  ColorMode of Init of h_dma2d is equal to DMA2D_OUTPUT_RGB565.
+        COMMENT
+        COMMENT Where: 
+        COMMENT COND1 - (Bitwise AND of p_data and DMA2D_OCOLR_RED_1) right shift by NINTEEN.
+        COMMENT COND2 - (Bitwise AND of p_data and DMA2D_OCOLR_GREEN_1) right shift by TEN.
+        COMMENT COND3 - (Bitwise AND of p_data and DMA2D_OCOLR_BLUE_1) right shift by THREE.
+        COMMENT Equivalence Class 12, 16
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-008]
+        COMMENT The function calls macro WRITE_REG with parameter OCOLR of  Instance of h_dma2d and 
+        COMMENT temporary variable when Mode of Init of h_dma2d is equal to DMA2D_R2M.
+        COMMENT Equivalence Class 11
+        COMMENT 
+        COMMENT  </TD> 
+        
+        ELEMENT
+            COMMENT INPUT section :
+            
+                STRUCTURE h_dma2d,      init = { Instance => DMA2D, Init => { Mode => DMA2D_R2M, ColorMode => DMA2D_OUTPUT_RGB565, 
+                &                                OutputOffset => 2 }, XferCpltCallback => NIL, 
+                &                                XferErrorCallback => NIL, LayerCfg => { others => 
+                &                                { InputOffset => 2, InputColorMode => 2, AlphaMode => 2, 
+                &                                InputAlpha => 2} }, Lock=> HAL_UNLOCKED, State => HAL_DMA2D_STATE_RESET, 
+                &                                ErrorCode => 2 },     
+                &                                       ev = init
+        
+                VAR p_data,             init = DMA2D_OCOLR_RED_1,       ev = init
+    
+                VAR dst_address,        init = 2,       ev = init
+   
+                VAR width,              init = 2,       ev = init
+    
+                VAR height,             init = 2,       ev = init
+
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+            
+                --Configure DMA2D data size
+                VAR DMA2D->NLR,         init = 0,       ev = (T_UINT32)131074
+            
+                --Configure DMA2D destination address
+                VAR DMA2D->OMAR,        init = 0,       ev = (T_UINT32)2
+                        
+                --Configure DMA2D CR register
+                VAR DMA2D->CR,          init = 2,       ev = (T_UINT32)8963
+            
+                --Writes to DMA2D OCOLR register
+                VAR DMA2D->OCOLR,       init = 0,       ev = (T_UINT32)63488
+            
+            SIMUL
+            
+            --None
+            
+            END SIMUL        
+        
+        --Calling Unit Under Test 
+        #HalDma2dStartIt(&h_dma2d, p_data, dst_address, width, height);
+        
+        END ELEMENT
+
+    END TEST -- TEST 4
+
+    TEST 5
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-006]
+        COMMENT The function stores the result of bitwise OR of COND1 left shift by FIFTEEN, 
+        COMMENT COND2 left shift by TEN, COND3 left shift by FIVE, COND4 to a temporary variable.
+        COMMENT When all of the below conditions are satisified
+        COMMENT 1.  Mode of Init of h_dma2d is equal to DMA2D_R2M 
+        COMMENT 2.  ColorMode of Init of h_dma2d is equal to DMA2D_OUTPUT_ARGB1555.
+        COMMENT
+        COMMENT Where: 
+        COMMENT COND1 - (Bitwise AND of p_data and DMA2D_OCOLR_ALPHA_1) right shift by THIRTY_ONE
+        COMMENT COND2 - (Bitwise AND of p_data and DMA2D_OCOLR_RED_1) right shift by NINTEEN.
+        COMMENT COND3 - (Bitwise AND of p_data and DMA2D_OCOLR_GREEN_1) right shift by ELEVEN.
+        COMMENT COND4 - (Bitwise AND of p_data and DMA2D_OCOLR_BLUE_1) right shift by THREE.
+        COMMENT Equivalence Class 12, 17
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-008]
+        COMMENT The function calls macro WRITE_REG with parameter OCOLR of  Instance of h_dma2d and 
+        COMMENT temporary variable when Mode of Init of h_dma2d is equal to DMA2D_R2M.
+        COMMENT Equivalence Class 11
+        COMMENT 
+        COMMENT  </TD> 
+        
+
+        ELEMENT
+            COMMENT INPUT section :
+            
+                STRUCTURE h_dma2d,      init = { Instance => DMA2D, Init => { Mode => DMA2D_R2M, ColorMode => DMA2D_OUTPUT_ARGB1555, 
+                &                                OutputOffset => 3 }, XferCpltCallback => NIL, 
+                &                                XferErrorCallback => NIL, LayerCfg => { others => 
+                &                                { InputOffset => 3, InputColorMode => 2, AlphaMode => 3, 
+                &                                InputAlpha => 3} }, Lock=> HAL_UNLOCKED, State => HAL_DMA2D_STATE_RESET, 
+                &                                ErrorCode => 3 },     
+                &                                       ev = init
+        
+                VAR p_data,             init = DMA2D_OCOLR_ALPHA_1,       ev = init
+    
+                VAR dst_address,        init = 3,       ev = init
+   
+                VAR width,              init = 3,       ev = init
+    
+                VAR height,             init = 3,       ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+            
+                --Configure DMA2D data size
+                VAR DMA2D->NLR,         init = 0,       ev = (T_UINT32)196611
+            
+                --Configure DMA2D destination address
+                VAR DMA2D->OMAR,        init = 0,       ev = (T_UINT32)3
+                        
+                --Configure DMA2D CR register
+                VAR DMA2D->CR,          init = 3,       ev = (T_UINT32)8963
+            
+                --Writes to DMA2D OCOLR register
+                VAR DMA2D->OCOLR,       init = 0,       ev = (T_UINT32)32768
+            
+            SIMUL
+            
+            --None
+            
+            END SIMUL        
+        
+        --Calling Unit Under Test 
+        #HalDma2dStartIt(&h_dma2d, p_data, dst_address, width, height);
+        
+        END ELEMENT
+
+    END TEST -- TEST 5
+
+    TEST 6
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-007]
+        COMMENT The function stores the result of bitwise OR of COND1 left shift by TWELVE, 
+        COMMENT COND2 left shift by EIGHT, COND3 left shift by FOUR, COND4 to a temporary variable.
+        COMMENT When,
+        COMMENT 1.  Mode of Init of h_dma2d is equal to DMA2D_R2M 
+        COMMENT 2.  ColorMode of Init of h_dma2d is other than DMA2D_OUTPUT_ARGB8888, DMA2D_OUTPUT_RGB888, 
+        COMMENT DMA2D_OUTPUT_RGB565, DMA2D_OUTPUT_ARGB1555.
+        COMMENT
+        COMMENT Where: 
+        COMMENT COND1 - (Bitwise AND of p_data and DMA2D_OCOLR_ALPHA_1) right shift by TWENTY_EIGHT.
+        COMMENT COND2 - (Bitwise AND of p_data and DMA2D_OCOLR_RED_1) right shift by TWENTY.
+        COMMENT COND3 - (Bitwise AND of p_data and DMA2D_OCOLR_GREEN_1) right shift by TWELVE.
+        COMMENT COND4 - (Bitwise AND of p_data and DMA2D_OCOLR_BLUE_1) right shift by FOUR.
+        COMMENT Equivalence Class 12, 18
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-008]
+        COMMENT The function calls macro WRITE_REG with parameter OCOLR of  Instance of h_dma2d and 
+        COMMENT temporary variable when Mode of Init of h_dma2d is equal to DMA2D_R2M.
+        COMMENT Equivalence Class 11
+        COMMENT 
+        COMMENT  </TD> 
+        
+        ELEMENT
+            COMMENT INPUT section :
+            
+                STRUCTURE h_dma2d,      init = { Instance => DMA2D, Init => { Mode => DMA2D_R2M, ColorMode => DMA2D_OUTPUT_ARGB4444, 
+                &                                OutputOffset => 4 }, XferCpltCallback => NIL, 
+                &                                XferErrorCallback => NIL, LayerCfg => { others => 
+                &                                { InputOffset => 4, InputColorMode => 2, AlphaMode => 4, 
+                &                                InputAlpha => 4} }, Lock=> HAL_UNLOCKED, State => HAL_DMA2D_STATE_RESET, 
+                &                                ErrorCode => 4 },     
+                &                                       ev = init
+        
+                VAR p_data,             init = DMA2D_OCOLR_BLUE_1,       ev = init
+    
+                VAR dst_address,        init = 4,       ev = init
+   
+                VAR width,              init = 4,       ev = init
+    
+                VAR height,             init = 4,       ev = init
+                
+
+            COMMENT INPUT/OUTPUT section :
+                --none
+            
+            COMMENT OUTPUT section :
+            
+                --Configure DMA2D data size
+                VAR DMA2D->NLR,         init = 0,       ev = (T_UINT32)262148
+            
+                --Configure DMA2D destination address
+                VAR DMA2D->OMAR,        init = 0,       ev = (T_UINT32)4
+                        
+                --Configure DMA2D CR register
+                VAR DMA2D->CR,          init = 4,       ev = (T_UINT32)8965
+            
+                --Writes to DMA2D OCOLR register
+                VAR DMA2D->OCOLR,       init = 0,       ev = (T_UINT32)15
+            
+            SIMUL
+            
+            --None
+            
+            END SIMUL        
+        
+        --Calling Unit Under Test 
+        #HalDma2dStartIt(&h_dma2d, p_data, dst_address, width, height);
+        
+        END ELEMENT
+
+    END TEST -- TEST 6
+
+--    TEST 7
+--    FAMILY nominal
+--
+--        COMMENT Test Description
+--        COMMENT <TD>
+--        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-007]
+--        COMMENT The function stores the result of bitwise OR of COND1 left shift by TWELVE, 
+--        COMMENT COND2 left shift by EIGHT, COND3 left shift by FOUR, COND4 to a temporary variable.
+--        COMMENT When,
+--        COMMENT 1.  Mode of Init of h_dma2d is equal to DMA2D_R2M 
+--        COMMENT 2.  ColorMode of Init of h_dma2d is other than DMA2D_OUTPUT_ARGB8888, DMA2D_OUTPUT_RGB888, 
+--        COMMENT DMA2D_OUTPUT_RGB565, DMA2D_OUTPUT_ARGB1555.
+--        COMMENT
+--        COMMENT Where: 
+--        COMMENT COND1 - (Bitwise AND of p_data and DMA2D_OCOLR_ALPHA_1) right shift by TWENTY_EIGHT.
+--        COMMENT COND2 - (Bitwise AND of p_data and DMA2D_OCOLR_RED_1) right shift by TWENTY.
+--        COMMENT COND3 - (Bitwise AND of p_data and DMA2D_OCOLR_GREEN_1) right shift by TWELVE.
+--        COMMENT COND4 - (Bitwise AND of p_data and DMA2D_OCOLR_BLUE_1) right shift by FOUR.
+--        COMMENT Equivalence Class 74
+--        COMMENT
+--        COMMENT Note: Parameter h_dma2d is exercised for NULL
+--        COMMENT  </TD> 
+--        
+--        ELEMENT
+--            COMMENT INPUT section :
+--        
+--                VAR p_data,             init = DMA2D_OCOLR_BLUE_1,       ev = init
+--    
+--                VAR dst_address,        init = 4,       ev = init
+--   
+--                VAR width,              init = 4,       ev = init
+--    
+--                VAR height,             init = 4,       ev = init
+--                
+--
+--            COMMENT INPUT/OUTPUT section :
+--                --none
+--            
+--            COMMENT OUTPUT section :
+--                --none
+--            
+--            SIMUL
+--            
+--            --None
+--            
+--            END SIMUL        
+--        
+--        --Calling Unit Under Test 
+--        #HalDma2dStartIt(NULL, p_data, dst_address, width, height);
+--        
+--        END ELEMENT
+--
+--    END TEST -- TEST 7
+END SERVICE -- HalDma2dStartIt
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service Dma2dInit
+--------------------------------------------------------------------------------
+SERVICE Dma2dInit
+SERVICE_TYPE extern
+
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dInit-DB-LLR-001]
+        COMMENT The function does following :
+        COMMENT 1.  calls macro __HAL_RCC_DMA2D_CLK_ENABLE to enable RCC peripheral clock for DMA2D.
+        COMMENT 2.  Sets Instance of Dma2d_handle to DMA2D.
+        COMMENT Equivalence Class 70
+        COMMENT
+        COMMENT  </TD> 
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+                --none
+
+            COMMENT INPUT/OUTPUT section :
+                
+                --Sets RCC AHB1 peripheral clock register
+                VAR RCC->AHB1ENR, init = 1, ev = (T_UINT32)0x00800001
+            
+            COMMENT OUTPUT section :
+                
+                --Instance of Dma2d_handle is set to DMA2D
+                VAR Dma2d_handle.Instance, init = NULL, ev = DMA2D
+            
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test 
+        #Dma2dInit();
+        
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+END SERVICE -- Dma2dInit
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalDma2dConfigLayer
+--------------------------------------------------------------------------------
+SERVICE HalDma2dConfigLayer
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_DMA2D_HANDLE_TYPE h_dma2d;
+    #T_UINT32 layer_idx;
+
+    ENVIRONMENT ENV_HalDma2dConfigLayer
+    
+    STRUCTURE h_dma2d,      init = { Instance => NIL, Init => { Mode => 0, ColorMode => 0, 
+    &                                OutputOffset => 0 }, XferCpltCallback => NIL, XferErrorCallback => NIL, 
+    &                                LayerCfg => { others => { InputOffset => 0, InputColorMode => 0, 
+    &                                AlphaMode => 0, InputAlpha => 0 } }, Lock=> HAL_UNLOCKED,
+    &                                State => HAL_DMA2D_STATE_RESET, ErrorCode => 0 },     
+    &                       ev = init
+    
+    VAR layer_idx,          init = 0,       ev = init
+    
+    END ENVIRONMENT -- ENV_HalDma2dConfigLayer
+    
+    USE ENV_HalDma2dConfigLayer
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-001]
+        COMMENT The function sets DMA2D BGPFCR register value to result of COND2.
+        COMMENT Where, 
+        COMMENT COND1 = AlphaMode of LayerCfg with index layer_idx of h_dma2d left shift by DMA2D_POSITION_BGPFCCR_AM.
+        COMMENT COND2  = Bitwise OR of InputColorMode of LayerCfg with index layer_idx of h_dma2d and COND1
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-002]
+        COMMENT The function sets DMA2D BGPFCR register mask to result of Bitwise OR of 
+        COMMENT DMA2D_BGPFCCR_CM, DMA2D_BGPFCCR_AM and DMA2D_BGPFCCR_ALPHA
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-004]
+        COMMENT The function sets DMA2D BGPFCR register value to result of Bitwise OR of 
+        COMMENT DMA2D BGPFCR register value and InputAlpha of LayerCfg with index layer_idx of 
+        COMMENT h_dma2d left shift by DMA2D_POSITION_BGPFCCR_ALPHA if both the conditions are false :
+        COMMENT A.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A4 AND 
+        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A8
+        COMMENT MCDC covered for FF
+        COMMENT Equivalence Class 2, 4
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-005]
+        COMMENT The function calls macro MODIFY_REG with parameter BGPFCCR of Instance of h_dma2d, 
+        COMMENT DMA2D BGPFCR register mask and DMA2D BGPFCR register value when layer_idx is equal to zero. 
+        COMMENT Equivalence Class 8
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-006]
+        COMMENT The function calls macro WRITE_REG with parameter BGOR of Instance of h_dma2d and InputOffset 
+        COMMENT of LayerCfg with index layer_idx of h_dma2d when layer_idx is equal to zero. 
+        COMMENT Equivalence Class 9
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-007]
+        COMMENT The function does nothing when:
+        COMMENT A.  layer_idx is equal to zero. 
+        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A4 OR
+        COMMENT C.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A8
+        COMMENT MCDC covered for FF
+        COMMENT Equivalence Class 6, 2, 4
+        COMMENT
+        COMMENT  </TD>
+        
+        ELEMENT
+        
+            COMMENT INPUT section :
+                
+                --DMA2D Layer index
+                VAR layer_idx,                              init = 0,       ev = init                
+                
+                --configuration information for the DMA2D
+                VAR h_dma2d.Instance,                       init = DMA2D,   ev = init 
+                VAR h_dma2d.LayerCfg[0].InputColorMode,     init = 0,       ev = init
+                VAR h_dma2d.LayerCfg[0].AlphaMode,          init = 0,       ev = init
+                VAR h_dma2d.LayerCfg[0].InputAlpha,         init = 0,       ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+                        
+            COMMENT OUTPUT section :
+                --DMA2D BGPFCCR register 
+                VAR DMA2D->BGPFCCR,                         init = 1,       ev = (T_UINT32)0
+                
+                --DMA2D BGOR register configuration
+                VAR DMA2D->BGOR,                            init = 1,       ev = (T_UINT32)0
+                
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test     
+        #HalDma2dConfigLayer(&h_dma2d, layer_idx);
+        
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-003]
+        COMMENT The function  set DMA2D BGPFCR register value to result of Bitwise OR of 
+        COMMENT DMA2D BGPFCR register value and Bitwise AND of DMA2D_BGPFCCR_ALPHA, InputAlpha
+        COMMENT of LayerCfg with index layer_idx of h_dma2d if the following conditions are true :
+        COMMENT A.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is equal to DMA2D_INPUT_A4 OR 
+        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A8
+        COMMENT MCDC covered for TX
+        COMMENT Equivalence Class 1, 4
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-007]
+        COMMENT The function calls macro WRITE_REG with parameter BGCOLR of Instance of h_dma2d 
+        COMMENT and result of Bitwise AND of InputAlpha of LayerCfg with index layer_idx of h_dma2d 
+        COMMENT and result of Bitwise OR of DMA2D_BGCOLR_BLUE, DMA2D_BGCOLR_GREEN and DMA2D_BGCOLR_RED.
+        COMMENT MCDC covered for TX
+        COMMENT when:
+        COMMENT A.  layer_idx is equal to zero. 
+        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is equal to DMA2D_INPUT_A4 OR
+        COMMENT C.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A8
+        COMMENT Equivalence Class 6, 1, 4
+        COMMENT
+        COMMENT  </TD>
+        
+        ELEMENT
+        
+            COMMENT INPUT section :
+                
+                --DMA2D Layer index
+                VAR layer_idx,                              init = 0,       ev = init                
+                
+                --configuration information for the DMA2D
+                VAR h_dma2d.Instance,                       init = DMA2D,   ev = init 
+                VAR h_dma2d.LayerCfg[0].InputColorMode,     init = DMA2D_INPUT_A4,       
+                &                                                           ev = init
+                VAR h_dma2d.LayerCfg[0].AlphaMode,          init = 1,       ev = init
+                VAR h_dma2d.LayerCfg[0].InputAlpha,         init = DMA2D_BGPFCCR_ALPHA,       
+                &                                                           ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+                        
+            COMMENT OUTPUT section :
+            
+                --DMA2D BGPFCCR register 
+                VAR DMA2D->BGPFCCR,                         init = 1,       ev = (T_UINT32)4278255626
+                
+                --DMA2D BGOR register configuration
+                VAR DMA2D->BGOR,                            init = 1,       ev = (T_UINT32)0
+                
+                --DMA2D BGCOLR register configuration
+                VAR DMA2D->BGCOLR,                          init = 1,       ev = (T_UINT32)0
+                
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test 
+        #HalDma2dConfigLayer(&h_dma2d, layer_idx);
+        
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+    TEST 3
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-003]
+        COMMENT The function  set DMA2D BGPFCR register value to result of Bitwise OR of 
+        COMMENT DMA2D BGPFCR register value and Bitwise AND of DMA2D_BGPFCCR_ALPHA, InputAlpha
+        COMMENT of LayerCfg with index layer_idx of h_dma2d if the following conditions are true :
+        COMMENT A.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A4 OR 
+        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is equal to DMA2D_INPUT_A8
+        COMMENT MCDC covered for FT
+        COMMENT Equivalence Class 2, 3
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-007]
+        COMMENT The function calls macro WRITE_REG with parameter BGCOLR of Instance of h_dma2d 
+        COMMENT and result of Bitwise AND of InputAlpha of LayerCfg with index layer_idx of h_dma2d 
+        COMMENT and result of Bitwise OR of DMA2D_BGCOLR_BLUE, DMA2D_BGCOLR_GREEN and DMA2D_BGCOLR_RED.
+        COMMENT MCDC covered for FT
+        COMMENT when:
+        COMMENT A.  layer_idx is equal to zero. 
+        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A4 OR
+        COMMENT C.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is equal to DMA2D_INPUT_A8
+        COMMENT Equivalence Class 6, 2, 3
+        COMMENT
+        COMMENT  </TD>
+        
+        ELEMENT
+        
+            COMMENT INPUT section :
+                
+                --DMA2D Layer index
+                VAR layer_idx,                              init = 0,       ev = init                
+                
+                --configuration information for the DMA2D
+                VAR h_dma2d.Instance,                       init = DMA2D,   ev = init 
+                VAR h_dma2d.LayerCfg[0].InputColorMode,     init = DMA2D_INPUT_A8,       
+                &                                                           ev = init
+                VAR h_dma2d.LayerCfg[0].AlphaMode,          init = 1,       ev = init
+                VAR h_dma2d.LayerCfg[0].InputAlpha,         init = 1,       ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+                        
+            COMMENT OUTPUT section :
+            
+                --DMA2D BGPFCCR register 
+                VAR DMA2D->BGPFCCR,                         init = 0,       ev = (T_UINT32)65545
+                
+                --DMA2D BGOR register configuration
+                VAR DMA2D->BGOR,                            init = 1,       ev = (T_UINT32)0
+                
+                --DMA2D BGCOLR register configuration
+                VAR DMA2D->BGCOLR,                          init = 0,       ev = (T_UINT32)1
+                
+                
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test 
+        #HalDma2dConfigLayer(&h_dma2d, layer_idx);
+        
+        END ELEMENT
+
+    END TEST -- TEST 3
+
+    TEST 4
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-009]
+        COMMENT The function calls macro MODIFY_REG with parameter FGPFCCR of Instance of h_dma2d, 
+        COMMENT register mask and register value when layer_idx is not equal to zero. 
+        COMMENT Equivalence Class 8
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-008]
+        COMMENT The function calls macro WRITE_REG with parameter FGOR of Instance of h_dma2d and 
+        COMMENT InputOffset of LayerCfg with index layer_idx of h_dma2d when layer_idx is not equal to zero. 
+        COMMENT Equivalence Class 9
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-010]
+        COMMENT The function does nothing
+        COMMENT When all the below conditions are satisified
+        COMMENT A.  layer_idx is not equal to zero. 
+        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A4 OR
+        COMMENT C.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A8
+        COMMENT MCDC covered for FF
+        COMMENT Equivalence Class 7, 2, 4
+        COMMENT
+        COMMENT  </TD>
+        
+        ELEMENT
+        
+            COMMENT INPUT section :
+                
+                --DMA2D Layer index
+                VAR layer_idx,                              init = 1,       ev = init                
+                
+                --configuration information for the DMA2D
+                VAR h_dma2d.Instance,                       init = DMA2D,   ev = init 
+                VAR h_dma2d.LayerCfg[1].InputColorMode,     init = 0,       ev = init
+                VAR h_dma2d.LayerCfg[1].AlphaMode,          init = 4294967295,       
+                &                                                           ev = init
+                VAR h_dma2d.LayerCfg[1].InputAlpha,         init = 4294967295,       
+                &                                                           ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+                        
+            COMMENT OUTPUT section :
+            
+                --DMA2D FGPFCCR register 
+                VAR DMA2D->FGPFCCR,                         init = 1,       ev = (T_UINT32)4294901760 
+                
+                --DMA2D FGOR register configuration
+                VAR DMA2D->FGOR,                            init = 1,       ev = (T_UINT32)0                
+                
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test 
+        #HalDma2dConfigLayer(&h_dma2d, layer_idx);
+        
+        END ELEMENT
+
+    END TEST -- TEST 4
+
+    TEST 5
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-010]
+        COMMENT The function calls macro WRITE_REG with parameter FGCOLR of Instance of h_dma2d 
+        COMMENT and result of bitwise AND of InputAlpha of LayerCfg with index layer_idx of h_dma2d and 
+        COMMENT result of bitwise OR of DMA2D_FGCOLR_BLUE, DMA2D_FGCOLR_GREEN and DMA2D_FGCOLR_RED.
+        COMMENT When all the below conditions are satisified
+        COMMENT A.  layer_idx is not equal to zero. 
+        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is equal to DMA2D_INPUT_A4 OR
+        COMMENT C.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A8
+        COMMENT MCDC covered for TX
+        COMMENT Equivalence Class 7, 1, 4
+        COMMENT
+        COMMENT  </TD>
+        
+        ELEMENT
+        
+            COMMENT INPUT section :
+                
+                --DMA2D Layer index
+                VAR layer_idx,                              init = 1,       ev = init                
+                
+                --configuration information for the DMA2D
+                VAR h_dma2d.Instance,                       init = DMA2D,   ev = init 
+                VAR h_dma2d.LayerCfg[1].InputColorMode,     init = DMA2D_INPUT_A4,       
+                &                                                           ev = init
+                VAR h_dma2d.LayerCfg[1].AlphaMode,          init = 2,       ev = init
+                VAR h_dma2d.LayerCfg[1].InputAlpha,         init = DMA2D_BGPFCCR_ALPHA,       
+                &                                                           ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+                        
+            COMMENT OUTPUT section :
+            
+                --DMA2D FGPFCCR register 
+                VAR DMA2D->FGPFCCR,                         init = 1,       ev = (T_UINT32)4278321162
+                
+                --DMA2D FGOR register configuration
+                VAR DMA2D->FGOR,                            init = 1,       ev = (T_UINT32)0
+                
+                --DMA2D FGOR register configuration
+                VAR DMA2D->FGCOLR,                          init = 1,       ev = (T_UINT32)0
+                
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test 
+        #HalDma2dConfigLayer(&h_dma2d, layer_idx);
+        
+        END ELEMENT
+
+    END TEST -- TEST 5
+
+    TEST 6
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-010]
+        COMMENT The function calls macro WRITE_REG with parameter FGCOLR of Instance of h_dma2d 
+        COMMENT and result of bitwise AND of InputAlpha of LayerCfg with index layer_idx of h_dma2d and 
+        COMMENT result of bitwise OR of DMA2D_FGCOLR_BLUE, DMA2D_FGCOLR_GREEN and DMA2D_FGCOLR_RED.
+        COMMENT When all the below conditions are satisified
+        COMMENT A.  layer_idx is not equal to zero. 
+        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A4 OR
+        COMMENT C.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is equal to DMA2D_INPUT_A8
+        COMMENT MCDC covered for FT
+        COMMENT Equivalence Class 7, 2, 3
+        COMMENT
+        COMMENT  </TD>        
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+                
+                --DMA2D Layer index
+                VAR layer_idx,                              init = 1,       ev = init                
+                
+                --configuration information for the DMA2D
+                VAR h_dma2d.Instance,                       init = DMA2D,   ev = init 
+                VAR h_dma2d.LayerCfg[1].InputColorMode,     init = DMA2D_INPUT_A8,       
+                &                                                           ev = init
+                VAR h_dma2d.LayerCfg[1].AlphaMode,          init = 3,       ev = init
+                VAR h_dma2d.LayerCfg[1].InputAlpha,         init = DMA2D_BGPFCCR_AM,       
+                &                                                           ev = init
+                
+            COMMENT INPUT/OUTPUT section :
+                --none
+                        
+            COMMENT OUTPUT section :
+            
+                --DMA2D FGPFCCR register 
+                VAR DMA2D->FGPFCCR,                         init = 1,       ev = (T_UINT32)196617
+                
+                --DMA2D FGOR register configuration
+                VAR DMA2D->FGOR,                            init = 1,       ev = (T_UINT32)0
+                
+                --DMA2D FGOR register configuration
+                VAR DMA2D->FGCOLR,                          init = 1,       ev = (T_UINT32)196608
+                
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test 
+        #HalDma2dConfigLayer(&h_dma2d, layer_idx);
+        
+        END ELEMENT
+        
+    END TEST -- TEST 6
+
+--    TEST 7
+--    FAMILY nominal
+--
+--        COMMENT Test Description
+--        COMMENT <TD>
+--        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-010]
+--        COMMENT The function calls macro WRITE_REG with parameter FGCOLR of Instance of h_dma2d 
+--        COMMENT and result of bitwise AND of InputAlpha of LayerCfg with index layer_idx of h_dma2d and 
+--        COMMENT result of bitwise OR of DMA2D_FGCOLR_BLUE, DMA2D_FGCOLR_GREEN and DMA2D_FGCOLR_RED.
+--        COMMENT When all the below conditions are satisified
+--        COMMENT A.  layer_idx is not equal to zero. 
+--        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A4 OR
+--        COMMENT C.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is equal to DMA2D_INPUT_A8
+--        COMMENT Equivalence Class 7, 2, 3        
+--        COMMENT
+--        COMMENT Note: Parameter 'layer_idx' is exercised for max value.
+--        COMMENT  </TD>        
+--
+--        ELEMENT
+--        
+--            COMMENT INPUT section :
+--                
+--                --DMA2D Layer index
+--                VAR layer_idx,          init = 4294967295,       ev = init                
+--                
+--                --configuration information for the DMA2D
+--                VAR h_dma2d.Instance,   init = DMA2D,   ev = init 
+--                VAR h_dma2d.LayerCfg[4294967295].InputColorMode,          
+--                &                       init = DMA2D_INPUT_A8,   ev = init
+--                VAR h_dma2d.LayerCfg[4294967295].AlphaMode,          
+--                &                       init = 4,            ev = init
+--                VAR h_dma2d.LayerCfg[4294967295].InputAlpha,         
+--                &                      init = DMA2D_BGPFCCR_AM,  ev = init
+--                
+--            COMMENT INPUT/OUTPUT section :
+--                --none
+--                        
+--            COMMENT OUTPUT section :
+--                --none
+--                
+--            SIMUL
+--            
+--                --none
+--            
+--            END SIMUL
+--        
+--        --Calling Unit Under Test 
+--        #HalDma2dConfigLayer(&h_dma2d, layer_idx);
+--        
+--        END ELEMENT
+--        
+--    END TEST -- TEST 7
+--
+--    TEST 8
+--    FAMILY nominal
+--
+--        COMMENT Test Description
+--        COMMENT <TD>
+--        COMMENT [hdudispfdma2d-HalDma2dConfigLayer-DB-LLR-010]
+--        COMMENT The function calls macro WRITE_REG with parameter FGCOLR of Instance of h_dma2d 
+--        COMMENT and result of bitwise AND of InputAlpha of LayerCfg with index layer_idx of h_dma2d and 
+--        COMMENT result of bitwise OR of DMA2D_FGCOLR_BLUE, DMA2D_FGCOLR_GREEN and DMA2D_FGCOLR_RED.
+--        COMMENT When all the below conditions are satisified
+--        COMMENT A.  layer_idx is not equal to zero. 
+--        COMMENT B.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is not equal to DMA2D_INPUT_A4 OR
+--        COMMENT C.  InputColorMode of LayerCfg with index layer_idx of h_dma2d is equal to DMA2D_INPUT_A8
+--        COMMENT Equivalence Class 5
+--        COMMENT
+--        COMMENT Note: Parameter 'h_dma2d' is excercised for Null.
+--        COMMENT  </TD>        
+--
+--        ELEMENT
+--        
+--            COMMENT INPUT section :
+--                
+--            COMMENT INPUT/OUTPUT section :
+--                --none
+--                        
+--            COMMENT OUTPUT section :
+--                --none
+--                
+--            SIMUL
+--            
+--                --none
+--            
+--            END SIMUL
+--        
+--        --Calling Unit Under Test 
+--        #HalDma2dConfigLayer(NULL, layer_idx);
+--        
+--        END ELEMENT
+--        
+--    END TEST -- TEST 8
+
+END SERVICE -- HalDma2dConfigLayer
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service HalDma2dBlendingStartIt
+--------------------------------------------------------------------------------
+SERVICE HalDma2dBlendingStartIt
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_DMA2D_HANDLE_TYPE h_dma2d;
+    #T_UINT32 src_address_1;
+    #T_UINT32 src_address_2;
+    #T_UINT32 dst_address;
+    #T_UINT32 width;
+    #T_UINT32 height;
+
+    ENVIRONMENT ENV_HalDma2dBlendingStartIt
+    
+    STRUCTURE h_dma2d,      init = { Instance => NIL, Init => { Mode => 0, ColorMode => 0, 
+    &                                OutputOffset => 0 }, XferCpltCallback => NIL, 
+    &                                XferErrorCallback => NIL, LayerCfg => { others => { InputOffset => 0,
+    &                                InputColorMode => 0, AlphaMode => 0, InputAlpha => 0 } }, Lock
+    &                                => HAL_UNLOCKED, State => HAL_DMA2D_STATE_RESET, ErrorCode => 0 },     
+    &                                       ev = init
+    
+    VAR src_address_1,      init = 0,       ev = init
+    
+    VAR src_address_2,      init = 0,       ev = init
+    
+    VAR dst_address,        init = 0,       ev = init
+    
+    VAR width,              init = 0,       ev = init
+    
+    VAR height,             init = 0,       ev = init
+    
+    END ENVIRONMENT -- ENV_HalDma2dBlendingStartIt
+    
+    USE ENV_HalDma2dBlendingStartIt
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dBlendingStartIt-DB-LLR-001]
+        COMMENT The function calls macro WRITE_REG with parameter BGMAR of Instance of h_dma2d and src_address_2.
+        COMMENT Equivalence Class 19
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dBlendingStartIt-DB-LLR-002]
+        COMMENT The function calls Dma2dSetConfig with parameters h_dma2d, src_address_1, dst_address, 
+        COMMENT width and height to configure source, destination address and the data size.
+        COMMENT Equivalence Class 20
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dBlendingStartIt-DB-LLR-003]
+        COMMENT The function calls macro __HAL_DMA2D_ENABLE_IT with parameter DMA2D, result of bitwise OR 
+        COMMENT of DMA2D_IT_TC, DMA2D_IT_TE, DMA2D_IT_CE to Enable the specified DMA2D interrupts
+        COMMENT Equivalence Class 21
+        COMMENT
+        COMMENT [hdudispfdma2d-HalDma2dBlendingStartIt-DB-LLR-004]
+        COMMENT The function calls macro __HAL_DMA2D_ENABLE with parameter DMA2D to Enable the DMA2D Peripheral
+        COMMENT Equivalence Class 22
+        COMMENT
+        COMMENT Note: Parameters are exercised for min values 
+        COMMENT  </TD>  
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+                --configuration information for the DMA2D
+                STRUCTURE h_dma2d.Instance,     
+                &                       init = DMA2D,   ev = init                
+                   
+                VAR src_address_1,      init = 0,       ev = init
+                
+                VAR src_address_2,      init = 0,       ev = init
+                
+                VAR dst_address,        init = 0,       ev = init
+                
+                VAR width,              init = 0,       ev = init
+    
+                VAR height,             init = 0,       ev = init                
+                
+            COMMENT INPUT/OUTPUT section :
+            
+                --DMA2D CR register configuration
+                VAR DMA2D->CR,          init = 0,       ev = (T_UINT32)8961 
+                        
+            COMMENT OUTPUT section :     
+            
+                --DMA2D BGMAR register configuration
+                VAR DMA2D->BGMAR,       init = 1,       ev = (T_UINT32)0 
+                
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test          
+        #HalDma2dBlendingStartIt(&h_dma2d, src_address_1, src_address_2, dst_address, width, height);
+        
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dBlendingStartIt-DB-LLR-002]
+        COMMENT The function calls Dma2dSetConfig with parameters h_dma2d, src_address_1, dst_address, 
+        COMMENT width and height to configure source, destination address and the data size.
+        COMMENT Equivalence Class 20
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-009]
+        COMMENT The function calls macro WRITE_REG with parameter FGMAR of  Instance of h_dma2d 
+        COMMENT and p_data when Mode of Init of h_dma2d is not equal to DMA2D_R2M.
+        COMMENT Equivalence Class 11, 13
+        COMMENT
+        COMMENT Note: Parameters are exercised for max values 
+        COMMENT
+        COMMENT  </TD>  
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+                --configuration information for the DMA2D
+                STRUCTURE h_dma2d.Instance,     
+                &                       init = DMA2D,   ev = init              
+                   
+                VAR src_address_1,      init = (T_UINT32)4294967295,       ev = init
+                
+                VAR src_address_2,      init = (T_UINT32)4294967295,       ev = init
+                
+                VAR dst_address,        init = (T_UINT32)4294967295,       ev = init
+                
+                VAR width,              init = (T_UINT32)4294967295,       ev = init
+    
+                VAR height,             init = (T_UINT32)4294967295,       ev = init  
+                
+                
+            COMMENT INPUT/OUTPUT section :
+            
+                --DMA2D CR register configuration
+                VAR DMA2D->CR,          init = 1,                ev = (T_UINT32)8961 
+                            
+            COMMENT OUTPUT section :
+            
+                --DMA2D BGMAR register configuration
+                VAR DMA2D->BGMAR,       init = 0,                ev = (T_UINT32)4294967295   
+            
+                --DMA2D FGMAR register configuration 
+                VAR DMA2D->FGMAR,       init = 1,                ev = (T_UINT32)4294967295               
+                
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test          
+        #HalDma2dBlendingStartIt(&h_dma2d, src_address_1, src_address_2, dst_address, width, height);
+        
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+    TEST 3
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-HalDma2dBlendingStartIt-DB-LLR-002]
+        COMMENT The function calls Dma2dSetConfig with parameters h_dma2d, src_address_1, dst_address, 
+        COMMENT width and height to configure source, destination address and the data size.
+        COMMENT Equivalence Class 20
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dSetConfig-DB-LLR-009]
+        COMMENT The function calls macro WRITE_REG with parameter FGMAR of  Instance of h_dma2d 
+        COMMENT and p_data when Mode of Init of h_dma2d is not equal to DMA2D_R2M.
+        COMMENT Equivalence Class 11, 13
+        COMMENT
+        COMMENT Note: Parameters are exercised for nominal values 
+        COMMENT  </TD>  
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+                --configuration information for the DMA2D
+                STRUCTURE h_dma2d.Instance,     
+                &                       init = DMA2D,   ev = init               
+                   
+                VAR src_address_1,      init = 1,       ev = init
+                
+                VAR src_address_2,      init = 1,       ev = init
+                
+                VAR dst_address,        init = 1,       ev = init
+                
+                VAR width,              init = 1,       ev = init
+    
+                VAR height,             init = 1,       ev = init  
+                
+                
+            COMMENT INPUT/OUTPUT section :
+            
+                --DMA2D CR register configuration:
+                VAR DMA2D->CR,          init = 212738, ev = (T_UINT32)212739 
+                            
+            COMMENT OUTPUT section :
+            
+                --DMA2D BGMAR register configuration
+                VAR DMA2D->BGMAR,       init = 0,      ev = (T_UINT32)1      
+            
+                --DMA2D FGMAR register configuration 
+                VAR DMA2D->FGMAR,       init = 0,      ev = (T_UINT32)1               
+                
+            SIMUL
+            
+                --none
+            
+            END SIMUL
+        
+        --Calling Unit Under Test          
+        #HalDma2dBlendingStartIt(&h_dma2d, src_address_1, src_address_2, dst_address, width, height);
+        
+        END ELEMENT
+
+    END TEST -- TEST 3
+
+--    TEST 4
+--    FAMILY nominal
+--
+--        COMMENT Test Description
+--        COMMENT <TD>
+--        COMMENT [hdudispfdma2d-HalDma2dBlendingStartIt-DB-LLR-002]
+--        COMMENT The function calls Dma2dSetConfig with parameters h_dma2d, src_address_1, dst_address, 
+--        COMMENT width and height to configure source, destination address and the data size.
+--        COMMENT Equivalence Class 36
+--        COMMENT
+--        COMMENT Note: Parameters h_dma2d exercised for NULL 
+--        COMMENT  </TD>  
+--
+--        ELEMENT
+--        
+--            COMMENT INPUT section :               
+--                   
+--                VAR src_address_1,      init = 1,       ev = init
+--                
+--                VAR src_address_2,      init = 1,       ev = init
+--                
+--                VAR dst_address,        init = 1,       ev = init
+--                
+--                VAR width,              init = 1,       ev = init
+--    
+--                VAR height,             init = 1,       ev = init  
+--                
+--                
+--            COMMENT INPUT/OUTPUT section :
+--                --None
+--            
+--                            
+--            COMMENT OUTPUT section :
+--                --None
+--                         
+--                
+--            SIMUL
+--            
+--                --none
+--            
+--            END SIMUL
+--        
+--        --Calling Unit Under Test          
+--        #HalDma2dBlendingStartIt(NULL, src_address_1, src_address_2, dst_address, width, height);
+--        
+--        END ELEMENT
+--
+--    END TEST -- TEST 4
+
+END SERVICE -- HalDma2dBlendingStartIt
+
+
+--------------------------------------------------------------------------------
+-- Declaration of the service Dma2dWait
+--------------------------------------------------------------------------------
+SERVICE Dma2dWait
+SERVICE_TYPE extern
+
+
+    TEST 1
+    FAMILY nominal
+
+        COMMENT Test Description
+        COMMENT <TD>
+        COMMENT [hdudispfdma2d-Dma2dWait-DB-LLR-001]
+        COMMENT The function sets first call to zero and return when first call is one. 
+        COMMENT Equivalence Class 27
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dWait-DB-LLR-002]
+        COMMENT The function does nothing when result of bitwise AND of DMA2D_ISR_TCIF and ISR of DMA2D is not ZERO.
+        COMMENT Loops for zero times
+        COMMENT Equivalence Class 30
+        COMMENT
+        COMMENT In Second Element Block 
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dWait-DB-LLR-001]
+        COMMENT The function  does nothing when first call is not one.
+        COMMENT Equivalence Class 28
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dWait-DB-LLR-002]
+        COMMENT The function increments test count till result of bitwise AND of DMA2D_ISR_TCIF and ISR of DMA2D is ZERO.
+        COMMENT Loops for two or more times
+        COMMENT Equivalence Class 29
+        COMMENT
+        COMMENT [hdudispfdma2d-Dma2dWait-DB-LLR-003]
+        COMMENT The function sets IFCR of DMA2D to DMA2D_ISR_TCIF.
+        COMMENT Equivalence Class None
+        COMMENT
+        COMMENT  </TD>  
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+                --None
+                
+                
+            COMMENT INPUT/OUTPUT section :
+                --None
+                
+                
+            COMMENT OUTPUT section :
+                --None
+            
+        SIMUL
+            
+            --None
+
+            END SIMUL
+        
+        --Calling Unit Under Test  
+        #Dma2dWait();
+        
+        END ELEMENT
+        
+        --loops for zero time when result of bitwise AND of DMA2D_ISR_TCIF and ISR of DMA2D is not ZERO
+        #DMA2D->ISR= DMA2D_ISR_TCIF;
+        #Dma2dWait();
+
+        ELEMENT
+        
+            COMMENT INPUT section :
+
+                   --Configure ISR of DMA2D 
+                VAR DMA2D->ISR, init = 0, ev = init
+                
+                
+            COMMENT INPUT/OUTPUT section :
+                --None
+                
+                
+            COMMENT OUTPUT section :
+
+                   --Configure IFCR of DMA2D 
+                VAR DMA2D->IFCR, init = 0, ev = (T_UINT32)DMA2D_ISR_TCIF
+            
+        SIMUL
+            
+            --None
+
+            END SIMUL
+        
+      --Calling Unit Under Test 
+        #Dma2dWait();
+
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+
+END SERVICE -- Dma2dWait
+
+

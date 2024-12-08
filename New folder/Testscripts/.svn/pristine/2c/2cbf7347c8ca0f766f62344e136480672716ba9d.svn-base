@@ -1,0 +1,4224 @@
+HEADER hdudispfcas, Source Code Ver : 1.3 , TestScript Ver : 1.1
+--------------------------------------------------------------------------------
+-- Author Name         : Priyanka N
+--
+-- File Name           : hdudispfcas.ptu
+--
+-- Test Creation Date  : 23.10.2017 
+--
+-- Tested Functions    : CasSetCasWord
+--                       CasInit
+--                       FormulateNewCas
+--                       ResetNewTimers
+--			 SetCasStatus
+--			 CasUpdate
+--			 CasSort
+--			 CasDisplay
+--                  
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------        ---------       -----------        -------------
+--  1.1                 23.10.2017      Priyanka N         Created the PTU file.
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+##include "hdudispfcas.h"
+##include "hdudispffonts.h"
+##include "hdudispfpara.h"
+##include "hdulibbasictypes.h"
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern T_UINT16 U16_cas_new_shadow[(64/8)];
+    #extern void SetCasStatus(void);
+    #extern T_UINT16 U16_cas_new_words[(64/8)];
+    #extern T_UINT16 U16_cas_old_shadow[(64/8)];
+    #T_CAS_MSG Cas_messages_setting;
+    #enum CAS_INDEX  Cas_app_array[64+1];
+    #T_CAS_MSG_DEF Cas_msg[64];
+    #T_UINT8 Cas_message_count;
+    #T_CAS_MESSAGE All_cas_messages[64];
+
+--  Temporary variable created to pass as an address to function parameters
+
+   -- Temprary variables cteated to verify the stub parameters
+   #T_TIMER PTU_timer[64];
+   #T_TIMER PTU_timer_TimerInstall[64];
+   #T_UINT32 PTU_i;
+   #T_CAS_MESSAGE PTU_timer_1[64];
+   #T_INT8 PTU_pc_string_in[23];
+   #T_INT8 PTU_pc_string_out[23];
+   #T_TIMER PTU_TimerPreset[64];
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author Name      : Priyanka N 
+    COMMENT
+    COMMENT File Name        : hdudispfcas.ptu
+    COMMENT
+    COMMENT Tested Functions :CasSetCasWord 
+    COMMENT                   CasInit 
+    COMMENT                   FormulateNewCas 
+    COMMENT                   ResetNewTimers 
+    COMMENT                   SetCasStatus 
+    COMMENT            	      CasUpdate 
+    COMMENT		              CasSort
+    COMMENT                   CasDisplay
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT 
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1. In function "CasDisplay" , implicit else in below code snippet cannot be achieve.
+    COMMENT Code:
+    COMMENT else
+    COMMENT {
+    COMMENT 	 /* hdudispfcas-CasDisplay-DB-LLR-013 */
+    COMMENT  if (cas_message->Flash_timer < flash_timer)
+    COMMENT   {
+    COMMENT    ....
+    COMMENT    else if(CAS_RED==cas_message->ePenColor)
+    COMMENT    {
+    COMMENT      TextDispString(message_text, u16_display_x, u16_display_y, cas_font,cas_message->ePenColor, TX_NO_FLASH, V_REVERSE, ALIGN_LEFT);
+    COMMENT    }
+    COMMENT   }
+    COMMENT   ...
+    COMMENT }
+    COMMENT since there is no possible ePenColor of cas_message to reach the implicit else, Due to this coverage is less in function "CasDisplay".
+    COMMENT
+    COMMENT 2. In function "CasDisplay" , implicit else in below code snippet cannot be achieve.
+    COMMENT Code:
+    COMMENT else
+    COMMENT {
+    COMMENT	/* hdudispfcas-CasDisplay-DB-LLR-014 */
+    COMMENT  else if((CAS_AMBER==cas_message->ePenColor)||(CAS_WHITE==cas_message->ePenColor))
+    COMMENT   {
+    COMMENT      TextDispString(message_text, u16_display_x, u16_display_y, cas_font,cas_message->ePenColor, TX_NO_FLASH, V_NORMAL, ALIGN_LEFT);
+    COMMENT   }
+    COMMENT }
+    COMMENT since there is no possible ePenColor of cas_message to reach the implicit else, Due to this coverage is less in function "CasDisplay".
+    COMMENT </AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT 
+    COMMENT Valid Class(es)
+    COMMENT Class 1
+    COMMENT Function "CasSetCasWord" , used to set the CAS words.
+    COMMENT
+    COMMENT Class 2
+    COMMENT Function "CasUpdate" , calls the static function "FormulateNewCas".
+    COMMENT 
+    COMMENT Class 3
+    COMMENT In function "FormulateNewCas" , CAS message is present in the new CAS list and CAS message is present in the old CAS list
+    COMMENT 
+    COMMENT Class 4
+    COMMENT In function "FormulateNewCas" , CAS message is not present in the new CAS list
+    COMMENT 
+    COMMENT Class 5
+    COMMENT In function "FormulateNewCas" , CAS message is present in the new CAS list and CAS message is not present in the old CAS list
+    COMMENT 
+    COMMENT Class 6
+    COMMENT Function "CasUpdate" , calls the static function "ResetNewTimers".
+    COMMENT
+    COMMENT Class 7
+    COMMENT In function "ResetNewTimers" ,result of U16_cas_new_words with index word count bitwise AND with mask value is not equal to ZERO
+    COMMENT
+    COMMENT Class 8
+    COMMENT In function "ResetNewTimers" ,result of U16_cas_new_words with index word count bitwise AND with mask value is equal to ZERO
+    COMMENT
+    COMMENT Class 9
+    COMMENT Function "ResetNewTimers" , calls the function "TimerReset".
+    COMMENT 
+    COMMENT Class 10
+    COMMENT Function "CasUpdate" , calls the static function "SetCasStatus".
+    COMMENT 
+    COMMENT Class 11
+    COMMENT Function "SetCasStatus" , sets the CAS status.
+    COMMENT 
+    COMMENT Class 12
+    COMMENT Function "CasInit" , calls the function "TimerInstall"
+    COMMENT 
+    COMMENT Class 13
+    COMMENT Function "CasSort" , id field of one CAS message is greater than the adjacent CAS message
+    COMMENT 
+    COMMENT Class 14
+    COMMENT Function "CasSort" , id field of one CAS message is lesser than the adjacent CAS message
+    COMMENT 
+    COMMENT Class 15
+    COMMENT Function "CasSort" , u8Start field of one CAS message is greater than the adjacent CAS message
+    COMMENT 
+    COMMENT Class 16
+    COMMENT Function "CasSort" , u8Start field of one CAS message is lesser than the adjacent CAS message
+    COMMENT 
+    COMMENT Class 17
+    COMMENT Function "CasSort" , priority field of one CAS message is greater than the adjacent CAS message
+    COMMENT 
+    COMMENT Class 18
+    COMMENT Function "CasSort" , priority field of one CAS message is lesser than the adjacent CAS message
+    COMMENT 
+    COMMENT Class 19
+    COMMENT Function "CasSort" , u8Start field of local cas list is equal to ELEVEN
+    COMMENT 
+    COMMENT Class 20
+    COMMENT Function "CasSort" , u8Start field of local cas list is not equal to ELEVEN
+    COMMENT 
+    COMMENT Class 21
+    COMMENT Function "CasSort" , id field of two adjacent CAS messages are equal
+    COMMENT 
+    COMMENT Class 22
+    COMMENT Function "CasSort" , id field of two adjacent CAS messages are not equal
+    COMMENT 
+    COMMENT Class 23
+    COMMENT Function "CasDisplay" , calls the function "CasSort"
+    COMMENT 
+    COMMENT Class 24
+    COMMENT In function "CasDisplay" , type of Cas_msg is equal to CAS_ADVISORY
+    COMMENT 
+    COMMENT Class 25
+    COMMENT In function "CasDisplay" , type of Cas_msg is not equal to CAS_ADVISORY and type of Cas_msg is equal to CAS_CAUTION
+    COMMENT 
+    COMMENT Class 26
+    COMMENT In function "CasDisplay" , type of Cas_msg is not equal to CAS_ADVISORY , CAS_CAUTION and type of Cas_msg is equal to CAS_WARNING
+    COMMENT 
+    COMMENT Class 27
+    COMMENT In function "CasDisplay" , type of Cas_msg is not equal to CAS_ADVISORY , CAS_CAUTION and CAS_WARNING
+    COMMENT 
+    COMMENT Class 28
+    COMMENT In function "CasDisplay" , ePenColor of All_Cas_messages is equal to BLACK
+    COMMENT 
+    COMMENT Class 29
+    COMMENT In function "CasDisplay" , ePenColor of All_Cas_messages is not equal to BLACK
+    COMMENT 
+    COMMENT Class 30
+    COMMENT In function "CasDisplay" , local variable 'item count' is greater than or equal to 14
+    COMMENT 
+    COMMENT Class 31
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is CAS_RED.
+    COMMENT 
+    COMMENT Class 32
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is CAS_AMBER.
+    COMMENT 
+    COMMENT Class 33
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is CAS_WHITE
+    COMMENT 
+    COMMENT Class 34
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is not CAS_RED , CAS_AMBER and CAS_WHITE
+    COMMENT 
+    COMMENT Class 35
+    COMMENT In function "CasDisplay" , flash timer is equal to 0
+    COMMENT 
+    COMMENT Class 36
+    COMMENT In function "CasDisplay" , flash timer is not equal to 0
+    COMMENT 
+    COMMENT Class 37
+    COMMENT In function "CasDisplay" , calls the function "TextDispString"
+    COMMENT 
+    COMMENT Class 38
+    COMMENT In function "CasDisplay" , u8Stat of CAS message is REV_VID
+    COMMENT 
+    COMMENT Class 39
+    COMMENT In function "CasDisplay" , u8Stat of CAS message is not REV_VID OR ePenColor of CAS message is CAS_RED.
+    COMMENT 
+    COMMENT Class 40
+    COMMENT In function "CasDisplay" , cas message status u8Stat is set
+    COMMENT 
+    COMMENT Class 41
+    COMMENT In function "CasDisplay" , cas message status u8Stat is not set
+    COMMENT 
+    COMMENT Class 42
+    COMMENT In function "CasDisplay" , u8Stat of CAS message is not REV_VID OR ePenColor of CAS message is not CAS_RED.
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is not CAS_AMBER.
+    COMMENT 
+    COMMENT Class 44
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is not CAS_WHITE.
+    COMMENT 
+    COMMENT Class 45
+    COMMENT In function "CasDisplay" , ePenColor of CAS message is not CAS_AMBER and CAS_WHITE
+    COMMENT 
+    COMMENT Class 46
+    COMMENT In function "CasDisplay" , flash timer is not less than Flash_timer of CAS message 
+    COMMENT 
+    COMMENT Class 47
+    COMMENT In function "CasDisplay" , u8Stat of CAS message is other than REV_VID
+    COMMENT 
+    COMMENT Class 48
+    COMMENT In function "CasDisplay" , calls the function "TimerPreset"
+    COMMENT 
+    COMMENT Class 49	
+    COMMENT In function "CasDisplay" , flash timer is FLASH_TIME1.
+    COMMENT 
+    COMMENT Class 50	
+    COMMENT In function "CasDisplay" , flash timer is FLASH_TIME2.
+    COMMENT 
+    COMMENT Class 51	
+    COMMENT In function "CasDisplay" , flash timer is less than Flash_timer of CAS message 
+    COMMENT
+    COMMENT Invalid class(es)
+    COMMENT None
+    COMMENT </ECD>
+	
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+SIMUL
+
+    DEFINE STUB hdudispfcas_c 70
+
+	-- Parameter 'timer' is made as _no, and verified explicitly 
+        #void TimerPreset( volatile  T_TIMER _inout _no *timer, T_INT32 _in s32_set_val)
+        # {
+        # for(PTU_i=0;PTU_i<64;PTU_i++)
+        #  {
+        #   PTU_TimerPreset[PTU_i] = timer[PTU_i];
+        #  }
+        # }
+
+	-- Parameter 'pc_string' is made as _no, and verified explicitly 
+        #void TextDispString(char _inout _no *pc_string[200], T_UINT16 _in u16_x, T_UINT16 _in u16_y, T_ETXFONT _in e_tx_font, T_EPENCOLOR _in e_pen_color, T_ETXFLASH _in e_tx_flash, T_ETXV _in e_txv, T_ETXALIGN _in e_tx_align)
+        # {
+        # for(PTU_i=0;PTU_i<23;PTU_i++)
+        # {
+        # pc_string[PTU_i] = (char)PTU_pc_string_in[PTU_i];
+        # (char)PTU_pc_string_out[PTU_i] = pc_string[PTU_i];
+        # }
+        # }
+
+	-- Parameter 'timer' is made as _no, and verified explicitly 
+        #void TimerReset( volatile  T_TIMER _inout _no *timer)
+        # {
+        # for(PTU_i=0;PTU_i<64;PTU_i++)
+        #  {
+        #   PTU_timer[PTU_i] = timer[PTU_i];
+        #  }
+        # }
+		
+	-- Parameter 'timer' is made as _no, and verified explicitly 
+        #void TimerInstall( volatile  T_TIMER _inout _no *timer)
+        # {
+        # for(PTU_i=0;PTU_i<64;PTU_i++)
+        #  {
+        #   PTU_timer_TimerInstall[PTU_i] = timer[PTU_i];
+        #  }
+        # }
+	
+    END DEFINE
+
+ELSE_SIMUL
+
+    -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the target execution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file
+
+ENVIRONMENT ENV_hdudispfcas_c
+
+    -- Default array initialization
+    ARRAY U16_cas_new_shadow,		init = { others => 0 },		ev = init
+    ARRAY U16_cas_new_words,		init = { others => 0 },		ev = init
+    ARRAY U16_cas_words,		init = { others => 0 },		ev = init
+    ARRAY U16_cas_old_shadow,		init = { others => 0 },		ev = init
+
+END ENVIRONMENT -- ENV_hdudispfcas_c
+
+USE ENV_hdudispfcas_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CasSetCasWord
+--------------------------------------------------------------------------------
+SERVICE CasSetCasWord
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT8 u8_index;
+    #T_UINT16 u16_cas_word;
+
+    ENVIRONMENT ENV_CasSetCasWord
+	
+	-- parameter is initialized before usage
+    VAR u8_index,			init = 0,		ev = init
+  
+	-- parameter is initialized before usage
+	VAR u16_cas_word,		init = 0,		ev = init
+	
+    END ENVIRONMENT -- ENV_CasSetCasWord
+    
+	USE ENV_CasSetCasWord
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [CAS-CasSetCasWord-DB-LLR-001]
+    COMMENT The function sets the U16_cas_words array with index (u8_index mod MAX_FLAG_WORDS) with the parameter u16_cas_word
+    COMMENT Equivalence Class 1
+    COMMENT parameters values are exercised with minimum values
+    COMMENT </TD>
+ 
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- parameter 'u16_cas_word' is assigned with min value
+            VAR u16_cas_word,   	init = 0 ,	      	ev = init
+	
+            -- parameter 'u16_cas_word' is assigned with min value
+            VAR u8_index,       	init = 0 ,	      	ev = init 
+
+        COMMENT OUTPUT SECTION: 
+		
+            -- Gloabal variable is updated with 'u16_cas_word'
+            VAR U16_cas_words,  	init = {others=>100} ,	ev = {0=>u16_cas_word, others=>100}
+	
+        COMMENT INPUT/OUTPUT SECTION:
+		
+            --None
+
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+		
+            -- Calling the Unit Under Test :
+        #CasSetCasWord(u8_index,u16_cas_word);
+
+	END ELEMENT
+	
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [CAS-CasSetCasWord-DB-LLR-001]
+    COMMENT The function sets the U16_cas_words array with index (u8_index mod MAX_FLAG_WORDS) with the parameter u16_cas_word
+    COMMENT Equivalence Class 1
+    COMMENT parameters values are exercised with nominal values
+    COMMENT </TD>
+	
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+		
+            -- parameter 'u16_cas_word' is assigned with nominal value
+            VAR u16_cas_word,   	init = 200 ,          	ev = init
+		
+            -- parameter 'u16_cas_word' is assigned with nominal value
+            VAR u8_index,       	init = 32 ,           	ev = init 
+
+        COMMENT OUTPUT SECTION: 
+			
+            -- Gloabal variable is updated with 'u16_cas_word'
+            VAR U16_cas_words,  	init = {others=>100} ,	ev = {0=>u16_cas_word , others=>100}
+
+        COMMENT INPUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+		
+            --None
+		
+        END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #CasSetCasWord(u8_index,u16_cas_word);
+
+	END ELEMENT
+	
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [CAS-CasSetCasWord-DB-LLR-001]
+    COMMENT The function sets the U16_cas_words array with index (u8_index mod MAX_FLAG_WORDS) with the parameter u16_cas_word
+    COMMENT Equivalence Class 1
+    COMMENT parameters values are exercised with maximum values
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- parameter 'u16_cas_word' is assigned with max value
+            VAR u16_cas_word,   	init = 65535 ,        	ev = init
+		
+            -- parameter 'u16_cas_word' is assigned with max value
+            VAR u8_index,       	init = 255 ,          	ev = init 
+
+        COMMENT OUTPUT SECTION: 
+		
+            -- Gloabal variable is updated with 'u16_cas_word'
+            VAR U16_cas_words,  	init = {others=>255} ,	ev = {7=>u16_cas_word , others=>255}
+	
+        COMMENT INPUT/OUTPUT SECTION:
+		
+            --None
+
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #CasSetCasWord(u8_index,u16_cas_word);
+
+	END ELEMENT
+	
+END TEST  -- TEST 3
+
+END SERVICE -- CasSetCasWord
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CasUpdate
+--------------------------------------------------------------------------------
+SERVICE CasUpdate
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-001]
+    COMMENT The function creates a copy of the recent CAS words from U16_cas_words
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-002]
+    COMMENT The function creates a copy of the new CAS words from U16_cas_new_words
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-003]
+    COMMENT The function calls FormulateNewCas to build new CAS message words
+    COMMENT Equivalence Class 2
+    COMMENT
+    COMMENT [hdudispfcas-FormulateNewCas -DB-LLR-001]
+    COMMENT The function performs the following for all the CAS messages from zero to MAX_FLAG_WORDS-1
+    COMMENT 1.	Scan through all the 2 bit values allocated for each CAS message in each word
+    COMMENT 2.	Eliminates the CAS message from the new list by masking when the following conditions are satisfied 
+    COMMENT	i.when the CAS message is present in the new CAS list which is checked by masking it with the new CAS word
+    COMMENT	ii.when the CAS message is present in the old CAS list which is checked by masking it with the new CAS word
+    COMMENT Equivalence Class 3 and 4
+    COMMENT 
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-004]
+    COMMENT Function calls ResetNewTimers to reset the Flash timer for the new CAS message words
+    COMMENT Equivalence Class 6
+    COMMENT 
+    COMMENT [hdudispfcas-ResetNewTimers-DB-LLR-001]
+    COMMENT The function initializes the index value to ZERO and loop from zero to MAX_FLAG_WORDS(word count) and THREE to ZERO(mask) 
+    COMMENT  by decrementing the mask value with its value left shift by TWO and does the following 
+    COMMENT -	Does not resets the timer for flash message since result of U16_cas_new_words with index word count bitwise AND with mask value
+    COMMENT 	is equal to ZERO.
+    COMMENT -	Increment the index value by ONE.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-005]
+    COMMENT The function calls SetCasStatus to compute CAs status and update it to the CAS list
+    COMMENT Equivalence Class 10
+    COMMENT 
+    COMMENT [hdudispfcas-SetCasStatus-DB-LLR-001]
+    COMMENT The function performs the following for all the CAS messages from zero to MAX_FLAG_WORDS-1
+    COMMENT 1.	Scan through all the 2 bit values allocated for each CAS message in each word
+    COMMENT 2.	Extracts the CAS status bits from the new CAS list[U16_cas_new_shadow]
+    COMMENT 3.	Right shifts the extracted status based on the position of the CAS in the word
+    COMMENT 4.	Sets the extracted CAS status in All_Cas_messages
+    COMMENT Equivalence Class 11
+    COMMENT
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-006]
+    COMMENT The function copies the U16_cas_new_shadow to the U16_cas_old_shadow and calls the function SetCasStatus to copy the status to the CAS list.
+    COMMENT Equivalence Class 10
+    COMMENT 
+    COMMENT Note: Input values are exercised for nominal values.
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Global variables are assigned with nominal value
+            VAR U16_cas_words,	      		init = { others =>1}  , 					     ev = init 
+
+            -- Global variables are assigned with nominal value
+            VAR U16_cas_new_words,        	init = { others =>1}  , 					     ev = { others =>0} 
+
+            -- Global variables are assigned with nominal value
+            VAR U16_cas_old_shadow,       	init = { others =>1}  , 					     ev = init
+
+            -- Global variable is initialized
+            VAR U16_cas_new_shadow,       	init = {others =>1 } ,  					     ev = init 
+			
+        COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+	
+        COMMENT OUTPUT SECTION:
+		
+            -- Structure member 'u8Stat' is modified
+	    VAR All_cas_messages,         init = {0 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	3 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	8 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	9 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	11 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	16 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	19 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	24 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	25 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	27 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	32 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	33 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	35 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	40 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	41 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	43 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	48 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	49 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	51 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	56 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	57 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	59 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	others =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } }  ,
+	    &     													ev = init 
+
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+
+            -- Calling the Unit Under Test :
+        #CasUpdate( );
+
+	END ELEMENT
+
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-001]
+    COMMENT The function creates a copy of the recent CAS words from U16_cas_words
+    COMMENT Equivalence Class None
+    COMMENT
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-002]
+    COMMENT The function creates a copy of the new CAS words from U16_cas_new_words
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-003]
+    COMMENT The function calls FormulateNewCas to build new CAS message words
+    COMMENT Equivalence Class 2
+    COMMENT
+    COMMENT [hdudispfcas-FormulateNewCas -DB-LLR-001]
+    COMMENT The function performs the following for all the CAS messages from zero to MAX_FLAG_WORDS-1
+    COMMENT 1.	Scan through all the 2 bit values allocated for each CAS message in each word
+    COMMENT 2.	Eliminates the CAS message from the new list by masking when the following conditions are satisfied 
+    COMMENT 	i. when the CAS message is present in the new CAS list which is checked by masking it with the new CAS word
+    COMMENT	ii. when the CAS message is present in the old CAS list which is checked by masking it with the new CAS word
+    COMMENT Equivalence Class 3 and 4
+    COMMENT 
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-004]
+    COMMENT Function calls ResetNewTimers to reset the Flash timer for the new CAS message words
+    COMMENT Equivalence Class 6
+    COMMENT 
+    COMMENT [hdudispfcas-ResetNewTimers-DB-LLR-001]
+    COMMENT The function initializes the index value to ZERO and loop from zero to MAX_FLAG_WORDS(word count) and THREE to ZERO(mask) 
+    COMMENT  by decrementing the mask value with its value left shift by TWO and does the following 
+    COMMENT -	Does not resets the timer for flash message since result of U16_cas_new_words with index word count bitwise AND with mask value
+    COMMENT 	is equal to ZERO.
+    COMMENT -	Increment the index value by ONE.
+    COMMENT Equivalence Class 8
+    COMMENT
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-005]
+    COMMENT The function calls SetCasStatus to compute CAs status and update it to the CAS list
+    COMMENT Equivalence Class 10
+    COMMENT 
+    COMMENT [hdudispfcas-SetCasStatus-DB-LLR-001]
+    COMMENT The function performs the following for all the CAS messages from zero to MAX_FLAG_WORDS-1
+    COMMENT 1.	Scan through all the 2 bit values allocated for each CAS message in each word
+    COMMENT 2.	Extracts the CAS status bits from the new CAS list[U16_cas_new_shadow]
+    COMMENT 3.	Right shifts the extracted status based on the position of the CAS in the word
+    COMMENT 4.	Sets the extracted CAS status in All_Cas_messages
+    COMMENT Equivalence Class 11
+    COMMENT
+    COMMENT [hdudispfcas-CasUpdate-DB-LLR-006]
+    COMMENT The function copies the U16_cas_new_shadow to the U16_cas_old_shadow and calls the function SetCasStatus to copy the status to the CAS list.
+    COMMENT Equivalence Class 10
+    COMMENT 
+    COMMENT Note: Input values are exercised for maximum values.
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Global variable is assigned with max value
+            VAR U16_cas_words,	      		init = { others =>65535}  ,	ev = init 
+
+            -- Global variable is assigned with max value
+            VAR U16_cas_old_shadow,       	init = { others =>65535}  ,	ev = init
+
+            -- Global variable is assigned with max value
+            VAR U16_cas_new_shadow,       	init = {others =>65535 } ,	ev = init  
+		
+        COMMENT OUTPUT SECTION:
+
+            -- Value of global variable is updated
+            VAR U16_cas_new_words,        	init = { others =>65535}  ,	ev = {others =>0} 
+			
+            -- Structure member 'u8Stat' is updated
+            VAR All_cas_messages,         	init = {others =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>3 , Flash_timer =>0  } } ,
+	    &     								ev = init 
+		
+        COMMENT INPUT/OUTPUT SECTION:
+
+        SIMUL
+
+            -- None
+
+        END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #CasUpdate( );
+
+	END ELEMENT
+
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT
+    COMMENT [hdudispfcas-FormulateNewCas -DB-LLR-001]
+    COMMENT The function performs the following for all the CAS messages from zero to MAX_FLAG_WORDS-1
+    COMMENT 1.	Scan through all the 2 bit values allocated for each CAS message in each word
+    COMMENT 2.	does nothing when
+    COMMENT	i. the CAS message is not present in the new CAS list which is checked by masking it with the new CAS word
+    COMMENT Equivalence Class 4
+    COMMENT 
+    COMMENT Note: Input values are exercised for minimum values.
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Global variable is assigned with min value
+            VAR U16_cas_words,	      		init = { others =>0}  , ev = init 
+
+            -- Global variable is assigned with min value
+            VAR U16_cas_new_words,       	init = { others =>0}  , ev = init
+
+            -- Global variable is assigned with min value
+            VAR U16_cas_old_shadow,       	init = { others =>0}  , ev = init
+			
+            -- Global variable is assigned with min value
+            VAR U16_cas_new_shadow,       	init = {others =>0 } ,  ev = init  
+		
+        COMMENT OUTPUT SECTION:
+
+            -- Value of global variable is updated
+            VAR All_cas_messages,         	init = {others =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } } ,
+	    &     							ev = init 
+		
+        COMMENT INPUT/OUTPUT SECTION:
+
+            -- None
+			
+        SIMUL
+			
+                -- None
+
+        END SIMUL
+	
+        -- Calling the Unit Under Test :
+        #CasUpdate( );
+
+	END ELEMENT
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-FormulateNewCas -DB-LLR-001]
+    COMMENT The function performs the following for all the CAS messages from zero to MAX_FLAG_WORDS-1
+    COMMENT 1.	Scan through all the 2 bit values allocated for each CAS message in each word
+    COMMENT 2.	does not eliminates the CAS message from the new list when
+    COMMENT	i.the CAS message is present in the new CAS list which is checked by masking it with the new CAS word
+    COMMENT	ii.and the CAS message is not present in the old CAS list which is checked by masking it with the new CAS word
+    COMMENT Equivalence Class 5
+    COMMENT
+    COMMENT [hdudispfcas-ResetNewTimers-DB-LLR-001]
+    COMMENT The function initializes the index value to ZERO and loop from zero to MAX_FLAG_WORDS(word count) and THREE to ZERO(mask) 
+    COMMENT  by decrementing the mask value with its value left shift by TWO and does the following 
+    COMMENT -	Resets the timer for flash message since result of U16_cas_new_words with index word count bitwise AND with mask value
+    COMMENT 	is not equal to ZERO.
+    COMMENT -	Increment the index value by ONE.
+    COMMENT Equivalence Class 7 and 9
+    COMMENT </TD>
+	 
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Global variable is initialized
+            VAR U16_cas_words,	      		init = { others =>1}  ,				ev = init 
+
+            -- Global variable is initialized
+            VAR U16_cas_new_words,        	init = { others =>1}  , 			ev = init
+	
+            -- Global variable is initialized
+            VAR U16_cas_new_shadow,       	init = {others =>1 } ,  			ev = init  
+	
+        COMMENT OUTPUT SECTION:
+
+            -- Global variable is initialized
+            VAR U16_cas_old_shadow,       	init = { others =>0}  , 			ev = { others =>1}
+			
+            -- Structure member 'u8Stat' is updated
+            VAR All_cas_messages,         init = {0 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	3 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	8 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	9 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	11 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	16 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	19 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	24 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	25 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	27 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	32 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	33 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	35 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	40 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	41 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	43 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	48 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	49 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	51 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	56 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>1 , Flash_timer =>0  } ,
+	    &	57 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	59 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } ,
+	    &	others =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } }  ,
+	    &     										ev = init 
+
+            -- Stub parameter 'timer' holds the values of 'All_cas_messages[index].Flash_timer'
+            VAR  PTU_timer[0] , 		init = 10 , 					ev = All_cas_messages[0].Flash_timer
+            VAR  PTU_timer[8] , 		init = 10 , 					ev = All_cas_messages[8].Flash_timer
+            VAR  PTU_timer[16] ,		 init = 10 , 					ev = All_cas_messages[16].Flash_timer
+            VAR  PTU_timer[24] , 		init = 10 , 					ev = All_cas_messages[24].Flash_timer
+            VAR  PTU_timer[32] , 		init = 10 , 					ev = All_cas_messages[32].Flash_timer
+            VAR  PTU_timer[40] , 		init = 10 , 					ev = All_cas_messages[40].Flash_timer
+            VAR  PTU_timer[48] , 		init = 10 , 					ev = All_cas_messages[48].Flash_timer
+            VAR  PTU_timer[56] , 		init = 10 , 					ev = All_cas_messages[56].Flash_timer
+
+        SIMUL
+	    STUB TimerReset 1..8=>()
+
+        END SIMUL
+
+            -- Calling the Unit Under Test :
+        #CasUpdate( );
+
+	END ELEMENT
+
+END TEST  -- TEST 4
+
+END SERVICE -- CasUpdate
+
+--------------------------------------------------------------------------------
+-- Declaration of the service SetCasStatus
+--------------------------------------------------------------------------------
+SERVICE SetCasStatus
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-SetCasStatus-DB-LLR-001]
+    COMMENT The function performs the following for all the CAS messages from zero to MAX_FLAG_WORDS-1
+    COMMENT 1.	Scan through all the 2 bit values allocated for each CAS message in each word
+    COMMENT 2.	Extracts the CAS status bits from the new CAS list[U16_cas_new_shadow]
+    COMMENT 3.	Right shifts the extracted status based on the position of the CAS in the word
+    COMMENT 4.	Sets the extracted CAS status in All_Cas_messages
+    COMMENT Equivalence Class 10 and 11
+    COMMENT parameters values are exercised with maximum values
+    COMMENT </TD>
+ 
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+		
+            -- Global variable is initialized with min value
+            VAR U16_cas_new_shadow,  init = {others =>0} ,  	ev = init  
+	
+        COMMENT OUTPUT SECTION:
+		
+            -- Structure member 'u8Stat' is updated
+            VAR All_cas_messages,    init = { others =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } }  ,
+	    &     						ev = init 
+				
+        COMMENT INPUT/OUTPUT SECTION:
+		
+            --None
+
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #SetCasStatus( );
+
+	END ELEMENT
+	
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-SetCasStatus-DB-LLR-001]
+    COMMENT The function performs the following for all the CAS messages from zero to MAX_FLAG_WORDS-1
+    COMMENT 1.	Scan through all the 2 bit values allocated for each CAS message in each word
+    COMMENT 2.	Extracts the CAS status bits from the new CAS list[U16_cas_new_shadow]
+    COMMENT 3.	Right shifts the extracted status based on the position of the CAS in the word
+    COMMENT 4.	Sets the extracted CAS status in All_Cas_messages
+    COMMENT Equivalence Class 10 and 11
+    COMMENT parameters values are exercised with nominal values
+    COMMENT </TD>
+	
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+		
+            -- Global variable is initialized with nominal value
+            VAR U16_cas_new_shadow,  init = {others =>200 } ,     		ev = init  
+	
+        COMMENT OUTPUT SECTION:
+			
+            -- Structure member 'u8Stat' is updated
+            VAR All_cas_messages,    init = {1 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>2 , Flash_timer =>0  } ,
+	    &	3 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>3 , Flash_timer =>0  } ,
+	    &	9 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>2 , Flash_timer =>0  } ,
+	    &	11 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>3 , Flash_timer =>0  } ,
+	    &	17 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>2 , Flash_timer =>0  } ,
+	    &	19 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>3 , Flash_timer =>0  } ,
+	    &	25 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>2 , Flash_timer =>0  } ,
+	    &	27 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>3 , Flash_timer =>0  } ,
+	    &	33 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>2 , Flash_timer =>0  } ,
+	    &	35 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>3 , Flash_timer =>0  } ,
+	    &	41 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>2 , Flash_timer =>0  } ,
+	    &	43 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>3 , Flash_timer =>0  } ,
+	    &	49 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>2 , Flash_timer =>0  } ,
+	    &	51 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>3 , Flash_timer =>0  } ,
+	    &	57 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>2 , Flash_timer =>0  } ,
+	    &	59 =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>3 , Flash_timer =>0  } ,
+	    &	others =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>0 , Flash_timer =>0  } }  ,
+	    &     								ev = init 
+				
+        COMMENT INPUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #SetCasStatus( );
+
+	END ELEMENT
+	
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-SetCasStatus-DB-LLR-001]
+    COMMENT The function performs the following for all the CAS messages from zero to MAX_FLAG_WORDS-1
+    COMMENT 1.	Scan through all the 2 bit values allocated for each CAS message in each word
+    COMMENT 2.	Extracts the CAS status bits from the new CAS list[U16_cas_new_shadow]
+    COMMENT 3.	Right shifts the extracted status based on the position of the CAS in the word
+    COMMENT 4.	Sets the extracted CAS status in All_Cas_messages
+    COMMENT Equivalence Class 10 and 11
+    COMMENT parameters values are exercised with maximum values
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+		
+        -- Global variable is initialized with max value
+	    VAR U16_cas_new_shadow,  init = {others =>65535 } ,   				ev = init  
+	
+        COMMENT OUTPUT SECTION:
+
+        -- Structure member 'u8Stat' is updated
+	    VAR All_cas_messages,    init = { others =>{ ePenColor =>BLACK, acCASText =>"" , u8Stat =>3 , Flash_timer =>0  } }  ,
+		&     										ev = init 
+				
+        COMMENT INPUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #SetCasStatus( );
+
+	END ELEMENT
+END TEST  -- TEST 3
+
+END SERVICE -- SetCasStatus
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CasInit
+--------------------------------------------------------------------------------
+SERVICE CasInit
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasInit-DB-LLR-001]
+    COMMENT The function does the following 
+    COMMENT calls the function TimerInstall for all the CAS messages from index 0 to MAX_CAS_MESSAGES-1 with parameter Flash_timer of All_Cas_messages
+    COMMENT Equivalence Class 12
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            --None
+			
+        COMMENT OUTPUT SECTION:
+
+            -- Stub parameter 'timer' of stub 'TimerInstall' is updated with 'All_cas_messages[index].Flash_timer'
+            VAR PTU_timer_TimerInstall[0] ,  	init = 10 , ev = All_cas_messages[0].Flash_timer
+            VAR PTU_timer_TimerInstall[1] , 	init = 10 , ev = All_cas_messages[1].Flash_timer
+            VAR PTU_timer_TimerInstall[2] , 	init = 10 , ev = All_cas_messages[2].Flash_timer
+            VAR PTU_timer_TimerInstall[3] , 	init = 10 , ev = All_cas_messages[3].Flash_timer
+            VAR PTU_timer_TimerInstall[4] , 	init = 10 , ev = All_cas_messages[4].Flash_timer
+            VAR PTU_timer_TimerInstall[5] , 	init = 10 , ev = All_cas_messages[5].Flash_timer
+            VAR PTU_timer_TimerInstall[6] , 	init = 10 , ev = All_cas_messages[6].Flash_timer
+            VAR PTU_timer_TimerInstall[7] , 	init = 10 , ev = All_cas_messages[7].Flash_timer
+            VAR PTU_timer_TimerInstall[8] , 	init = 10 , ev = All_cas_messages[8].Flash_timer
+            VAR PTU_timer_TimerInstall[9] , 	init = 10 , ev = All_cas_messages[9].Flash_timer
+            VAR PTU_timer_TimerInstall[10] ,	init = 10 , ev = All_cas_messages[10].Flash_timer
+            VAR PTU_timer_TimerInstall[11] , 	init = 10 , ev = All_cas_messages[11].Flash_timer
+            VAR PTU_timer_TimerInstall[12] , 	init = 10 , ev = All_cas_messages[12].Flash_timer
+            VAR PTU_timer_TimerInstall[13] , 	init = 10 , ev = All_cas_messages[13].Flash_timer
+            VAR PTU_timer_TimerInstall[14] , 	init = 10 , ev = All_cas_messages[14].Flash_timer
+            VAR PTU_timer_TimerInstall[15] , 	init = 10 , ev = All_cas_messages[15].Flash_timer
+            VAR PTU_timer_TimerInstall[16] , 	init = 10 , ev = All_cas_messages[16].Flash_timer
+            VAR PTU_timer_TimerInstall[17] , 	init = 10 , ev = All_cas_messages[17].Flash_timer
+            VAR PTU_timer_TimerInstall[18] , 	init = 10 , ev = All_cas_messages[18].Flash_timer
+            VAR PTU_timer_TimerInstall[19] , 	init = 10 , ev = All_cas_messages[19].Flash_timer
+            VAR PTU_timer_TimerInstall[20] , 	init = 10 , ev = All_cas_messages[20].Flash_timer
+            VAR PTU_timer_TimerInstall[21] , 	init = 10 , ev = All_cas_messages[21].Flash_timer
+            VAR PTU_timer_TimerInstall[22] , 	init = 10 , ev = All_cas_messages[22].Flash_timer
+            VAR PTU_timer_TimerInstall[23] , 	init = 10 , ev = All_cas_messages[23].Flash_timer
+            VAR PTU_timer_TimerInstall[24] , 	init = 10 , ev = All_cas_messages[24].Flash_timer
+            VAR PTU_timer_TimerInstall[25] , 	init = 10 , ev = All_cas_messages[25].Flash_timer
+            VAR PTU_timer_TimerInstall[26] , 	init = 10 , ev = All_cas_messages[26].Flash_timer
+            VAR PTU_timer_TimerInstall[27] , 	init = 10 , ev = All_cas_messages[27].Flash_timer
+            VAR PTU_timer_TimerInstall[28] , 	init = 10 , ev = All_cas_messages[28].Flash_timer
+            VAR PTU_timer_TimerInstall[29] , 	init = 10 , ev = All_cas_messages[29].Flash_timer
+            VAR PTU_timer_TimerInstall[30] , 	init = 10 , ev = All_cas_messages[30].Flash_timer
+            VAR PTU_timer_TimerInstall[31] , 	init = 10 , ev = All_cas_messages[31].Flash_timer
+            VAR PTU_timer_TimerInstall[32] , 	init = 10 , ev = All_cas_messages[32].Flash_timer
+            VAR PTU_timer_TimerInstall[33] , 	init = 10 , ev = All_cas_messages[33].Flash_timer
+            VAR PTU_timer_TimerInstall[34] , 	init = 10 , ev = All_cas_messages[34].Flash_timer
+            VAR PTU_timer_TimerInstall[35] , 	init = 10 , ev = All_cas_messages[35].Flash_timer
+            VAR PTU_timer_TimerInstall[36] , 	init = 10 , ev = All_cas_messages[36].Flash_timer
+            VAR PTU_timer_TimerInstall[37] , 	init = 10 , ev = All_cas_messages[37].Flash_timer
+            VAR PTU_timer_TimerInstall[38] , 	init = 10 , ev = All_cas_messages[38].Flash_timer
+            VAR PTU_timer_TimerInstall[39] , 	init = 10 , ev = All_cas_messages[39].Flash_timer
+            VAR PTU_timer_TimerInstall[40] , 	init = 10 , ev = All_cas_messages[40].Flash_timer
+            VAR PTU_timer_TimerInstall[41] , 	init = 10 , ev = All_cas_messages[41].Flash_timer
+            VAR PTU_timer_TimerInstall[42] , 	init = 10 , ev = All_cas_messages[42].Flash_timer
+            VAR PTU_timer_TimerInstall[43] , 	init = 10 , ev = All_cas_messages[43].Flash_timer
+            VAR PTU_timer_TimerInstall[44] , 	init = 10 , ev = All_cas_messages[44].Flash_timer
+            VAR PTU_timer_TimerInstall[45] , 	init = 10 , ev = All_cas_messages[45].Flash_timer
+            VAR PTU_timer_TimerInstall[46] , 	init = 10 , ev = All_cas_messages[46].Flash_timer
+            VAR PTU_timer_TimerInstall[47] , 	init = 10 , ev = All_cas_messages[47].Flash_timer
+            VAR PTU_timer_TimerInstall[48] , 	init = 10 , ev = All_cas_messages[48].Flash_timer
+            VAR PTU_timer_TimerInstall[49] , 	init = 10 , ev = All_cas_messages[49].Flash_timer
+            VAR PTU_timer_TimerInstall[50] , 	init = 10 , ev = All_cas_messages[50].Flash_timer
+            VAR PTU_timer_TimerInstall[51] , 	init = 10 , ev = All_cas_messages[51].Flash_timer
+            VAR PTU_timer_TimerInstall[52] , 	init = 10 , ev = All_cas_messages[52].Flash_timer
+            VAR PTU_timer_TimerInstall[53] , 	init = 10 , ev = All_cas_messages[53].Flash_timer
+            VAR PTU_timer_TimerInstall[54] , 	init = 10 , ev = All_cas_messages[54].Flash_timer
+            VAR PTU_timer_TimerInstall[55] , 	init = 10 , ev = All_cas_messages[55].Flash_timer
+            VAR PTU_timer_TimerInstall[56] , 	init = 10 , ev = All_cas_messages[56].Flash_timer
+            VAR PTU_timer_TimerInstall[57] , 	init = 10 , ev = All_cas_messages[57].Flash_timer
+            VAR PTU_timer_TimerInstall[58] , 	init = 10 , ev = All_cas_messages[58].Flash_timer
+            VAR PTU_timer_TimerInstall[59] , 	init = 10 , ev = All_cas_messages[59].Flash_timer
+            VAR PTU_timer_TimerInstall[60] , 	init = 10 , ev = All_cas_messages[60].Flash_timer
+            VAR PTU_timer_TimerInstall[61] , 	init = 10 , ev = All_cas_messages[61].Flash_timer
+            VAR PTU_timer_TimerInstall[62] , 	init = 10 , ev = All_cas_messages[62].Flash_timer
+            VAR PTU_timer_TimerInstall[63] , 	init = 10 , ev = All_cas_messages[63].Flash_timer
+				
+        COMMENT INPUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+			
+            -- This routine receives a pointer to an unsigned integer and then increments that timer each time timer_isr is called.
+	    STUB TimerInstall 1..64=>()
+
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CasInit( );
+
+	END ELEMENT
+
+END TEST  -- TEST 1
+
+END SERVICE -- CasInit
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CasSort
+--------------------------------------------------------------------------------
+SERVICE CasSort
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasSort-DB-LLR-001]
+    COMMENT Does nothing since Cas_message_count is 0
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-002]
+    COMMENT Does nothing since Cas_message_count is 0
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-003]
+    COMMENT Does nothing since Cas_message_count is 0
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-004]
+    COMMENT Does nothing since Cas_message_count is 0
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-005]
+    COMMENT Does nothing since Cas_message_count is 0
+    COMMENT Equivalence Class none
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+		
+            -- Global variable is assined with value zero
+            VAR Cas_message_count,  init = 0 ,	ev = init
+
+        COMMENT OUTPUT SECTION:
+		
+            --None
+			
+        COMMENT INPUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+	
+            --None
+		
+        END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #CasSort( );
+
+	END ELEMENT
+	
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasSort-DB-LLR-001]
+    COMMENT Does nothing since Cas_message_count is 1
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-002]
+    COMMENT Does nothing since Cas_message_count is 1
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-003]
+    COMMENT The function creates a local cas priority list by copying all the cas messages from Cas_msg from 0 to Cas_message_count
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-004]
+    COMMENT Does nothing since Cas_message_count is 1
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-005]
+    COMMENT	The function builds the CAS priority list Cas_app_array from local list copied from Cas_msg by reading local list
+    COMMENT	from index 0 to Cas_message_count as follows
+    COMMENT	- Set Cas_app_array with the calculated value as
+    COMMENT	(id field of local cas list multiply with 8) add ((u8Start field of local cas list subtracted by 10) divided by 2)) add 1, 
+    COMMENT	when the u8Start field of local cas list is not equal to 11
+    COMMENT Equivalence Class 20
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+            VAR Cas_message_count,    	init = 1 , 	ev = init
+		
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+            VAR Cas_msg[0].priority,  	init = 10 ,	ev = init
+		
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+            VAR Cas_msg[0].Id,	  	init = 20 ,	ev = init
+		
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+            VAR Cas_msg[0].u8Start,   	init = 30 ,	ev = init
+		
+        COMMENT OUTPUT SECTION:
+		
+            -- Gloabal variable 'Cas_app_array' is updated
+            VAR Cas_app_array[0] , 	init = 100 ,	ev = 171
+
+	    COMMENT INUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #CasSort( );
+
+	END ELEMENT
+	
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasSort-DB-LLR-001]
+    COMMENT The function sorts all the CAS messages in the PDI list based on id by performing the following from index 0 to Cas_message_count 
+    COMMENT 1.	Compares the id field of first CAS messages in Cas_msg with the rest of all messages
+    COMMENT 2.	does not swaps the two adjacent Cas_msg elements when the id field of one CAS message is not greater than the adjacent CAS message
+    COMMENT Equivalence Class 14
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-002]
+    COMMENT The function sorts all the CAS messages in the PDI list based on u8Start by performing the following from index 0 to Cas_message_count
+    COMMENT and does nothing when id field of two adjacent CAS messages are not equal
+    COMMENT Equivalence Class 22
+    COMMENT
+    COMMENT [hdudispfcas-CasSort-DB-LLR-004]
+    COMMENT The function sorts all the CAS messages copied to the local list based on priority by performing the following from index 0 to Cas_message_count 
+    COMMENT 1.	Compares the priority field of first CAS messages in Cas_msg with the rest of all messages
+    COMMENT 2.	does nothing when the priority field of one CAS message is not greater than the adjacent CAS message
+    COMMENT Equivalence Class 18
+    COMMENT </TD>
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+		
+            -- Global variable is assined with value one
+            VAR Cas_message_count,    	init = 2 , 	ev = init
+		
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+            VAR Cas_msg[0].priority,  	init = 10 ,
+	    &     					ev = init
+		
+            -- Stucture member 'Cas_msg[1].priority' is initialized
+            VAR Cas_msg[1].priority,  	init = 20 ,
+	    &     					ev = init
+		
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+            VAR Cas_msg[0].Id,	  	init = 20 ,
+	    &     					ev = init
+		
+            -- Stucture member 'Cas_msg[1].Id' is initialized
+            VAR Cas_msg[1].Id,	  	init = 30 ,
+	    &     					ev = init
+		
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+            VAR Cas_msg[0].u8Start,   	init = 30 ,
+	    &     					ev = init
+
+            -- Stucture member 'Cas_msg[1].u8Start' is initialized
+            VAR Cas_msg[1].u8Start,   	init = 40 ,
+	    &     					ev = init
+			
+        COMMENT OUTPUT SECTION:
+		
+            -- Gloabal variable 'Cas_app_array' is updated
+            VAR Cas_app_array[0] ,  	init = 100 ,
+	    &     					 ev = 171
+
+            -- Gloabal variable 'Cas_app_array' is updated
+            VAR Cas_app_array[1],   	init = 100 ,
+	    &     					 ev = 256
+
+	    COMMENT INUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+
+            -- Calling the Unit Under Test :
+        #CasSort( );
+
+	END ELEMENT
+	
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasSort-DB-LLR-003]
+    COMMENT The function sorts all the CAS messages in the PDI list based on u8Start by performing the following from index 0 to Cas_message_count
+    COMMENT and Perform the following when id field of two adjacent CAS messages are equal
+    COMMENT 1.	Compares the u8Start field of first CAS messages in Cas_msg with the rest of all messages
+    COMMENT 2.	does not Swaps the two adjacent Cas_msg elements when the u8Start field of one CAS message is not greater than the adjacent CAS message
+    COMMENT Equivalence Class 16 and 21
+    COMMENT 
+    COMMENT </TD>
+
+
+    ELEMENT
+	
+        COMMENT INPUT SECTION:
+		
+            -- Global variable is assined with value one
+            VAR Cas_message_count,    init = 3 , ev = init
+		
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+            VAR Cas_msg[0].priority,  init = 10 ,
+	    &     					 ev = init
+		
+            -- Stucture member 'Cas_msg[1].priority' is initialized
+            VAR Cas_msg[1].priority,  init = 20 ,
+	    &     					 ev = init
+
+            -- Stucture member 'Cas_msg[2].priority' is initialized
+            VAR Cas_msg[2].priority,  init = 20 ,
+	    &     					 ev = init
+			
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+            VAR Cas_msg[0].Id,	  init = 20 ,
+	    &     					 ev = init
+		
+            -- Stucture member 'Cas_msg[1].Id' is initialized
+            VAR Cas_msg[1].Id,	  init = 30 ,
+	    &     					 ev = init
+
+            -- Stucture member 'Cas_msg[2].Id' is initialized
+            VAR Cas_msg[2].Id,	  init = 50 ,
+	    &     					 ev = init
+		
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+            VAR Cas_msg[0].u8Start,   init = 20 ,
+	    &     					 ev = init
+		
+            -- Stucture member 'Cas_msg[1].u8Start' is initialized
+            VAR Cas_msg[1].u8Start,   init = 30 ,
+	    &     					 ev = init
+		
+            -- Stucture member 'Cas_msg[2].u8Start' is initialized
+            VAR Cas_msg[2].u8Start,   init = 50 ,
+	    &     					 ev = init
+			
+        COMMENT OUTPUT SECTION:
+		
+            -- Gloabal variable 'Cas_app_array[0]' is updated
+            VAR Cas_app_array[0] ,     init = 100 ,
+	    &     					 ev = 166
+
+            -- Gloabal variable 'Cas_app_array[1]' is updated
+            VAR Cas_app_array[1] ,     init = 100 ,
+	    &     					 ev = 251
+
+            -- Gloabal variable 'Cas_app_array[2]' is updated
+            VAR Cas_app_array[2] ,     init = 100 ,
+	    &     					 ev = 421
+
+	    COMMENT INUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+		
+            -- Calling the Unit Under Test :
+        #CasSort( );
+
+	END ELEMENT
+	
+END TEST  -- TEST 4
+
+TEST 5
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasSort-DB-LLR-002]
+    COMMENT The function sorts all the CAS messages in the PDI list based on u8Start by performing the following from index 0 to Cas_message_count
+    COMMENT and perform the following when id field of two adjacent CAS messages are equal
+    COMMENT 1.	Compares the u8Start field of first CAS messages in Cas_msg with the rest of all messages
+    COMMENT 2.	Swaps the two adjacent Cas_msg elements if the u8Start field of one CAS message is greater than the adjacent CAS message
+    COMMENT Equivalence Class 15
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-004]
+    COMMENT The function sorts all the CAS messages copied to the local list based on priority by performing the following from index 0 to Cas_message_count 
+    COMMENT 1.	Compares the priority field of first CAS messages in Cas_msg with the rest of all messages
+    COMMENT 2.	Swap the two adjacent Cas_msg elements when the priority field of one CAS message is greater than the adjacent CAS message
+    COMMENT Equivalence Class 17
+    COMMENT </TD>
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+            VAR Cas_message_count,    	init = 2 , ev = init
+			
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+            VAR Cas_msg[0].priority,  	init = 10 ,
+	    &     					 ev = 20
+		
+            -- Stucture member 'Cas_msg[1].priority' is initialized
+            VAR Cas_msg[1].priority,  	init = 20 ,
+	    &     					 ev = 10
+			
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+            VAR Cas_msg[0].Id,	  	init = 20 ,
+	    &     					 ev = init
+		
+            -- Stucture member 'Cas_msg[1].Id' is initialized
+            VAR Cas_msg[1].Id,	  	init = 20 ,
+	    &     					 ev = init
+			
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+            VAR Cas_msg[0].u8Start,   	init = 30 ,
+	    &     					 ev = 20
+	 
+            -- Stucture member 'Cas_msg[1].u8Start' is initialized
+            VAR Cas_msg[1].u8Start,   	init = 20 ,
+	    &     					 ev = 30
+				
+        COMMENT OUTPUT SECTION:
+		
+            -- Gloabal variable 'Cas_app_array[0]' is updated
+            VAR Cas_app_array[0] ,     	init = 100 ,
+	    &     					 ev = 171
+
+            -- Gloabal variable 'Cas_app_array[1]' is updated
+            VAR Cas_app_array[1] ,     	init = 100 ,
+	    &     					 ev = 166
+	
+	    COMMENT INUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+
+        -- Calling the Unit Under Test :
+        #CasSort( );
+
+	END ELEMENT
+END TEST  -- TEST 5
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasSort-DB-LLR-001]
+    COMMENT The function sorts all the CAS messages in the PDI list based on id by performing the following from index 0 to Cas_message_count 
+    COMMENT 1.	Compares the id field of first CAS messages in Cas_msg with the rest of all messages
+    COMMENT 2.	Swap the two adjacent Cas_msg elements when the id field of one CAS message is greater than the adjacent CAS message
+    COMMENT Equivalence Class 13
+    COMMENT 
+    COMMENT [hdudispfcas-CasSort-DB-LLR-005]
+    COMMENT The function builds the CAS priority list Cas_app_array from local list copied from Cas_msg by reading local list from index 0 to Cas_message_count as follows
+    COMMENT 1.	Sets Cas_app_array with the calculated value as
+    COMMENT (id field of local cas list multiply with 8) add with (u8Start field of local cas list subtract by 10), when the u8Start field of local cas list
+    COMMENT is equal to 11
+    COMMENT Equivalence Class 19
+    COMMENT </TD>
+
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+            VAR Cas_message_count,    	init = 2 , 	ev = init
+		
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+            VAR Cas_msg[0].priority,  	init = 20 ,
+	    &     					 ev = 10
+		
+            -- Stucture member 'Cas_msg[1].priority' is initialized
+            VAR Cas_msg[1].priority,  	init = 10 ,
+	    &     					 ev = 20
+			
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+            VAR Cas_msg[0].Id,	  	init = 20 ,
+	    &     					 ev = 10
+		
+            -- Stucture member 'Cas_msg[1].Id' is initialized
+            VAR Cas_msg[1].Id,	  	init = 10 ,
+	    &     					 ev = 20
+			
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+            VAR Cas_msg[0].u8Start,   	init = 10 ,
+	    &     					 ev = 11
+	 
+            -- Stucture member 'Cas_msg[1].u8Start' is initialized
+            VAR Cas_msg[1].u8Start,   	init = 11 ,
+	    &     					 ev = 10
+			
+        COMMENT OUTPUT SECTION:
+		
+            -- Gloabal variable 'Cas_app_array[0]' is updated
+            VAR Cas_app_array[0],     	init = 100 ,
+	    &     					 ev = 81
+
+            -- Gloabal variable 'Cas_app_array[1]' is updated
+            VAR Cas_app_array[1],     	init = 100 ,
+	    &     					 ev = 161
+	
+	    COMMENT INUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #CasSort( );
+
+	END ELEMENT
+	
+END TEST  -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasSort-DB-LLR-002]
+    COMMENT The function sorts all the CAS messages in the PDI list based on u8Start by performing the following from index 0 to Cas_message_count
+    COMMENT and perform the following when id field of two adjacent CAS messages are equal
+    COMMENT 1.	Compares the u8Start field of first CAS messages in Cas_msg with the rest of all messages
+    COMMENT 2.	does not swaps the two adjacent Cas_msg elements if the u8Start field of one CAS message is greater than the adjacent CAS message
+    COMMENT Equivalence Class 14
+    COMMENT </TD>
+
+
+    ELEMENT
+
+        COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+            VAR Cas_message_count,    	init = 2 , 	ev = init
+		
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+            VAR Cas_msg[0].priority,  	init = 20 ,
+	    &     					 ev = init
+		
+            -- Stucture member 'Cas_msg[1].priority' is initialized
+            VAR Cas_msg[1].priority,  	init = 10 ,
+	    &     					 ev = init
+			
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+            VAR Cas_msg[0].Id,	  	init = 10 ,
+	    &     					 ev = init
+		
+            -- Stucture member 'Cas_msg[1].Id' is initialized
+            VAR Cas_msg[1].Id,	  	init = 10 ,
+	    &     					 ev = init
+			
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+            VAR Cas_msg[0].u8Start,   	init = 10 ,
+	    &     					 ev = init
+	 
+            -- Stucture member 'Cas_msg[1].u8Start' is initialized
+            VAR Cas_msg[1].u8Start,   	init = 11 ,
+	    &     					 ev = init
+			
+        COMMENT OUTPUT SECTION:
+		
+            -- Gloabal variable 'Cas_app_array[0]' is updated
+            VAR Cas_app_array[0],     	init = 100 ,
+	    &     					 ev = 81
+
+            -- Gloabal variable 'Cas_app_array[1]' is updated
+            VAR Cas_app_array[1],     	init = 100 ,
+	    &     					 ev = 81
+	
+	    COMMENT INUT/OUTPUT SECTION:
+		
+            --None
+			
+        SIMUL
+		
+            --None
+			
+        END SIMUL
+		
+        -- Calling the Unit Under Test :
+        #CasSort( );
+
+	END ELEMENT
+	
+END TEST  -- TEST 7
+
+END SERVICE -- CasSort
+
+--------------------------------------------------------------------------------
+-- Declaration of the service CasDisplay
+--------------------------------------------------------------------------------
+SERVICE CasDisplay
+SERVICE_TYPE extern
+
+TEST 1
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-001]
+    COMMENT The function does the following:
+    COMMENT 1.Calls CasSort to sort the CAS messages from PDI in ascending order based on id, start bit and priority.
+    COMMENT 2.Sets color to be displayed of all CAS messages(All_cas_messages) to BLACK.
+    COMMENT 3.Sets color to be displayed of CAS messages(All_cas_messages) to CAS_WHITE when the caution or warning is recieved
+    COMMENT (i.e Content of Cas_app_array is other than zero). 
+    COMMENT Equivalence Class 23
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-002]
+    COMMENT The function sets the ePenColor for all the cas messages in Cas_msg from index 0 to Cas_message_count as follows
+    COMMENT 1.	Sets ePenColor of Cas_msg to CAS_WHITE, if type of Cas_msg is equal to CAS_ADVISORY
+    COMMENT Equivalence Class 24
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-003]
+    COMMENT The function copies the ePenColor and acCASText from Cas_msg to All_Cas_messages from index 0 to MAX_CAS_MESSAGES as follows
+    COMMENT 1.	Continues when ePenColor of All_Cas_messages is equal to BLACK
+    COMMENT 2.	Copies ePenColor and acCASText from Cas_msg to All_Cas_messages when ePenColor of All_Cas_messages is not equal to BLACK
+    COMMENT Equivalence Class 28 and 29
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-004]
+    COMMENT The function index through the CAS messages All_Cas_messages based on the priority list Cas_app_array and performs the following
+    COMMENT 1.	copies the CAS message from All_Cas_messages with index from Cas_app_array to local element
+    COMMENT 2.	Calculates the X and Y axis for Displaying the CAS layout by using the row, colomnwidth, row height, sOrigin.u16X0 and sOrigin.u16Y0 of Cas_messages_setting.
+    COMMENT 3.	Creates local copy of eFont from Cas_messages_setting.
+    COMMENT Equivalence Class none
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-005]
+    COMMENT Does nothing since cas message status u8Stat is not set
+    COMMENT Equivalence Class 41
+    COMMENT </TD>
+	
+    ELEMENT
+
+        COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+	    VAR Cas_message_count,  		   init = 1 ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+	    VAR Cas_msg[0].u8Start, 		   init = 12 ,    	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+	    VAR Cas_msg[0].priority,		   init = 1 ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+            VAR Cas_msg[0].Id,			   init = 1 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+	    VAR Cas_msg[0].type,    		   init = CAS_ADVISORY  ,     ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+            VAR Cas_msg[0].acCASText,     	   init = {others=>1} ,       ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+            VAR All_cas_messages[9].u8Stat,        init = 0 ,     	      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+            VAR All_cas_messages[9].Flash_timer,   init = 0 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+	    VAR Cas_messages_setting,     	   init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>0 , caut_flash_timer =>0 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init 
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+            VAR Cas_msg[0].ePenColor,     	   init = PINK ,  	      ev = CAS_WHITE
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+            VAR All_cas_messages[9].ePenColor,     init = BLACK , 	      ev = CAS_WHITE
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+            VAR Cas_app_array,			   init = { others =>ZERO}  , ev = {0=>10 , others=>ZERO}	
+	
+            -- Stub Calls :
+        SIMUL
+        
+        
+        END SIMUL
+           
+        -- Calling the Unit Under Test :
+	#CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-002]
+    COMMENT The function sets the ePenColor for all the cas messages in Cas_msg from index 0 to Cas_message_count as follows
+    COMMENT	-Sets ePenColor of Cas_msg to CAS_AMBER, when type of Cas_msg is equal to CAS_CAUTION
+    COMMENT	Equivalence Class 25
+    COMMENT 
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		   init = 1 ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		   init = 12 ,    	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		   init = 1 ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			   init = 1 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		   init = CAS_CAUTION  ,      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	   init = {others=>1} ,       ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,        init = 0 ,     	      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,   init = 0 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	   init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>0 , caut_flash_timer =>0 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init 
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	   init = PINK ,  	      ev = CAS_AMBER
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,     init = BLACK , 	      ev = CAS_AMBER
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			   init = { others =>ZERO}  , ev = {0=>10 , others=>ZERO}	
+		
+
+            -- Stub Calls :
+        SIMUL
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 2
+
+TEST 3
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-002]
+    COMMENT The function sets the ePenColor for all the cas messages in Cas_msg from index 0 to Cas_message_count as follows
+    COMMENT	-Sets ePenColor of Cas_msg to CAS_RED, when type of Cas_msg is equal to CAS_WARNING
+    COMMENT	Equivalence Class 26
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		   init = 1 ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		   init = 12 ,    	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		   init = 1 ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			   init = 1 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		   init = CAS_WARNING  ,      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	   init = {others=>1} ,       ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,        init = 0 ,     	      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,   init = 0 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	   init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>0 , caut_flash_timer =>0 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init 
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	   init = PINK ,  	      ev = CAS_RED
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,     init = BLACK , 	      ev = CAS_RED
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			   init = { others =>ZERO}  , ev = {0=>10 , others=>ZERO}
+		
+
+            -- Stub Calls :
+        SIMUL
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 3
+
+TEST 4
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-002]
+    COMMENT Does nothing when type of Cas_msg is not equal to CAS_WARNING , CAS_ADVISORY and CAS_CAUTION
+    COMMENT	Equivalence Class 27
+    COMMENT
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-005]
+    COMMENT The function indexs through the CAS messages All_Cas_messages based on the priority list Cas_app_array and perform the following
+    COMMENT	when the cas message status u8Stat is set
+    COMMENT	1.	Builds the CAS string to be displayed by copying the acCASText of current CAS message with delimiters LEFT_BE at the beginning 
+    COMMENT	and RIGHT_BE at the end.
+    COMMENT	Equivalence Class 40
+    COMMENT
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT Does nothing when ePenColor of CAS message is not CAS_RED , CAS_AMBER and CAS_WHITE.
+    COMMENT Equivalence Class 34
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-007]
+    COMMENT	The function shall does the following when u8Stat of CAS message is other than ZERO and flash timer is ZERO.
+    COMMENT	-	Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value,
+    COMMENT	eFont of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_REVERSE and ALIGN_LEFT 
+    COMMENT when u8Stat of CAS message REV_VID OR ePenColor of CAS message is CAS_RED.
+    COMMENT Equivalence Class 35 , 37 and 38
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 1 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>0 , caut_flash_timer =>0 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = PINK ,   	      ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = BLACK ,  	      ev = PINK
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+		
+
+	    VAR PTU_pc_string_in[0..22],  	  init = (T_INT8)'a' ,    	      ev = init
+	
+
+	    VAR PTU_pc_string_out[0..22], 	  init = (T_INT8)'b' ,     	      ev = (T_INT8)'a'
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,PINK,TX_NO_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 4
+
+TEST 6
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-	Set the flash timer to warn_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_RED.
+    COMMENT Equivalence Class 31
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-007]
+    COMMENT	The function shall does the following when u8Stat of CAS message is other than ZERO and flash timer is ZERO.
+    COMMENT	-	Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value,
+    COMMENT	eFont of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_REVERSE and ALIGN_LEFT 
+    COMMENT when u8Stat of CAS message is not REV_VID OR ePenColor of CAS message is CAS_RED.
+    COMMENT Equivalence Class 39
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>0 , caut_flash_timer =>0 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init 
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_RED ,	      ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = BLACK ,  	      ev = CAS_RED
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+		
+
+	    VAR PTU_pc_string_in[0..22],  	  init = 'a' ,    	      ev = init
+	
+
+	    VAR PTU_pc_string_out[0..22], 	  init = 20 ,     	      ev = 'a'
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_RED,TX_NO_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 6
+
+TEST 7
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-	Set the flash timer to caut_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_AMBER.
+    COMMENT Equivalence Class 32
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-007]
+    COMMENT	Does nothing
+    COMMENT when u8Stat of CAS message is not REV_VID OR ePenColor of CAS message is not CAS_RED.
+    COMMENT Equivalence Class 42
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-008]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is ZERO.
+    COMMENT	-	Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value,
+    COMMENT eFont of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_NORMAL  and ALIGN_LEFT 
+    COMMENT	when u8Stat of CAS message is other than REV_VID and ePenColor of CAS message is CAS_AMBER OR CAS_WHITE.
+    COMMENT Equivalence Class 37 and 32
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>0 , caut_flash_timer =>0 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_AMBER ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = BLACK ,  	      ev = CAS_AMBER
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+	
+
+	    VAR PTU_pc_string_in[0..22],  	  init = 'a' ,    	      ev = init
+	
+
+	    VAR PTU_pc_string_out[0..22], 	  init = 20 ,     	      ev = 'a'
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_AMBER,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 7
+
+TEST 8
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-	Set the flash timer to adv_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_WHITE.
+    COMMENT Equivalence Class 33
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-008]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is ZERO.
+    COMMENT	-	Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value,
+    COMMENT eFont of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_NORMAL  and ALIGN_LEFT 
+    COMMENT	when u8Stat of CAS message is other than REV_VID and ePenColor of CAS message is not CAS_AMBER but CAS_WHITE.
+    COMMENT Equivalence Class 37 and 33
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>0 , caut_flash_timer =>0 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_WHITE ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = BLACK ,  	      ev = CAS_WHITE
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+		
+
+	    VAR PTU_pc_string_in[0..22],  	  init = 'a' ,    	      ev = init
+	
+
+	    VAR PTU_pc_string_out[0..22], 	  init = 20 ,     	      ev = 'a'
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_WHITE,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 8
+
+TEST 9
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	Does nothing when ePenColor of CAS message is not CAS_WHITE , CAS_AMBER OR CAS_RED.
+    COMMENT Equivalence Class 34
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-008]
+    COMMENT	Does nothing when ePenColor of CAS message is not CAS_AMBER OR CAS_WHITE.
+    COMMENT Equivalence Class 37 and 45
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>0 , caut_flash_timer =>0 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = BLACK ,  	      ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = BLACK
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+
+
+            -- Stub Calls :
+        SIMUL
+                -- None
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 9
+
+TEST 10
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-	Set the flash timer to adv_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_WHITE.
+    COMMENT Equivalence Class 33
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-007]
+    COMMENT Does nothing since flash timer is 0
+    COMMENT Equivalence Class 36
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-014]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is other than ZERO, 
+    COMMENT	FLASH_TIME1 and FLASH_TIME2 and flash timer is not less than Flash_timer of CAS message 
+    COMMENT -	Display the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT	of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_NORMAL  and ALIGN_LEFT 
+    COMMENT	when u8Stat of CAS message is other than REV_VID and ePenColor of CAS message is CAS_WHITE. 
+    COMMENT	Equivalence Class 47 , 33 and 46
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>10 , caut_flash_timer =>0 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+            -- Stub parameter 'timer' of stub 'TimerInstall' is updated with 'All_cas_messages[index].Flash_timer'
+            VAR PTU_TimerPreset[0] ,  init = 10 , ev = init
+            VAR PTU_TimerPreset[9] , init = 10 , ev = 0
+
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_WHITE ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_WHITE
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TimerPreset (10)
+
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_WHITE,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 10
+
+TEST 11
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-Sets the flash timer to caut_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_AMBER.
+    COMMENT Equivalence Class 32
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-014]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is other than ZERO, 
+    COMMENT	FLASH_TIME1 and FLASH_TIME2 and flash timer is not less than Flash_timer of CAS message 
+    COMMENT -Sets the given timer by calling the function TimerPreset with parameter address of Flash_timer of CAS message and flash timer.
+    COMMENT -Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT	of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_NORMAL  and ALIGN_LEFT 
+    COMMENT	when u8Stat of CAS message is other than REV_VID and ePenColor of CAS message is CAS_AMBER. 
+    COMMENT	Equivalence Class 37 , 47 , 32 , 48 and 46
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>10 , caut_flash_timer =>10 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_AMBER ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_AMBER
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+	
+
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TimerPreset (10)
+
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_AMBER,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 11
+
+TEST 12
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-Sets the flash timer to caut_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_AMBER.
+    COMMENT Equivalence Class 32
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-014]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is other than ZERO, 
+    COMMENT	FLASH_TIME1 and FLASH_TIME2 and flash timer is not less than Flash_timer of CAS message 
+    COMMENT -Sets the given timer by calling the function TimerPreset with parameter address of Flash_timer of CAS message and flash timer.
+    COMMENT -Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT	of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_REVERSE  and ALIGN_LEFT 
+    COMMENT	when u8Stat of CAS message is REV_VID
+    COMMENT	Equivalence Class 37 , 38 , 48 and 46
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 1 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>10 , caut_flash_timer =>10 ,
+		&	warn_flash_timer =>0 , cas_redx_txt =>{ others =>0 } }  ,   ev = init
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_AMBER ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_AMBER
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TimerPreset (10)
+
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_AMBER,TX_NO_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 12
+
+TEST 13
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-Sets the flash timer to warn_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_RED.
+    COMMENT Equivalence Class 31
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-014]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is other than ZERO, 
+    COMMENT	FLASH_TIME1 and FLASH_TIME2 and flash timer is not less than Flash_timer of CAS message 
+    COMMENT -Sets the given timer by calling the function TimerPreset with parameter address of Flash_timer of CAS message and flash timer.
+    COMMENT -Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT	of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_REVERSE  and ALIGN_LEFT 
+    COMMENT	when u8Stat of CAS message is not REV_VID and ePenColor of CAS message is CAS_RED.
+    COMMENT	Equivalence Class 37 , 39 , 48 and 46
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>10 , caut_flash_timer =>10 ,
+		&	warn_flash_timer =>10 , cas_redx_txt =>{ others =>0 } }  ,  ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_RED ,	      ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_RED
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TimerPreset (10)
+
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_RED,TX_NO_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 13
+
+TEST 14
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-	Set the flash timer to adv_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_WHITE.
+    COMMENT Equivalence Class 33
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-009]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is FLASH_TIME1.
+    COMMENT	-Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT of Cas_messages_setting, ePenColor of CAS message, TX_FLASH, V_REVERSE  and ALIGN_LEFT 
+    COMMENT	when u8Stat of CAS message is not REV_VID and ePenColor of CAS message is CAS_WHITE.
+    COMMENT	Equivalence Class 49 , 37 , 38 and 33
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>999000 , caut_flash_timer =>10 ,
+		&	warn_flash_timer =>10 , cas_redx_txt =>{ others =>0 } }  ,  ev = init 
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_WHITE ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_WHITE
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_WHITE,TX_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 14
+
+TEST 15
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-	Set the flash timer to adv_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_WHITE.
+    COMMENT Equivalence Class 33
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-009]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is FLASH_TIME1.
+    COMMENT	-Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT of Cas_messages_setting, ePenColor of CAS message, TX_FLASH, V_REVERSE  and ALIGN_LEFT 
+    COMMENT	when u8Stat of CAS message is REV_VID and ePenColor of CAS message is not CAS_WHITE.
+    COMMENT	Equivalence Class 49 , 37 and 38
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 1 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>999000 , caut_flash_timer =>10 ,
+		&	warn_flash_timer =>10 , cas_redx_txt =>{ others =>0 } }  ,  ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_WHITE ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_WHITE
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_WHITE,TX_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 15
+
+TEST 16
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-Sets the flash timer to caut_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_AMBER.
+    COMMENT Equivalence Class 32
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-010]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is FLASH_TIME1.
+    COMMENT	-Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_NORMAL  and ALIGN_LEFT 
+    COMMENT	when u8Stat of CAS message is other than REV_VID and ePenColor of CAS message is CAS_AMBER.
+    COMMENT	Equivalence Class 49 , 37 and 32
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>999000 , caut_flash_timer =>999000 ,
+		&	warn_flash_timer =>10 , cas_redx_txt =>{ others =>0 } }  ,  ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_AMBER ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_AMBER
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+	
+
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_AMBER,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 16
+
+TEST 17
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-Sets the flash timer to warn_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_RED.
+    COMMENT Equivalence Class 31
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-011]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is FLASH_TIME1.
+    COMMENT	-Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_REVERSE  and ALIGN_LEFT 
+    COMMENT	when u8Stat of CAS message is other than REV_VID AND ePenColor of CAS message is other than CAS_WHITE. AND 
+    COMMENT ePenColor of CAS message is other than CAS_AMBER
+    COMMENT	Equivalence Class 49 , 37 , 44 and 43
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,			  ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     		  ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,			  ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,			  ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     		  ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,  	  ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,			  ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     		  ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>999000 , caut_flash_timer =>999000 ,
+		&	warn_flash_timer =>999000 , cas_redx_txt =>{ others =>0 } }  ,
+		&     										  ev = init
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_RED ,		  ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   		  ev = CAS_RED
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,    ev = {0=>10 , others=>ZERO}
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_RED,TX_NO_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 17
+
+TEST 18
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-Sets the flash timer to warn_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_RED.
+    COMMENT Equivalence Class 31
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-012]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is FLASH_TIME2.
+    COMMENT	-Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT of Cas_messages_setting, ePenColor of CAS message, TX_FLASH, V_REVERSE  and ALIGN_LEFT 
+    COMMENT	Equivalence Class 50 and 37
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,			   ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     		   ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,			   ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,			   ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     		   ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,  	   ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,			   ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     		   ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>999000 , caut_flash_timer =>999000 ,
+		&	warn_flash_timer =>9999000 , cas_redx_txt =>{ others =>0 } }  ,
+		&     										   ev = init
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_RED ,		   ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   		   ev = CAS_RED
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,     ev = {0=>10 , others=>ZERO}
+	
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_RED,TX_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 18
+
+TEST 19
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-Sets the flash timer to warn_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_RED.
+    COMMENT Equivalence Class 31
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-013]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is other than ZERO, FLASH_TIME1
+    COMMENT and FLASH_TIME2 and flash timer is less than Flash_timer of CAS message 
+    COMMENT	-Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_REVERSE  and ALIGN_LEFT when
+    COMMENT u8Stat of CAS message is other than REV_VID  and ePenColor of CAS message is CAS_RED.
+    COMMENT	Equivalence Class 51 , 47 , 31 and 37
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 10 ,     	      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>999000 , caut_flash_timer =>999000 ,
+		&	warn_flash_timer =>11 , cas_redx_txt =>{ others =>0 } }  ,  ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_RED ,	      ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_RED
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_RED,TX_NO_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 19
+
+TEST 20
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-	Set the flash timer to adv_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_WHITE.
+    COMMENT Equivalence Class 33
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-013]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is other than ZERO, FLASH_TIME1
+    COMMENT and FLASH_TIME2 and flash timer is less than Flash_timer of CAS message 
+    COMMENT	-Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT of Cas_messages_setting, ePenColor of CAS message, TX_FLASH, V_REVERSE  and ALIGN_LEFT when
+    COMMENT when ePenColor of CAS message is CAS_WHITE
+    COMMENT	Equivalence Class 51 and 33
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 9 ,		      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>10 , caut_flash_timer =>999000 ,
+		&	warn_flash_timer =>11 , cas_redx_txt =>{ others =>0 } }  ,  ev = init
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_WHITE ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_WHITE
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_WHITE,TX_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 20
+
+TEST 21
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-Sets the flash timer to caut_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_AMBER.
+    COMMENT Equivalence Class 32
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-013]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is other than ZERO, FLASH_TIME1
+    COMMENT and FLASH_TIME2 and flash timer is less than Flash_timer of CAS message 
+    COMMENT	-Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT of Cas_messages_setting, ePenColor of CAS message, TX_FLASH, V_REVERSE  and ALIGN_LEFT when
+    COMMENT ePenColor of CAS message is CAS_WHITE and u8Stat of CAS message is not REV_VID.
+    COMMENT	Equivalence Class 51 and 38
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 1 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 9 ,		      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>10 , caut_flash_timer =>10 ,
+		&	warn_flash_timer =>11 , cas_redx_txt =>{ others =>0 } }  ,  ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_AMBER ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_AMBER
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_AMBER,TX_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 21
+
+TEST 22
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-Sets the flash timer to caut_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_AMBER.
+    COMMENT Equivalence Class 32
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-013]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is other than ZERO, FLASH_TIME1
+    COMMENT and FLASH_TIME2 and flash timer is less than Flash_timer of CAS message 
+    COMMENT	-Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_NORMAL  and ALIGN_LEFT when
+    COMMENT u8Stat of CAS message is other than REV_VID  and ePenColor of CAS message is CAS_AMBER.
+    COMMENT	Equivalence Class 51 , 47 , 44 and 32
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 9 ,		      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>10 , caut_flash_timer =>10 ,
+		&	warn_flash_timer =>11 , cas_redx_txt =>{ others =>0 } }  ,  ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_AMBER ,          ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_AMBER
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+	
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_AMBER,TX_NO_FLASH,V_NORMAL,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 22
+
+TEST 23
+FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD>
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-006]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO 
+    COMMENT	-Sets the flash timer to warn_flash_timer of Cas_messages_setting when ePenColor of CAS message CAS_RED.
+    COMMENT Equivalence Class 31
+    COMMENT 
+    COMMENT [hdudispfcas-CasDisplay-DB-LLR-013]
+    COMMENT	The function does the following when u8Stat of CAS message is other than ZERO and flash timer is other than ZERO, FLASH_TIME1
+    COMMENT and FLASH_TIME2 and flash timer is less than Flash_timer of CAS message 
+    COMMENT	-Displays the CAS message by calling the function TextDispString with parameters message to be displayed , x axis value, y axis value, eFont
+    COMMENT of Cas_messages_setting, ePenColor of CAS message, TX_NO_FLASH, V_REVERSE  and ALIGN_LEFT when
+    COMMENT u8Stat of CAS message is other than REV_VID  and ePenColor of CAS message is CAS_RED.
+    COMMENT	Equivalence Class 51 43 , 44 and 31
+    COMMENT </TD>
+	
+    ELEMENT
+
+
+	    COMMENT COMMENT INPUT SECTION:
+
+            -- Global variable is assined with value one
+
+	    VAR Cas_message_count,  		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].u8Start' is initialized
+
+	    VAR Cas_msg[0].u8Start, 		  init = 12 ,     	      ev = init
+
+            -- Stucture member 'Cas_msg[0].priority' is initialized
+
+	    VAR Cas_msg[0].priority,		  init = 1 ,		      ev = init
+	
+            -- Stucture member 'Cas_msg[0].Id' is initialized
+
+	    VAR Cas_msg[0].Id,			  init = 1 ,		      ev = init
+
+            -- Stucture member 'Cas_msg[0].type' is initialized
+
+	    VAR Cas_msg[0].type,    		  init = 3  ,     	      ev = init
+	
+            -- Stucture member 'Cas_msg[0].acCASText' is initialized
+
+	    VAR Cas_msg[0].acCASText,     	  init = {others=>1} ,        ev = init
+	
+            -- Stucture member 'All_cas_messages[9].u8Stat' is initialized
+
+	    VAR All_cas_messages[9].u8Stat,       init = 2 ,		      ev = init
+
+            -- Stucture member 'All_cas_messages[9].Flash_timer' is initialized
+
+	    VAR All_cas_messages[9].Flash_timer,  init = 9 ,		      ev = init
+	
+            -- Gloabal variable 'Cas_messages_setting' is initialized			
+
+	    VAR Cas_messages_setting,     	  init = { ePenColor =>BLACK, sOrigin =>{ u16X0 =>1 , u16Y0 =>1  } , row =>1 , column =>'A' ,
+		&	rowHeight =>1 , columnWidth =>1 , eFont =>E_NO_FONT, adv_flash_timer =>10 , caut_flash_timer =>10 ,
+		&	warn_flash_timer =>11 , cas_redx_txt =>{ others =>0 } }  ,  ev = init 
+		
+
+        COMMENT COMMENT OUTPUT SECTION:
+
+            -- Stucture member 'All_cas_messages[9].acCASText' is initialized
+	    VAR All_cas_messages[9].acCASText[0],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[1],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[2],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[3],     init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[4],      init = (T_UINT8)0 ,       ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[5],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[6],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[7],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[8],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[9],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[10],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[11],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[12],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[13],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[14],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[15],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[16],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[17],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[18],     init = (T_UINT8)0 , ev = (T_UINT8)1
+	    VAR All_cas_messages[9].acCASText[19],     init = (T_UINT8)0 , ev = (T_UINT8)1
+
+        COMMENT COMMENT INPUT/OUTPUT SECTION:
+
+            -- Stucture member 'Cas_msg[0].ePenColor' is updated
+
+	    VAR Cas_msg[0].ePenColor,     	  init = CAS_RED ,	      ev = init
+
+            -- Stucture member 'All_cas_messages[9].ePenColor' is updated
+
+	    VAR All_cas_messages[9].ePenColor,    init = PINK ,   	      ev = CAS_RED
+	
+            -- Gloabal variable 'Cas_app_array' is updated
+
+	    VAR Cas_app_array,			  init = { others =>ZERO}  ,  ev = {0=>10 , others=>ZERO}
+
+
+            -- Stub Calls :
+        SIMUL
+	    STUB TextDispString (1,1,E_NO_FONT,CAS_RED,TX_NO_FLASH,V_REVERSE,ALIGN_LEFT)
+
+        END SIMUL
+            -- Calling the Unit Under Test :
+
+        #CasDisplay();
+
+	END ELEMENT
+END TEST  -- TEST 23
+
+END SERVICE -- CasDisplay
+

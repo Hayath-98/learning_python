@@ -1,0 +1,848 @@
+HEADER hdudispfglobalsettings,Source Code Ver :1.14,TestScript Ver : 1.8
+--------------------------------------------------------------------------------
+-- Author Name         : Vinothini M
+--
+-- File Name           : hdudispfglobalsettings_8.ptu
+--
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : GlobalSettingsPull
+--
+-- Version History     :
+--
+--  TEST-VERSION        TEST-DATE       TESTER NAME           MODIFICATIONS
+--  ------------        ---------       -----------           -------------
+--      1.1             30.10.2017      Vinothini M         Created the ptu file.
+--      1.2             10.11.2017      Vinothini M         Updated as per #PR100171 
+--      1.3             14.11.2017      Vinothini M         Updated as per #PR100171 
+--      1.4             10.04.2018      Neha Rai R         	Updated as per #PR100201 
+--      1.5				21.05.2020		Swaroopa N			Updated as per #PR100249
+--      1.6				27.07.2020		Swaroopa N			Updated as per #PR100267
+--      1.7				03.10.2020		Vignesh Sunil		Updated as per #PR100281
+--      1.8				28.04.2021		Vignesh Sunil		Updated as per #PR100338
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/
+
+##include "hdudispfpdidata.h"         /* contains routines for PDI data */
+##include "hdudispfdemo.h"           /* provides demo functionalities */
+##include "hdudispfa429.h"           /* Routines for arinc 429 */
+##include "hdudispfcrc.h"            /* Contains functions prototypes of hdudispbcrc*/
+##include "hdudispfdauprofile.h"     /* defines the constants for ARINC 825  Message Traffic.*/
+##include "hdudispfglobalsettings.h" /* Routines to read and write data to NVRAM  */
+##include "hdudispfgrapp.h"          /* routines for all graph */
+##include "hdudispfarinc825.h"      /* Define the structure for an ARINC 825 Message. */
+##include "hdudispfpara.h"       /* prototype for builds faults, message and system information*/
+##include "hdulibbasictypes.h"   /* Standard basic data type definitions */
+##include "hdudispfoscpu.h"      /* OS function declarations */
+##include "hdudispfmenu.h" /* contains prototype for menu module*/
+##include "hdudispftimer.h"         /* Consistency Check*/
+##include "hdudispfresource.h"/* provides resources */
+##include "hdudispfucos.h" /* provides ucos functionalities */
+##include "hdudispfgrapp.h"           /* routines for all graph */
+##include "hdudispfpbit.h"        /* contains prototypes for PBIT test. */
+##include "hdudispfmenu.h"            /* contains prototype for menu module*/		
+##include "hdudispflmsscu.h"  /* SCU rtd processing and error codes  */		
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+	--Flight exceedances timer values.
+	#extern T_TIMER Flight_timer_exceed[7];
+
+	--Exceedence log of trigger condition
+	#T_ELOG_TRIG_STRUCT Elog_trig[5]; 
+
+	--Condition count value
+	#T_UINT8 Cond_cnt[5]; 
+
+	--Exceedence log of label 
+	#T_ELOG_LABEL_STRUCT Elog_label[5]; 
+
+	--A429 data strucutre
+	#T_A429_DATA_STRUCT A429_data[2][256]; 
+
+	--Port1 label count value
+	#T_UINT16 Port1_label_count; 
+
+	--Critical status register value
+	#T_UINT32 U32_critical_sr; 
+
+	--Position value of Display Unit 
+	#T_UINT8 Du_position; 
+
+	--Toggle screen value
+	#T_EPAGE_NUM Toggle_screen;
+
+	--Page number value
+	#T_EPAGE_NUM Page_num;
+
+	--Cool_down_select
+	#T_BOOL Cool_down_select;
+
+	--Exceedance logged
+	#T_GLOBAL_EXCEED Exceedance_log[EXCEED_LOG_SIZE];
+
+	#T_GLOBAL_SETTINGSTRIG Trig_Setting[5] ;
+		
+	#T_BOOL  Exceedance_startup_check[5] ;	
+	
+	#T_BOOL Bitmap_crc_check_bit[20];	
+	
+    #T_BOOL Fault_log_adv; 
+	
+    #T_UINT16 Flt_id_count; 
+	
+    #T_BOOL Fuel_flow_select; 	
+
+-- Declarations of the temporary variable
+
+    --Created to verify the ps_xm of function A8251Xmit
+    #T_A825_MESSAGE PTU_IN_ps_xm,PTU_IN_ps_xm_2;
+    #T_UINT8 PTU_COUNT;
+
+    --Created to verify the ps_xm of function A8252Xmit
+    #T_A825_MESSAGE PTU_IN_ps_xm_1;
+
+    --Created to verify the u32_buffer of function CrcCalculate
+    #T_UINT32 PTU_IN_u32_buffer[NV_SIZE]; 
+    # T_GLOBAL_CONFIG PTU_Nv_storage_in;
+
+    --Created to verify the ps_dest of function RTDGetParamDdw
+    #T_PARAM_READING PTU_IN_ps_dest,PTU_OUT_ps_dest;
+
+    --Created to verify the ps_dest of function RTDGetParam
+    #T_PARAM_READING PTU_ps_dest_in_Param[6];
+    #T_UINT8 Ptu_Count_param;
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Vinothini M
+    COMMENT
+    COMMENT File name        : hdudispfglobalsettings_8.ptu
+    COMMENT
+    COMMENT Tested functions : GlobalSettingsPull
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT
+    COMMENT 1) The testscript is split into 28 due to static dependency.
+    COMMENT
+    COMMENT 2) In function 'GlobalSettingsPush', for loop cannot be covered for 0 or 1 loop since it is controlled by a macro NV_SIZE.
+    COMMENT
+    COMMENT code snippet:
+    COMMENT    for(u16_sequence = ZERO; u16_sequence <= NV_SIZE; u16_sequence++, pu32_vn_ptr++)
+    COMMENT {
+    COMMENT       *((T_UINT16 *)&(s_xm.u8PayLoad[2])) = u16_sequence;
+    COMMENT       *((T_UINT32 *)(&(s_xm.u8PayLoad[4]))) = *pu32_vn_ptr;
+    COMMENT       test_res = A8251Xmit(&s_xm);
+    COMMENT     ...
+    COMMENT 3) Warning "enumerated type mixed with another type" is obtained when parameter 
+    COMMENT    '(enum T_A825_XMITRESULT)type' of return value of function 'A8251Xmit'
+    COMMENT    is exercised with value "A825_XM_NOT_IMPLEMENTED+1" to test LLR 
+    COMMENT    "hdudispfglobalsettings-GlobalSettingsPush-DB-LLR-006" and
+    COMMENT    '(enum T_EIU)type' of Active_eiu
+    COMMENT    '(enum T_BRIGHTNESS_MODE)type' of Brightness_mode 
+    COMMENT    '(enum T_COOLDOWN_STATE)type' of Cool_down_state
+    COMMENT    is exercised with value "EIU1+1","EBRIGHTNESS_AUTO+1" and "ECOOLDOWN_OFF+1" to test LLR 
+    COMMENT    hdudispfglobalsettings-GlobalSettingsPush-DB-LLR-001
+    COMMENT    in PTU "hdudispfglobalsettings_2.ptu" .
+    COMMENT
+ 	COMMENT 4) In the function 'GlobalSettingsPushPeakLog' for loop cannot be covered for 0 and 1 times
+ 	COMMENT since it is controlled by the macro "EXCEED_LOG_SIZE" 
+ 	COMMENT
+ 	COMMENT 5)Header file "hdudispftimer.h" is modified for testing purpose. The 'volatile' keyword is removed from parameter of function 
+	COMMENT 'TimerInstall' and 'TimerPreset' declarations.	
+	COMMENT
+	COMMENT 6) In the function 'GlobalSettingsCheckExParam' for loop cannot be covered for 0 and 1 times
+	COMMENT since it is controlled by the macros "FIVE" and "MAX_ELOG_PARAM".
+    COMMENT</AC>
+
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function 'GlobalSettingsSetSysInfo', macro INIT_NOC_MESSAGE is called.
+    COMMENT
+    COMMENT Class 2
+    COMMENT In function 'GlobalSettingsSetSysInfo', function A8251Xmit is called.
+    COMMENT
+    COMMENT Class 3
+    COMMENT In function 'GlobalSettingsPull', function A8251Xmit is called.
+    COMMENT
+    COMMENT Class 4
+    COMMENT In function 'GlobalSettingsPull', macro INIT_NSC_REQUEST is called.
+    COMMENT
+    COMMENT Class 5
+    COMMENT In function 'GlobalSettingsProcessNSC', node service code is not equal to NSC_NVS,NSC_PULL_MEM,NSC_PULL_RESEND.
+    COMMENT
+    COMMENT Class 9
+    COMMENT In function 'GlobalSettingsProcessNSC', node service code is equal to NSC_NVS.
+    COMMENT
+    COMMENT Class 10
+    COMMENT In function 'GlobalSettingsProcessNSC', node service code is equal to NSC_PULL_MEM.
+    COMMENT
+    COMMENT Class 12
+    COMMENT In function 'GlobalSettingsProcessNSC', node service code is equal to NSC_PULL_RESEND.
+    COMMENT
+    COMMENT Class 13
+    COMMENT In function 'GlobalSettingsProcessNSC', location sequence is less than NV_SIZE.
+    COMMENT
+    COMMENT Class 14
+    COMMENT In function 'GlobalSettingsProcessNSC', location sequence is equal to NV_SIZE.
+    COMMENT
+    COMMENT Class 15
+    COMMENT In function 'GlobalSettingsProcessNSC', location sequence is greater than NV_SIZE.
+    COMMENT
+    COMMENT Class 16
+    COMMENT In function 'GlobalSettingsProcessNSC', return value of CrcCalculate is not equal to u32CRC of storage structure.
+    COMMENT
+    COMMENT Class 17
+    COMMENT In function 'GlobalSettingsProcessNSC', return value of CrcCalculate is equal to u32CRC of storage structure.
+    COMMENT
+    COMMENT Class 18
+    COMMENT In function 'GlobalSettingsProcessNSC', macro OS_ENTER_CRITICAL is called.
+    COMMENT
+    COMMENT Class 19
+    COMMENT In function 'GlobalSettingsProcessNSC', macro OS_EXIT_CRITICAL is called.
+    COMMENT
+    COMMENT Class 22
+    COMMENT In function 'GlobalSettingsProcessNSC', GlobalSettingsPull is called.
+    COMMENT
+    COMMENT Class 23
+    COMMENT In function 'GlobalSettingsProcessNSC', OsTimeDly is called.
+    COMMENT
+    COMMENT Class 24
+    COMMENT In function 'GlobalSettingsSetEIU', RTDGetParamDdw is called.
+    COMMENT
+    COMMENT Class 25
+    COMMENT In function 'GlobalSettingsSetEIU', status of heartbeat message is not MISSING.
+    COMMENT
+    COMMENT Class 26
+    COMMENT In function 'GlobalSettingsSetEIU', status of heartbeat message is MISSING.
+    COMMENT
+    COMMENT Class 27
+    COMMENT In function 'GlobalSettingsSetEIU', macro INIT_NSC_REQUEST is called.
+    COMMENT
+    COMMENT Class 28
+    COMMENT In function 'GlobalSettingsSetEIU', A8252Xmit is called.
+    COMMENT
+    COMMENT Class 29
+    COMMENT In function 'GlobalSettingsPush', macro INIT_NSC_REQUEST is called.
+    COMMENT
+    COMMENT Class 30
+    COMMENT In function 'GlobalSettingsPush', CrcCalculate is called.
+    COMMENT
+    COMMENT Class 31
+    COMMENT In function 'GlobalSettingsPush', A8251Xmit is called.
+    COMMENT
+    COMMENT Class 32
+    COMMENT In function 'GlobalSettingsPush', return value of A8251Xmit is equal to A825_XM_OK.
+    COMMENT
+    COMMENT Class 33
+    COMMENT In function 'GlobalSettingsPush', return value of A8251Xmit is not equal to A825_XM_OK.
+    COMMENT
+    COMMENT Class 34
+    COMMENT In function 'GlobalSettingsProcessNSC', Cool_down_select is equal to TRUE.
+    COMMENT
+    COMMENT Class 35
+    COMMENT In function 'GlobalSettingsProcessNSC', Cool_down_select is not equal to TRUE.
+    COMMENT
+    COMMENT
+    COMMENT Class 36	
+    COMMENT In function 'GlobalSettingsPushPeakLog', C macro INIT_NOC_MESSAGE is called.
+    COMMENT
+    COMMENT Class 37	
+    COMMENT In function 'GlobalSettingsPushPeakLog', Exceedance_index of Exceedance_log with sequence as index is greater than ZERO 
+    COMMENT
+    COMMENT Class 38	
+    COMMENT In function 'GlobalSettingsPushPeakLog', Exceedance_index of Exceedance_log with sequence as index is lesser than ZERO
+    COMMENT
+    COMMENT Class 39	
+    COMMENT In function 'GlobalSettingsPushPeakLog', Exceedance_index of Exceedance_log with sequence as index is equal to ZERO
+    COMMENT
+    COMMENT Class 40	
+    COMMENT In function 'GlobalSettingsPushPeakLog', End_transmission of Exceedance_log with sequence as index is equal to FALSE
+    COMMENT
+    COMMENT Class 41	
+    COMMENT In function 'GlobalSettingsPushPeakLog', End_transmission of Exceedance_log with sequence as index is not equal to FALSE
+    COMMENT
+    COMMENT Class 42	
+    COMMENT In function 'GlobalSettingsPushPeakLog', Fst_log_rec_stat of Exceedance_log with sequence as index is equal to TRUE 
+    COMMENT
+    COMMENT Class 43
+    COMMENT In function 'GlobalSettingsPushPeakLog', Fst_log_rec_stat of Exceedance_log with sequence as index is not equal to TRUE 
+    COMMENT
+    COMMENT Class 44
+    COMMENT In function 'GlobalSettingsPushPeakLog', function 'A8251Xmit' is called.
+    COMMENT
+    COMMENT Class 45
+    COMMENT In function 'GlobalSettingsPushPeakLog', function 'OsTimeDly' is called.
+    COMMENT
+    COMMENT Class 46
+    COMMENT In function 'GlobalSettingsPushPeakLog', test result is not equal to A825_XM_OK
+    COMMENT
+    COMMENT Class 47
+    COMMENT In function 'GlobalSettingsPushPeakLog', test result is equal to A825_XM_OK
+    COMMENT
+    COMMENT Class 48
+    COMMENT In function 'GlobalSettingsPushPeakLog', Data_log_rec_stat of Exceedance_log with sequence as index is equal to TRUE 
+    COMMENT
+    COMMENT Class 49
+    COMMENT In function 'GlobalSettingsPushPeakLog', Data_log_rec_stat of Exceedance_log with sequence as index is not equal to TRUE      
+    COMMENT
+    COMMENT Class 50
+    COMMENT In function 'GlobalSettingsPushPeakLog', Flght_log_rec_stat of Exceedance_log with sequence as index is equal to TRUE 
+    COMMENT
+    COMMENT Class 51
+    COMMENT In function 'GlobalSettingsPushPeakLog', Flght_log_rec_stat of Exceedance_log with sequence as index is not equal to TRUE 
+    COMMENT
+    COMMENT Class 52
+    COMMENT In function 'GlobalSettingsPushPeakLog', Lst_log_rec of Exceedance_log with sequence as index is equal to TRUE
+    COMMENT
+    COMMENT Class 53
+    COMMENT In function 'GlobalSettingsPushPeakLog', Lst_log_rec of Exceedance_log with sequence as index is not equal to TRUE      
+    COMMENT
+    COMMENT Class 54
+    COMMENT In function 'GlobalSettingsCheckExParam', elog_label of Elog_label with loop1 index as index is equal to
+    COMMENT label of A429_data with zero and loop2 index as indices 
+    COMMENT
+    COMMENT Class 55
+    COMMENT In function 'GlobalSettingsCheckExParam', elog_label of Elog_label with loop1 index as index is not equal to
+    COMMENT label of A429_data with zero and loop2 index as indices  
+    COMMENT
+    COMMENT Class 56
+    COMMENT In function 'GlobalSettingsCheckExParam', function is 'RTDGetParamDdw' called 
+    COMMENT
+    COMMENT Class 57
+    COMMENT In function 'GlobalSettingsCheckExParam', stat of exceedance read is equal to PARAM_OK 
+    COMMENT
+    COMMENT Class 58
+    COMMENT In function 'GlobalSettingsCheckExParam', stat of exceedance read is not equal to PARAM_OK 
+    COMMENT
+    COMMENT Class 59
+    COMMENT In function 'GlobalSettingsCheckExParam', label of A429_data with zero and loop2 index as indices
+    COMMENT is equal to elog_bit_label with loop3 index as index of Elog_label with loop1 index  
+    COMMENT
+    COMMENT Class 60
+    COMMENT In function 'GlobalSettingsCheckExParam', label of A429_data with zero 	and loop2 index as indices
+    COMMENT is not equal to elog_bit_label with loop3 index as index of Elog_label with loop1 index
+    COMMENT
+    COMMENT Class 61
+    COMMENT In function 'GlobalSettingsCheckExParam', function 'RTDGetParam' is called.
+    COMMENT
+    COMMENT Class 62
+    COMMENT In function 'GlobalSettingsCheckExParam', log parameter is equal to TRUE    
+    COMMENT
+    COMMENT Class 63
+    COMMENT In function 'GlobalSettingsCheckExParam', log parameter is not equal to TRUE 
+    COMMENT
+    COMMENT Class 65
+    COMMENT In function 'GlobalSettingsCheckExParam', init exceed id with loop1 index and loop3 index as indices is equal to TRUE 
+    COMMENT
+    COMMENT Class 66
+    COMMENT In function 'GlobalSettingsCheckExParam', init exceed id with loop1 index and loop3 index as indices is not equal to TRUE 
+    COMMENT
+    COMMENT Class 67
+    COMMENT In function 'GlobalSettingsCheckExParam', stat of param reading data is equal to PARAM_OK 
+    COMMENT
+    COMMENT Class 68
+    COMMENT In function 'GlobalSettingsCheckExParam', stat of param reading data is not equal to PARAM_OK        
+    COMMENT
+    COMMENT Class 69
+    COMMENT In function 'GlobalSettingsCheckExParam', timer reset state with exceed log index as index is equal to FALSE
+    COMMENT
+    COMMENT Class 70
+    COMMENT In function 'GlobalSettingsCheckExParam', timer reset state with exceed log index as index is not equal to FALSE
+    COMMENT
+    COMMENT Class 71
+    COMMENT In function 'GlobalSettingsCheckExParam', return value of function FlightTimerStartExceed 
+    COMMENT with exceed log index as parameter is TRUE
+    COMMENT
+    COMMENT Class 72
+    COMMENT In function 'GlobalSettingsCheckExParam', return value of function FlightTimerStartExceed 
+    COMMENT with exceed log index as parameter not is TRUE
+    COMMENT
+    COMMENT Class 73
+    COMMENT In function 'GlobalSettingsCheckExParam', init duration loop1 index and loop3 index as indicies is equal to TRUE  
+    COMMENT
+    COMMENT Class 74
+    COMMENT In function 'GlobalSettingsCheckExParam', init duration loop1 index and loop3 index as indicies is not equal to TRUE 
+    COMMENT
+    COMMENT Class 75
+    COMMENT In function 'GlobalSettingsCheckExParam', flight old status with exceed log index as index is equal to TRUE 
+    COMMENT
+    COMMENT Class 76
+    COMMENT In function 'GlobalSettingsCheckExParam', flight old status with exceed log index as index is not equal to TRUE    
+    COMMENT
+    COMMENT Class 77
+    COMMENT In function 'GlobalSettingsCheckExParam', init peak value with loop1 index and loop3 index as indices is equal to TRUE 
+    COMMENT
+    COMMENT Class 78
+    COMMENT In function 'GlobalSettingsCheckExParam', init peak value with loop1 index and loop3 index as indices is not equal to TRUE 
+    COMMENT
+    COMMENT Class 79
+    COMMENT In function 'GlobalSettingsCheckExParam', Peak_value of Exceedance_log with exceed log index as index
+    COMMENT is less than 'r' of  param reading data 
+    COMMENT
+    COMMENT Class 80
+    COMMENT In function 'GlobalSettingsCheckExParam', Peak_value of Exceedance_log with exceed log index as index
+    COMMENT is greater than 'r' of  param reading data 
+    COMMENT
+    COMMENT Class 81
+    COMMENT In function 'GlobalSettingsCheckExParam', Peak_value of Exceedance_log with exceed log index as index
+    COMMENT is equal to'r' of  param reading data 
+    COMMENT
+    COMMENT Class 82
+    COMMENT In function 'GlobalSettingsCheckExParam', Flight_number of Exceedance_log with exceed log index as index 
+    COMMENT is equal to Flight_count
+    COMMENT
+    COMMENT Class 83
+    COMMENT In function 'GlobalSettingsCheckExParam', Flight_number of Exceedance_log with exceed log index as index 
+    COMMENT is not equal to Flight_count
+    COMMENT
+    COMMENT Class 86
+    COMMENT In function 'GlobalSettingsCheckExParam', Ex_id_count is greater than EXCEED_LOG_SIZE
+    COMMENT
+    COMMENT Class 87	
+    COMMENT In function 'GlobalSettingsCheckExParam', Ex_id_count is lesser than EXCEED_LOG_SIZE
+    COMMENT
+    COMMENT Class 88
+    COMMENT In function 'GlobalSettingsCheckExParam', Ex_id_count is equal to EXCEED_LOG_SIZE
+    COMMENT
+    COMMENT Class 89	
+    COMMENT In function 'GlobalSettingsCheckTrig', NV ram read is equal to TRUE
+    COMMENT
+    COMMENT Class 90	
+    COMMENT In function 'GlobalSettingsCheckTrig', NV ram read is not equal to TRUE
+    COMMENT
+    COMMENT Class 91	
+    COMMENT In function 'GlobalSettingsCheckTrig', init value is equal to TRUE 
+    COMMENT
+    COMMENT Class 92	
+    COMMENT In function 'GlobalSettingsCheckTrig', init value is not equal to TRUE 
+    COMMENT
+    COMMENT Class 93	
+    COMMENT In function 'GlobalSettingsCheckTrig', label of A429_data with 0 and loop index as indices is equal to
+    COMMENT elog_trig_label value with index 0 of Elog_trig
+    COMMENT
+    COMMENT Class 94	
+    COMMENT In function 'GlobalSettingsCheckTrig', label of A429_data with 0 and loop index as indices is not equal to
+    COMMENT elog_trig_label value with index 0 of Elog_trig
+    COMMENT
+    COMMENT Class 95	
+    COMMENT In function 'GlobalSettingsCheckTrig', function 'RTDGetParam' is called
+    COMMENT
+    COMMENT Class 96
+    COMMENT In function 'GlobalSettingsCheckTrig', return value of function 'CompareLimit' with 'r' of param reading structure
+    COMMENT with loop index as index, elog_trig_start_val with loop index as index of Elog_trig multiplied with 10
+    COMMENT and elog_trig_start_type with loop index as index of Elog_trig as parameters is equal to ONE 
+    COMMENT
+    COMMENT Class 97
+    COMMENT In function 'GlobalSettingsCheckTrig', return value of function 'CompareLimit' with 'r' of param reading structure
+    COMMENT with loop index as index, elog_trig_start_val with loop index as index of Elog_trig multiplied with 10
+    COMMENT and elog_trig_start_type with loop index as index of Elog_trig as parameters is not equal to ONE 
+    COMMENT
+    COMMENT Class 98
+    COMMENT In function 'GlobalSettingsCheckTrig', init start with loop index as index is equal to TRUE
+    COMMENT
+    COMMENT Class 99
+    COMMENT In function 'GlobalSettingsCheckTrig', init start with loop index as index is not equal to TRUE
+    COMMENT
+    COMMENT Class 100
+    COMMENT In function 'GlobalSettingsCheckTrig', stat of param reading data with loop index as index is equal to PARAM_OK.
+    COMMENT
+    COMMENT Class 101
+    COMMENT In function 'GlobalSettingsCheckTrig', stat of param reading data with loop index as index is not equal to PARAM_OK. 
+    COMMENT
+    COMMENT Class 102
+    COMMENT In function 'GlobalSettingsCheckTrig', return value of function 'CompareLimit' with 'r' of param reading structure 
+    COMMENT with loop index as index, elog_trig_cross_val with loop index as index of Elog_trig multiplied with TEN
+    COMMENT and elog_trig_cross_type with loop index as index of Elog_trig as parameters is equal to ONE     
+    COMMENT
+    COMMENT Class 103
+    COMMENT In function 'GlobalSettingsCheckTrig', return value of function 'CompareLimit' with 'r' of param reading structure 
+    COMMENT with loop index as index, elog_trig_cross_val with loop index as index of Elog_trig multiplied with TEN
+    COMMENT and elog_trig_cross_type with loop index as index of Elog_trig as parameters is not equal to ONE   
+    COMMENT
+    COMMENT Class 104
+    COMMENT In function 'GlobalSettingsCheckTrig', state variable with loop index as index is equal to FALSE
+    COMMENT
+    COMMENT Class 105
+    COMMENT In function 'GlobalSettingsCheckTrig', state variable with loop index as index is not equal to FALSE  
+    COMMENT
+    COMMENT Class 106
+    COMMENT In function 'GlobalSettingsCheckTrig', init cross with loop index as index is equal to TRUE
+    COMMENT
+    COMMENT Class 107
+    COMMENT In function 'GlobalSettingsCheckTrig', init cross with loop index as index is not equal to TRUE 
+    COMMENT    
+    COMMENT Class 108
+    COMMENT In function 'GlobalSettingsCheckTrig', flight started with loop index as index is equal to TRUE 
+    COMMENT
+    COMMENT Class 109
+    COMMENT In function 'GlobalSettingsCheckTrig', flight started with loop index as index is not equal to TRUE 
+    COMMENT
+    COMMENT Class 110
+    COMMENT In function 'GlobalSettingsCheckTrig', loop index is equal to condition count minus one 
+    COMMENT
+    COMMENT Class 111
+    COMMENT In function 'GlobalSettingsCheckTrig', loop index is not equal to condition count minus one  
+    COMMENT
+    COMMENT Class 112
+    COMMENT In function 'GlobalSettingsCheckTrig', target flight condition is equal to condition count 
+    COMMENT
+    COMMENT Class 113
+    COMMENT In function 'GlobalSettingsCheckTrig', target flight condition is not equal to condition count 
+    COMMENT
+    COMMENT Class 114
+    COMMENT In function 'GlobalSettingsCheckTrig', check trigger condition is equal to 1 
+    COMMENT
+    COMMENT Class 115
+    COMMENT In function 'GlobalSettingsCheckTrig', check trigger condition is not equal to 1    
+    COMMENT
+    COMMENT Class 116
+    COMMENT In function 'GlobalSettingsCheckTrig', Exceedance_startup_check is equal to TRUE
+    COMMENT
+    COMMENT Class 117
+    COMMENT In function 'GlobalSettingsCheckTrig', Exceedance_startup_check is not equal to TRUE
+    COMMENT
+    COMMENT Class 118
+    COMMENT In function 'GlobalSettingsCheckTrig', function 'GlobalSettingsCheckExParam' is called
+    COMMENT
+    COMMENT Class 119
+    COMMENT In function 'GlobalSettingsCheckTrig', re entry with loop index as index is TRUE 
+    COMMENT
+    COMMENT Class 120
+    COMMENT In function 'GlobalSettingsCheckTrig', re entry with loop index as index is not TRUE 
+    COMMENT
+    COMMENT Class 121
+    COMMENT In function 'GlobalSettingsCheckTrig', target flight re entry is equal to condition count 
+    COMMENT
+    COMMENT Class 122
+    COMMENT In function 'GlobalSettingsCheckTrig', target flight re entry is not equal to condition count 
+    COMMENT
+    COMMENT Class 123
+    COMMENT In function 'FlightTimerStart', init variable is TRUE
+    COMMENT
+    COMMENT Class 124
+    COMMENT In function 'FlightTimerStart', init variable is FALSE
+    COMMENT
+    COMMENT Class 125
+    COMMENT In function 'FlightTimerStart', function 'TimerInstall' is called
+    COMMENT
+    COMMENT Class 126
+    COMMENT In function 'FlightTimerStart', function 'Flight_timer' is called   
+    COMMENT
+    COMMENT Class 127
+    COMMENT In function 'FlightTimerStart', function 'TimerPreset' is called
+    COMMENT
+    COMMENT Class 128
+    COMMENT In function 'FlightTimerStart', Flight_timer with flight index as index is greater than flight down  
+    COMMENT
+    COMMENT Class 129
+    COMMENT In function 'FlightTimerStart', Flight_timer with flight index as index is lesser than flight down
+    COMMENT
+    COMMENT Class 130
+    COMMENT In function 'FlightTimerStart', Flight_timer with flight index as index is equal to flight down 
+    COMMENT
+    COMMENT Class 131
+    COMMENT In function 'FlightTimerStartExceed', init variable is TRUE
+    COMMENT
+    COMMENT Class 132
+    COMMENT In function 'FlightTimerStartExceed', init variable is FALSE
+    COMMENT
+    COMMENT Class 133
+    COMMENT In function 'FlightTimerStartExceed', function 'TimerInstall' is called
+    COMMENT
+    COMMENT Class 134
+    COMMENT In function 'FlightTimerStartExceed', function 'Flight_timer_exceed' is called   
+    COMMENT
+    COMMENT Class 135
+    COMMENT In function 'FlightTimerStartExceed', function 'TimerPreset' is called    
+    COMMENT
+    COMMENT Class 136
+    COMMENT In function 'FlightTimerStartExceed', Flight_timer_exceed with flight index as index is greater than TIME_FRAME 
+    COMMENT
+    COMMENT Class 137
+    COMMENT In function 'FlightTimerStartExceed', Flight_timer_exceed with flight index as index is lesser than TIME_FRAME
+    COMMENT
+    COMMENT Class 138
+    COMMENT In function 'FlightTimerStartExceed', Flight_timer_exceed with flight index as index is equal to TIME_FRAME    
+    COMMENT
+    COMMENT Class 139
+    COMMENT The function 'FlightTimerStart', returns 'TRUE'
+    COMMENT
+    COMMENT Class 140
+    COMMENT The function 'FlightTimerStart', returns 'FALSE'
+    COMMENT
+    COMMENT Class 141
+    COMMENT The function 'FlightTimerStartExceed', returns 'TRUE'
+    COMMENT
+    COMMENT Class 142
+    COMMENT The function 'FlightTimerStartExceed', returns 'FALSE'
+    COMMENT
+    COMMENT Class 143
+    COMMENT In the function 'FlightTimerStartExceed', Demo_mode is TRUE
+    COMMENT
+    COMMENT Class 144	
+    COMMENT In the function 'FlightTimerStartExceed', Demo_mode is FALSE
+    COMMENT
+    COMMENT Class 145
+    COMMENT In the function 'GlobalSettingsProcessNSC', Demo_mode is TRUE
+    COMMENT
+    COMMENT Class 146
+    COMMENT In the function 'GlobalSettingsProcessNSC', Demo_mode is FALSE    
+    COMMENT
+    COMMENT Class 147
+    COMMENT In the function 'GlobalSettingsProcessNSC', function 'GlobalSettingsSetSysInfo'is called  
+    COMMENT
+    COMMENT Class 148
+    COMMENT In the function 'GlobalSettingsProcessNSC', function 'GlobalSettingsPush'is called       
+    COMMENT
+    COMMENT Class 149	
+    COMMENT In function 'GlobalSettingsCheckTrig', sdi of Trig_setting is equal to TRUE 
+    COMMENT
+    COMMENT Class 150	
+    COMMENT In function 'GlobalSettingsCheckTrig', sdi of Trig_setting is not equal to TRUE 
+    COMMENT
+    COMMENT Class 151	
+    COMMENT In function 'GlobalSettingsCheckTrig', Engine_started of Trig_setting is not equal to TRUE 
+    COMMENT
+    COMMENT Class 152
+    COMMENT In function 'GlobalSettingsCheckTrig', Engine_started of Trig_setting is equal to TRUE 	
+    COMMENT
+    COMMENT Class 153
+    COMMENT In function 'GlobalSettingsCheckTrig', tgr_fgt_cond of Trig_setting is equal to condition count 
+    COMMENT
+    COMMENT Class 154
+    COMMENT In function 'GlobalSettingsCheckTrig', tgr_fgt_cond of Trig_setting is not equal to condition count
+    COMMENT
+    COMMENT Class 155
+    COMMENT In function 'GlobalSettingsCheckTrig', tgr_fgt_reentry of Trig_setting is equal to condition count 
+    COMMENT
+    COMMENT Class 156
+    COMMENT In function 'GlobalSettingsCheckTrig', tgr_fgt_reentry of Trig_setting is not equal to condition count 	 	
+    COMMENT
+    COMMENT Invalid Class(es)
+    COMMENT None  
+    COMMENT
+    COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+
+    DEFINE STUB hdudispfglobalsettings_c
+
+		#void TimerPreset(T_TIMER  _no *timer, T_INT32  _in s32_set_val);
+
+		#void TimerInstall(T_TIMER  _no *timer);
+
+		#T_UINT8 CompareLimit(T_FLOAT _in val, T_FLOAT  _in range, T_UINT8  _in operator);
+
+		#void RTDGetParam(T_UINT16 _in a429_tag, T_PARAM_READING  _no *ps_dest)
+		#{
+        #		*ps_dest = *PTU_ps_dest_in_Param;
+        #}
+
+        --Parameter ps_xm is made as _no and is verified explicitly
+        #T_A825_XMITRESULT A8252Xmit(T_A825_MESSAGE _no ps_xm) 
+        #{
+        # PTU_IN_ps_xm_1 = *ps_xm;
+        #
+        #}
+
+        --Parameter ps_dest is made as _no and is verified explicitly
+        #void RTDGetParamDdw(T_UINT16 _in a429_tag, T_PARAM_READING _no *ps_dest)
+        #{
+        #PTU_IN_ps_dest = *ps_dest;
+        #*ps_dest = PTU_OUT_ps_dest;
+        #}
+
+        #void OsTimeDly(T_UWORD _in ticks); 
+
+        #void RestoreStatusReg(T_UINT32 _in U32_critical_sr);
+
+        #T_UINT32 SaveStatusReg(void); 
+
+        --Parameter ps_xm is made as _no and is verified explicitly
+        #T_A825_XMITRESULT A8251Xmit(T_A825_MESSAGE _no *ps_xm)
+        #{
+        #
+        #   if(PTU_COUNT==0)
+        #   {
+        #       PTU_IN_ps_xm = *ps_xm;
+        #   }
+        #   else
+        #   {
+        #       PTU_IN_ps_xm_2 = *ps_xm;
+        #   }
+        #PTU_COUNT++;
+        #}
+
+        --Parameter u32_buffer is made as _no and is verified explicitly
+        #T_UINT32 CrcCalculate(T_UINT32 _no *u32_buffer, T_UINT32 _in u32_buffer_length)
+        #{
+        # *PTU_IN_u32_buffer = *u32_buffer;
+        #
+        #}
+		#void CrcPages(T_EPAGE_NUM  _in page_count);
+    END DEFINE
+
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONMENT
+--------------------------------------------------------------------------------
+
+-- Environment of the file hdudispfglobalsettings.c
+ENVIRONMENT ENV_hdudispfglobalsettings_c
+
+  VAR Nv_crc_fail,								init = FALSE,				ev = init
+  VAR Active_eiu,								init = EIU1,				ev = init
+  VAR Data_received,							init = FALSE,				ev = init
+  VAR Cool_down_state,							init = ECOOLDOWN_ON,		ev = init
+  VAR Manual_brightness,						init = 0,					ev = init
+  ARRAY Flight_timer_exceed,					init = { others => 0 },		ev = init
+  VAR Flight_count,								init = 0,					ev = init
+
+  VAR Exceedance_log[0..89].Exceedance_index,	init = 0,					ev = init
+  VAR Exceedance_log[0..89].Param_name,			init = {others=>0},			ev = init
+  VAR Exceedance_log[0..89].Peak_value,			init = 0,					ev = init
+  VAR Exceedance_log[0..89].Duration,			init = 0,					ev = init
+  VAR Exceedance_log[0..89].Flight_number,		init = 0,					ev = init
+  VAR Exceedance_log[0..89].Fst_log_rec_stat,	init = FALSE,				ev = init
+  VAR Exceedance_log[0..89].Lst_log_rec,		init = FALSE,				ev = init
+  VAR Exceedance_log[0..89].End_transmission,	init = FALSE,				ev = init
+  VAR Exceedance_log[0..89].Data_log_rec_stat,	init = FALSE,				ev = init
+  VAR Exceedance_log[0..89].Flght_log_rec_stat,	init = FALSE,				ev = init
+ 
+  VAR Brightness_mode,							init = EBRIGHTNESS_MANUAL,	ev = init
+  VAR Auto_brightness,							init = 0,					ev = init
+  VAR Demo_mode,								init = FALSE,				ev = init
+  ARRAY Trig_Setting[0..4].Engine_timer[0..4],	init = {others=>0},			ev = init
+  ARRAY S32_data_exceed[0..3],					init = {others=>0},			ev = init
+  VAR Ex_id_count,								init = 0,					ev = init
+  VAR Pull_flag,								init = FALSE,				ev = init
+  VAR Log_overflow,								init = FALSE,				ev = init
+  VAR Demo_mode_activate,						init = FALSE,				ev = init
+
+END ENVIRONMENT -- ENV_hdudispfglobalsettings_c
+USE ENV_hdudispfglobalsettings_c
+
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service GlobalSettingsPull
+--------------------------------------------------------------------------------
+SERVICE GlobalSettingsPull
+SERVICE_TYPE extern
+
+TEST 3
+FAMILY nominal
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT In this testcase return value of A8251Xmit is exercised for max value
+    COMMENT [hdudispfglobalsettings-GlobalSettingsPull-DB-LLR-001]
+    COMMENT The function GlobalSettingsPull calls the macro INIT_NSC_REQUEST with NSC request as parameter and initialize, 
+    COMMENT NSC request for payload NSC_PULL_MEM with size TWO and server identifier EISDSPLYGATEWAY_SID and 
+    COMMENT rci value set to last two bits of Du_position.
+    COMMENT 
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispfglobalsettings-GlobalSettingsPull-DB-LLR-002]
+    COMMENT The function GlobalSettingsPull calls A8251Xmit to transmit the requested payload. 
+    COMMENT 
+    COMMENT Equivalence Class 4
+    COMMENT 
+    COMMENT      
+    COMMENT </TD> 
+    
+        ELEMENT
+
+        COMMENT INPUT SECTION:
+			--holds Du_position
+            VAR Du_position,                     init = (T_UINT8)255,      ev = init
+
+        COMMENT OUTPUT SECTION:
+			--to verify A8251Xmit
+            VAR PTU_IN_ps_xm.u8PaySize,                 init = 1,             ev = TWO
+            VAR PTU_IN_ps_xm.u8PayLoad[0],              init = (T_UINT8)NSC_SET_DOUT1, ev = (T_UINT8)NSC_PULL_MEM
+            VAR PTU_IN_ps_xm.lcc,                       init = EEC,           ev = NSC
+            VAR PTU_IN_ps_xm.sID.PID.sid,               init = ANALOG_SID,    ev = EISDSPLYGATEWAY_SID
+            VAR PTU_IN_ps_xm.sID.PID.rci,               init = 1,             ev = 3
+            VAR PTU_IN_ps_xm.sID.PID.smt,               init = 0,             ev = 1
+            VAR PTU_IN_ps_xm.sID.PID.lcl,               init = 0,             ev = 1
+            VAR PTU_IN_ps_xm.sID.PID.pvt,               init = 0,             ev = 1
+            VAR PTU_IN_ps_xm.sID.PID.cfid,              init = 1,             ev = HOWELL_DAU_FID
+            VAR PTU_IN_ps_xm.sID.PID.sfid,              init = 1,             ev = HOWELL_DAU_FID
+            
+
+        COMMENT INPUT/OUTPUT SECTION:
+            --None 
+            
+        --Stub Calls:
+        SIMUL
+			-- Builds a CAN message 
+            STUB A8251Xmit()A825_XM_NOT_IMPLEMENTED
+        END SIMUL
+    
+        -- Calling the Unit Under Test      
+        #GlobalSettingsPull();
+        END ELEMENT
+
+END TEST -- TEST 3
+
+END SERVICE -- GlobalSettingsPull
+

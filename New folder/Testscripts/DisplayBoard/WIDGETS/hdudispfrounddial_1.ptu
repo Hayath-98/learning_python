@@ -1,0 +1,2351 @@
+HEADER hdudispfrounddial,Source Code Ver : 1.8,TestScript Ver : 1.5
+--------------------------------------------------------------------------------
+-- Author Name          : Pallavi V N
+--
+-- File Name            : hdudispfrounddial_1.ptu
+--
+-- Test Creation Date   : 16.10.2017
+--
+-- Tested Functions     : RoundDialAllocat
+--                        RoundDialDraw
+-- 
+-- Version History     :
+--
+-- TEST-VERSION        TEST-DATE       TESTER NAME        MODIFICATIONS
+--  ------------       ---------       -----------        -------------
+--     1.1             16.10.2017      Pallavi V N        Created the ptu file 
+--     1.2             10.11.2017      Pallavi V N        Updated as per #PR100171 
+--     1.3             14.11.2017      Pallavi V N        Updated as per #PR100171  
+--     1.4             30.07.2020      Swaroopa N         Updated as per #PR100267
+--     1.5             03.10.2020      Vignesh Sunil      Updated as per #PR100281
+-------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/ 
+
+##include "hdudispffonts.h"       
+##include "hdudispfpolygon1.h"    
+##include "hdudispfrterror.h"     
+##include "hdudispftext.h"        
+##include "hdudispfrounddial.h"   
+##include "hdudispfbinascii.h"
+##include "hdudispfpdidata.h"
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+ 
+   #extern T_CHAR glob_file_name[];
+
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT Author name      : Pallavi V N
+    COMMENT
+    COMMENT File name        : hdudispfrounddial_1.ptu
+    COMMENT
+    COMMENT Tested functions : RoundDialAllocat
+    COMMENT                    RoundDialDraw
+    COMMENT
+    COMMENT Assumptions and Constraints
+    COMMENT <AC>
+    COMMENT Assumption(s):
+    COMMENT None
+    COMMENT
+    COMMENT Constraint(s):
+    COMMENT 1) In function "RoundDialDraw" for loop cannot be coverd for 0 loop as it is contrlled by a macro
+    COMMENT     Code snippet:
+    COMMENT     for(assc_indx=0;assc_indx<ASSC_LABEL_INDX;assc_indx++)
+    COMMENT 
+    COMMENT 2) Source file "hdudispfrounddial.c" is modified for testing purpose to verify the file name
+    COMMENT    T_CHAR glob_file_name[] = __FILE__;
+    COMMENT
+    COMMENT 3) PTU has been split as 1 to 10 due to static dependency.
+    COMMENT
+    COMMENT 4) Following Test script related warning is observed during Target Execution for stub function return value:
+    COMMENT    warning #120-D: 
+    COMMENT    return value type does not match the function type
+    COMMENT    return(Attol_ptr_out->ret);
+    COMMENT
+    COMMENT		warning #188-D: 
+    COMMENT		enumerated type mixed with another type
+    COMMENT		_os_232_hdudispfrounddial_c_PolygonsPsPolyInit[2]._datain.e_poly_shape = 1
+    COMMENT
+    COMMENT		warning #188-D:
+    COMMENT		enumerated type mixed with another type
+    COMMENT		_os_232_hdudispfrounddial_c_PolygonsPsPolyInit[3]._datain.e_poly_shape = 378;
+    COMMENT
+    COMMENT 5)	Following source code related warning is observed 
+    COMMENT		warning #188-D: 
+    COMMENT		enumerated type mixed with another type
+    COMMENT		ps_ptr_src->psShape = PolygonsPsPolyInit(ps_ptr_src->s32PtrShape,
+    COMMENT
+    COMMENT</AC>
+    
+    COMMENT Equivalence Class Description
+    COMMENT <ECD>
+    COMMENT
+    COMMENT Valid Class(es)
+    COMMENT 
+    COMMENT Class 1
+    COMMENT In function "RoundDialAllocat" RterrWidget function is called.
+    COMMENT  
+    COMMENT Class 2
+    COMMENT In function "RoundDialAllocat" number round dials installed is equal to MAX_ROUND_DIALS.
+    COMMENT  
+    COMMENT Class 3
+    COMMENT In function "RoundDialAllocat" number round dials installed is not equal to MAX_ROUND_DIALS.
+    COMMENT  
+    COMMENT Class 4
+    COMMENT In function "RoundDialAllocat" shall loop till s32PtrShape of source pointer is not null.
+    COMMENT   
+    COMMENT Class 5
+    COMMENT In function "RoundDialAllocat" shall not loop when s32PtrShape of source pointer is null.
+    COMMENT   
+    COMMENT Class 6
+    COMMENT In function "RoundDialAllocat" PolygonsPsPolyInit function is called
+    COMMENT    
+    COMMENT Class 7
+    COMMENT In function "RoundDialAllocat" PolygonsPsDuplicate function is called
+    COMMENT    
+    COMMENT Class 8
+    COMMENT In function "RoundDialAllocat" LookupTableLookup function is called
+    COMMENT    
+    COMMENT Class 9
+    COMMENT In function "RoundDialAllocat" BinasGetWidth function is called
+    COMMENT    
+    COMMENT Class 10
+    COMMENT In function "RoundDialAllocat" BinasByteFormatInfoBE function is called
+    COMMENT    
+    COMMENT Class 11
+    COMMENT In function "RoundDialAllocat" TextAllocat function is called 
+    COMMENT    
+    COMMENT Class 12
+    COMMENT In function "RoundDialUpdate"  WidgetsUpdateRT function is called
+    COMMENT    
+    COMMENT Class 13
+    COMMENT In function "RoundDialUpdate" LookupTableLookup function is called
+    COMMENT    
+    COMMENT Class 14
+    COMMENT In function "RoundDialUpdate" pText of sWidgetParm of Round dial is not equal to ZERO
+    COMMENT    
+    COMMENT Class 15
+    COMMENT In function "RoundDialUpdate" pText of sWidgetParm of Round dial is equal to ZERO
+    COMMENT      
+    COMMENT Class 16
+    COMMENT In function "RoundDialUpdate" stat of psParam of round_dial_def of Round dial is equal to PARAM_BAD.
+    COMMENT      
+    COMMENT Class 17
+    COMMENT In function "RoundDialUpdate"  stat of psParam of round_dial_def of Round dial is less than PARAM_BAD.
+    COMMENT      
+    COMMENT Class 18
+    COMMENT In function "RoundDialUpdate"  stat of psParam of round_dial_def of Round dial is greater than PARAM_BAD.
+    COMMENT      
+    COMMENT Class 19
+    COMMENT In function "RoundDialUpdate" WidgetsNumUpdate function is called 
+    COMMENT      
+    COMMENT Class 20
+    COMMENT In function "RoundDialUpdate" PolygonsvPolarToRect function is called 
+    COMMENT      
+    COMMENT Class 21
+    COMMENT In function "RoundDialUpdate" pText of sWidgetParm of ps_round_dial is other than NULL
+    COMMENT      
+    COMMENT Class 22
+    COMMENT In function "RoundDialUpdate" pText of sWidgetParm of ps_round_dial is equal to NULL
+    COMMENT      
+    COMMENT Class 23
+    COMMENT In function "RoundDialUpdate" field width is not equal to zero
+    COMMENT        
+    COMMENT Class 24
+    COMMENT In function "RoundDialUpdate" field width is equal to zero
+    COMMENT        
+    COMMENT Class 25
+    COMMENT In function "RoundDialUpdate" TextUpdate function is called 
+    COMMENT        
+    COMMENT Class 26
+    COMMENT In function "RoundDialDraw" stat of psParam of round_dial_def of Round dial  is equal to PARAM_BAD 
+    COMMENT        
+    COMMENT Class 27
+    COMMENT In function "RoundDialDraw" stat of psParam of round_dial_def of Round dial  is greater than PARAM_BAD 
+    COMMENT       
+    COMMENT Class 28
+    COMMENT In function "RoundDialDraw" stat of psParam of round_dial_def of Round dial  is less than PARAM_BAD 
+    COMMENT       
+    COMMENT Class 29
+    COMMENT In function "RoundDialDraw" psDisRegion of round_dial_def of Round dial is not equal to NULL 
+    COMMENT       
+    COMMENT Class 30
+    COMMENT In function "RoundDialDraw" psDisRegion of round_dial_def of Round dial is equal to NULL  
+    COMMENT       
+    COMMENT Class 31
+    COMMENT In function "RoundDialDraw" WidgetsRedX function is called 
+    COMMENT       
+    COMMENT Class 32
+    COMMENT In function "RoundDialDraw"  psShape of Spec pointer is not equal to zero.
+    COMMENT       
+    COMMENT Class 33
+    COMMENT In function "RoundDialDraw"  psShape of Spec pointer is equal to zero.
+    COMMENT       
+    COMMENT Class 34
+    COMMENT In function "RoundDialClear" round dial is not equal to zero
+    COMMENT       
+    COMMENT Class 35
+    COMMENT In function "RoundDialClear" round dial is equal to zero
+    COMMENT       
+    COMMENT Class 36
+    COMMENT In function "RoundDialDraw"  PolygonDrawPoly function is called.
+    COMMENT       
+    COMMENT Class 37
+    COMMENT In function "RoundDialDraw"  associated_labels of round_dial_def of Round dial is not equal to 0 .
+    COMMENT       
+    COMMENT Class 38
+    COMMENT In function "RoundDialDraw"  associated_labels of round_dial_def of Round dial is equal to 0 .
+    COMMENT       
+    COMMENT Class 39
+    COMMENT In function "RoundDialDraw"  associated_labels of  round_dial_def of Round dial is equal to label of round_dial_def of A_round_dial .
+    COMMENT       
+    COMMENT Class 40
+    COMMENT In function "RoundDialDraw"  associated_labels of  round_dial_def of Round dial is not equal to label of round_dial_def of A_round_dial .
+    COMMENT       
+    COMMENT Class 41
+    COMMENT In function "RoundDialDraw"   Array round dail status is FALSE.
+    COMMENT       
+    COMMENT Class 42
+    COMMENT In function "RoundDialDraw"   Array round dail status is TRUE
+    COMMENT       
+    COMMENT Class 43
+    COMMENT In function "RoundDialDraw"   stat of psParam of round_dial_def of A_round_dial is less than PARAM_BAD.
+    COMMENT       
+    COMMENT Class 44
+    COMMENT In function "RoundDialDraw"   stat of psParam of round_dial_def of A_round_dial is greater than PARAM_BAD.
+    COMMENT       
+    COMMENT Class 45
+    COMMENT In function "RoundDialDraw"   stat of psParam of round_dial_def of A_round_dial is equal to PARAM_BAD.
+    COMMENT       
+    COMMENT Class 46
+    COMMENT In function "RoundDialDraw"   Draw dail status is equal to TRUE.
+    COMMENT       
+    COMMENT Class 47
+    COMMENT In function "RoundDialDraw"   Draw dail status is not equal to TRUE.
+    COMMENT              
+    COMMENT Class 48
+    COMMENT In function "RoundDialUpdate"  CalculatePower function is called.
+    COMMENT  
+    COMMENT Class 49
+    COMMENT In function "RoundDialUpdate". BinasGetWidth function is called 
+    COMMENT     
+    COMMENT      
+	COMMENT Class 51
+	COMMENT In function "RoundDialUpdate" vernStatus of round_dial_def of ps_round_dial is equal to ONE.
+	COMMENT      
+	COMMENT Class 52
+	COMMENT In function "RoundDialUpdate" vernStatus of round_dial_def of ps_round_dial is not equal to ONE.
+	COMMENT
+	COMMENT Class 53
+	COMMENT In function "RoundDialUpdate" vernPos of round_dial_def of ps_round_dial is greater than ONE.
+	COMMENT
+	COMMENT Class 54
+	COMMENT In function "RoundDialUpdate" vernPos of round_dial_def of ps_round_dial less than  ONE.
+	COMMENT
+	COMMENT Class 55
+	COMMENT In function "RoundDialUpdate" vernPos of round_dial_def of ps_round_dial is equal to ONE.
+	COMMENT
+	COMMENT Class 56
+	COMMENT In function "RoundDialUpdate" vernPos of round_dial_def of ps_round_dial is not equal to ONE.
+	COMMENT
+	COMMENT Class 57
+	COMMENT In function "RoundDialUpdate" s32Scaler of sWidgetParm of ps_round_dial is greater than ZERO.
+	COMMENT
+	COMMENT Class 58
+	COMMENT In function "RoundDialUpdate" s32Scaler of sWidgetParm of ps_round_dial is less than ZERO.
+	COMMENT
+	COMMENT Class 59
+	COMMENT In function "RoundDialUpdate" s32Scaler of sWidgetParm of ps_round_dial is equal to ZERO.
+	COMMENT
+	COMMENT Class 60
+	COMMENT In function "RoundDialUpdate" s32PtrShape of asPtrSpec of round_dial_def of ps_round_dial is equal to EMOVINGROUNDDIAL.
+	COMMENT
+	COMMENT Class 61
+	COMMENT In function "RoundDialUpdate" s32PtrShape of asPtrSpec of round_dial_def of ps_round_dial is not equal to EMOVINGROUNDDIAL.
+	COMMENT	
+    COMMENT Invalid Class(es)
+    COMMENT  
+    COMMENT Class 50
+    COMMENT In function 'RoundDialAllocat', parameter 'round_dial_def' is NULL. 
+    COMMENT
+    COMMENT </ECD>    
+    
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+SIMUL
+
+DEFINE STUB hdudispfrounddial_c
+
+    --Temporary variables declaration
+    --created to verify the parameter ps_param of function WidgetsUpdateRT
+    #T_PARAM_READING PTU_ps_param;
+    
+    --created to verify the parameter ps_widget_parm_in of function WidgetsUpdateRT
+    #T_SWIDGETPARAM PTU_ps_widget_parm_in;
+    #T_SWIDGETPARAM PTU_ps_widget_parm_out;
+
+    --created to verify the parameter table of function LookupTableLookup
+    #T_LOOKUP_TABLE PTU_table;
+    
+    --created to verify the parameter stat of function LookupTableLookup
+    #T_PARAM_STAT PTU_stat;
+    
+    --created to verify the parameter pps_poly_red_x of function WidgetsRedX
+    #T_SPOLY PTU_pps_poly_red_x_in, PTU_pps_poly_red_x_out;
+    
+    --created to verify the parameter ps_dis_region of function WidgetsRedX
+    #T_SDISREGION PTU_ps_dis_region;
+    
+    --created to verify the parameter pps_handle_add of function TextAllocat
+    #T_TEXT *PTU_pps_handle_add_out;
+    #T_TEXT PTU_pps_handle_add_in;
+    
+    --created to verify return value of function BinasByteFormatInfoBE 
+    #T_INT8 PTU_BinasByteFormatInfoBE_return;
+    
+    --created to verify the parameter pu8_string of function TextAllocat
+    #T_UINT8 PTU_pu8_string[13];
+    
+    --created to verify the parameter dest of function BinasByteFormatInfoBE
+    #T_INT8 PTU_dest[13],PTU_i,PTU_j;
+    
+    --created to verify return value of function PolygonsPsPolyInit 
+    #T_SPOLY PTU_PolygonsPsPolyInit_return,PTU_PolygonsPsPolyInit_return_1;
+    
+    --created to verify return value of function PolygonsPsDuplicate 
+    #T_SPOLY PTU_PolygonsPsDuplicate_return;
+    
+    --created to verify the parameter pc_message of function RterrWidget
+    #char PTU_pc_message[200];
+    --created to verify the parameter pc_file of function RterrWidget
+    #char PTU_pc_file[200],PTU_temp;
+
+    --created to verify the member psDisRegion of structure round_dial_def 
+    #T_SDISREGION PTU_psDisRegion;
+    --created to verify the member psGeometry of structure round_dial_def 
+    #T_LOOKUP_TABLE PTU_psGeometry; 
+    --created to verify the member psParam of structure round_dial_def
+    #T_PARAM_READING  PTU_psParam;
+    --created to verify the member pRoundDial->psPolyRedX of structure round_dial_def
+    #T_SPOLY PTU_psPolyRedX;
+    --created to verify the parameter ps_poly of functionPolygonDrawPoly
+    #T_SPOLY *PTU_ps_poly;
+    --created to verify the member x,y of psGeometry of structure round_dial_def
+    #T_INT32 PTU_x, PTU_y;
+    --created to verify the parameter ps_poly of function PolygonsvPolarToRect
+    #T_SPOLY ps_poly_PTU;
+    
+    -- Parameter ps_poly is made as _no as it is verified explicitly
+    #void PolygonDrawPoly(T_SPOLY  _no *ps_poly, T_EPENCOLOR  _in e_color)
+    #{
+    #   PTU_ps_poly = ps_poly;
+    #}
+    
+    -- Parameters ps_dis_region and pps_poly_red_x are made as _no as it is verified explicitly
+    #void WidgetsRedX(T_SDISREGION  _no ps_dis_region, T_SPOLY _no **pps_poly_red_x)
+    #{
+    #     PTU_ps_dis_region = *ps_dis_region;
+    #     PTU_pps_poly_red_x_in = *((T_SPOLY *)pps_poly_red_x);
+    #}
+    
+    -- Parameter p_text is made as _no as it is verified in other scripts
+    #void TextUpdate(struct Text _no p_text, T_EPENCOLOR  _in e_pen_color, T_ETXFLASH  _in e_tx_flash, T_ETXV  _in e_txv);                                                               
+	--parameter ps_poly is made _no and is verified explicitly
+    #void PolygonsvPolarToRect(T_SPOLY  _no ps_poly, T_INT32  _in s32_xoff, T_INT32  _in s32_yoff, T_UINT16  _in u16_len, T_INT32  _in u32_rot, T_INT32  _in u32_rot_rd, T_BOOL  _in moving_rd)
+    #{
+    #  ps_poly_PTU= *ps_poly;
+    #}                                           
+    #void WidgetsNumUpdate(T_PARAM_READING  _inout param, T_SWIDGETPARAM  _inout ps_widget_param, char  _inout ac_dig_text[200], T_UINT16  _in u16_format,T_EPENCOLOR _in e_pen_color);                                   
+    
+    -- Parameters ps_param and ps_widget_parm are made as _no as it is verified explicitly
+    #void WidgetsUpdateRT(T_PARAM_READING  _no ps_param, T_SWIDGETPARAM  _no *ps_widget_parm)
+    #{
+    #   PTU_ps_param.r = ps_param->r;
+    #   PTU_ps_param.stat = ps_param->stat;
+    #   PTU_ps_widget_parm_in = *ps_widget_parm;
+    #   ps_widget_parm->s32Dig = PTU_ps_widget_parm_out.s32Dig;
+    #   ps_widget_parm->s32DisDig = PTU_ps_widget_parm_out.s32DisDig;
+    #   ps_widget_parm->eDIsDigStat = PTU_ps_widget_parm_out.eDIsDigStat;
+    #   ps_widget_parm->pText = PTU_ps_widget_parm_out.pText;
+    #   ps_widget_parm->s32Scaler = PTU_ps_widget_parm_out.s32Scaler;
+    #   ps_widget_parm->s32ScalerStep = PTU_ps_widget_parm_out.s32ScalerStep;
+    #}
+    
+    -- Parameters pps_handle_add and pu8_string are made as _no as it is verified explicitly
+    #void TextAllocat(T_PTEXT  _no *pps_handle_add, T_UINT8  _no *pu8_string, T_UINT16  _in u16_x0, T_UINT16  _in u16_y0, T_ETXALIGN  _in e_tx_align, T_ETXFONT  _in e_tx_font, T_EPENCOLOR  _in e_pen_color, T_ETXV  _in e_txv, T_ETXFLASH  _in e_tx_flash)
+    #{   
+    #   for(PTU_i =0; PTU_i<13;PTU_i++)
+    #   {  
+    #   PTU_pu8_string[PTU_i] = pu8_string[PTU_i] ;
+    #   }
+    #   PTU_pps_handle_add_out = (T_TEXT*) pps_handle_add;
+    #   PTU_pps_handle_add_in =  *PTU_pps_handle_add_out;
+    #}
+    
+    -- Parameters src and dest are made as _no as it is verified explicitly
+    #T_INT8* BinasByteFormatInfoBE(void * _no src, T_UINT16  _in format, char _no dest[200])
+    #{
+    #   for(PTU_i =0; PTU_i<13;PTU_i++)
+    #   dest[PTU_i] = PTU_dest[PTU_i];
+    #}
+    #T_UINT16 BinasGetWidth(T_UINT16  _in format); 
+    
+    -- Parameters table and stat are made as _no as it is verified explicitly
+    #T_INT32 LookupTableLookup( const  T_LOOKUP_TABLE _no *table, T_INT32 _in ind_var, T_PARAM_STAT _no *stat)
+    #{
+    # PTU_table = *table;
+    # PTU_stat = *stat;
+    #}     
+    
+    #T_SPOLY* PolygonsPsDuplicate(T_SPOLY  _in ps_poly_src);
+    #T_SPOLY* PolygonsPsPolyInit(T_ESTOCKSHAPE  _in e_poly_shape, T_FLOAT  _in fx_scale, T_INT16  _in s16_xoff, T_FLOAT  _in fy_scale, T_INT16  _in s16_yoff, T_INT16  _in s16_rot);
+    
+    -- Parameters pc_file and pc_message are made as _no as it is verified explicitly
+    #void RterrWidget(char _no pc_file[200], T_INT32 _in s32_line_number, char _no pc_message[200])
+    #{
+    #  PTU_temp = 0;
+    #  while(pc_file[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_file[PTU_temp]= pc_file[PTU_temp];   //Verify pc_file path 
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_file[PTU_temp]= ZERO;
+    #
+    #  PTU_temp = 0;
+    #  while(pc_message[PTU_temp]!= ZERO)
+    #  {
+    #    PTU_pc_message[PTU_temp]= pc_message[PTU_temp];  //Verify pc_message
+    #    PTU_temp = PTU_temp+1;
+    #  }
+    #    PTU_pc_message[PTU_temp]= ZERO;
+    #}    
+    
+    #T_FLOAT CalculatePower(T_FLOAT _in value, T_INT32 _in mul); 
+    
+END DEFINE
+
+ELSE_SIMUL
+
+        -- No action defined as of now if the module is not simulated
+
+END SIMUL
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--IF HOST
+
+-- No special things that have to be done on the host to run the test.
+
+--ELSE
+
+-- No action defined for the targetexecution as of now
+
+--END IF
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--Environment of the hdudispfrounddial.c
+
+--ENVIRONMENT ENV_hdudispfrounddial_c
+
+    --None
+    
+--END ENVIRONMENT -- ENV_hdudispfrounddial_c
+--USE ENV_hdudispfrounddial_c
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Declaration of the service RoundDialAllocat
+--------------------------------------------------------------------------------
+SERVICE RoundDialAllocat
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ROUNDDIALDEF round_dial_def;
+    
+    ENVIRONMENT ENV_RoundDialAllocat
+
+        VAR round_dial_def.sUpperLeft,                             init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+        VAR round_dial_def.sDialCenterOffset,                      init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+        VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+        VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+        VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+        &                                                                                   ev = init 
+        VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+        &                                                                                   ev = init 
+        VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+        &                                                                                   ev = init 
+		VAR round_dial_def.rotAngle,        					   init = { others => 0},		 ev = init
+        VAR round_dial_def.usLength,                               init = 0,                               ev = init
+        VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+        VAR round_dial_def.eFont,                                  init = E_LARGE_FONT,                    ev = init
+        VAR round_dial_def.numLimit,                               init = 0,                               ev = init
+        VAR round_dial_def.limVal,                                 init = { others => 0.0 },               ev = init
+        VAR round_dial_def.limValtype,                             init = { others => 0 },               ev = init
+        VAR round_dial_def.limColor,                               init = { others => 0 },               ev = init
+        VAR round_dial_def.label,                                  init = 0,                               ev = init
+        VAR round_dial_def.associated_labels,                      init = { others => 0 },                 ev = init
+        VAR round_dial_def.sDigCenterOffset,                       init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+        VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+            
+    END ENVIRONMENT -- ENV_RoundDialAllocat
+    USE ENV_RoundDialAllocat   
+    
+    TEST 1
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-002]
+    COMMENT The function RoundDialAllocat set Round Dial of round_dial_def to Round Dial when
+    COMMENT number round dials installed is not equal to MAX_ROUND_DIALS
+    COMMENT 
+    COMMENT Note: Variable Name "round_dial" is local, hence it is not expected in the Output section and the 
+    COMMENT       functionality of the requirement is verified implicitly.
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-003]
+    COMMENT The function RoundDialAllocat does the following
+    COMMENT - Set round_dial_def of Round Dial to round_dial_def
+    COMMENT - Set psPolyRedX of Round Dial to ZERO
+    COMMENT - Set the decimal number to last 3 bits of u16Format of round_dial_def of pointer to structure
+    COMMENT   T_PROUNDDIAL right shifted by FOUR.
+    COMMENT - Set reading value to sum ( FIVE and product of fread of psParam of  pointer to structure T_PROUNDDIAL,
+    COMMENT  THOUSAND and return value of function CalculatePower with parameters TEN and decimal value.) divided by TEN 
+    COMMENT - Set s32DisDig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Dig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Scaler of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32ScalerStep of sWidgetParm of Round Dial to ZERO
+    COMMENT - Set source pointer to asPtrSpec of round_dial_def
+    COMMENT - Set destination pointer to asPtrSpec of Round Dial.
+    COMMENT 
+    COMMENT Equivalence Class 48
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-004]
+    COMMENT The function RoundDialAllocat does nothing when s32PtrShape of source pointer is null.
+    COMMENT 
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-005]
+    COMMENT The function RoundDialAllocat set psShape of destination to ZERO and sAngle of Round dial to return value of LookupTableLookup .
+    COMMENT 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-007]
+    COMMENT The function RoundDialAllocat set pText of sWidgetParm of Round dial to ZERO when return value of BinasGetWidth 
+    COMMENT AND eFont of round_dial_def is not equal to TRUE .
+    COMMENT 
+    COMMENT Equivalence Class 9
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-008]
+    COMMENT The function RoundDialAllocat increment number round dials installed by one.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT </TD> 
+    
+        ELEMENT
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+         
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => PARAM_BAD,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = init 
+            
+            VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+            VAR round_dial_def.eFont,                                  init = E_NO_FONT,                       ev = init
+            VAR round_dial_def.pRoundDial->sWidgetParm.s32Scaler,      init = 0,                               ev = init 
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+            
+            COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)(T_INT32)-2147483648
+            STUB BinasGetWidth 1 => (0)100
+            STUB CalculatePower(10.0,0)1.0
+            
+            END SIMUL
+        
+            -- Calling the Unit Under Test: 
+            #RoundDialAllocat(&round_dial_def);
+            
+        END ELEMENT
+
+    END TEST -- TEST 1
+    
+    TEST 2
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-002]
+    COMMENT The function RoundDialAllocat set Round Dial of round_dial_def to Round Dial when
+    COMMENT number round dials installed is not equal to MAX_ROUND_DIALS
+    COMMENT 
+    COMMENT Note: Variable Name "round_dial" is local, hence it is not expected in the Output section and the 
+    COMMENT       functionality of the requirement is verified implicitly.
+    COMMENT 
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-003]
+    COMMENT The function RoundDialAllocat does the following
+    COMMENT - Set round_dial_def of Round Dial to round_dial_def
+    COMMENT - Set psPolyRedX of Round Dial to ZERO
+    COMMENT - Set the decimal number to last 3 bits of u16Format of round_dial_def of pointer to structure
+    COMMENT   T_PROUNDDIAL right shifted by FOUR.
+    COMMENT - Set reading value to sum ( FIVE and product of fread of psParam of  pointer to structure T_PROUNDDIAL,
+    COMMENT  THOUSAND and return value of function CalculatePower with parameters TEN and decimal value.) divided by TEN 
+    COMMENT - Set s32DisDig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Dig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Scaler of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32ScalerStep of sWidgetParm of Round Dial to ZERO
+    COMMENT - Set source pointer to asPtrSpec of round_dial_def
+    COMMENT - Set destination pointer to asPtrSpec of Round Dial.
+    COMMENT 
+    COMMENT Equivalence Class 48
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-004]
+    COMMENT The function RoundDialAllocat does nothing when s32PtrShape of source pointer is null.
+    COMMENT 
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-005]
+    COMMENT The function RoundDialAllocat set psShape of destination to ZERO and sAngle of Round dial to return value of LookupTableLookup .
+    COMMENT 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-006]
+    COMMENT The function RoundDialAllocat do the following when return value of BinasGetWidth AND eFont of round_dial_def is equal to TRUE.
+    COMMENT - Call function BinasByteFormatInfoBE.
+    COMMENT - Call function TextAllocat with parameter ALIGN_CENTER, eFont of round_dial_def, WHITE, V_NORMAL and TX_NO_FLASH.
+    COMMENT 
+    COMMENT Equivalence Class 9,10,11
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-008]
+    COMMENT The function RoundDialAllocat increment number round dials installed by one.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT </TD> 
+
+        ELEMENT
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+             
+            VAR round_dial_def.sUpperLeft,                             init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.sDialCenterOffset,                      init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => PARAM_BAD,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.usLength,                               init = 0,                               ev = init
+            VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+            VAR round_dial_def.eFont,                                  init = E_LARGE_FONT,                    ev = init
+            VAR round_dial_def.numLimit,                               init = 0,                               ev = init
+            VAR round_dial_def.limVal,                                 init = { others => 0.0 },               ev = init
+            VAR round_dial_def.limValtype,                             init = { others => 0 },               ev = init
+            VAR round_dial_def.limColor,                               init = { others => 0 },               ev = init
+            VAR round_dial_def.sDigCenterOffset,                       init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+            
+            VAR round_dial_def.pRoundDial->round_dial_def,init = NIL,ev = &round_dial_def
+            VAR round_dial_def.pRoundDial->psPolyRedX,init = &PTU_psPolyRedX,ev = (T_SPOLY *)ZERO
+            VAR round_dial_def.pRoundDial->asPtrSpec,init = { others => 
+            &                                              { s32PtrShape => 0, 
+            &                                                ePenColor => BLACK,
+            &                                                psShape => NIL 
+            &                                              } 
+            &                                           },
+            &                                                                   ev = init 
+            VAR round_dial_def.pRoundDial->acDigText,init = "AAAAAAAAAAAA",       ev = ""
+            VAR round_dial_def.pRoundDial->sAngle,   init = 1,                ev = 500
+            VAR round_dial_def.pRoundDial->sWidgetParm,init = {eDIsDigStat => PARAM_ADVISORY, 
+            &                                                  s32ScalerStep =>1, 
+            &                                                  pText => "ROUND",  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0},             
+            &                                            ev = {eDIsDigStat => PARAM_OK, 
+            &                                                  s32ScalerStep =>0, 
+            &                                                  pText => NIL,  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0}   
+            
+           
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+            
+            COMMENT INPUT/OUTPUT SECTION:
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)500
+            STUB BinasGetWidth 1 => (0)0
+            STUB CalculatePower(10.0,0)1.0
+            
+            END SIMUL
+        
+            -- Calling the Unit Under Test: 
+            #RoundDialAllocat(&round_dial_def);
+            
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+    TEST 3
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-002]
+    COMMENT The function RoundDialAllocat set Round Dial of round_dial_def to Round Dial when
+    COMMENT number round dials installed is not equal to MAX_ROUND_DIALS
+    COMMENT 
+    COMMENT Note: Variable Name "round_dial" is local, hence it is not expected in the Output section and the 
+    COMMENT       functionality of the requirement is verified implicitly.
+    COMMENT 
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-003]
+    COMMENT The function RoundDialAllocat does the following
+    COMMENT - Set round_dial_def of Round Dial to round_dial_def
+    COMMENT - Set psPolyRedX of Round Dial to ZERO
+    COMMENT - Set the decimal number to last 3 bits of u16Format of round_dial_def of pointer to structure
+    COMMENT   T_PROUNDDIAL right shifted by FOUR.
+    COMMENT - Set reading value to sum ( FIVE and product of fread of psParam of  pointer to structure T_PROUNDDIAL,
+    COMMENT  THOUSAND and return value of function CalculatePower with parameters TEN and decimal value.) divided by TEN 
+    COMMENT - Set s32DisDig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Dig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Scaler of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32ScalerStep of sWidgetParm of Round Dial to ZERO
+    COMMENT - Set source pointer to asPtrSpec of round_dial_def
+    COMMENT - Set destination pointer to asPtrSpec of Round Dial.
+    COMMENT 
+    COMMENT Equivalence Class 48
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-004]
+    COMMENT The function RoundDialAllocat does nothing when s32PtrShape of source pointer is null.
+    COMMENT 
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-005]
+    COMMENT The function RoundDialAllocat set psShape of destination to ZERO and sAngle of Round dial to return value of LookupTableLookup .
+    COMMENT 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-006]
+    COMMENT The function RoundDialAllocat do the following when return value of BinasGetWidth AND eFont of round_dial_def is equal to TRUE.
+    COMMENT - Call function BinasByteFormatInfoBE.
+    COMMENT - Call function TextAllocat with parameter ALIGN_CENTER, eFont of round_dial_def, WHITE, V_NORMAL and TX_NO_FLASH.
+    COMMENT 
+    COMMENT Equivalence Class 9,10,11
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-008]
+    COMMENT The function RoundDialAllocat increment number round dials installed by one.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT </TD> 
+
+        ELEMENT
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+             
+            VAR round_dial_def.sUpperLeft,                             init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.sDialCenterOffset,                      init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.usLength,                               init = 0,                               ev = init
+            VAR round_dial_def.u16Format,                              init = 1578,                            ev = init
+            VAR round_dial_def.eFont,                                  init = E_BEZEL_FONT,                    ev = init
+            VAR round_dial_def.numLimit,                               init = 0,                               ev = init
+            VAR round_dial_def.limVal,                                 init = { others => 0.0 },               ev = init
+            VAR round_dial_def.limValtype,                             init = { others => 0 },               ev = init
+            VAR round_dial_def.limColor,                               init = { others => 0 },               ev = init
+            VAR round_dial_def.sDigCenterOffset,                       init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+            
+            VAR round_dial_def.pRoundDial->round_dial_def,init = NIL,ev = &round_dial_def
+            VAR round_dial_def.pRoundDial->psPolyRedX,init = &PTU_psPolyRedX,ev = (T_SPOLY *)ZERO
+            VAR round_dial_def.pRoundDial->asPtrSpec,init = { others => 
+            &                                              { s32PtrShape => 0, 
+            &                                                ePenColor => BLACK,
+            &                                                psShape => NIL 
+            &                                              } 
+            &                                           },
+            &                                                                   ev = init 
+            VAR round_dial_def.pRoundDial->acDigText,init = "AAAAAAAAAAA",       ev = "BBBBBBBBBBBBB"
+            VAR round_dial_def.pRoundDial->sAngle,   init = 1,                ev = 2147483647
+            VAR round_dial_def.pRoundDial->sWidgetParm,init = {eDIsDigStat => PARAM_ADVISORY, 
+            &                                                  s32ScalerStep =>1, 
+            &                                                  pText => "ROUND",  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0},             
+            &                                            ev = {eDIsDigStat => PARAM_OK, 
+            &                                                  s32ScalerStep =>0, 
+            &                                                  pText => NIL,  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0}    
+              
+                        
+            VAR PTU_psParam,                    init = {fread => -3.4e38,stat => PARAM_BAD,others => 10},          ev = init
+            VAR PTU_psDisRegion,                init = {eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => {others => 0},s32Width => 1, s32Height => 1, sDisLocO => {others => 0},eTXFont => E_NO_FONT,pu8Text => NIL},           
+            & ev = init   
+           
+            VAR PTU_pu8_string[0..12],          init = {others => 'Z'},                             ev = {others => 'B'}
+            VAR PTU_pps_handle_add_in,          init = {ppsOwner => NIL,pu8String => NIL,eTXAlign =>ALIGN_CENTER_LEFT, eTXFont =>E_TINY_FONT, ePenColor =>RED, eTXV =>V_REVERSE, eTXFlash =>TX_FLASH,u16X0 => 80,u16Y0 =>80},
+            & ev = {ppsOwner => NIL,pu8String => NIL,eTXAlign =>E_NO_FONT, eTXFont =>E_NO_FONT, ePenColor =>65535, eTXV =>255, eTXFlash =>127,u16X0 => 0,u16Y0 => 0}
+            VAR PTU_dest[0..12],                init = {others => 'B'},                             ev = init
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+            
+            COMMENT INPUT/OUTPUT SECTION:
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)(T_INT32)2147483647
+            STUB TextAllocat 1 => (0,0,ALIGN_CENTER,E_BEZEL_FONT,WHITE,V_NORMAL,TX_NO_FLASH)
+            STUB BinasGetWidth 1 => (1578)65535
+            STUB BinasByteFormatInfoBE(1578)(T_INT8 *)&PTU_BinasByteFormatInfoBE_return
+            STUB CalculatePower(10.0,2)0.0
+            
+            END SIMUL
+        
+            -- Calling the Unit Under Test: 
+            #RoundDialAllocat(&round_dial_def);
+            
+        END ELEMENT
+
+    END TEST -- TEST 3
+    
+    TEST 4
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-002]
+    COMMENT The function RoundDialAllocat set Round Dial of round_dial_def to Round Dial when
+    COMMENT number round dials installed is not equal to MAX_ROUND_DIALS
+    COMMENT 
+    COMMENT Note: Variable Name "round_dial" is local, hence it is not expected in the Output section and the 
+    COMMENT       functionality of the requirement is verified implicitly.
+    COMMENT 
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-003]
+    COMMENT The function RoundDialAllocat does the following
+    COMMENT - Set round_dial_def of Round Dial to round_dial_def
+    COMMENT - Set psPolyRedX of Round Dial to ZERO
+    COMMENT - Set the decimal number to last 3 bits of u16Format of round_dial_def of pointer to structure
+    COMMENT   T_PROUNDDIAL right shifted by FOUR.
+    COMMENT - Set reading value to sum ( FIVE and product of fread of psParam of  pointer to structure T_PROUNDDIAL,
+    COMMENT  THOUSAND and return value of function CalculatePower with parameters TEN and decimal value.) divided by TEN 
+    COMMENT - Set s32DisDig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Dig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Scaler of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32ScalerStep of sWidgetParm of Round Dial to ZERO
+    COMMENT - Set source pointer to asPtrSpec of round_dial_def
+    COMMENT - Set destination pointer to asPtrSpec of Round Dial.
+    COMMENT 
+    COMMENT Equivalence Class 48
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-004]
+    COMMENT The function RoundDialAllocat does nothing when s32PtrShape of source pointer is null.
+    COMMENT 
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-005]
+    COMMENT The function RoundDialAllocat set psShape of destination to ZERO and sAngle of Round dial to return value of LookupTableLookup .
+    COMMENT 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-006]
+    COMMENT The function RoundDialAllocat do the following when return value of BinasGetWidth AND eFont of round_dial_def is equal to TRUE.
+    COMMENT - Call function BinasByteFormatInfoBE.
+    COMMENT - Call function TextAllocat with parameter ALIGN_CENTER, eFont of round_dial_def, WHITE, V_NORMAL and TX_NO_FLASH.
+    COMMENT 
+    COMMENT Equivalence Class 9,10,11
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-008]
+    COMMENT The function RoundDialAllocat increment number round dials installed by one.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT </TD> 
+
+        ELEMENT
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+             
+            VAR round_dial_def.sUpperLeft,                             init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.sDialCenterOffset,                      init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 3.4e28,stat => PARAM_BAD,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.usLength,                               init = 0,                               ev = init
+            VAR round_dial_def.u16Format,                              init = 65535,                           ev = init
+            VAR round_dial_def.eFont,                                  init = E_TINY_FONT,                    ev = init
+            VAR round_dial_def.numLimit,                               init = 0,                               ev = init
+            VAR round_dial_def.limVal,                                 init = { others => 0.0 },               ev = init
+            VAR round_dial_def.limValtype,                             init = { others => 0 },               ev = init
+            VAR round_dial_def.limColor,                               init = { others => 0 },               ev = init
+            VAR round_dial_def.sDigCenterOffset,                       init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+            VAR round_dial_def.pRoundDial->round_dial_def,init = NIL,ev = &round_dial_def
+            VAR round_dial_def.pRoundDial->psPolyRedX,init = &PTU_psPolyRedX,ev = (T_SPOLY *)ZERO
+            VAR round_dial_def.pRoundDial->asPtrSpec,init = { others => 
+            &                                              { s32PtrShape => 0, 
+            &                                                ePenColor => BLACK,
+            &                                                psShape => NIL 
+            &                                              } 
+            &                                           },
+            &                                                                   ev = init 
+            VAR round_dial_def.pRoundDial->acDigText,init = "AAAAAAAAAAAAA",       ev = "BBBBBBBBBBBBB"
+            VAR round_dial_def.pRoundDial->sAngle,   init = 1,                ev = 32767
+            VAR round_dial_def.pRoundDial->sWidgetParm,init = {eDIsDigStat => PARAM_ADVISORY, 
+            &                                                  s32ScalerStep =>1, 
+            &                                                  pText => "ROUND",  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0},             
+            &                                            ev = {eDIsDigStat => PARAM_OK, 
+            &                                                  s32ScalerStep =>0, 
+            &                                                  pText => NIL,  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0}  
+            
+            VAR PTU_pu8_string[0..12],          init = {others => 'Z'},                             ev = {others => 'B'}
+            VAR PTU_pps_handle_add_in,          init = {ppsOwner => NIL,pu8String => NIL,eTXAlign =>ALIGN_CENTER_LEFT, eTXFont =>E_TINY_FONT, ePenColor =>RED, eTXV =>V_REVERSE, eTXFlash =>TX_FLASH,u16X0 => 80,u16Y0 =>80},  
+            & ev = {ppsOwner => NIL,pu8String => NIL,eTXAlign =>E_NO_FONT, eTXFont =>E_NO_FONT, ePenColor =>32767, eTXV =>V_NORMAL, eTXFlash =>TX_NO_FLASH,u16X0 => 0,u16Y0 => 0}
+            VAR PTU_dest[0..12],                init = {others => 'B'},                             ev = init
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+  
+            
+            COMMENT INPUT/OUTPUT SECTION:
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)32767
+            STUB TextAllocat 1 => (0,0,ALIGN_CENTER,E_TINY_FONT,WHITE,V_NORMAL,TX_NO_FLASH)
+            STUB BinasGetWidth 1 => (65535)100
+            STUB BinasByteFormatInfoBE(65535)(T_INT8 *)&PTU_BinasByteFormatInfoBE_return
+            STUB CalculatePower(10.0,7)0.0
+            
+            END SIMUL
+        
+            -- Calling the Unit Under Test: 
+            #RoundDialAllocat(&round_dial_def);
+            
+        END ELEMENT
+
+    END TEST -- TEST 4
+    
+    TEST 5
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-002]
+    COMMENT The function RoundDialAllocat set Round Dial of round_dial_def to Round Dial when
+    COMMENT number round dials installed is not equal to MAX_ROUND_DIALS
+    COMMENT 
+    COMMENT Note: Variable Name "round_dial" is local, hence it is not expected in the Output section and the 
+    COMMENT       functionality of the requirement is verified implicitly.
+    COMMENT 
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-003]
+    COMMENT The function RoundDialAllocat does the following
+    COMMENT - Set round_dial_def of Round Dial to round_dial_def
+    COMMENT - Set psPolyRedX of Round Dial to ZERO
+    COMMENT - Set the decimal number to last 3 bits of u16Format of round_dial_def of pointer to structure
+    COMMENT   T_PROUNDDIAL right shifted by FOUR.
+    COMMENT - Set reading value to sum ( FIVE and product of fread of psParam of  pointer to structure T_PROUNDDIAL,
+    COMMENT  THOUSAND and return value of function CalculatePower with parameters TEN and decimal value.) divided by TEN 
+    COMMENT - Set s32DisDig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Dig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Scaler of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32ScalerStep of sWidgetParm of Round Dial to ZERO
+    COMMENT - Set source pointer to asPtrSpec of round_dial_def
+    COMMENT - Set destination pointer to asPtrSpec of Round Dial.
+    COMMENT 
+    COMMENT Equivalence Class 48
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-004]
+    COMMENT The function RoundDialAllocat does nothing when s32PtrShape of source pointer is null.
+    COMMENT 
+    COMMENT Equivalence Class 5
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-005]
+    COMMENT The function RoundDialAllocat set psShape of destination to ZERO and sAngle of Round dial to return value of LookupTableLookup .
+    COMMENT 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-007]
+    COMMENT The function RoundDialAllocat set pText of sWidgetParm of Round dial to ZERO when return value of BinasGetWidth 
+    COMMENT is not equal to TRUE .
+    COMMENT 
+    COMMENT Equivalence Class 9
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-008]
+    COMMENT The function RoundDialAllocat increment number round dials installed by one.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT </TD> 
+
+        ELEMENT
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+             
+            VAR round_dial_def.sUpperLeft,                             init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.sDialCenterOffset,                      init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 158.0,stat => PARAM_BAD,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+
+           
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.usLength,                               init = 0,                               ev = init
+            VAR round_dial_def.u16Format,                              init = 65535,                           ev = init
+            VAR round_dial_def.eFont,                                  init = E_SMALL_FONT,                    ev = init
+            VAR round_dial_def.numLimit,                               init = 0,                               ev = init
+            VAR round_dial_def.limVal,                                 init = { others => 0.0 },               ev = init
+            VAR round_dial_def.limValtype,                             init = { others => 0 },               ev = init
+            VAR round_dial_def.limColor,                               init = { others => 0 },               ev = init
+            VAR round_dial_def.sDigCenterOffset,                       init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+
+            VAR round_dial_def.pRoundDial->round_dial_def,init = NIL,ev = &round_dial_def
+            VAR round_dial_def.pRoundDial->psPolyRedX,init = &PTU_psPolyRedX,ev = (T_SPOLY *)ZERO
+            VAR round_dial_def.pRoundDial->asPtrSpec,init = { others => 
+            &                                              { s32PtrShape => 0, 
+            &                                                ePenColor => BLACK,
+            &                                                psShape => NIL 
+            &                                              } 
+            &                                           },
+            &                                                                   ev = init 
+            VAR round_dial_def.pRoundDial->acDigText,init = "AAAAAAAAAAAAA",       ev = ""
+            VAR round_dial_def.pRoundDial->sAngle,   init = 1,                ev = 32767
+            VAR round_dial_def.pRoundDial->sWidgetParm,init = {eDIsDigStat => PARAM_ADVISORY, 
+            &                                                  s32ScalerStep =>1, 
+            &                                                  pText => "ROUND",  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0},             
+            &                                            ev = {eDIsDigStat => PARAM_OK, 
+            &                                                  s32ScalerStep =>0, 
+            &                                                  pText => NIL,  
+            &                                                  s32Dig => 15800,  
+            &                                                  s32DisDig => 15800, 
+            &                                                  s32Scaler => 15800}   
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+                          
+            COMMENT INPUT/OUTPUT SECTION:
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (15800)32767
+            STUB BinasGetWidth 1 => (65535)0
+            STUB CalculatePower(10.0,7)1.0
+            
+            END SIMUL
+        
+            -- Calling the Unit Under Test: 
+            #RoundDialAllocat(&round_dial_def);
+            
+        END ELEMENT
+
+    END TEST -- TEST 5
+    
+    TEST 6
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-002]
+    COMMENT The function RoundDialAllocat set Round Dial of round_dial_def to Round Dial when
+    COMMENT number round dials installed is not equal to MAX_ROUND_DIALS
+    COMMENT 
+    COMMENT Note: Variable Name "round_dial" is local, hence it is not expected in the Output section and the 
+    COMMENT       functionality of the requirement is verified implicitly.
+    COMMENT 
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-003]
+    COMMENT The function RoundDialAllocat does the following
+    COMMENT - Set round_dial_def of Round Dial to round_dial_def
+    COMMENT - Set psPolyRedX of Round Dial to ZERO
+    COMMENT - Set the decimal number to last 3 bits of u16Format of round_dial_def of pointer to structure
+    COMMENT   T_PROUNDDIAL right shifted by FOUR.
+    COMMENT - Set reading value to sum ( FIVE and product of fread of psParam of  pointer to structure T_PROUNDDIAL,
+    COMMENT  THOUSAND and return value of function CalculatePower with parameters TEN and decimal value.) divided by TEN 
+    COMMENT - Set s32DisDig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Dig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Scaler of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32ScalerStep of sWidgetParm of Round Dial to ZERO
+    COMMENT - Set source pointer to asPtrSpec of round_dial_def
+    COMMENT - Set destination pointer to asPtrSpec of Round Dial.
+    COMMENT 
+    COMMENT Equivalence Class 48
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-004]
+    COMMENT The function RoundDialAllocat does the following untill s32PtrShape of source pointer is not null.
+    COMMENT -Set psShape of source pointer to return value of PolygonsPsPolyInit.
+    COMMENT -Set psShape of destination pointer to return value of PolygonsPsDuplicate.
+    COMMENT -Set ePenColor of destination pointer to ePenColor of source pointer.
+    COMMENT -Increment the source pointer and destination pointer.
+    COMMENT 
+    COMMENT Equivalence Class 4,6,7
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-005]
+    COMMENT The function RoundDialAllocat set psShape of destination to ZERO and sAngle of Round dial to return value of LookupTableLookup .
+    COMMENT 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-007]
+    COMMENT The function RoundDialAllocat set pText of sWidgetParm of Round dial to ZERO when return value of BinasGetWidth 
+    COMMENT is not equal to TRUE .
+    COMMENT 
+    COMMENT Equivalence Class 9
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-008]
+    COMMENT The function RoundDialAllocat increment number round dials installed by one.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT </TD> 
+
+        ELEMENT
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+             
+            VAR round_dial_def.sUpperLeft,                             init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.sDialCenterOffset,                      init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => PARAM_BAD,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 1, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = {others =>{s32PtrShape => 1,ePenColor => BLACK, psShape =>&PTU_PolygonsPsPolyInit_return}} 
+            VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.usLength,                               init = 0,                               ev = init
+            VAR round_dial_def.u16Format,                              init = 65535,                           ev = init
+            VAR round_dial_def.eFont,                                  init = E_BEZEL_FONT,                    ev = init
+            VAR round_dial_def.numLimit,                               init = 0,                               ev = init
+            VAR round_dial_def.limVal,                                 init = { others => 0.0 },               ev = init
+            VAR round_dial_def.limValtype,                             init = { others => 0 },               ev = init
+            VAR round_dial_def.limColor,                               init = { others => 0 },               ev = init
+            VAR round_dial_def.sDigCenterOffset,                       init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+            VAR round_dial_def.pRoundDial->round_dial_def,init = NIL,ev = &round_dial_def
+            VAR round_dial_def.pRoundDial->psPolyRedX,init = &PTU_psPolyRedX,ev = (T_SPOLY *)ZERO
+            VAR round_dial_def.pRoundDial->asPtrSpec,init = { others => 
+            &                                              { s32PtrShape => 0, 
+            &                                                ePenColor => BLACK,
+            &                                                psShape => NIL 
+            &                                              } 
+            &                                           },
+            &                                                                   ev = { others => 
+            &                                              { s32PtrShape => 0, 
+            &                                                ePenColor => BLACK,
+            &                                                psShape => &PTU_PolygonsPsDuplicate_return 
+            &                                              } 
+            &                                           } 
+            VAR round_dial_def.pRoundDial->acDigText,init = "AAAAAAAAAAAAA",       ev = ""
+            VAR round_dial_def.pRoundDial->sAngle,   init = 1,                ev = 32767
+            VAR round_dial_def.pRoundDial->sWidgetParm,init = {eDIsDigStat => PARAM_ADVISORY, 
+            &                                                  s32ScalerStep =>1, 
+            &                                                  pText => "ROUND",  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0},             
+            &                                            ev = {eDIsDigStat => PARAM_OK, 
+            &                                                  s32ScalerStep =>0, 
+            &                                                  pText => NIL,  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0}   
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK 
+           
+            COMMENT INPUT/OUTPUT SECTION:
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)32767
+            STUB BinasGetWidth 1 => (65535)0
+            STUB PolygonsPsPolyInit (1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit  (1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+            STUB PolygonsPsDuplicate 1..6 =>s (PTU_PolygonsPsPolyInit_return)&PTU_PolygonsPsDuplicate_return
+            STUB CalculatePower(10.0,7)1.0
+            
+            END SIMUL
+        
+            -- Calling the Unit Under Test: 
+            #RoundDialAllocat(&round_dial_def);
+            
+        END ELEMENT
+
+    END TEST -- TEST 6
+    
+    TEST 7
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-002]
+    COMMENT The function RoundDialAllocat set Round Dial of round_dial_def to Round Dial when
+    COMMENT number round dials installed is not equal to MAX_ROUND_DIALS
+    COMMENT 
+    COMMENT Note: Variable Name "round_dial" is local, hence it is not expected in the Output section and the 
+    COMMENT       functionality of the requirement is verified implicitly.
+    COMMENT 
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-003]
+    COMMENT The function RoundDialAllocat does the following
+    COMMENT - Set round_dial_def of Round Dial to round_dial_def
+    COMMENT - Set psPolyRedX of Round Dial to ZERO
+    COMMENT - Set the decimal number to last 3 bits of u16Format of round_dial_def of pointer to structure
+    COMMENT   T_PROUNDDIAL right shifted by FOUR.
+    COMMENT - Set reading value to sum ( FIVE and product of fread of psParam of  pointer to structure T_PROUNDDIAL,
+    COMMENT  THOUSAND and return value of function CalculatePower with parameters TEN and decimal value.) divided by TEN 
+    COMMENT - Set s32DisDig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Dig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Scaler of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32ScalerStep of sWidgetParm of Round Dial to ZERO
+    COMMENT - Set source pointer to asPtrSpec of round_dial_def
+    COMMENT - Set destination pointer to asPtrSpec of Round Dial.
+    COMMENT 
+    COMMENT Equivalence Class 48
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-004]
+    COMMENT The function RoundDialAllocat does the following untill s32PtrShape of source pointer is not null.
+    COMMENT -Set psShape of source pointer to return value of PolygonsPsPolyInit.
+    COMMENT -Set psShape of destination pointer to return value of PolygonsPsDuplicate.
+    COMMENT -Set ePenColor of destination pointer to ePenColor of source pointer.
+    COMMENT -Increment the source pointer and destination pointer.
+    COMMENT 
+    COMMENT Equivalence Class 4,6,7
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-005]
+    COMMENT The function RoundDialAllocat set psShape of destination to ZERO and sAngle of Round dial to return value of LookupTableLookup .
+    COMMENT 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-007]
+    COMMENT The function RoundDialAllocat set pText of sWidgetParm of Round dial to ZERO when return value of BinasGetWidth 
+    COMMENT is not equal to TRUE .
+    COMMENT 
+    COMMENT Equivalence Class 9
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-008]
+    COMMENT The function RoundDialAllocat increment number round dials installed by one.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT </TD> 
+
+        ELEMENT
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+             
+            VAR round_dial_def.sUpperLeft,                             init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.sDialCenterOffset,                      init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => PARAM_BAD,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => (T_INT32) 2147483647, ePenColor => TURQUOISE, psShape => NIL } },
+            &                                                                                   ev = {others =>{s32PtrShape => (T_INT32) 2147483647,ePenColor => TURQUOISE, psShape =>&PTU_PolygonsPsPolyInit_return}} 
+            VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.usLength,                               init = 0,                               ev = init
+            VAR round_dial_def.u16Format,                              init = 65535,                           ev = init
+            VAR round_dial_def.eFont,                                  init = E_NORMAL_FONT,                    ev = init
+            VAR round_dial_def.numLimit,                               init = 0,                               ev = init
+            VAR round_dial_def.limVal,                                 init = { others => 0.0 },               ev = init
+            VAR round_dial_def.limValtype,                             init = { others => 0 },               ev = init
+            VAR round_dial_def.limColor,                               init = { others => 0 },               ev = init
+            VAR round_dial_def.sDigCenterOffset,                       init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+
+            VAR round_dial_def.pRoundDial->round_dial_def,init = NIL,ev = &round_dial_def
+            VAR round_dial_def.pRoundDial->psPolyRedX,init = &PTU_psPolyRedX,ev = (T_SPOLY *)ZERO
+            VAR round_dial_def.pRoundDial->asPtrSpec,init = { others => 
+            &                                              { s32PtrShape => 0, 
+            &                                                ePenColor => BLACK,
+            &                                                psShape => NIL 
+            &                                              } 
+            &                                           },
+            &                                                                   ev = { others => 
+            &                                              { s32PtrShape => 0, 
+            &                                                ePenColor => TURQUOISE,
+            &                                                psShape => &PTU_PolygonsPsDuplicate_return 
+            &                                              } 
+            &                                           } 
+            VAR round_dial_def.pRoundDial->acDigText,init = "AAAAAAAAAAAAA",       ev = ""
+            VAR round_dial_def.pRoundDial->sAngle,   init = 1,                ev = 32767
+            VAR round_dial_def.pRoundDial->sWidgetParm,init = {eDIsDigStat => PARAM_ADVISORY, 
+            &                                                  s32ScalerStep =>1, 
+            &                                                  pText => "ROUND",  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0},             
+            &                                            ev = {eDIsDigStat => PARAM_OK, 
+            &                                                  s32ScalerStep =>0, 
+            &                                                  pText => NIL,  
+            &                                                  s32Dig => 0,  
+            &                                                  s32DisDig => 0, 
+            &                                                  s32Scaler => 0}   
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK            
+           
+            COMMENT INPUT/OUTPUT SECTION:
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)32767
+            STUB BinasGetWidth 1 => (65535)0
+            STUB PolygonsPsPolyInit  (-1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (-1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (-1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (-1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (-1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit  (-1,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+            STUB PolygonsPsDuplicate 1..6 => (PTU_PolygonsPsPolyInit_return)&PTU_PolygonsPsDuplicate_return
+            STUB CalculatePower(10.0,7)-3.4e38
+            END SIMUL
+        
+            -- Calling the Unit Under Test: 
+            #RoundDialAllocat(&round_dial_def);
+            
+        END ELEMENT
+
+    END TEST -- TEST 7
+    
+    TEST 8
+    FAMILY nominal
+
+    COMMENT Test Description
+    COMMENT <TD> 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-002]
+    COMMENT The function RoundDialAllocat set Round Dial of round_dial_def to Round Dial when
+    COMMENT number round dials installed is not equal to MAX_ROUND_DIALS
+    COMMENT 
+    COMMENT Note: Variable Name "round_dial" is local, hence it is not expected in the Output section and the 
+    COMMENT       functionality of the requirement is verified implicitly.
+    COMMENT 
+    COMMENT Equivalence Class 3
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-003]
+    COMMENT The function RoundDialAllocat does the following
+    COMMENT - Set round_dial_def of Round Dial to round_dial_def
+    COMMENT - Set psPolyRedX of Round Dial to ZERO
+    COMMENT - Set the decimal number to last 3 bits of u16Format of round_dial_def of pointer to structure
+    COMMENT   T_PROUNDDIAL right shifted by FOUR.
+    COMMENT - Set reading value to sum ( FIVE and product of fread of psParam of  pointer to structure T_PROUNDDIAL,
+    COMMENT  THOUSAND and return value of function CalculatePower with parameters TEN and decimal value.) divided by TEN 
+    COMMENT - Set s32DisDig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Dig of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32Scaler of sWidgetParm of Round Dial to reading value
+    COMMENT - Set s32ScalerStep of sWidgetParm of Round Dial to ZERO
+    COMMENT - Set source pointer to asPtrSpec of round_dial_def
+    COMMENT - Set destination pointer to asPtrSpec of Round Dial.
+    COMMENT 
+    COMMENT Equivalence Class 48
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-004]
+    COMMENT The function RoundDialAllocat does the following untill s32PtrShape of source pointer is not null.
+    COMMENT -Set psShape of source pointer to return value of PolygonsPsPolyInit.
+    COMMENT -Set psShape of destination pointer to return value of PolygonsPsDuplicate.
+    COMMENT -Set ePenColor of destination pointer to ePenColor of source pointer.
+    COMMENT -Increment the source pointer and destination pointer.
+    COMMENT 
+    COMMENT Equivalence Class 4,6,7
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-005]
+    COMMENT The function RoundDialAllocat set psShape of destination to ZERO and sAngle of Round dial to return value of LookupTableLookup .
+    COMMENT 
+    COMMENT Equivalence Class 8
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-007]
+    COMMENT The function RoundDialAllocat set pText of sWidgetParm of Round dial to ZERO when return value of BinasGetWidth 
+    COMMENT is not equal to TRUE .
+    COMMENT 
+    COMMENT Equivalence Class 9
+    COMMENT 
+    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-008]
+    COMMENT The function RoundDialAllocat increment number round dials installed by one.
+    COMMENT 
+    COMMENT Equivalence Class None
+    COMMENT 
+    COMMENT </TD> 
+
+        ELEMENT
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+             
+            VAR round_dial_def.sUpperLeft,                             init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.sDialCenterOffset,                      init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0, stat => PARAM_BAD,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init            
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => (T_INT32) -2147483648, ePenColor => TURQUOISE, psShape => NIL } },
+            &                                                                                   ev = {others =>{s32PtrShape => (T_INT32) -2147483648,ePenColor => TURQUOISE, psShape =>&PTU_PolygonsPsPolyInit_return}} 
+            VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.usLength,                               init = 0,                               ev = init
+            VAR round_dial_def.u16Format,                              init = 65535,                           ev = init
+            VAR round_dial_def.eFont,                                  init = E_BEZEL_FONT,                    ev = init
+            VAR round_dial_def.numLimit,                               init = 0,                               ev = init
+            VAR round_dial_def.limVal,                                 init = { others => 0.0 },               ev = init
+            VAR round_dial_def.limValtype,                             init = { others => 0 },               ev = init
+            VAR round_dial_def.limColor,                               init = { others => 0 },               ev = init
+            VAR round_dial_def.sDigCenterOffset,                       init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+            VAR round_dial_def.pRoundDial->round_dial_def,init = NIL,ev = &round_dial_def
+            VAR round_dial_def.pRoundDial->psPolyRedX,init = &PTU_psPolyRedX,ev = (T_SPOLY *)ZERO
+            VAR round_dial_def.pRoundDial->asPtrSpec,init = { others => 
+                &                                              { s32PtrShape => 0, 
+                &                                                ePenColor => BLACK,
+                &                                                psShape => NIL 
+                &                                              } 
+                &                                           },
+                &                                                                   ev = { others => 
+                &                                              { s32PtrShape => 0, 
+                &                                                ePenColor => TURQUOISE,
+                &                                                psShape => &PTU_PolygonsPsDuplicate_return 
+                &                                              } 
+                &                                           } 
+                VAR round_dial_def.pRoundDial->acDigText,init = "AAAAAAAAAAAAA",       ev = ""
+                VAR round_dial_def.pRoundDial->sAngle,   init = 1,                ev = 32767
+                VAR round_dial_def.pRoundDial->sWidgetParm,init = {eDIsDigStat => PARAM_ADVISORY, 
+                &                                                  s32ScalerStep =>1, 
+                &                                                  pText => "ROUND",  
+                &                                                  s32Dig => 0,  
+                &                                                  s32DisDig => 0, 
+                &                                                  s32Scaler => 0},             
+                &                                            ev = {eDIsDigStat => PARAM_OK, 
+                &                                                  s32ScalerStep =>0, 
+                &                                                  pText => NIL,  
+                &                                                  s32Dig => (T_INT32)0,  
+                &                                                  s32DisDig => (T_INT32)0, 
+                &                                                  s32Scaler => (T_INT32)0}   
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+                          
+            COMMENT INPUT/OUTPUT SECTION:
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)32767
+            STUB BinasGetWidth 1 => (65535)0
+            STUB PolygonsPsPolyInit ((T_ESTOCKSHAPE)EEND,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (0,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (0,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (0,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (0,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+	     STUB PolygonsPsPolyInit (0,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+            STUB PolygonsPsDuplicate 1..6 => (PTU_PolygonsPsPolyInit_return)&PTU_PolygonsPsDuplicate_return
+            STUB CalculatePower(10.0,7)(T_FLOAT)3.4e38
+            
+            END SIMUL
+        
+            -- Calling the Unit Under Test: 
+            #RoundDialAllocat(&round_dial_def);
+            
+        END ELEMENT
+
+    END TEST -- TEST 8
+
+-- Testcase is commented since it is crashing
+--    TEST 9
+--    FAMILY nominal
+--
+--    COMMENT Test Description
+--    COMMENT <TD> 
+--    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-001]
+--    COMMENT The function RoundDialAllocat call function RterrWidget with message "Too many round dials."and set 
+--    COMMENT Round Dial of round_dial_def to ZERO and return from function when number round dials installed is equal to MAX_ROUND_DIALS
+--    COMMENT 
+--    COMMENT Equivalence Class 1,2
+--    COMMENT 
+--    COMMENT 
+--    COMMENT </TD> 
+--
+--        ELEMENT
+--        
+--            COMMENT  INPUT SECTION:
+--
+--            --None 
+--            
+--            COMMENT OUTPUT SECTION:
+--             
+--            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+--            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+--            VAR PTU_psParam,                                           init = {fread => 0.0,stat => PARAM_BAD,others => 10},   
+--            &                                                                                                  ev = init
+--            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+--            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+--            &                                                                                   ev = init 
+--            
+--            VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+--            VAR round_dial_def.eFont,                                  init = E_NO_FONT,                       ev = init
+--            VAR round_dial_def.pRoundDial->sWidgetParm.s32Scaler,      init = 0,                               ev = init 
+--            
+--            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+--            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK           
+--                        
+--           VAR PTU_pc_file,                          init = "BB",                 ev = glob_file_name
+--           VAR PTU_pc_message,                       init = "AA",                 ev = "Too many round dials."
+--            
+--            COMMENT INPUT/OUTPUT SECTION:
+--            --None 
+--
+--            --Stub Calls:
+--            SIMUL   
+--            STUB LookupTableLookup 1..30 => (0)32767
+--            STUB BinasGetWidth 1..30 => (0)0
+--            STUB CalculatePower 1..30 => (10.0,0)1
+--            STUB RterrWidget(80)
+--            
+--            END SIMUL
+--        
+--            -- Calling the Unit Under Test: 
+--            -- function RoundDialAllocat is looped 51 times to increment U16_round_dials_installed
+--            #for(PTU_j = 0; PTU_j <51; PTU_j++)
+--            #{
+--            #RoundDialAllocat(&round_dial_def);
+--            #}
+--            
+--        END ELEMENT
+--
+--        
+--    END TEST -- TEST 9
+
+--    Test case is commented since it is crashing    
+--    TEST 10
+--    FAMILY robustness
+--
+--    COMMENT Test Description
+--    COMMENT <TD>
+--    COMMENT [hdudispfrounddial-RoundDialAllocat-DB-LLR-002]
+--    COMMENT In function "RoundDialAllocat" parameter "round_dial_def" is exercised for NULL value.
+--    COMMENT Equivalence Class 50
+--    COMMENT 
+--    COMMENT </TD> 
+--
+--        ELEMENT
+--        
+--            COMMENT  INPUT SECTION:
+--
+--            --None 
+--            
+--            COMMENT OUTPUT SECTION:
+--             
+--            VAR round_dial_def.sUpperLeft,                             init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+--            VAR round_dial_def.sDialCenterOffset,                      init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+--            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+--            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+--            VAR PTU_psParam,                                           init = {fread => 0.0,stat => PARAM_BAD,others => 10},   
+--            &                                                                                                  ev = init
+--            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init            
+--            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0x80000000, ePenColor => TURQUOISE, psShape => NIL } },
+--            &                                                                                   ev = {others =>{s32PtrShape => 0x80000000,ePenColor => TURQUOISE, psShape =>&PTU_PolygonsPsPolyInit_return}} 
+--            VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+--            &                                                                                   ev = init 
+--            VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+--            &                                                                                   ev = init 
+--            VAR round_dial_def.usLength,                               init = 0,                               ev = init
+--            VAR round_dial_def.u16Format,                              init = 65535,                           ev = init
+--            VAR round_dial_def.eFont,                                  init = E_BEZEL_FONT,                    ev = init
+--            VAR round_dial_def.numLimit,                               init = 0,                               ev = init
+--            VAR round_dial_def.limVal,                                 init = { others => 0.0 },               ev = init
+--            VAR round_dial_def.limValtype,                             init = { others => 0 },               ev = init
+--            VAR round_dial_def.limColor,                               init = { others => 0 },               ev = init
+--            VAR round_dial_def.sDigCenterOffset,                       init = { u16X0 => 0, u16Y0 => 0 },      ev = init
+--            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+--            VAR round_dial_def.pRoundDial->round_dial_def,init = NIL,ev = &round_dial_def
+--            VAR round_dial_def.pRoundDial->psPolyRedX,init = &PTU_psPolyRedX,ev = (T_SPOLY *)ZERO
+--            VAR round_dial_def.pRoundDial->asPtrSpec,init = { others => 
+--                &                                              { s32PtrShape => 0, 
+--                &                                                ePenColor => BLACK,
+--                &                                                psShape => NIL 
+--                &                                              } 
+--                &                                           },
+--                &                                                                   ev = { others => 
+--                &                                              { s32PtrShape => 0, 
+--                &                                                ePenColor => TURQUOISE,
+--                &                                                psShape => &PTU_PolygonsPsDuplicate_return 
+--                &                                              } 
+--                &                                           } 
+--                VAR round_dial_def.pRoundDial->acDigText,init = "AAAAAAAAAAAAA",       ev = ""
+--                VAR round_dial_def.pRoundDial->sAngle,   init = 1,                ev = 32767
+--                VAR round_dial_def.pRoundDial->sWidgetParm,init = {eDIsDigStat => 1, 
+--                &                                                  s32ScalerStep =>1, 
+--                &                                                  pText => "ROUND",  
+--                &                                                  s32Dig => 0,  
+--                &                                                  s32DisDig => 0, 
+--                &                                                  s32Scaler => 0},             
+--                &                                            ev = {eDIsDigStat => 0, 
+--                &                                                  s32ScalerStep =>0, 
+--                &                                                  pText => NIL,  
+--                &                                                  s32Dig => 0,  
+--                &                                                  s32DisDig => 0, 
+--                &                                                  s32Scaler => 0}   
+--            
+--            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+--            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+--                          
+--           
+--            COMMENT INPUT/OUTPUT SECTION:
+--            --None 
+--
+--            --Stub Calls:
+--            SIMUL   
+--            
+--            STUB LookupTableLookup 1 => (0)32767
+--            STUB BinasGetWidth 1 => (65535)0
+--            STUB PolygonsPsPolyInit 1..6 => (0x80000000,0,0,0,0,0)&PTU_PolygonsPsPolyInit_return
+--            STUB PolygonsPsDuplicate 1..6 => (PTU_PolygonsPsPolyInit_return)&PTU_PolygonsPsDuplicate_return
+--            
+--            END SIMUL
+--        
+--            -- Calling the Unit Under Test: 
+--            #RoundDialAllocat(NULL);
+--            
+--        END ELEMENT
+--
+--    END TEST -- TEST 10
+
+END SERVICE -- RoundDialAllocat
+
+----------------------------------------------------------------------------------
+-- Declaration of the service RoundDialDraw
+--------------------------------------------------------------------------------
+SERVICE RoundDialDraw
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_ROUNDDIALDEF round_dial_def;
+
+    TEST 1
+    FAMILY nominal    
+
+        ELEMENT
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-002]
+        COMMENT For all the round dails
+        COMMENT 1.calls function WidgetsRedX 
+        COMMENT 2.sets round dail status with index as loop value to TRUE 
+        COMMENT  since psDisRegion of round_dial_def of Round dial is not equal to NULL and
+        COMMENT  Draw dail status is equal to TRUE  
+        COMMENT  stat of psParam of round_dial_def of Round dial equal to PARAM_BAD
+        COMMENT Equivalence Class 29,46,27,31,26,38.45
+        COMMENT 
+        COMMENT </TD> 
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+         
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => PARAM_BAD,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = init 
+            
+            VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+            VAR round_dial_def.eFont,                                  init = E_NO_FONT,                       ev = init
+            VAR round_dial_def.pRoundDial->sWidgetParm.s32Scaler,      init = 0,                               ev = init 
+            VAR PTU_psDisRegion,                                       init = {eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => {others => 0},s32Width => 1, s32Height => 1, sDisLocO => {others => 0},eTXFont => E_NO_FONT,pu8Text => NIL},           
+            & ev = init   
+            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+            
+
+            VAR PTU_ps_dis_region,              init = {eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => {others => 0},s32Width => 1, s32Height => 1, sDisLocO => {others => 0},eTXFont => E_NO_FONT,pu8Text => NIL},         
+            & ev = {eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => {others => 0},s32Width => 1, s32Height => 1, sDisLocO => {others => 0},eTXFont => E_NO_FONT,pu8Text => NIL}
+
+            VAR PTU_pps_poly_red_x_in,          init = {others => 1},           ev = {others => 0}
+            
+            VAR round_dial_def.label,                                  init = 0,                               ev = init
+            VAR round_dial_def.associated_labels,                      init = { others => 65535 },             ev = init
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+            
+            COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)100
+            STUB BinasGetWidth 1 => (0)100
+            STUB CalculatePower(10.0,0)1.0
+            
+            STUB WidgetsRedX()
+            
+            END SIMUL
+        
+            -- Function called to create a round dial 
+            #RoundDialClear();
+            #RoundDialAllocat(&round_dial_def);
+            
+            -- Calling the Unit Under Test:
+            #RoundDialDraw();
+        END ELEMENT
+
+    END TEST -- TEST 1
+
+    TEST 2
+    FAMILY nominal    
+
+        ELEMENT
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-001]
+        COMMENT 1. Initializes Round dial to address of A round dial with index round dial counter.
+        COMMENT 2..Sets Draw dail status to TRUE
+        COMMENT (checked for 1 round dial)
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-002]
+        COMMENT For all the round dails
+        COMMENT 1.calls function WidgetsRedX 
+        COMMENT 2.sets round dail status with index as loop value to TRUE 
+        COMMENT  since psDisRegion of round_dial_def of Round dial is not equal to NULL and
+        COMMENT  Draw dail status is equal to TRUE  
+        COMMENT  stat of psParam of round_dial_def of Round dial greater than or equal to PARAM_BAD
+        COMMENT Equivalence Class 29,46,27,31,37,39,44
+        COMMENT 
+        COMMENT </TD> 
+                
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+         
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => RANGE_ERROR,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = init 
+            
+            VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+            VAR round_dial_def.eFont,                                  init = E_NO_FONT,                       ev = init
+            VAR round_dial_def.pRoundDial->sWidgetParm.s32Scaler,      init = 0,                               ev = init 
+            VAR PTU_psDisRegion,                                       init = {eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => {others => 0},s32Width => 1, s32Height => 1, sDisLocO => {others => 0},eTXFont => E_NO_FONT,pu8Text => NIL},           
+            & ev = init   
+            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+            
+
+            VAR PTU_ps_dis_region,              init = {eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => {others => 0},s32Width => 1, s32Height => 1, sDisLocO => {others => 0},eTXFont => E_NO_FONT,pu8Text => NIL},
+            &                                   ev = {eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => {others => 0},s32Width => 1, s32Height => 1, sDisLocO => {others => 0},eTXFont => E_NO_FONT,pu8Text => NIL} 
+            VAR PTU_pps_poly_red_x_in,          init = {others => 1},           ev = {others => 0}
+            
+            VAR round_dial_def.pRoundDial->psPolyRedX,init = &PTU_psPolyRedX,ev = (T_SPOLY *)ZERO
+            
+            VAR round_dial_def.label,                                  init = 0xFF,                               ev = init
+            VAR round_dial_def.associated_labels,                      init = { others => 0 },                 ev = init
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+            
+            COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)100
+            STUB BinasGetWidth 1 => (0)100
+            STUB CalculatePower(10.0,0)1.0
+            
+            STUB WidgetsRedX()
+            
+            END SIMUL
+        
+            -- Function called to create a round dial 
+            #RoundDialClear();
+            #RoundDialAllocat(&round_dial_def);
+            
+            -- Calling the Unit Under Test:
+            #RoundDialDraw();
+        END ELEMENT
+
+    END TEST -- TEST 2
+
+    TEST 3
+    FAMILY nominal    
+
+        ELEMENT
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-001]
+        COMMENT 1. Initializes Round dial to address of A round dial with index round dial counter.
+        COMMENT 2..Sets Draw dail status to TRUE
+        COMMENT (checked for 2 round dials)
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-002]
+        COMMENT For all the round dails
+        COMMENT 1.calls function WidgetsRedX 
+        COMMENT 2.sets round dail status with index as loop value to TRUE 
+        COMMENT  since psDisRegion of round_dial_def of Round dial is not equal to NULL and
+        COMMENT  Draw dail status is equal to TRUE  
+        COMMENT  stat of psParam of round_dial_def of Round dial greater than or equal to PARAM_BAD
+        COMMENT Equivalence Class 29,46,27,31,40,42
+        COMMENT 
+        COMMENT </TD> 
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+         
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => RANGE_ERROR,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = init 
+            
+            VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+            VAR round_dial_def.eFont,                                  init = E_NO_FONT,                       ev = init
+            VAR round_dial_def.pRoundDial->sWidgetParm.s32Scaler,      init = 0,                               ev = init 
+            VAR PTU_psDisRegion,                                       init = {eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => {others => 0},s32Width => 1, s32Height => 1, sDisLocO => {others => 0},eTXFont => E_NO_FONT,pu8Text => NIL},           
+            & ev = init   
+            VAR round_dial_def.psDisRegion,                            init = &PTU_psDisRegion,                ev = init
+            
+
+            VAR PTU_ps_dis_region,              init = {eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => {others => 0},s32Width => 1, s32Height => 1, sDisLocO => {others => 0},eTXFont => E_NO_FONT,pu8Text => NIL},
+            &                                   ev = {eRegionType => E_REGION_TYPE_GAUGE, sDisLocCtr => {others => 0},s32Width => 1, s32Height => 1, sDisLocO => {others => 0},eTXFont => E_NO_FONT,pu8Text => NIL}
+
+            VAR PTU_pps_poly_red_x_in,          init = {others => 1},           ev = {others => 0}
+            
+            VAR round_dial_def.label,                                  init = 1,                               ev = init
+            VAR round_dial_def.associated_labels,                      init = { others => 1 },                 ev = init
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+            
+            COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)100
+            STUB BinasGetWidth 1 => (0)100
+            STUB CalculatePower(10.0,0)1.0
+            
+            STUB WidgetsRedX 1..2 => ()
+            
+            END SIMUL
+        
+            -- Function called to create a round dial 
+            #RoundDialAllocat(&round_dial_def);
+            
+            -- Calling the Unit Under Test:
+            #RoundDialDraw();
+        END ELEMENT
+
+    END TEST -- TEST 3
+
+    TEST 4
+    FAMILY nominal    
+
+        ELEMENT
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-001]
+        COMMENT Does nothing 
+        COMMENT (checked for 0 round dials)
+        COMMENT Equivalence Class none
+        COMMENT 
+        COMMENT </TD> 
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+         
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                   ev = init         
+
+            
+            COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+             
+            --None 
+            
+            END SIMUL
+        
+            -- Function called to clear the values 
+            #RoundDialClear();
+            
+            -- Calling the Unit Under Test:
+            #RoundDialDraw();
+        END ELEMENT
+
+    END TEST -- TEST 4
+
+    TEST 5
+    FAMILY nominal    
+
+        ELEMENT
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-001]
+        COMMENT 1. Initializes Round dial to address of A round dial with index round dial counter.
+        COMMENT 2..Sets Draw dail status to TRUE
+        COMMENT (checked for 2 round dials)
+        COMMENT Equivalence Class 41
+        COMMENT 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-002]
+        COMMENT Does nothing
+        COMMENT Equivalence Class 30
+        COMMENT 
+        COMMENT Note: Variable Name "A_round_dial" is static, hence it is not expected in the Output section and the 
+        COMMENT       functionality of the requirement is verified implicitly.
+        COMMENT </TD> 
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+         
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => RANGE_ERROR,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = init 
+            
+            VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+            VAR round_dial_def.eFont,                                  init = E_NO_FONT,                       ev = init
+            VAR round_dial_def.pRoundDial->sWidgetParm.s32Scaler,      init = 0,                               ev = init 
+            VAR round_dial_def.psDisRegion,                            init = NULL,                            ev = init
+            
+
+           
+            VAR round_dial_def.label,                                  init = 1,                               ev = init
+            VAR round_dial_def.associated_labels,                      init = { others => 1 },                 ev = init
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+            
+            COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)100
+            STUB BinasGetWidth 1 => (0)100
+            STUB CalculatePower(10.0,0)1.0
+            
+            
+            END SIMUL
+        
+            -- Function called to create a round dial 
+            #RoundDialAllocat(&round_dial_def);
+            
+            -- Calling the Unit Under Test:
+            #RoundDialDraw();
+        END ELEMENT
+
+    END TEST -- TEST 5
+
+    TEST 6
+    FAMILY nominal    
+
+        ELEMENT
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-003]
+        COMMENT 1. Set round dail status with index as loop value to FALSE
+        COMMENT 2..Set Spec pointer to asPtrSpec of Round dial
+        COMMENT (checked for 0 round dials)
+        COMMENT Equivalence Class 28,34,33,43
+        COMMENT 
+        COMMENT </TD> 
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+         
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => PARAM_WARNING,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+            VAR round_dial_def.asPtrSpec,                              init = { others => { s32PtrShape => 0, ePenColor => BLACK, psShape => NIL } },
+            &                                                                                   ev = init 
+            
+            VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+            VAR round_dial_def.eFont,                                  init = E_NO_FONT,                       ev = init
+            VAR round_dial_def.pRoundDial->sWidgetParm.s32Scaler,      init = 0,                               ev = init 
+            VAR round_dial_def.psDisRegion,                            init = NULL,                ev = init
+            
+
+           
+            VAR round_dial_def.label,                                  init = 1,                               ev = init
+            VAR round_dial_def.associated_labels,                      init = { others => 1 },                 ev = init
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+            
+            COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)100
+            STUB BinasGetWidth 1 => (0)100
+            STUB CalculatePower(10.0,0)1.0
+            
+            
+            END SIMUL
+        
+            -- Function called to create a round dial 
+            #RoundDialAllocat(&round_dial_def);
+            
+            -- Calling the Unit Under Test:
+            #RoundDialDraw();
+        END ELEMENT
+
+    END TEST -- TEST 6
+
+    TEST 7
+    FAMILY nominal    
+
+        ELEMENT
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-003]
+        COMMENT 1.Sets round dail status with index as loop value to FALSE
+        COMMENT 2.Sets Spec pointer to asPtrSpec of Round dial
+        COMMENT 3.calls PolygonDrawPoly 
+        COMMENT (checked for 2 round dials)
+        COMMENT Equivalence Class 28,34,36,32
+        COMMENT 
+        COMMENT </TD> 
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+         
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => PARAM_WARNING,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+
+            
+            VAR round_dial_def.asPtrSpec,                              init = { 0 => { s32PtrShape => 1, ePenColor => BLACK, psShape => &PTU_PolygonsPsPolyInit_return_1 },
+            &                                                                   1 => { s32PtrShape => 1, ePenColor => BLACK, psShape => &PTU_PolygonsPsPolyInit_return_1 },
+            &                                                                   others => { s32PtrShape => 0, ePenColor => BLACK, psShape => &PTU_PolygonsPsPolyInit_return_1 } },
+            &                                                                                   ev = {0 => { s32PtrShape => 1, ePenColor => BLACK, psShape => &PTU_PolygonsPsPolyInit_return },
+            &                                                                                         1 => { s32PtrShape => 1, ePenColor => BLACK, psShape => &PTU_PolygonsPsPolyInit_return },
+            &                                                                                         others => { s32PtrShape => 0, ePenColor => BLACK, psShape => &PTU_PolygonsPsPolyInit_return_1 } }
+
+            VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init             
+            
+            VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+            VAR round_dial_def.eFont,                                  init = E_NO_FONT,                       ev = init
+            VAR round_dial_def.pRoundDial->sWidgetParm.s32Scaler,      init = 0,                               ev = init 
+            VAR round_dial_def.psDisRegion,                            init = NULL,                ev = init
+            
+
+           
+            VAR round_dial_def.label,                                  init = 1,                               ev = init
+            VAR round_dial_def.associated_labels,                      init = { others => 1 },                 ev = init
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+            
+            VAR PTU_ps_poly,                                            init = NIL,                            ev = &PTU_PolygonsPsDuplicate_return
+            
+            COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)100
+            STUB BinasGetWidth 1 => (0)100
+            STUB CalculatePower(10.0,0)1.0
+            
+            STUB PolygonsPsPolyInit 1 => (1,0,0,0,0,0) &PTU_PolygonsPsPolyInit_return
+            STUB PolygonsPsPolyInit 2 => (1,0,0,0,0,0) &PTU_PolygonsPsPolyInit_return
+            STUB PolygonsPsDuplicate 1..2 => (PTU_PolygonsPsPolyInit_return) &PTU_PolygonsPsDuplicate_return
+            
+            STUB PolygonDrawPoly 1..2 => (BLACK)
+            END SIMUL
+        
+            -- Function called to create a round dial 
+            #RoundDialAllocat(&round_dial_def);
+            
+            -- Calling the Unit Under Test:
+            #RoundDialDraw();
+        END ELEMENT
+
+    END TEST -- TEST 7
+
+    TEST 8
+    FAMILY nominal    
+
+        ELEMENT
+        COMMENT Test Description
+        COMMENT <TD> 
+        COMMENT [hdudispfrounddial-RoundDialDraw-DB-LLR-003]
+        COMMENT 1.Sets round dail status with index as loop value to FALSE
+        COMMENT 2.Sets Spec pointer to asPtrSpec of Round dial
+        COMMENT 3.calls PolygonDrawPoly 
+        COMMENT (checked for 1 round dials)
+        COMMENT Equivalence Class 28,34,36,32
+        COMMENT 
+        COMMENT </TD> 
+        
+            COMMENT  INPUT SECTION:
+
+            --None 
+            
+            COMMENT OUTPUT SECTION:
+         
+            VAR PTU_psGeometry,                                        init = { x => &PTU_x, y => &PTU_y},       ev = init
+            VAR round_dial_def.psGeometry,                             init = &PTU_psGeometry,                 ev = init
+            VAR PTU_psParam,                                           init = {fread => 0.0,stat => PARAM_WARNING,others => 10},   
+            &                                                                                                  ev = init
+            VAR round_dial_def.psParam,                                init = &PTU_psParam,                    ev = init
+
+            
+            VAR round_dial_def.asPtrSpec,                              init = { 0 => { s32PtrShape => 1, ePenColor => BLACK, psShape => &PTU_PolygonsPsPolyInit_return_1 },
+            &                                                                   others => { s32PtrShape => 0, ePenColor => BLACK, psShape => &PTU_PolygonsPsPolyInit_return_1 } },
+            &                                                                                   ev = {0 => { s32PtrShape => 1, ePenColor => BLACK, psShape => &PTU_PolygonsPsPolyInit_return },
+            &                                                                                         others => { s32PtrShape => 0, ePenColor => BLACK, psShape => &PTU_PolygonsPsPolyInit_return_1 } }
+
+            VAR round_dial_def.ptr_scale,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init 
+            VAR round_dial_def.ptr_scale_offset,                              init = { others => { u16X0 => 0, u16Y0 => 0 } },
+            &                                                                                   ev = init             
+            
+            VAR round_dial_def.u16Format,                              init = 0,                               ev = init
+            VAR round_dial_def.eFont,                                  init = E_NO_FONT,                       ev = init
+            VAR round_dial_def.pRoundDial->sWidgetParm.s32Scaler,      init = 0,                               ev = init 
+            VAR round_dial_def.psDisRegion,                            init = NULL,                ev = init
+            
+
+           
+            VAR round_dial_def.label,                                  init = 1,                               ev = init
+            VAR round_dial_def.associated_labels,                      init = { others => 1 },                 ev = init
+            
+            VAR PTU_table,                                              init = NIL,                            ev = { x => &PTU_x, y => &PTU_y}
+            VAR PTU_stat,                                               init = RANGE_ERROR,                    ev = PARAM_OK
+            
+            VAR PTU_ps_poly,                                            init = NIL,                            ev = &PTU_PolygonsPsDuplicate_return
+            
+            COMMENT INPUT/OUTPUT SECTION:
+
+            --None 
+
+            --Stub Calls:
+            SIMUL   
+            
+            STUB LookupTableLookup 1 => (0)100
+            STUB BinasGetWidth 1 => (0)100
+            STUB CalculatePower(10.0,0)1.0
+            
+            STUB PolygonsPsPolyInit 1 => (1,0,0,0,0,0) &PTU_PolygonsPsPolyInit_return
+            STUB PolygonsPsDuplicate 1 => (PTU_PolygonsPsPolyInit_return) &PTU_PolygonsPsDuplicate_return
+            
+            STUB PolygonDrawPoly 1 => (BLACK)
+            END SIMUL
+        
+            -- Function called to create a round dial 
+            #RoundDialClear();
+            #RoundDialAllocat(&round_dial_def);
+            
+            -- Calling the Unit Under Test:
+            #RoundDialDraw();
+        END ELEMENT
+
+    END TEST -- TEST 8
+
+END SERVICE -- RoundDialDraw
+
+
+
+
+

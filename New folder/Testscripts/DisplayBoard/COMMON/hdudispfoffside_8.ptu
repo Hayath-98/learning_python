@@ -1,0 +1,384 @@
+HEADER hdudispfoffside,Source Code Ver : 1.2 ,TestScript Ver :1.1  
+--------------------------------------------------------------------------------
+-- Author Name         : Hemalatha S
+--
+-- File Name           : hdudispfoffside.ptu
+--                       
+-- Test Creation Date  : 30.10.2017
+--
+-- Tested Functions    : OffsideTimerStop
+--						 OffsideProcessA825NSC
+--						 OffsideTimerReset
+--						 OffsideTimerStart
+--						 OffsideHeartBeat
+--						 OffsideCoolTimer
+--						 OffsideProcessA825NOC
+--						 OffsideSwitchScreen
+--
+-- Version History     :
+--
+-- TEST-VERSION     TEST-DATE	    TESTER NAME        MODIFICATIONS
+-- ------------   	---------       -----------        -------------
+-- 		1.1         30.10.2017      Hemalatha S   	   Created the PTU file.
+--      
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE INCLUDE DIRECTIVES 
+--
+--------------------------------------------------------------------------------
+
+#/*============================================================================*/
+#/* Module specific includes                                                   */
+#/*============================================================================*/  
+
+##include "hdudispfa429.h" /* Routines for arinc 429 */
+##include "hdudispfdauprofile.h"  /* defines the constants for ARINC 825  Message Traffic.*/
+##include "hdudispfglobalsettings.h" /* Routines to read and write data to NVRAM  */
+##include "hdudispfoffside.h"  /* Screen, message and timer configuration */
+##include "hdudispfpara.h"   /* prototype for builds faults, message and system information  */
+##include "hdudispfrtd.h" /* Provide mapping for all A825 incoming parameters */
+##include "hdudispfarinc825.h" /* Define the structure for an ARINC 825 Message. */
+##include "hdulibbasictypes.h" /* Standard basic data type definitions */
+
+#/* Updated as per PR 100083 */
+##include "hdudispfpdidata.h" /* provides pdi declarations */
+##include "hdudispfgrapp.h" /* routines for all graph */
+##include "hdudispfmenu.h" /* contains prototype for menu module*/
+
+##define HEARTBEAT_PAYLOAD     0x12345678UL
+
+--------------------------------------------------------------------------------
+--
+-- TESTED FILE DECLARATIONS 
+--
+--------------------------------------------------------------------------------
+
+-- Declarations of the global variables of the tested file
+
+    #extern void OffsideCoolTimer(T_UINT8 cool_timer_state);
+--------------------------------------------------------------------------------
+
+BEGIN
+
+    COMMENT  Author Name         : Hemalatha S
+	COMMENT 
+	COMMENT  File Name           : hdudispfoffside.ptu
+	COMMENT 
+	COMMENT  Tested Functions    : OffsideTimerStop
+	COMMENT						   OffsideProcessA825NSC
+	COMMENT						   OffsideTimerReset
+	COMMENT						   OffsideTimerStart
+	COMMENT						   OffsideHeartBeat
+	COMMENT						   OffsideCoolTimer
+	COMMENT						   OffsideProcessA825NOC	
+	COMMENT						   OffsideSwitchScreen
+ 	COMMENT
+	COMMENT  Assumptions and Constraints
+	COMMENT  <AC>
+	COMMENT
+	COMMENT  Assumption(s):
+	COMMENT
+	COMMENT  None
+	COMMENT 
+	COMMENT  Constraint(s):
+	COMMENT	 The PTU is been split into 8 due to static dependency.
+	COMMENT
+	COMMENT  </AC>
+	
+	COMMENT  <ECD>
+	COMMENT 
+	COMMENT  Valid Class(es)
+	COMMENT  Class 1
+	COMMENT  In Function'OffsideTimerStop',stat of temp is equal to MISSING.
+	COMMENT
+	COMMENT  Class 2
+	COMMENT  In Function'OffsideTimerStop',stat of temp is not  equal to MISSING.
+	COMMENT
+	COMMENT  Class 3
+	COMMENT  In Function'OffsideTimerStop','INIT_NSC_REQUEST' is called.
+	COMMENT
+	COMMENT  Class 4
+	COMMENT  In Function'OffsideTimerStop','A8252Xmit' is called.
+	COMMENT
+	COMMENT  Class 5
+	COMMENT  In Function'OffsideTimerStop','RTDGetParamDdw' is called.
+	COMMENT
+	COMMENT  Class 6
+	COMMENT  In Function'OffsideProcessA825NSC',node_service_code is NSC_SWITCH_SCREEN.
+	COMMENT
+	COMMENT  Class 7
+	COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_TIMER_START.
+	COMMENT
+	COMMENT  Class 8
+	COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_TIMER_STOP.
+	COMMENT
+	COMMENT  Class 9
+	COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_TIMER_RESET.
+	COMMENT
+	COMMENT  Class 10
+	COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_SET_EIU.
+	COMMENT
+	COMMENT  Class 11
+	COMMENT  In Function'OffsideProcessA825NSC',node_service_code is  NSC_COOL_TIMER_STATE.
+	COMMENT
+	COMMENT  Class 12
+	COMMENT  In Function'OffsideProcessA825NSC',node_service_code is other than NSC_SWITCH_SCREEN,NSC_TIMER_START,NSC_TIMER_STOP
+	COMMENT  NSC_TIMER_RESET,NSC_SET_EIU,NSC_COOL_TIMER_STATE.
+	COMMENT
+	COMMENT  Class 13
+	COMMENT  In Function'OffsideProcessA825NSC',Page_num is equal to EPAGE0.
+	COMMENT
+	COMMENT  Class 14
+	COMMENT  In Function'OffsideProcessA825NSC',Page_num is not equal to EPAGE0.
+	COMMENT
+	COMMENT  Class 15
+	COMMENT  In Function'OffsideProcessA825NSC','GrappSetPage' is called.
+	COMMENT
+	COMMENT  Class 16
+	COMMENT  In Function'OffsideProcessA825NSC','OffsideManualTimerStart' is called.
+	COMMENT
+	COMMENT  Class 17
+	COMMENT  In Function'OffsideProcessA825NSC','OffsideManualTimerStop' is called.
+	COMMENT	
+	COMMENT  Class 18
+	COMMENT  In Function'OffsideProcessA825NSC','OffsideManualTimerReset' is called.
+	COMMENT	
+	COMMENT  Class 19
+	COMMENT  In Function'OffsideTimerReset',stat of temp is equal to MISSING.
+	COMMENT
+	COMMENT  Class 20
+	COMMENT  In Function'OffsideTimerReset',stat of temp is not  equal to MISSING.
+	COMMENT
+	COMMENT  Class 21
+	COMMENT  In Function'OffsideTimerReset','INIT_NSC_REQUEST' is called.
+	COMMENT
+	COMMENT  Class 22
+	COMMENT  In Function'OffsideTimerReset','A8252Xmit' is called.
+	COMMENT
+	COMMENT  Class 23
+	COMMENT  In Function'OffsideTimerReset','RTDGetParamDdw' is called.
+	COMMENT	
+	COMMENT  Class 24
+	COMMENT  In Function'OffsideTimerStart',stat of temp is equal to MISSING.
+	COMMENT
+	COMMENT  Class 25
+	COMMENT  In Function'OffsideTimerStart',stat of temp is not  equal to MISSING.
+	COMMENT
+	COMMENT  Class 26
+	COMMENT  In Function'OffsideTimerStart','INIT_NSC_REQUEST' is called.
+	COMMENT
+	COMMENT  Class 27
+	COMMENT  In Function'OffsideTimerStart','A8252Xmit' is called.
+	COMMENT
+	COMMENT  Class 28
+	COMMENT  In Function'OffsideTimerStart','RTDGetParamDdw' is called.
+	COMMENT	
+	COMMENT  Class 29
+	COMMENT  In Function'OffsideHeartBeat','INIT_NOC_MESSAGE' is called.
+	COMMENT
+	COMMENT  Class 30
+	COMMENT  In Function'OffsideHeartBeat','A8252Xmit' is called.
+	COMMENT
+	COMMENT  Class 31
+	COMMENT  In Function'OffsideProcessA825NOC',doc of BID of SID of s_mess is equal to HEART_BEAT.
+	COMMENT
+	COMMENT  Class 32
+	COMMENT  In Function'OffsideProcessA825NOC',doc of BID of SID of s_mess is not equal to HEART_BEAT.
+	COMMENT
+	COMMENT  Class 33
+	COMMENT  In Function'OffsideSwitchScreen','INIT_NSC_REQUEST' is called.
+	COMMENT
+	COMMENT  Class 34
+	COMMENT  In Function'OffsideSwitchScreen','A8252Xmit' is called.
+	COMMENT 
+	COMMENT  Class 35
+	COMMENT  In Function'OffsideTimerStart',stat of temp is equal to MISSING.
+	COMMENT
+	COMMENT  Class 36
+	COMMENT  In Function'OffsideTimerStart',stat of temp is not  equal to MISSING.
+	COMMENT
+	COMMENT  Class 37
+	COMMENT  In Function'OffsideTimerStart','INIT_NSC_REQUEST' is called.
+	COMMENT
+	COMMENT  Class 38
+	COMMENT  In Function'OffsideTimerStart','A8252Xmit' is called.
+	COMMENT
+	COMMENT  Class 39
+	COMMENT  In Function'OffsideTimerStart','RTDGetParamDdw' is called.
+	COMMENT	
+	COMMENT Invalid Class(es)	
+	COMMENT
+	COMMENT	None
+	COMMENT
+	COMMENT </ECD>
+
+--------------------------------------------------------------------------------
+--
+-- STUB DECLARATIONS OF THE TESTED OR INTEGRATED UNITS
+--
+--------------------------------------------------------------------------------
+
+    #T_BOOL Cool_down_select; 
+    #T_EIU Active_eiu; 
+    #T_UINT8 Max_num_of_pages; 
+    #T_EPAGE_NUM Toggle_screen; 
+    #T_EPAGE_NUM Page_num;
+    #T_UINT8 Du_position; 
+     
+
+	#T_A825_MESSAGE PTU_ps_xm[100];
+	--#T_PARAM_READING PTU_ps_dest_1;
+	#T_PARAM_READING PTU_ps_dest;
+
+	#T_UINT8 PTU_index;
+
+
+DEFINE STUB hdudispfoffside_c
+    #void RTDSetParam(T_UINT8  _in channel, T_UINT16  _in a429_tag, T_FLOAT  _in s32_data, T_RTD_STATUS  _in ertd_stat); 
+    #void OffsideManualTimerReset(void); 
+    #void OffsideManualTimerStop(T_UINT32  _in u32_stop_val); 
+    #void OffsideManualTimerStart(T_UINT32  _in u32_start_val); 
+    #void GrappSetPage(T_UINT8  _in u8MyPage); 
+    #void RTDGetParamDdw(T_UINT16  _in a429_tag, T_PARAM_READING  _no *ps_dest)
+    #{
+    #	*ps_dest = PTU_ps_dest;
+    #}
+    
+	--Parameter '*ps_xm' is made _no since Local variable address can not be expected.
+	#T_A825_XMITRESULT A8252Xmit(T_A825_MESSAGE  _no *ps_xm)
+	#{
+	#	PTU_ps_xm[PTU_index++] = *ps_xm;
+    #}
+END DEFINE
+
+--------------------------------------------------------------------------------
+--
+-- ENVIRONMENTS DECLARATIONS
+--
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- TESTED FILE ENVIRONNEMENT
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--
+-- SERVICES DECLARATIONS
+--
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Declaration of the service OffsideTimerStop
+--------------------------------------------------------------------------------
+SERVICE OffsideTimerStop
+SERVICE_TYPE extern
+
+    -- Tested service parameters declarations
+    #T_UINT32 u32_stop_value;
+
+TEST 1
+FAMILY nominal
+
+	COMMENT Test Description 
+	COMMENT <TD>
+	COMMENT [hdudispfoffside-OffsideTimerStop-DB-LLR-003]
+	COMMENT The function "OffsideTimerStop", calls RTDGetParamDdw with zero and reference to T_PARAM_READING 
+	COMMENT variable as parameters to get the status of heartbeat message.
+	COMMENT Equivalence Class 5
+	COMMENT 
+	COMMENT [hdudispfoffside-OffsideTimerStop-DB-LLR-001]
+	COMMENT The function "OffsideTimerStop",  calls the macro INIT_NSC_REQUEST with NSC request as its parameter 
+	COMMENT and initialize NSC request for payload NSC_TIMER_STOP with size SIX, server identifier 
+	COMMENT EISDSPLY_SID , rci value as Du_position and payload content at index two with u32_stop_value
+	COMMENT when heartbeat message status is not MISSING.
+	COMMENT Equivalence Class 2,3
+	COMMENT 
+	COMMENT [hdudispfoffside-OffsideTimerStop-DB-LLR-002]
+	COMMENT The function "OffsideTimerStop", calls A8252Xmit to transmit initialized NSC request 
+	COMMENT for payload NSC_TIMER_STOP when heartbeat message status is not MISSING.
+	COMMENT Equivalence Class 4
+	COMMENT </TD>
+	
+	ELEMENT
+
+	COMMENT INPUT SECTION:
+
+		VAR u32_stop_value,		init = 4,		ev = init
+
+	COMMENT OUTPUT SECTION:
+		
+		VAR PTU_ps_dest.stat,				init = NCD, 		ev = init
+
+	COMMENT INPUT/OUTPUT SECTION:
+
+		VAR PTU_ps_xm[0].sID.PID.sid , 		init = 0,		ev = EISDSPLY_SID
+		
+		VAR PTU_ps_xm[0].u8PaySize,			init = 0, 		ev = SIX
+		
+		VAR PTU_ps_xm[0].sID.PID.rci,		init = 0, 		ev = Du_position
+		
+		VAR PTU_ps_xm[0].u8PayLoad[0],		init = 0, 		ev = NSC_TIMER_STOP
+		
+		VAR PTU_ps_xm[0].u8PayLoad[1],		init = 0, 		ev = 192
+		
+		VAR PTU_ps_xm[0].u8PayLoad[2],		init = 0, 		ev = 4
+		
+
+	--Stub Calls :        
+	SIMUL
+
+		STUB A8252Xmit()0
+		STUB RTDGetParamDdw(0)
+
+	END SIMUL
+	
+	#OffsideTimerStop(u32_stop_value);
+	END ELEMENT
+
+END TEST -- TEST 1
+
+
+TEST 2
+FAMILY nominal
+
+	COMMENT Test Description 
+	COMMENT <TD> 
+	COMMENT [hdudispfoffside-OffsideTimerStop-DB-LLR-003]
+	COMMENT The function "OffsideTimerStop", calls RTDGetParamDdw with zero and reference to T_PARAM_READING 
+	COMMENT variable as parameters to get the status of heartbeat message.
+	COMMENT Equivalence Class  5
+	COMMENT 
+	COMMENT [hdudispfoffside-OffsideTimerStop-DB-LLR-001]
+	COMMENT The function "OffsideTimerStop",  does nothing
+	COMMENT when heartbeat message status is MISSING.
+	COMMENT Equivalence Class 1
+	COMMENT </TD>
+
+ELEMENT
+
+	COMMENT INPUT SECTION:
+
+		VAR u32_stop_value,			init = 0,			ev = init
+		
+		VAR PTU_ps_dest.stat,		init = MISSING, 	ev = init
+
+	COMMENT OUTPUT SECTION:
+	
+		--None
+
+	COMMENT INPUT/OUTPUT SECTION:
+
+		--None
+		
+
+	--Stub Calls :        
+	SIMUL
+
+		STUB RTDGetParamDdw(0)
+
+	END SIMUL
+	
+
+	#OffsideTimerStop(u32_stop_value);
+	END ELEMENT
+
+END TEST -- TEST 2
+END SERVICE -- OffsideTimerStop
