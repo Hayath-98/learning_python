@@ -1,0 +1,350 @@
+Testing concepts
+-----------------
+1. how to test local variable in RTRT
+a) first we have to make it as global by declaring that variable in ptu.
+EXAMPLE;-
+ we have integer variale locally see below
+ file name 1.c
+ void fun()
+ {
+ int a,
+ bool b,c;
+ if(a==1)
+ {
+	 b=1;
+ }
+ else
+ {
+  c=0;	 
+ }
+ }
+-if you want to test this local varible
+ file name 1.ptu
+ #int a;
+ #bool b,c;
+    ENVIRONMENT ENV_fun
+    VAR a,        init = 0,      ev = init 
+    VAR b,        init = 0,      ev = init
+    VAR c,        init = 0,      ev = init	
+    END ENVIRONMENT -- ENV_fun
+    USE ENV_fun
+
+TEST 1
+FAMILY nominal
+
+        COMMENT  Test Description
+		
+		///////////////////////
+		ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the local variable
+                VAR a,                  init = 1,             ev = init              
+            COMMENT INPUT/OUTPUT SECTION :
+                --none            
+            COMMENT OUTPUT SECTION :                   
+                VAR b,        init = 0,      ev = 1
+                VAR c,        init = 1,      ev = 0
+            SIMUL                
+                --none           
+            END SIMUL       
+        --Calling Unit Under Test    
+        #fun();       
+        END ELEMENT
+    END TEST -- TEST 1
+	
+TEST 2
+FAMILY nominal
+
+        COMMENT  Test Description
+		
+		///////////////////////
+		ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the local variable
+                VAR a,                  init = 0,             ev = init              
+            COMMENT INPUT/OUTPUT SECTION :
+                --none            
+            COMMENT OUTPUT SECTION :                   
+                VAR b,        init = 1,      ev = 0
+                VAR c,        init = 0,      ev = 1
+            SIMUL                
+                --none           
+            END SIMUL       
+        --Calling Unit Under Test    
+        #fun();       
+        END ELEMENT
+    END TEST -- TEST 2
+	
+=======================================================
+2. how to test function return in RTRT
+file name 2.c
+ bool fun1()
+ {
+ int a;
+ if(a==1)
+ {
+	 return 1;
+ }
+ else
+ {
+  return 0;	 
+ }
+ }
+ file name 2.ptu
+ #int a;
+ #bool ret_fun;
+    ENVIRONMENT ENV_fun1
+    VAR a,        init = 0,      ev = init 
+    VAR ret_fun1,        init = 0,      ev = init	
+    END ENVIRONMENT -- ENV_fun1
+    USE ENV_fun1
+
+TEST 1
+FAMILY nominal
+
+        COMMENT  Test Description
+		
+		///////////////////////
+		ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the local variable
+                VAR a,                  init = 1,             ev = init              
+            COMMENT INPUT/OUTPUT SECTION :
+                --none            
+            COMMENT OUTPUT SECTION :                   
+                VAR ret_fun1,        init = 0,      ev = 1
+            SIMUL                
+                --none           
+            END SIMUL       
+        --Calling Unit Under Test    
+        #ret_fun1 = fun1();       
+        END ELEMENT
+    END TEST -- TEST 1
+
+TEST 2
+FAMILY nominal
+
+        COMMENT  Test Description
+		
+		///////////////////////
+		ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                --Initializes the local variable
+                VAR a,                  init = 0,             ev = init              
+            COMMENT INPUT/OUTPUT SECTION :
+                --none            
+            COMMENT OUTPUT SECTION :                   
+                VAR ret_fun1,        init = 1,      ev = 0
+            SIMUL                
+                --none           
+            END SIMUL       
+        --Calling Unit Under Test    
+        #ret_fun1 = fun1();       
+        END ELEMENT
+    END TEST -- TEST 2
+===============================================================================
+3. how to test service parameters in RTRT
+ file name 3.c
+ ##define twnety 20
+ void fun3(int a ,bool b,bool c)
+ {
+ if(a==twnety)
+ {
+	b=1;
+ }
+ else if(b==1)
+ {
+   a=120;
+ }
+ else
+ {
+	c=0;
+ }
+ }
+ file name 3.ptu
+ #int a;
+ #bool b,c;
+    ENVIRONMENT ENV_fun3
+    VAR a,        init = 0,      ev = init 
+    VAR b,        init = 0,      ev = init
+    VAR c,        init = 0,      ev = init	
+    END ENVIRONMENT -- ENV_fun3
+    USE ENV_fun3
+
+TEST 1
+FAMILY nominal
+
+        COMMENT  Test Description
+		
+		///////////////////////
+		ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                  --none                       
+            COMMENT INPUT/OUTPUT SECTION :
+                --none            
+            COMMENT OUTPUT SECTION :
+                VAR a,        init = 120,      ev =120  			
+                VAR b,        init = 0,      ev = 1
+                VAR c,        init = 1,      ev = 1
+            SIMUL                
+                --none           
+            END SIMUL       
+        --Calling Unit Under Test    
+        #fun3(a,b,c);       
+        END ELEMENT
+    END TEST -- TEST 1
+	
+TEST 2
+FAMILY nominal
+
+        COMMENT  Test Description
+		
+		///////////////////////
+		ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                  --none                       
+            COMMENT INPUT/OUTPUT SECTION :
+                --none            
+            COMMENT OUTPUT SECTION :
+                VAR a,        init = min,      ev =120  			
+                VAR b,        init = 1,      ev = 0
+                VAR c,        init = 1,      ev = 1
+            SIMUL                
+                --none           
+            END SIMUL       
+        --Calling Unit Under Test    
+        #fun3(a,b,c);       
+        END ELEMENT
+    END TEST -- TEST 2
+	
+TEST 3
+FAMILY nominal
+
+        COMMENT  Test Description
+		
+		///////////////////////
+		ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+                  --none                       
+            COMMENT INPUT/OUTPUT SECTION :
+                --none            
+            COMMENT OUTPUT SECTION :
+                VAR a,        init = max,      ev =max  			
+                VAR b,        init = 0,      ev = 0
+                VAR c,        init = 1,      ev = 0
+            SIMUL                
+                --none           
+            END SIMUL       
+        --Calling Unit Under Test    
+        #fun3(a,b,c);       
+        END ELEMENT
+    END TEST -- TEST 3
+=================================================================================
+4. how to STUB if function is calling multiple time in RTRT
+##define twenty 20
+ file name 4.c
+ void fun3(int a)
+ {
+	 int i;
+ if(a)
+ {
+  for(i=0;i<twenty;i++)
+  {
+	  fun2();
+  }
+ }
+
+ file name 4.ptu
+ #int a;
+    ENVIRONMENT ENV_fun4
+    VAR a,        init = 0,      ev = init 	
+    END ENVIRONMENT -- ENV_fun4
+    USE ENV_fun4
+
+TEST 1
+FAMILY nominal
+
+        COMMENT  Test Description
+		
+		///////////////////////
+		ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+             VAR a,        init = mid,      ev =init                        
+            COMMENT INPUT/OUTPUT SECTION :
+                --none            
+            COMMENT OUTPUT SECTION :
+              			
+              
+            SIMUL                
+               
+			 STUB fun2 1..19 =>()  
+            END SIMUL       
+        --Calling Unit Under Test    
+        #fun4(a);       
+        END ELEMENT
+    END TEST -- TEST 1
+============================================================================
+5. how to STUB if function is calling multiple time in RTRT
+##define twenty 20
+ file name 5.c
+ void fun3(int *ptr)
+ {
+	 int i;
+ if(ptr==NULL)
+ {
+  for(i=0;i<twenty;i++)
+  {
+	  fun2();
+  }
+ }
+
+ file name 5.ptu
+ #int PTU_ptr;--creating local variale to handle pointer
+ #int *ptr;-- service parameters
+    ENVIRONMENT ENV_fun5
+    VAR PTU_ptr,        init = 0,      ev = init 	
+    END ENVIRONMENT -- ENV_fun5
+    USE ENV_fun5
+
+TEST 1
+FAMILY nominal
+
+        COMMENT  Test Description
+		
+		--///////////////////////
+		ELEMENT
+        
+            COMMENT INPUT SECTION :
+                
+             VAR ptr,        init = &PTU_ptr,      ev =init 
+			  VAR PTU_ptr,        init = NULL,      ev =init
+            COMMENT INPUT/OUTPUT SECTION :
+                --none            
+            COMMENT OUTPUT SECTION :
+              			
+              
+            SIMUL                
+               
+			 STUB fun2 1..19 =>()  
+            END SIMUL       
+        --Calling Unit Under Test    
+        #fun7(&a);       
+        END ELEMENT
+    END TEST -- TEST 1
+============================================================================
